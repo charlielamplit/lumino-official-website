@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const contract = require("../apps/portal/runtime/service-contract.js");
+const contract = require("../packages/shared/service-contract.js");
 const publicServices = require("../apps/site/site/service-registry.js");
 
 test("公开站与 Portal 共享六项服务契约", () => {

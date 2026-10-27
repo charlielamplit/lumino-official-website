@@ -39,7 +39,7 @@ const gasProposal = {
 };
 
 test("runtime and capability catalog versions", () => {
-  assert.equal(RUNTIME_VERSION, "0.1.0");
+  assert.equal(RUNTIME_VERSION, "0.1.1");
   assert.equal(capabilities.CATALOG_VERSION, "0.1.0");
   assert.equal(capabilities.getCapability("CBAM_ENERGY_INVOICE_EXTRACT").completionMode, "proposal_only");
   assert.equal(capabilities.capabilitiesForStage("pcf", "template").length, 1);
@@ -139,4 +139,19 @@ test("pipeline blocks unknown businessType", () => {
     () => engine.submit({ serialNo: "x", businessType: "NOPE", input: {} }, { actor: "Portal" }),
     { code: "UNKNOWN_BUSINESS_TYPE" }
   );
+});
+
+test("poll advances SUBMITTING to PROCESSING then READY", () => {
+  const engine = tasks();
+  const created = engine.submit({
+    serialNo: "biz-gas-poll",
+    businessType: "CBAM_ENERGY_INVOICE_EXTRACT",
+    input: {}
+  }, { actor: "Portal" });
+  const pending = { proposals: [gasProposal], summary: "polled ready" };
+  const p1 = engine.poll(created.id, { requiredPolls: 2, pendingResult: pending });
+  assert.equal(p1.status, "PROCESSING");
+  const p2 = engine.poll(created.id, { requiredPolls: 2, pendingResult: pending });
+  // pollCount=2 after second poll while PROCESSING -> complete
+  assert.equal(p2.status, "READY");
 });

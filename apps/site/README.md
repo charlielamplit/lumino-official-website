@@ -12,7 +12,7 @@
 ## 边界
 
 - **不依赖** `packages/agent` 运行时；仅通过文案声明与门禁意图对齐（`stages[].validationSummary`）
-- 公共服务契约读取 `apps/portal/runtime/service-contract.js`（共享声明字段）
+- 公共服务契约读取 `packages/shared/service-contract.js`（共享声明字段）
 - 部署时可用根目录 `vercel.json` 将 `/services/*`、`/calculator` 等重写到本目录
 
 ## 本地

@@ -8,6 +8,33 @@
     toast.timer = window.setTimeout(() => element.classList.remove("show"), 2800);
   }
 
+  function runAgentTaskWithPolling({ taskId, pendingResult, onStatus, onReady, onError, requiredPolls = 2, intervalMs = 450 }) {
+    const tick = () => {
+      try {
+        const snapshot = agentTaskEngine.poll(taskId, { requiredPolls, pendingResult });
+        if (typeof onStatus === "function") onStatus(snapshot);
+        if (["READY", "READY_PARTIAL"].includes(snapshot.status)) {
+          onReady(snapshot);
+          return;
+        }
+        if (["FAILED", "SYNC_FAILED"].includes(snapshot.status)) {
+          onError(snapshot, null);
+          return;
+        }
+        window.setTimeout(tick, intervalMs);
+      } catch (error) {
+        onError(null, error);
+      }
+    };
+    window.setTimeout(tick, intervalMs);
+  }
+
+  function setSubmitBusyLabel(submitButton, label) {
+    if (!submitButton) return;
+    submitButton.disabled = true;
+    submitButton.textContent = label;
+  }
+
   $("#loginForm").addEventListener("submit", (event) => { event.preventDefault(); login("customer_owner"); });
   document.querySelectorAll("[data-demo-role]").forEach((button) => button.addEventListener("click", () => login(button.dataset.demoRole)));
   $("#logoutButton").addEventListener("click", logout);
@@ -458,7 +485,7 @@
             input: { evidenceId: "EVD-PCF-DATAPACK-001", templateVersion: String(formData.get("templateVersion") || "PCF-DATA-PACK-1.0"), supportFileCount, filename: file?.name || "Lumino_PCF_数据采集模板_HRC-01.xlsx" },
           }, { actor: roleConfig[state.role].name });
           const power = assetRegistry.get("REC-HX-POWER-2026Q3");
-          const completed = agentTaskEngine.simulateSuccess(task.id, {
+          const pendingResult = {
             proposals: [{
               proposalId: "PROP-PCF-POWER-BIND",
               assetId: "REC-HX-POWER-2026Q3",
@@ -472,21 +499,40 @@
               binding: { id: "BIND-REC-POWER-PCF", serviceId: "pcf", caseId: "PCF-2026-001", usagePurpose: "产品活动数据", scopeId: "PRD-HRC-01" },
             }],
             summary: "模板结构校验通过；提出 PCF 服务绑定待确认",
+          };
+          setSubmitBusyLabel(submitButton, "校验中…");
+          toast(`Agent 任务 ${task.id} 已提交，正在轮询…`);
+          runAgentTaskWithPolling({
+            taskId: task.id,
+            pendingResult,
+            onStatus: (snapshot) => setSubmitBusyLabel(submitButton, snapshot.status === "PROCESSING" ? "处理中…" : "提交中…"),
+            onReady: (completed) => {
+              try {
+                if (!assetRegistry.get("REC-HX-POWER-2026Q3")) {
+                  window.LuminoProposalBridge.applyTaskResult(assetRegistry, completed, { tenantId: "TNT-0018", ownerOrganizationId: "ORG-HX-001" });
+                } else if (!assetRegistry.bindings({ id: "BIND-REC-POWER-PCF" }).length) {
+                  assetRegistry.bind({
+                    id: "BIND-REC-POWER-PCF", serviceId: "pcf", caseId: "PCF-2026-001", assetId: "REC-HX-POWER-2026Q3",
+                    usagePurpose: "产品活动数据", scopeId: "PRD-HRC-01", status: "PROPOSED",
+                  }, { actor: "PCF Agent", role: "agent", reason: `Agent 任务 ${completed.id} 提出 PCF 绑定` });
+                }
+                moveWorkflow("EVD-PCF-DATAPACK-001", ["SECURITY_SCANNED", "PARSED"], `PCF Agent 任务 ${completed.id} 完成（proposal_only）`, { confirmationScope: "pcf-only", importedRecords: 16, supportFileCount, assetId: "EVD-HX-POWER-2026Q3", agentTaskId: completed.id });
+                if (workflowEngine.get("PCF-2026-001")?.status === "SCOPING") moveWorkflow("PCF-2026-001", ["COLLECTING"], "开始采集 PCF 活动数据");
+                moveWorkflow("PCF-2026-001", ["NEEDS_CONFIRMATION"], "PCF Agent 已提出待确认服务绑定");
+                state.currentService = "pcf"; state.page = "pcf-data"; persistPortalState(); state.actionBusy = false; closeDrawer(); render();
+                toast("数据包校验任务已完成：仅生成待确认绑定，不会自动确认 PCF 事实。");
+              } catch (error) {
+                state.actionBusy = false;
+                if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }
+                toast(error.message || "PCF 绑定写入失败");
+              }
+            },
+            onError: (snapshot, error) => {
+              state.actionBusy = false;
+              if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }
+              toast(error?.message || snapshot?.errorMessage || "PCF 模板校验任务失败");
+            },
           });
-          // Ensure power asset exists as PROPOSED/NEEDS path only when missing; binding is the main proposal.
-          if (!assetRegistry.get("REC-HX-POWER-2026Q3")) {
-            window.LuminoProposalBridge.applyTaskResult(assetRegistry, completed, { tenantId: "TNT-0018", ownerOrganizationId: "ORG-HX-001" });
-          } else if (!assetRegistry.bindings({ id: "BIND-REC-POWER-PCF" }).length) {
-            assetRegistry.bind({
-              id: "BIND-REC-POWER-PCF", serviceId: "pcf", caseId: "PCF-2026-001", assetId: "REC-HX-POWER-2026Q3",
-              usagePurpose: "产品活动数据", scopeId: "PRD-HRC-01", status: "PROPOSED",
-            }, { actor: "PCF Agent", role: "agent", reason: `Agent 任务 ${completed.id} 提出 PCF 绑定` });
-          }
-          moveWorkflow("EVD-PCF-DATAPACK-001", ["SECURITY_SCANNED", "PARSED"], `PCF Agent 任务 ${completed.id} 完成（proposal_only）`, { confirmationScope: "pcf-only", importedRecords: 16, supportFileCount, assetId: "EVD-HX-POWER-2026Q3", agentTaskId: completed.id });
-          if (workflowEngine.get("PCF-2026-001")?.status === "SCOPING") moveWorkflow("PCF-2026-001", ["COLLECTING"], "开始采集 PCF 活动数据");
-          moveWorkflow("PCF-2026-001", ["NEEDS_CONFIRMATION"], "PCF Agent 已提出待确认服务绑定");
-          state.currentService = "pcf"; state.page = "pcf-data"; persistPortalState(); state.actionBusy = false; closeDrawer(); render();
-          toast("数据包校验任务已完成：仅生成待确认绑定，不会自动确认 PCF 事实。");
         } catch (error) {
           state.actionBusy = false;
           if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }
@@ -532,7 +578,7 @@
             input: { evidenceId, filename, facilityAssetId, year: state.year, quarter: state.quarter },
           }, { actor: roleConfig[state.role].name });
 
-          const completed = agentTaskEngine.simulateSuccess(task.id, {
+          const pendingResult = {
             proposals: [{
               proposalId: `PROP-${activityAssetId}`,
               assetId: activityAssetId,
@@ -547,21 +593,40 @@
               binding: { id: bindingId, serviceId: "cbam", caseId: `CBAM-${state.year}-${state.quarter}`, usagePurpose: "季度直接排放", scopeId: facilityAssetId },
             }],
             summary: "已从账单提取天然气用量，等待企业确认",
+          };
+          setSubmitBusyLabel(submitButton, "提取中…");
+          toast(`Agent 任务 ${task.id} 已提交（${serialNo}），正在轮询状态…`);
+          runAgentTaskWithPolling({
+            taskId: task.id,
+            pendingResult,
+            onStatus: (snapshot) => setSubmitBusyLabel(submitButton, snapshot.status === "PROCESSING" ? "Agent 处理中…" : "任务提交中…"),
+            onReady: (completed) => {
+              try {
+                window.LuminoProposalBridge.applyTaskResult(assetRegistry, completed, {
+                  tenantId: "TNT-0018",
+                  ownerOrganizationId: "ORG-HX-001",
+                  reason: "Agent 任务产出待确认活动数据提议",
+                });
+                moveWorkflow(evidenceId, ["PARSED"], `Agent 任务 ${completed.id} 已就绪（proposal_only）`, { agentTaskId: completed.id, activityAssetId, bindingId });
+                state.uploadAdded = true;
+                persistPortalState();
+                state.actionBusy = false;
+                closeDrawer(); render();
+                toast(completed.status === "READY_PARTIAL"
+                  ? "材料已上传；Agent 仅部分提取成功，请核对后确认事实。"
+                  : "轮询完成。Agent 已提交待确认提议，不会自动写成正式事实。");
+              } catch (error) {
+                state.actionBusy = false;
+                if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }
+                toast(error.message || "写入提议失败");
+              }
+            },
+            onError: (snapshot, error) => {
+              state.actionBusy = false;
+              if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }
+              toast(error?.message || snapshot?.errorMessage || "Agent 提取任务失败");
+            },
           });
-          window.LuminoProposalBridge.applyTaskResult(assetRegistry, completed, {
-            tenantId: "TNT-0018",
-            ownerOrganizationId: "ORG-HX-001",
-            reason: "Agent 任务产出待确认活动数据提议",
-          });
-          moveWorkflow(evidenceId, ["PARSED"], `Agent 任务 ${completed.id} 已就绪（proposal_only）`, { agentTaskId: completed.id, activityAssetId, bindingId });
-
-          state.uploadAdded = true;
-          persistPortalState();
-          state.actionBusy = false;
-          closeDrawer(); render();
-          toast(completed.status === "READY_PARTIAL"
-            ? "材料已上传；Agent 仅部分提取成功，请核对后确认事实。"
-            : "材料已上传。Agent 已提交待确认提议，不会自动写成正式事实。");
         } catch (error) {
           state.actionBusy = false;
           if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }

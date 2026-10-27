@@ -4,7 +4,7 @@
   if (root) root.LuminoPublicServices = services;
 })(typeof window !== "undefined" ? window : globalThis, function (contract) {
   "use strict";
-  const base = contract || (typeof require === "function" ? require("../../portal/runtime/service-contract.js") : {});
+  const base = contract || (typeof require === "function" ? require("../../../packages/shared/service-contract.js") : {});
   const reviewedAt = "2026-10-27";
   const withBase = (id, detail) => Object.freeze({ ...base[id], reviewedAt, ...detail });
   return Object.freeze({

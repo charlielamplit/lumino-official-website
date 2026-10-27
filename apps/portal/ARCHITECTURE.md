@@ -16,7 +16,7 @@
 | `packages/agent/runtime/agent-task-engine.js` | Agent 任务状态机（幂等 serialNo） | 正式事实确认 |
 | `packages/agent/runtime/proposal-bridge.js` | 任务结果 → PROPOSED 资产／绑定 | confirm／lock |
 | `packages/agent/schemas/*.schema.json` | 资产、绑定、提议、快照、转换、计算运行契约 | 运行时逻辑 |
-| `runtime/service-contract.js` | 公开服务契约与对外声明字段 | 门户会话状态 |
+| `packages/shared/service-contract.js` | 公开服务契约（site／portal 共用） | 门户会话状态 |
 | `runtime/portal-config.js` | 角色、导航、年度 Mock、门户状态、工作流与资产种子 | 页面模板与事件监听 |
 | `runtime/asset-view-model.js` | 企业数据资产的授权只读投影 | 页面 DOM 与写命令 |
 | `runtime/shared-center-view-model.js` | 跨服务任务与受控交付物的授权只读投影 | 平行工作流状态与页面 DOM |
@@ -37,7 +37,7 @@
 4. `../../packages/agent/runtime/capability-catalog.js`
 5. `../../packages/agent/runtime/agent-task-engine.js`
 6. `../../packages/agent/runtime/proposal-bridge.js`
-7. `runtime/service-contract.js`
+7. `../../packages/shared/service-contract.js`
 8. `runtime/portal-permissions.js`
 9. `runtime/portal-config.js`（创建 `assetRegistry` 与 `agentTaskEngine`）
 10. `runtime/asset-view-model.js`
