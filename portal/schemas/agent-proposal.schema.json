@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumino.example/schemas/agent-proposal/0.1.0",
+  "title": "Lumino Agent Data Proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["proposalId", "targetAssetType", "sourceAssetIds", "proposedPatch", "agentId", "modelVersion", "ruleOrPromptVersion", "createdAt", "reviewStatus"],
+  "properties": {
+    "proposalId": { "type": "string" },
+    "targetAssetType": { "type": "string" },
+    "targetAssetId": { "type": ["string", "null"] },
+    "sourceAssetIds": { "type": "array", "minItems": 1, "items": { "type": "string" }, "uniqueItems": true },
+    "proposedPatch": { "type": "object" },
+    "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "agentId": { "type": "string" },
+    "modelVersion": { "type": "string" },
+    "ruleOrPromptVersion": { "type": "string" },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "reviewStatus": { "type": "string", "enum": ["PENDING", "ACCEPTED", "MODIFIED", "REJECTED"] },
+    "reviewedBy": { "type": ["string", "null"] },
+    "reviewedAt": { "type": ["string", "null"], "format": "date-time" },
+    "reviewReason": { "type": ["string", "null"] }
+  }
+}

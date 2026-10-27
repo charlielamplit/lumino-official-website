@@ -83,3 +83,22 @@ test("年度状态只由子对象派生并返回开放阻塞", () => {
   assert.deepEqual(summary.blockers, ["FND-Q3"]);
   assert.equal(workflow.get("PKG-Q3").status, "COLLECTING");
 });
+
+test("PCF 服务案件只能按范围、采集、确认、计算、复核和报告顺序推进", () => {
+  const workflow = engine();
+  workflow.create({ id: "PCF-1", type: "serviceCase", status: "SCOPING", metadata: { serviceId: "pcf" } });
+  assert.throws(() => workflow.transition("PCF-1", "CALCULATING", { actor: "周岚", reason: "尝试跳过采集与确认" }), { code: "ILLEGAL_TRANSITION" });
+  workflow.transitionPath("PCF-1", ["COLLECTING", "NEEDS_CONFIRMATION", "CALCULATING", "EXPERT_REVIEW", "DELIVERABLE_READY"], { actor: "周岚", role: "customer_owner", reason: "完成 PCF 最小闭环" });
+  assert.equal(workflow.get("PCF-1").status, "DELIVERABLE_READY");
+  assert.equal(workflow.get("PCF-1").metadata.serviceId, "pcf");
+  assert.equal(workflow.events({ objectId: "PCF-1" }).length, 6);
+});
+
+test("跨服务复用材料仍保留独立服务事实", () => {
+  const workflow = engine();
+  workflow.create({ id: "EVD-SHARED", type: "evidence", status: "ACCEPTED", metadata: { serviceId: "pcf", referencedBy: ["pcf", "cbam"] } });
+  workflow.create({ id: "FACT-PCF", type: "fact", status: "CONFIRMED", dependsOn: ["EVD-SHARED"], metadata: { serviceId: "pcf" } });
+  workflow.create({ id: "FACT-CBAM", type: "fact", status: "NEEDS_CONFIRMATION", dependsOn: ["EVD-SHARED"], metadata: { serviceId: "cbam" } });
+  assert.equal(workflow.get("FACT-PCF").status, "CONFIRMED");
+  assert.equal(workflow.get("FACT-CBAM").status, "NEEDS_CONFIRMATION");
+});

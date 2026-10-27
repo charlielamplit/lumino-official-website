@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumino.example/schemas/service-binding/0.1.0",
+  "title": "Lumino Service Asset Binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "tenantId", "serviceId", "caseId", "assetId", "assetRevision", "assetVersionId", "status", "revision", "createdAt", "createdBy"],
+  "properties": {
+    "id": { "type": "string" },
+    "tenantId": { "type": "string" },
+    "serviceId": { "type": "string" },
+    "caseId": { "type": "string" },
+    "assetId": { "type": "string" },
+    "assetRevision": { "type": "integer", "minimum": 1 },
+    "assetVersionId": { "type": "string" },
+    "usagePurpose": { "type": "string" },
+    "scopeId": { "type": ["string", "null"] },
+    "included": { "type": "boolean" },
+    "inclusionReason": { "type": "string" },
+    "transformationId": { "type": ["string", "null"] },
+    "allocationRuleId": { "type": ["string", "null"] },
+    "status": { "type": "string", "enum": ["PROPOSED", "PENDING_CONFIRMATION", "CONFIRMED", "REJECTED", "SUPERSEDED"] },
+    "revision": { "type": "integer", "minimum": 1 },
+    "snapshotId": { "type": ["string", "null"] },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "createdBy": { "type": "string" },
+    "createdByRole": { "type": "string" },
+    "confirmedBy": { "type": "string" },
+    "confirmedAt": { "type": "string", "format": "date-time" },
+    "confirmationBasis": { "type": "string" }
+  }
+}

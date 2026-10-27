@@ -1077,7 +1077,7 @@ class Component extends DCLogic {
       ] },
       'dist-M':{ title:'判定 M · 必须实测 ' + sc.dist.M + ' 个', note:'最不利路径。M 的数量直接决定服务费敞口上限。', rows:dispRows('M') },
       'dist-R':{ title:'判定 R · 可沿用 ' + sc.dist.R + ' 个', note:'沿用上期已核验结果，本期不重复收资、不重复收费。', rows:dispRows('R') },
-      'dist-F':{ title:'判定 F · 用默认值 ' + sc.dist.F + ' 个', note:'风险自留路径。默认值逐年加价【TODO-核实】。', rows:dispRows('F') }
+      'dist-F':{ title:'判定 F · 用默认值 ' + sc.dist.F + ' 个', note:'风险自留路径。默认值逐年加价【按申报期核对】。', rows:dispRows('F') }
     };
     const dd = st.drawer ? D[st.drawer] : null;
 
@@ -1154,7 +1154,7 @@ class Component extends DCLogic {
       })),
       yearLabel: String(year),
       periodEffect: st.periodKind === '确定期'
-        ? '→ ' + year + ' 确定期：产生实际缴费义务，缺省值加价条款适用【TODO-核实】。首次申报截止 ' + (year + 1) + '-05-31。'
+        ? '→ ' + year + ' 确定期：产生实际缴费义务，缺省值加价条款适用【按申报期核对】。首次申报截止 ' + (year + 1) + '-05-31。'
         : '→ ' + year + ' 过渡期补报：只报告不缴费，口径要求较宽。',
       periodStamp: year + ' · ' + st.periodKind,
       pasteText:st.pasteText,
@@ -1233,7 +1233,7 @@ class Component extends DCLogic {
         { label:'实测口径 · 699 张', value:'¥ 427,998', fg:'#0A4F3A' },
         { label:'差额 · 290 张', value:'¥ 177,567', fg:'#07110E' },
         { label:'排放量 默认 2,996 / 实测 2,118 tCO₂e', value:'差 878', fg:'#46524E' },
-        { label:'证书价 € 78.50 = ¥ 612.30 · fx 7.80', value:'机制【TODO-核实】', fg:'#8A6A00' }
+        { label:'证书价 € 78.50 = ¥ 612.30 · fx 7.80', value:'机制【按申报期核对】', fg:'#8A6A00' }
       ],
       drawerOpen: !!dd, drawerTitle: dd ? dd.title : '', drawerNote: dd ? dd.note : '', drawerRows: dd ? dd.rows : [],
       closeDrawer:() => this.setState({ drawer:null })

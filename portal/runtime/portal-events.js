@@ -19,6 +19,7 @@
   $("#roleSelect").addEventListener("change", (event) => {
     state.role = event.target.value;
     if (customerRoles.has(state.role)) { state.year = "2026"; state.quarter = "Q3"; }
+    state.currentService = null;
     state.page = defaultPages[state.role];
     render();
     toast(`已切换为${iconLabel(state.role)}。正式产品将由账号权限决定。`);
@@ -79,11 +80,27 @@
         action: drawerTrigger.dataset.drawerAction,
         submitLabel: drawerTrigger.dataset.drawerSubmit,
         flow: drawerTrigger.dataset.flow,
+        serviceId: drawerTrigger.dataset.serviceId,
       });
       return;
     }
+    const serviceEntry = event.target.closest("[data-service-enter]");
+    if (serviceEntry) {
+      setCustomerDestination(serviceEntry.dataset.serviceEnter, serviceEntry.dataset.pageTarget);
+      persistPortalState(); render();
+      $("#sidebar").classList.remove("open");
+      $("#main").focus({ preventScroll: true });
+      return;
+    }
     const nav = event.target.closest("[data-page]");
-    if (nav) { state.page = nav.dataset.page; render(); $("#sidebar").classList.remove("open"); $("#mobileMenu").setAttribute("aria-expanded", "false"); $("#mobileMenu").setAttribute("aria-label", "打开导航"); $("#main").focus({ preventScroll: true }); return; }
+    if (nav) {
+      const page = nav.dataset.page;
+      if (globalCustomerPages.has(page)) { state.currentService = null; state.page = page; }
+      else if (servicePages.has(page)) state.page = page;
+      else state.page = page;
+      persistPortalState(); render(); closeDrawer();
+      $("#sidebar").classList.remove("open"); $("#mobileMenu").setAttribute("aria-expanded", "false"); $("#mobileMenu").setAttribute("aria-label", "打开导航"); $("#main").focus({ preventScroll: true }); return;
+    }
     const answer = event.target.closest("[data-answer]");
     if (answer) {
       if (isLockedYear()) { toast("锁定年度不能原位修改；请先创建更正申请。"); return; }
@@ -111,6 +128,70 @@
     const customerAction = event.target.closest("[data-action]");
     if (customerAction) {
       const action = customerAction.dataset.action;
+      if (action === "pcf-confirm-scope") { moveWorkflow("PCF-2026-001", ["COLLECTING"], "客户确认 PCF 核算目标和期间"); state.page = "pcf-boundary"; persistPortalState(); render(); toast("核算目标已确认。下一步确认系统边界和主要输入。"); }
+      if (action === "pcf-confirm-boundary") { state.page = "pcf-data"; persistPortalState(); render(); toast("边界建议已记录。请上传活动数据和证明材料。"); }
+      if (action === "pcf-confirm-proposal") {
+        try {
+          const actor = { ...workflowActor(), reason: "确认 PCF 使用企业购入电力资产", basis: "核对期间、产品用途与证据引用" };
+          ["BIND-REC-POWER-PCF", "BIND-EVD-POWER-PCF"].forEach((bindingId) => {
+            const binding = assetRegistry.bindings({ id: bindingId })[0];
+            if (binding && ["PROPOSED", "PENDING_CONFIRMATION"].includes(binding.status)) {
+              assetRegistry.confirmBinding(bindingId, actor);
+            }
+          });
+          ensureWorkflowObject({ id: "FACT-PCF-001-ELECTRICITY", type: "fact", status: "MISSING", owner: roleConfig[state.role].name, year: "2026", scope: "上海一厂购入电力", metadata: { serviceId: "pcf", assetId: "REC-HX-POWER-2026Q3", assetVersionId: assetRegistry.get("REC-HX-POWER-2026Q3")?.versionId } });
+          moveWorkflow("FACT-PCF-001-ELECTRICITY", ["PROPOSED", "NEEDS_CONFIRMATION", "CONFIRMED"], "用户独立确认 PCF 服务绑定", { evidenceId: "EVD-HX-POWER-2026Q3", assetId: "REC-HX-POWER-2026Q3" });
+          if (["SCOPING", "COLLECTING"].includes(workflowEngine.get("PCF-2026-001")?.status)) moveWorkflow("PCF-2026-001", ["NEEDS_CONFIRMATION"], "进入 PCF 绑定确认");
+          moveWorkflow("PCF-2026-001", ["CALCULATING"], "PCF 服务绑定已确认"); state.page = "pcf-results"; persistPortalState(); render(); toast("PCF 绑定已确认；CBAM 的确认状态不受影响。");
+        } catch (error) { toast(error.message); }
+      }
+      if (action === "pcf-retry-calculation") { state.pcfCalculationFailed = false; render(); toast("排放因子已重新加载，可以再次运行计算。"); }
+      if (action === "pcf-run-calculation") {
+        try {
+          const actor = { ...workflowActor(), reason: "锁定 PCF 输入快照并运行确定性计算" };
+          const powerBinding = assetRegistry.bindings({ serviceId: "pcf", assetId: "REC-HX-POWER-2026Q3" })[0];
+          const evidenceBinding = assetRegistry.bindings({ serviceId: "pcf", assetId: "EVD-HX-POWER-2026Q3" })[0];
+          const bindingIds = [powerBinding?.id, evidenceBinding?.id].filter(Boolean);
+          if (!assetRegistry.getSnapshot("SNAP-PCF-HRC-01")) {
+            assetRegistry.createSnapshot({
+              id: "SNAP-PCF-HRC-01",
+              tenantId: "TNT-0018",
+              serviceId: "pcf",
+              caseId: "PCF-2026-001",
+              bindingIds,
+              transformationIds: ["ALLOC-HRC-ELECTRICITY@1"],
+              status: "CURRENT",
+            }, actor);
+          }
+          if (!assetRegistry.getCalculationRun("ARUN-PCF-001")) {
+            assetRegistry.createCalculationRun({
+              id: "ARUN-PCF-001",
+              tenantId: "TNT-0018",
+              serviceId: "pcf",
+              caseId: "PCF-2026-001",
+              snapshotId: "SNAP-PCF-HRC-01",
+              status: "SUCCEEDED",
+              ruleVersion: "CN-EF-2026.1",
+              workflowObjectId: "RUN-PCF-001",
+              resultSummary: { total: "2.18", unit: "tCO2e/t" },
+            }, actor);
+          }
+          assetRegistry.markCurrent("ARUN-PCF-001", { ...workflowActor(), reason: "设为当前 PCF 计算结果" });
+          ensureWorkflowObject({ id: "RUN-PCF-001", type: "calculationRun", status: "QUEUED", owner: "PCF Agent", year: "2026", dependsOn: ["FACT-PCF-001-ELECTRICITY"], metadata: { serviceId: "pcf", rulepack: "CN-EF-2026.1", assetSnapshotId: "SNAP-PCF-HRC-01", assetRunId: "ARUN-PCF-001" } });
+          moveWorkflow("RUN-PCF-001", ["RUNNING", "SUCCEEDED", "CURRENT"], "使用确认资产版本和固定因子集完成 PCF Run 01");
+          moveWorkflow("PCF-2026-001", ["EXPERT_REVIEW"], "确定性计算草稿已生成并进入专家复核"); state.page = "pcf-report"; persistPortalState(); render(); toast("PCF 计算已生成，输入快照 SNAP-PCF-HRC-01 已锁定资产版本。");
+        } catch (error) { toast(error.message); }
+      }
+      if (action === "pcf-complete-review") {
+        try {
+          if (assetRegistry.getSnapshot("SNAP-PCF-HRC-01")?.status !== "LOCKED") {
+            assetRegistry.lockSnapshot("SNAP-PCF-HRC-01", { ...workflowActor(), reason: "专家复核完成，锁定报告输入快照" });
+          }
+          moveWorkflow("PCF-2026-001", ["DELIVERABLE_READY"], "专家完成方法、证据与计算血缘复核");
+          ensureWorkflowObject({ id: "PCF-RPT-2026-001-R1", type: "formalArtifact", status: "DRAFT", owner: "PCF 专家", year: "2026", scope: "热轧非合金钢卷", metadata: { serviceId: "pcf", artifactType: "PCF_REPORT", calculationRunId: "RUN-PCF-001", assetSnapshotId: "SNAP-PCF-HRC-01", assetRunId: "ARUN-PCF-001" } });
+          moveWorkflow("PCF-RPT-2026-001-R1", ["GENERATED", "VALIDATED"], "生成 PCF 报告 Rev 1"); persistPortalState(); render(); toast("专家复核已完成，PCF 报告 Rev 1 已就绪。");
+        } catch (error) { toast(error.message); }
+      }
       if (action === "dismiss-onboarding") { state.onboardingDismissed = true; window.localStorage.setItem("lumino-portal-onboarding", "dismissed"); render(); toast("快速引导已收起；可随时从“操作指南”查看完整流程。"); }
       if (action === "start-onboarding") { state.onboardingDismissed = true; window.localStorage.setItem("lumino-portal-onboarding", "dismissed"); render(); document.querySelector(".agent-task")?.scrollIntoView({ behavior: "smooth", block: "center" }); }
       if (action === "replay-onboarding") { state.onboardingDismissed = false; window.localStorage.removeItem("lumino-portal-onboarding"); state.page = "work"; render(); document.querySelector(".onboarding-guide")?.scrollIntoView({ behavior: "smooth", block: "start" }); }
@@ -146,15 +227,46 @@
         try {
           const evidenceId = `EVD-${state.year}-${state.quarter}-GAS`;
           const factId = `FACT-${state.year}-${state.quarter}-GAS`;
-          ensureWorkflowObject({ id: evidenceId, type: "evidence", status: "PARSED", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: "天然气账单" });
+          const gasAssetId = `REC-HX-GAS-${state.year}${state.quarter}`;
+          const actor = { ...workflowActor(), reason: "确认江苏二厂天然气提取结果并写入企业资产池" };
+          if (!assetRegistry.get(evidenceId)) {
+            assetRegistry.register({
+              id: evidenceId, type: "evidence", status: "CONFIRMED", tenantId: "TNT-0018", ownerOrganizationId: "ORG-HX-001",
+              name: `江苏二厂 ${state.year} ${state.quarter} 天然气账单`,
+              subjectRefs: { facilityId: "FAC-JS-02" },
+              temporal: { periodStart: `${state.year}-07-01`, periodEnd: `${state.year}-09-30`, recordedAt: new Date().toISOString() },
+              payload: { fileName: `江苏二厂天然气账单_${state.year}-09.pdf`, documentType: "energy_invoice", mediaType: "application/pdf" },
+              access: { confidentiality: "sensitive", visibility: "enterprise", allowedRoles: [], metadataVisible: true },
+            }, { ...actor, role: "customer_owner", reason: "登记天然气证据资产" });
+          }
+          if (!assetRegistry.get(gasAssetId)) {
+            assetRegistry.register({
+              id: gasAssetId, type: "energyConsumption", status: "NEEDS_CONFIRMATION", tenantId: "TNT-0018", ownerOrganizationId: "ORG-HX-001",
+              name: "江苏二厂购入天然气",
+              subjectRefs: { facilityId: "FAC-JS-02" },
+              temporal: { periodStart: `${state.year}-07-01`, periodEnd: `${state.year}-09-30`, recordedAt: new Date().toISOString() },
+              payload: { metricCode: "energy.natural_gas.purchased", originalValue: "18420", originalUnit: "Nm3", normalizedValue: "18420", normalizedUnit: "Nm3", dataOrigin: "invoice" },
+              provenance: { sourceType: "agent-extraction", sourceAssetIds: [evidenceId], extractionRuleVersion: "extract-gas@1.0.0" },
+              access: { confidentiality: "sensitive", visibility: "enterprise", allowedRoles: [], metadataVisible: true },
+            }, { ...actor, role: "customer_owner", reason: "登记天然气活动数据" });
+          }
+          if (assetRegistry.get(gasAssetId)?.status !== "CONFIRMED") {
+            assetRegistry.confirm(gasAssetId, { ...actor, role: "customer_owner", basis: "核对账单账期、设施与用量" });
+          }
+          const gasBindingId = `BIND-REC-GAS-CBAM-${state.year}${state.quarter}`;
+          if (!assetRegistry.bindings({ id: gasBindingId }).length) {
+            assetRegistry.bind({ id: gasBindingId, serviceId: "cbam", caseId: `CBAM-${state.year}-${state.quarter}`, assetId: gasAssetId, usagePurpose: "季度直接排放", scopeId: "FAC-JS-02" }, actor);
+            assetRegistry.confirmBinding(gasBindingId, { ...actor, role: "customer_owner", basis: "确认纳入 CBAM 季度核算" });
+          }
+          ensureWorkflowObject({ id: evidenceId, type: "evidence", status: "PARSED", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: "天然气账单", metadata: { assetId: evidenceId, activityAssetId: gasAssetId, facilityAssetId: "FAC-JS-02" } });
           moveWorkflow(evidenceId, ["CLASSIFIED", "LINKED", "REVIEWED", "ACCEPTED"], "项目协调人确认证据的账期、设施与提取值");
-          ensureWorkflowObject({ id: factId, type: "fact", status: "MISSING", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: "天然气用量" });
-          moveWorkflow(factId, ["PROPOSED", "NEEDS_CONFIRMATION", "CONFIRMED"], "已将通过复核的证据确认为本期业务事实", { evidenceId });
+          ensureWorkflowObject({ id: factId, type: "fact", status: "MISSING", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: "天然气用量", metadata: { assetId: gasAssetId } });
+          moveWorkflow(factId, ["PROPOSED", "NEEDS_CONFIRMATION", "CONFIRMED"], "已将通过复核的证据确认为本期业务事实", { evidenceId, assetId: gasAssetId });
           workflowEngine.invalidateDependents(factId, { ...workflowActor(), reason: `事实 ${factId} 已确认，原当前计算版本失效` });
           const runId = `RUN-05-${state.year}-${state.quarter}`;
-          ensureWorkflowObject({ id: runId, type: "calculationRun", status: "QUEUED", owner: "王晨", year: state.year, quarter: state.quarter, dependsOn: [factId], metadata: { rulepack: `EU-CBAM-${state.year}.1` } });
+          ensureWorkflowObject({ id: runId, type: "calculationRun", status: "QUEUED", owner: "王晨", year: state.year, quarter: state.quarter, dependsOn: [factId], metadata: { rulepack: `EU-CBAM-${state.year}.1`, activityAssetId: gasAssetId } });
           moveWorkflow(runId, ["RUNNING", "SUCCEEDED", "CURRENT"], "以已确认事实创建新计算版本");
-          state.factConfirmed = true; persistPortalState(); render(); toast("提取结果已确认；旧计算版本已失效，Run 05 成为当前版本。");
+          state.factConfirmed = true; persistPortalState(); render(); toast("提取结果已写入企业资产池并确认；旧计算版本已失效，Run 05 成为当前版本。");
         } catch (error) { toast(error.message); }
       }
       if (action === "resolve-finding") { state.findingChoiceOpen = true; render(); document.querySelector(".decision-panel")?.scrollIntoView({ behavior: "smooth", block: "center" }); }
@@ -234,6 +346,57 @@
       const id = activeDrawerForm.dataset.drawerForm;
       const formData = new FormData(activeDrawerForm);
       const title = $("#drawerTitle").textContent;
+      if (id === "service-consultation") {
+        const phone = String(formData.get("phone") || "").trim();
+        const email = String(formData.get("email") || "").trim();
+        if (!phone && !email) {
+          state.actionBusy = false;
+          if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }
+          toast("请至少填写联系电话或联系邮箱。"); return;
+        }
+        if (!state.online) {
+          state.actionBusy = false;
+          if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }
+          toast("当前离线，咨询内容已保留在表单中；联网后可再次提交。"); return;
+        }
+        const serviceId = String(formData.get("serviceId") || "");
+        const duplicate = state.consultationRequests.some((request) => request.serviceId === serviceId && request.status === "submitted");
+        if (duplicate) {
+          state.actionBusy = false; closeDrawer();
+          toast("该服务的咨询已提交，无需重复发送。"); return;
+        }
+        state.consultationRequests.push({ id: `CONSULT-${Date.now()}`, serviceId, portalRole: state.role, requestType: "service_consultation", organization: { ...state.organization }, context: { serviceId, portalRole: state.role, requestType: "service_consultation", organization: { ...state.organization } }, user: roleConfig[state.role].name, needs: String(formData.get("needs") || ""), preferredAt: String(formData.get("preferredAt") || ""), phone, email, status: "submitted" });
+        persistPortalState(); state.actionBusy = false; closeDrawer(); render();
+        toast("咨询请求已在原型中记录，顾问将按期望时间联系。"); return;
+      }
+      if (id === "pcf-upload") {
+        const file = formData.get("file");
+        const supportFileCount = activeDrawerForm.querySelector('[name="supportFiles"]')?.files?.length || 0;
+        ensureWorkflowObject({
+          id: "EVD-PCF-DATAPACK-001",
+          type: "evidence",
+          status: "UPLOADED",
+          owner: roleConfig[state.role].name,
+          year: "2026",
+          scope: "PCF 数据包",
+          metadata: {
+            serviceId: "pcf",
+            referencedBy: ["pcf", "cbam"],
+            filename: file?.name || "Lumino_PCF_数据采集模板_HRC-01.xlsx",
+            materialType: "PCF 数据包",
+            templateVersion: String(formData.get("templateVersion") || "PCF-DATA-PACK-1.0"),
+            supportFileCount,
+            assetId: "EVD-HX-POWER-2026Q3",
+            activityAssetId: "REC-HX-POWER-2026Q3",
+            productAssetId: "PRD-HRC-01",
+          },
+        });
+        moveWorkflow("EVD-PCF-DATAPACK-001", ["SECURITY_SCANNED", "PARSED"], "PCF Agent 完成模板结构校验并映射到企业资产池", { confirmationScope: "pcf-only", importedRecords: 16, supportFileCount, assetId: "EVD-HX-POWER-2026Q3" });
+        if (workflowEngine.get("PCF-2026-001")?.status === "SCOPING") moveWorkflow("PCF-2026-001", ["COLLECTING"], "开始采集 PCF 活动数据");
+        moveWorkflow("PCF-2026-001", ["NEEDS_CONFIRMATION"], "PCF Agent 已提出待确认服务绑定");
+        state.currentService = "pcf"; state.page = "pcf-data"; persistPortalState(); state.actionBusy = false; closeDrawer(); render();
+        toast("数据包已映射到企业资产池：电力记录 REC-HX-POWER-2026Q3 待 PCF 独立确认。"); return;
+      }
       if (id === "upload-evidence") {
         const file = formData.get("file");
         if (file && file.size > 30 * 1024 * 1024) {
@@ -243,8 +406,10 @@
           return;
         }
         const evidenceId = `EVD-${state.year}-${state.quarter}-GAS`;
-        ensureWorkflowObject({ id: evidenceId, type: "evidence", status: "UPLOADED", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: String(formData.get("facility") || "设施待确认"), metadata: { filename: file?.name || "demo-evidence.pdf", materialType: String(formData.get("type") || "能源账单") } });
-        moveWorkflow(evidenceId, ["SECURITY_SCANNED", "PARSED"], "文件已通过安全扫描并完成 Agent 提取", { filename: file?.name || "demo-evidence.pdf" });
+        const facilityName = String(formData.get("facility") || "设施待确认");
+        const facilityAsset = assetRegistry.catalog({ tenantId: "TNT-0018", role: state.role, type: "facility" }).find((item) => item.name === facilityName);
+        ensureWorkflowObject({ id: evidenceId, type: "evidence", status: "UPLOADED", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: facilityName, metadata: { filename: file?.name || "demo-evidence.pdf", materialType: String(formData.get("type") || "能源账单"), facilityAssetId: facilityAsset?.id || "FAC-JS-02" } });
+        moveWorkflow(evidenceId, ["SECURITY_SCANNED", "PARSED"], "文件已通过安全扫描并完成 Agent 提取", { filename: file?.name || "demo-evidence.pdf", facilityAssetId: facilityAsset?.id || null });
         state.uploadAdded = true;
         persistPortalState();
         state.actionBusy = false;
@@ -255,9 +420,22 @@
       if (id === "new-product") {
         state.productYears = formData.getAll("productYears");
         state.productCnCodes = String(formData.get("cnCodes") || "").split(/[，,;；\s]+/).map((code) => code.trim()).filter(Boolean);
+        const productName = String(formData.get("productName") || "冷轧非合金钢板");
+        const internalCode = String(formData.get("internalCode") || "CRS-02");
+        const productAssetId = `PRD-${internalCode.replace(/[^A-Za-z0-9]/g, "").toUpperCase() || "NEW"}`;
+        try {
+          if (!assetRegistry.get(productAssetId)) {
+            assetRegistry.register({
+              id: productAssetId, type: "product", status: "NEEDS_CONFIRMATION", tenantId: "TNT-0018", ownerOrganizationId: "ORG-HX-001", name: productName,
+              payload: { internalCode, uiKey: "cold", cnCodes: state.productCnCodes, cnLabel: state.productCnCodes.length ? `CN ${state.productCnCodes.join(" / ")} · 候选待确认` : "CN Code 尚未设置", summary: "尚未添加生产配置", scopeYears: state.productYears },
+              access: { confidentiality: "general", visibility: "enterprise", allowedRoles: [], metadataVisible: true },
+            }, { ...workflowActor(), reason: "新建产品主档" });
+          }
+        } catch (error) { toast(error.message); }
         state.productOverrides.cold = {
-          name: String(formData.get("productName") || "冷轧非合金钢板"),
-          code: String(formData.get("internalCode") || "CRS-02"),
+          name: productName,
+          code: internalCode,
+          assetId: productAssetId,
           cnCandidates: state.productCnCodes,
           scope: state.productYears,
         };
@@ -313,12 +491,22 @@
         if (state.selectedProduct === "cold") state.productYears = selectedYears;
       }
       if (id === "new-facility") {
-        state.facilities.push({
-          name: String(formData.get("facilityName") || "未命名设施"),
-          code: String(formData.get("facilityCode") || `FAC-${state.facilities.length + 3}`),
-          activity: String(formData.get("activity") || "生产活动待补充"),
-          status: String(formData.get("status") || "在建"),
-        });
+        const code = String(formData.get("facilityCode") || `FAC-${state.facilities.length + 3}`);
+        const name = String(formData.get("facilityName") || "未命名设施");
+        const activity = String(formData.get("activity") || "生产活动待补充");
+        const status = String(formData.get("status") || "在建");
+        const assetId = `FAC-${code.replace(/[^A-Za-z0-9]/g, "").toUpperCase() || Date.now()}`;
+        try {
+          if (!assetRegistry.get(assetId)) {
+            assetRegistry.register({
+              id: assetId, type: "facility", status: "NEEDS_CONFIRMATION", tenantId: "TNT-0018", ownerOrganizationId: "ORG-HX-001", name,
+              subjectRefs: { organizationId: "ORG-HX-001" },
+              payload: { internalCode: code, activity, operationalStatus: status },
+              access: { confidentiality: "general", visibility: "enterprise", allowedRoles: [], metadataVisible: true },
+            }, { ...workflowActor(), reason: "新建设施主档" });
+          }
+        } catch (error) { toast(error.message); }
+        state.facilities.push({ name, code, activity, status, assetId });
       }
       if (id === "invite-member") {
         state.invitedMembers.push({
@@ -333,7 +521,17 @@
           name: String(formData.get("organizationName") || state.organization.name),
           code: String(formData.get("organizationCode") || state.organization.code),
           address: String(formData.get("organizationAddress") || state.organization.address),
+          assetId: state.organization.assetId || "ORG-HX-001",
         };
+        try {
+          if (assetRegistry.get("ORG-HX-001")) {
+            assetRegistry.revise("ORG-HX-001", {
+              name: state.organization.name,
+              payload: { legalName: state.organization.name, registrationCode: state.organization.code, address: state.organization.address, country: "CN" },
+              status: "NEEDS_CONFIRMATION",
+            }, { ...workflowActor(), reason: "更新企业法定主体主档" });
+          }
+        } catch (error) { toast(error.message); }
         state.orgEditing = false;
       }
       persistPortalState();

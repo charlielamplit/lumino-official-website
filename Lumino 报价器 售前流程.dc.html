@@ -166,7 +166,7 @@ button{font:inherit;color:inherit;cursor:pointer}
           </table>
         </div>
         <div style="padding:9px 14px;border-top:1px solid #E3E8E6;background:#F4F7F6;display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:#46524E">
-          <span>阈值与覆盖清单口径 <span style="font-family:'IBM Plex Mono',monospace;color:#8A6A00;background:rgba(242,183,5,.14);padding:1px 6px;border-radius:2px">【TODO-核实】</span></span>
+          <span>阈值与覆盖清单口径 <span style="font-family:'IBM Plex Mono',monospace;color:#8A6A00;background:rgba(242,183,5,.14);padding:1px 6px;border-radius:2px">【按申报期核对】</span></span>
           <span>不在清单的 2 项不进入后续核算与计价。</span>
         </div>
       </section>
@@ -296,7 +296,7 @@ button{font:inherit;color:inherit;cursor:pointer}
             </div>
           </sc-if>
           <div style="display:flex;flex-wrap:wrap;gap:6px 20px;padding:9px 18px;border-top:1px solid #E3E8E6;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#67736F">
-            <span>证书价 € 78.50 / 张 <span style="color:#8A6A00;background:rgba(242,183,5,.14);padding:1px 5px;border-radius:2px">【TODO-核实】</span></span>
+            <span>证书价 € 78.50 / 张 <span style="color:#8A6A00;background:rgba(242,183,5,.14);padding:1px 5px;border-radius:2px">【按申报期核对】</span></span>
             <span>汇率 ¥ 8.12 / €</span>
             <span>取值日 2026-08-14</span>
             <span style="color:#46524E">仅为量级估算，不构成承诺</span>
@@ -464,7 +464,7 @@ button{font:inherit;color:inherit;cursor:pointer}
         </div>
         <p style="margin-top:20px;padding-left:16px;border-left:3px solid #0E7C5A;font-size:18px;line-height:1.6;color:#07110E">把生产厂的能耗数据要回来，这件事值 ¥ 349,300。这不是我们的服务费，是您直接少交的钱。</p>
         <div style="margin-top:20px;display:flex;flex-wrap:wrap;gap:8px 24px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#67736F">
-          <span>证书价 € 78.50 / 张【TODO-核实】</span>
+          <span>证书价 € 78.50 / 张【按申报期核对】</span>
           <span>汇率 ¥ 8.12 / €</span>
           <span>取值日 2026-08-14</span>
           <span>仅为量级估算，不构成承诺</span>
@@ -618,7 +618,7 @@ const CN_ROWS = [
   { cn:'7307 19 10', name:'铸铁管件', lines:'14', qty:'15.3', verdict:'覆盖', rule:'C-01' },
   { cn:'7326 90 98', name:'其他钢结构件', lines:'11', qty:'4.7', verdict:'覆盖', rule:'C-01' },
   { cn:'7318 22 00', name:'垫圈', lines:'9', qty:'9.9', verdict:'覆盖', rule:'C-01' },
-  { cn:'7616 99 10', name:'铝制紧固件', lines:'5', qty:'0.4', verdict:'阈值以下', rule:'C-05【TODO-核实】' },
+  { cn:'7616 99 10', name:'铝制紧固件', lines:'5', qty:'0.4', verdict:'阈值以下', rule:'C-05【按申报期核对】' },
   { cn:'3926 90 97', name:'塑料件', lines:'2', qty:'1.1', verdict:'不在清单', rule:'C-09' },
   { cn:'8544 30 00', name:'线束', lines:'1', qty:'0.6', verdict:'不在清单', rule:'C-09' }
 ];
@@ -784,7 +784,7 @@ class Component extends DCLogic {
         tagFg: cover ? '#0A4F3A' : below ? '#8A6A00' : '#46524E',
         tagBg: cover ? '#EDF6F2' : below ? '#FBF4DF' : '#F4F7F6',
         tagBorder: cover ? '#0E7C5A' : below ? '#8A6A00' : '#C6D1CD',
-        ruleFg: r.rule.indexOf('TODO') >= 0 ? '#8A6A00' : '#67736F'
+        ruleFg: r.rule.includes('按申报期核对') ? '#8A6A00' : '#67736F'
       });
     });
 

@@ -335,7 +335,7 @@ const CAVEATS = [
     ask:{zh:'无需动作。以后每期做过的单元都会形成沿用基线，第二次比第一次便宜。',en:'Nothing needed. Each period’s completed units become a baseline, so the second time costs less than the first.'} }
 ];
 
-const UNVERIFIED = [
+const REVIEW_REQUIRED = [
   { zh:'CBAM 证书价格的官方取值来源与发布频率', en:'Official source and release frequency of CBAM certificate prices' },
   { zh:'EUR/CNY 汇率的适用取值日规则', en:'Rule for the applicable EUR/CNY exchange-rate date' },
   { zh:'使用默认值的逐年加价比例', en:'Year-on-year mark-up applied to default values' },
@@ -409,7 +409,7 @@ class Component extends DCLogic {
         };
       }),
       itemsConfirmed:Object.keys(st.items).filter(k => st.items[k]).length,
-      unverified:UNVERIFIED.map((u, i) => ({ n:String(i + 1).padStart(2, '0'), text:u[lang] })),
+      unverified:REVIEW_REQUIRED.map((u, i) => ({ n:String(i + 1).padStart(2, '0'), text:u[lang] })),
       notDecided: st.state === 'open',
       confirmed: st.state === 'confirmed',
       rejected: st.state === 'rejected',

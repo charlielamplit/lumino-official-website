@@ -6,10 +6,14 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  const SCHEMA_VERSION = 1;
-  const defaultStorageKey = "lumino-cbam-workflow-v1";
+  const SCHEMA_VERSION = 2;
+  const defaultStorageKey = "lumino-multiservice-workflow-v2";
 
   const definitions = {
+    serviceCase: {
+      states: ["NOT_STARTED", "SCOPING", "COLLECTING", "NEEDS_CONFIRMATION", "CALCULATING", "EXPERT_REVIEW", "DELIVERABLE_READY", "CLOSED"],
+      transitions: { NOT_STARTED: ["SCOPING"], SCOPING: ["COLLECTING"], COLLECTING: ["NEEDS_CONFIRMATION"], NEEDS_CONFIRMATION: ["CALCULATING", "COLLECTING"], CALCULATING: ["EXPERT_REVIEW", "COLLECTING"], EXPERT_REVIEW: ["DELIVERABLE_READY", "COLLECTING"], DELIVERABLE_READY: ["CLOSED", "COLLECTING"] },
+    },
     productMaster: {
       states: ["DRAFT", "ACTIVE", "SUSPENDED", "RETIRED"],
       transitions: { DRAFT: ["ACTIVE"], ACTIVE: ["SUSPENDED", "RETIRED"], SUSPENDED: ["ACTIVE", "RETIRED"] },

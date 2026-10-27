@@ -5,6 +5,13 @@
   "rewrites": [
     { "source": "/calculator", "destination": "/calculator/index.html" },
     { "source": "/portal", "destination": "/portal/index.html" },
+    { "source": "/knowledge", "destination": "/knowledge/index.html" },
+    { "source": "/services/cbam", "destination": "/services/cbam/index.html" },
+    { "source": "/services/pcf", "destination": "/services/pcf/index.html" },
+    { "source": "/services/esg", "destination": "/services/esg/index.html" },
+    { "source": "/services/ghg-inventory", "destination": "/services/ghg-inventory/index.html" },
+    { "source": "/services/carbon-assets", "destination": "/services/carbon-assets/index.html" },
+    { "source": "/services/export-compliance", "destination": "/services/export-compliance/index.html" },
     { "source": "/quote", "destination": "/Lumino 报价器.dc.html" },
     { "source": "/site",  "destination": "/Lumino 官网.dc.html" }
   ],

@@ -408,7 +408,7 @@ const COPY = {
     s2no:'第二节', s2title:'我们理解的范围', s2colK:'项目', s2colV:'口径',
     scopeRows:[
       { k:'覆盖范围', v:'贵司 2026 申报年度出口至 DE / IT 的钢铁类紧固件与管件，共 9 个 Annex I 商品项。' },
-      { k:'不在范围内', v:'塑料件与线束等 2 类共 11 条报关行项不在 Annex I 覆盖清单内，不进入核算与计价；铝制紧固件 1 项在免征阈值以下【TODO-核实】。' },
+      { k:'不在范围内', v:'塑料件与线束等 2 类共 11 条报关行项不在 Annex I 覆盖清单内，不进入核算与计价；铝制紧固件 1 项在免征阈值以下【按申报期核对】。' },
       { k:'申报义务人', v:'欧盟进口商。我方交付可供其直接申报的数据包与支撑材料，不代为提交。' },
       { k:'生产设施', v:'3 家（玉环本厂 · 代工厂 A · 代工厂 B）。其中 2 家已书面确认，1 家为备选状态。' },
       { k:'生产路线', v:'EAF（电炉）2 家、BF-BOF（高炉转炉）1 家。路线进入归并键，影响排放强度取值。' },
@@ -436,7 +436,7 @@ const COPY = {
     riskTitle:'用默认值申报不等于豁免 —— 这是风险自留',
     riskBody:'按默认值申报的单元（U-06 · 7307 19 10 · F-03 · BF-BOF），残余风险由贵司承担：默认值按最不利口径取值，且逐年加价',
     riskBody2:'；欧盟进口商或核查机构追问时，我方可提供口径说明，但不改变该单元的取值性质。',
-    riskSign:'客户签字确认（接受该单元按默认值申报）', dateLabel:'日期', todo:'【TODO-核实】',
+    riskSign:'客户签字确认（接受该单元按默认值申报）', dateLabel:'日期', todo:'【按申报期核对】',
     s5no:'第五节', s5title:'费用结构', feeTotal:'服务费合计', capLabel:'封顶',
     feeRows:[
       { label:'固定项 · 申报期归档 + CN 归类 + 核查协调', basis:'一次性，含归并、边界初判、口径快照', amount:'¥ 3,200' },
@@ -603,7 +603,7 @@ const CAVEATS = [
     ask:{zh:'无需动作。后续每一期做过的单元都会形成沿用基线，第二次比第一次便宜。',en:'Nothing needed. Each period’s completed units become a baseline, so the second time costs less than the first.'} }
 ];
 
-const UNVERIFIED = [
+const REVIEW_REQUIRED = [
   { zh:'CBAM 证书价格的官方取值来源与发布频率', en:'Official source and release frequency of CBAM certificate prices' },
   { zh:'EUR/CNY 汇率的适用取值日规则', en:'Rule for the applicable EUR/CNY exchange-rate date' },
   { zh:'使用默认值的逐年加价比例', en:'Year-on-year mark-up applied to default values' },
@@ -707,7 +707,7 @@ class Component extends DCLogic {
         bg: c.good ? '#EDF6F2' : '#fff',
         fg: c.good ? '#0A4F3A' : '#0B100E'
       })),
-      unverified:UNVERIFIED.map((u, i) => ({ n:String(i + 1).padStart(2, '0'), text:u[lang] }))
+      unverified:REVIEW_REQUIRED.map((u, i) => ({ n:String(i + 1).padStart(2, '0'), text:u[lang] }))
     };
   }
 }

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumino.example/schemas/transformation/0.2.0",
+  "title": "Lumino Service Transformation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "serviceId", "ruleType", "ruleVersion", "status", "createdAt", "createdBy"],
+  "properties": {
+    "id": { "type": "string" },
+    "tenantId": { "type": ["string", "null"] },
+    "serviceId": { "type": "string" },
+    "caseId": { "type": ["string", "null"] },
+    "ruleType": { "type": "string" },
+    "ruleVersion": { "type": "string" },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "parameters": { "type": "object" },
+    "inputAssetVersionIds": { "type": "array", "items": { "type": "string" } },
+    "status": { "type": "string", "enum": ["ACTIVE", "RETIRED", "SUPERSEDED"] },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "createdBy": { "type": "string" },
+    "createdByRole": { "type": "string" }
+  }
+}

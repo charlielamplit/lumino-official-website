@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#0E7C5A">
-  <title>Lumino · CBAM 工作门户</title>
-  <meta name="description" content="Lumino CBAM 登录后客户与服务团队工作门户交互原型。">
+  <title>Lumino · 企业工作门户</title>
+  <meta name="description" content="Lumino 多服务企业工作门户交互原型。">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20261011-4">
+  <link rel="stylesheet" href="./styles.css?v=20261021-4">
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -28,9 +28,9 @@
     </header>
     <section class="login-story" aria-labelledby="loginTitle">
       <div class="story-copy">
-        <p class="eyebrow">CBAM COMPLIANCE WORKSPACE</p>
-        <h1 id="loginTitle">把复杂申报，<br><span>变成今天能回答的问题。</span></h1>
-        <p>你提供业务事实和现有材料。Lumino Agent 负责理解法规字段、整理证据，并把需要判断的地方交给专家。</p>
+        <p class="eyebrow">LUMINO SERVICE WORKSPACE</p>
+        <h1 id="loginTitle">用 AI 和平台服务，<br><span>重新定义合规核查业务。</span></h1>
+        <p>企业数据沉淀为可复用资产，各项服务在清晰边界内识别、确认、计算和交付。</p>
       </div>
       <div class="trust-note">
         <span aria-hidden="true">✓</span>
@@ -42,7 +42,7 @@
       <div class="login-box">
         <p class="eyebrow green">SECURE PORTAL</p>
         <h2>登录工作门户</h2>
-        <p class="muted">继续处理你的年度 CBAM 项目。</p>
+        <p class="muted">进入统一服务、任务、资料与交付空间。</p>
         <div class="import-notice" id="importNotice" hidden></div>
         <form id="loginForm">
           <label>工作邮箱<input type="email" value="demo@huaxing-steel.cn" autocomplete="email" required></label>
@@ -68,7 +68,7 @@
     <header class="topbar">
       <button class="mobile-menu" id="mobileMenu" type="button" aria-label="打开导航" aria-expanded="false">☰</button>
       <a class="brand" href="../Lumino%20官网.dc.html" aria-label="返回 Lumino 官网"><span>LUMINO</span><i aria-hidden="true"></i></a>
-      <span class="product-name">CBAM 工作门户</span>
+      <span class="product-name">企业工作门户</span>
       <div class="topbar-context">
         <button class="company-switch" type="button"><small id="companyContextLabel">当前企业</small><strong id="companyName">华星钢铁有限公司</strong><span>⌄</span></button>
         <div class="project-period" aria-label="当前项目期间">
@@ -77,6 +77,7 @@
         </div>
       </div>
       <div class="topbar-actions">
+        <button class="resource-button" type="button" data-drawer="resources" data-drawer-label="资源中心">资源</button>
         <button class="icon-button" type="button" aria-label="通知">●<span class="notification-dot"></span></button>
         <button class="profile-button" id="profileButton" type="button"><span id="profileInitial">周</span><span><small id="profileRole">项目协调人</small><strong id="profileName">周岚</strong></span><b>⌄</b></button>
         <button class="logout-button" id="logoutButton" type="button">退出</button>
@@ -128,12 +129,15 @@
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-  <script src="./domain/workflow-engine.js?v=20261011-4" defer></script>
-  <script src="./runtime/portal-config.js?v=20261011-4" defer></script>
-  <script src="./runtime/portal-core.js?v=20261011-4" defer></script>
-  <script src="./pages/customer-pages.js?v=20261011-4" defer></script>
-  <script src="./pages/role-pages.js?v=20261011-4" defer></script>
-  <script src="./runtime/portal-events.js?v=20261011-4" defer></script>
-  <script src="./app.js?v=20261011-4" defer></script>
+  <script src="./domain/workflow-engine.js?v=20261027-2" defer></script>
+  <script src="./domain/data-asset-engine.js?v=20261027-2" defer></script>
+  <script src="./runtime/service-contract.js?v=20261027-2" defer></script>
+  <script src="./runtime/portal-config.js?v=20261027-2" defer></script>
+  <script src="./runtime/portal-core.js?v=20261027-2" defer></script>
+  <script src="./pages/multi-service-pages.js?v=20261027-2" defer></script>
+  <script src="./pages/customer-pages.js?v=20261027-2" defer></script>
+  <script src="./pages/role-pages.js?v=20261027-2" defer></script>
+  <script src="./runtime/portal-events.js?v=20261027-2" defer></script>
+  <script src="./app.js?v=20261027-2" defer></script>
 </body>
 </html>

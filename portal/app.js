@@ -17,8 +17,11 @@
     }
     const demoPage = incoming.get("demoPage");
     const adminUtilityPages = new Set(["org-settings", "annual-setup"]);
-    if (demoPage && (roleConfig[demoRole].nav.some(([id]) => id === demoPage) || (demoRole === "customer_admin" && adminUtilityPages.has(demoPage)))) state.page = demoPage;
+    if (demoPage && (roleConfig[demoRole].nav.some(([id]) => id === demoPage) || (customerRoles.has(demoRole) && (globalCustomerPages.has(demoPage) || servicePages.has(demoPage))) || (demoRole === "customer_admin" && adminUtilityPages.has(demoPage)))) state.page = demoPage;
     render();
+  } else {
+    const sessionRole = window.sessionStorage.getItem("lumino-portal-session-role");
+    if (sessionRole && roleConfig[sessionRole]) login(sessionRole, { restore: true });
   }
   window.addEventListener("online", () => { state.online = true; if (state.loggedIn) render(); toast("网络已恢复，可以继续提交。"); });
   window.addEventListener("offline", () => { state.online = false; if (state.loggedIn) render(); });

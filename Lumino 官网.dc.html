@@ -1,500 +1,153 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="./support.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lumino · 企业绿色合规服务</title>
+  <meta name="description" content="Lumino 以企业数据资产为基础，通过 AI 辅助、确定性计算和专家复核，持续交付可追溯的绿色合规结果。">
+  <link rel="icon" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Fragment+Mono&family=Noto+Sans+SC:wght@400;500;600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="site/marketing.css">
+  <script defer src="site/site-shell.js"></script>
 </head>
 <body>
-<x-dc>
-<helmet data-dc-atomics>
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="alternate icon" href="/favicon.ico">
-
-<title>Lumino · CBAM 合规交付｜钢铁与铝制品出口欧盟</title>
-<meta name="description" content="面向出口方与欧盟进口方的托管式 CBAM 合规服务：取数、核算、专家复核到 Communication Form 交付。">
-<meta property="og:title" content="Lumino · CBAM 合规交付">
-<meta property="og:description" content="托管式 CBAM 合规服务：你提供手上的数据，我们交付可提交、经得起追问的结果。">
-<meta property="og:type" content="website">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-html{scroll-behavior:smooth}
-*{box-sizing:border-box}
-body{margin:0;background:#FFFFFF;color:#0B100E;font-family:"Instrument Sans","PingFang SC","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;font-size:16px;-webkit-font-smoothing:antialiased;text-wrap:pretty}
-h1,h2,h3,p,ul{margin:0}
-h1,h2,h3,h4{text-wrap:balance;font-family:"Archivo","PingFang SC","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif}
-ul{padding:0;list-style:none}
-a{color:inherit;text-decoration:none}
-a.link{color:#0E7C5A;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
-a.link:hover{text-decoration-thickness:2px}
-section[id]{scroll-margin-top:92px}
-a:focus-visible,button:focus-visible{outline:2px solid #0E7C5A;outline-offset:2px;border-radius:3px}
-.on-dark a:focus-visible,.on-dark button:focus-visible{outline-color:#F2B705}
-.skip{position:absolute;left:-9999px}
-.skip:focus{left:24px;top:12px;z-index:100;background:#fff;padding:12px 16px;border:1px solid #E2E8E5;border-radius:3px}
-.nav-desk{display:flex}
-.nav-mob-btn{display:none}
-.nav-mob{display:none;border-top:1px solid #E2E8E5;background:#fff}
-.hero{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,5vw,72px);align-items:center}
-.hero-card{justify-self:end;max-width:520px;width:100%}
-.tl{display:grid;grid-template-columns:repeat(3,1fr)}
-@media (max-width:1023px){.hero{grid-template-columns:1fr}.hero-card{justify-self:stretch;max-width:none}}
-@media (max-width:899px){.fork{grid-template-columns:1fr !important;gap:10px !important}}
-@media (max-width:859px){.nav-desk{display:none}.nav-mob-btn{display:inline-flex}.nav-mob[data-open="true"]{display:block}.tl{grid-template-columns:1fr}.tl>*{padding:22px 0 24px 20px !important;border-right:0 !important;border-bottom:0}}
-@keyframes lum-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-[data-anim]{animation:lum-in .22s ease-out both}
-@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
-</style>
-</helmet>
-
-<div>
-<a class="skip" href="#main">跳到主要内容</a>
-
-<header style="position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);border-bottom:1px solid #E2E8E5">
-  <div style="max-width:1200px;margin:0 auto;padding:0 24px;height:76px;display:flex;align-items:center;gap:28px">
-    <a href="#top" aria-label="Lumino 首页" style="display:flex;align-items:center;flex:none;padding-right:6px">
-      <span style="position:relative;display:inline-block">
-        <span style="font-family:'Instrument Sans',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1;color:#0B100E;white-space:nowrap;display:block">LUMINO</span>
-        <span style="font-family:'Instrument Sans',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1;color:#0E7C5A;white-space:nowrap;position:absolute;left:0;top:0;clip-path:inset(60% 0 0 0)">LUMINO</span>
-        <span style="position:absolute;left:-6.6px;right:-6.6px;top:60%;height:2px;background:#0B100E"></span>
-      </span>
-    </a>
-    <nav class="nav-desk" aria-label="主导航" style="gap:26px;flex:1;align-items:center">
-      <a href="#how" style="font-size:15px;color:#47534F;white-space:nowrap" style-hover="color:#0B100E">服务方式</a>
-      <a href="#cost" style="font-size:15px;color:#47534F;white-space:nowrap" style-hover="color:#0B100E">成本</a>
-      <a href="#scope" style="font-size:15px;color:#47534F;white-space:nowrap" style-hover="color:#0B100E">适用对象</a>
-      <a href="calculator/" style="font-size:15px;color:#0E7C5A;font-weight:500;white-space:nowrap" style-hover="color:#0A4F3A">免费试算</a>
-      <a href="Lumino CBAM 指南.dc.html" style="font-size:15px;color:#47534F;white-space:nowrap" style-hover="color:#0B100E">CBAM 指南</a>
-      <a href="Lumino 关于.dc.html" style="font-size:15px;color:#47534F;white-space:nowrap" style-hover="color:#0B100E">关于</a>
-    </nav>
-    <div style="display:flex;align-items:center;gap:14px;flex:none;margin-left:auto">
-      <a class="nav-desk" href="Lumino 报价器.dc.html" target="_blank" rel="noopener noreferrer" title="Get a quote — 在新标签页打开报价器" style="align-items:center;gap:5px;font-size:15px;color:#47534F;white-space:nowrap" style-hover="color:#0E7C5A">获取报价 <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">↗</span></a>
-      <a class="nav-desk" href="{{ appUrl }}" style="align-items:center;gap:5px;font-size:15px;color:#47534F;white-space:nowrap" style-hover="color:#0E7C5A">登录平台 <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">↗</span></a>
-      <a href="Lumino 联系.dc.html" style="background:#0E7C5A;color:#fff;font-size:15px;font-weight:500;height:44px;padding:0 18px;border-radius:3px;display:inline-flex;align-items:center;white-space:nowrap" style-hover="background:#0A4F3A">预约诊断</a>
-      <button class="nav-mob-btn" type="button" onClick="{{ toggleMenu }}" aria-label="{{ menuLabel }}" aria-expanded="{{ menuExpanded }}" aria-controls="mobile-nav" style="width:44px;height:44px;align-items:center;justify-content:center;background:#fff;border:1px solid #E2E8E5;border-radius:3px;cursor:pointer;flex:none">
-        <span style="display:grid;gap:4px"><i style="display:block;width:16px;height:1.5px;background:#0B100E"></i><i style="display:block;width:16px;height:1.5px;background:#0B100E"></i><i style="display:block;width:16px;height:1.5px;background:#0B100E"></i></span>
-      </button>
-    </div>
-  </div>
-    <div class="nav-mob" data-open="{{ menuOpen }}">
-      <nav id="mobile-nav" aria-label="移动导航" style="max-width:1200px;margin:0 auto;padding:8px 24px 16px;display:grid">
-        <a href="#how" onClick="{{ closeMenu }}" style="font-size:16px;padding:13px 0;border-bottom:1px solid #E2E8E5">服务方式</a>
-        <a href="#cost" onClick="{{ closeMenu }}" style="font-size:16px;padding:13px 0;border-bottom:1px solid #E2E8E5">成本</a>
-        <a href="#scope" onClick="{{ closeMenu }}" style="font-size:16px;padding:13px 0;border-bottom:1px solid #E2E8E5">适用对象</a>
-        <a href="calculator/" style="font-size:16px;padding:13px 0;border-bottom:1px solid #E2E8E5;color:#0E7C5A;font-weight:500">免费试算</a>
-        <a href="Lumino CBAM 指南.dc.html" style="font-size:16px;padding:13px 0;border-bottom:1px solid #E2E8E5">CBAM 指南</a>
-        <a href="Lumino 关于.dc.html" style="font-size:16px;padding:13px 0;border-bottom:1px solid #E2E8E5">关于</a>
-        <a href="Lumino 联系.dc.html" style="font-size:16px;padding:13px 0;border-bottom:1px solid #E2E8E5">联系</a>
-        <a href="Lumino 报价器.dc.html" target="_blank" rel="noopener noreferrer" style="font-size:16px;padding:13px 0;border-bottom:1px solid #E2E8E5;color:#0E7C5A;font-weight:500">获取报价 ↗</a>
-        <a href="{{ appUrl }}" style="font-size:16px;color:#0E7C5A;font-weight:500;padding:13px 0">登录平台 ↗</a>
-      </nav>
-    </div>
-</header>
-
+<lumino-header current="services"></lumino-header>
 <main id="main">
-
-<section id="top" style="position:relative;background:linear-gradient(150deg,#EFF7F4 0%,#FFFFFF 62%);overflow:hidden;border-bottom:1px solid #E2E8E5">
-  <div aria-hidden="true" style="position:absolute;top:-120px;left:30%;width:1px;height:640px;background:rgba(14,124,90,.14);transform:rotate(17deg);transform-origin:top center"></div>
-  <div aria-hidden="true" style="position:absolute;top:-120px;left:62%;width:1px;height:640px;background:rgba(14,124,90,.10);transform:rotate(17deg);transform-origin:top center"></div>
-  <div class="hero" style="position:relative;max-width:1200px;margin:0 auto;padding:clamp(56px,7vw,96px) 24px clamp(64px,8vw,104px)">
-    <div>
-      <h1 style="font-size:clamp(38px,6vw,58px);line-height:1.08;letter-spacing:-.02em;font-weight:600;margin-bottom:22px;max-width:18ch">CBAM 合规，<span style="color:#0E7C5A">交给我们</span>。<br>你只需要确认结果。</h1>
-      <p style="font-size:18px;line-height:1.75;color:#47534F;max-width:44ch;margin-bottom:30px">CBAM 的成本终会谈回到你身上。我们把可选路径和各自的代价算给你看，流程我们做完——你只需提供现成台账，确认一次。</p>
-      <div style="display:flex;flex-wrap:wrap;gap:12px">
-        <a href="calculator/" style="background:#0E7C5A;color:#fff;font-size:16px;font-weight:500;height:44px;padding:0 22px;border-radius:3px;display:inline-flex;align-items:center;gap:8px" style-hover="background:#0A4F3A">免费试算碳成本 <span>→</span></a>
-        <a href="Lumino 联系.dc.html" style="background:#fff;color:#0B100E;font-size:16px;font-weight:500;height:44px;padding:0 22px;border:1px solid #C6D1CD;border-radius:3px;display:inline-flex;align-items:center" style-hover="border-color:#0E7C5A">预约 30 分钟诊断</a>
-        <a href="Lumino 报价器.dc.html" target="_blank" rel="noopener noreferrer" style="background:#fff;color:#0B100E;font-size:16px;font-weight:500;height:44px;padding:0 20px;border:1px solid #C6D1CD;border-radius:3px;display:inline-flex;align-items:center;gap:8px" style-hover="border-color:#0E7C5A">获取报价 <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#67736F">↗</span></a>
-        <a href="#how" style="background:#fff;color:#0B100E;font-size:16px;font-weight:500;height:44px;padding:0 20px;border:1px solid #E2E8E5;border-radius:3px;display:inline-flex;align-items:center;gap:8px" style-hover="border-color:#0E7C5A">看看你要做什么 <span style="color:#67736F">→</span></a>
-      </div>
-    </div>
-
-    <div class="hero-card" style="position:relative">
-      <div style="position:relative;background:#fff;border:1px solid #C5D0CC;border-radius:3px;overflow:hidden">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:18px 26px 14px;background:#fff;border-bottom:2px solid #0B100E">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#0B100E">Communication Form</span>
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#67736F">示例数据</span>
-      </div>
-      <div style="padding:24px 26px 26px">
-        <div style="display:grid;gap:0">
-          <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #E2E8E5">
-            <span style="font-size:14px;color:#67736F">产品</span>
-            <span style="font-size:15px;text-align:right">冷镦紧固件 M10×40</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #E2E8E5">
-            <span style="font-size:14px;color:#67736F">CN code（欧盟 8 位）</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-variant-numeric:tabular-nums">73181510</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #E2E8E5">
-            <span style="font-size:14px;color:#67736F">中国 HS</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;color:#47534F;font-variant-numeric:tabular-nums">7318151000</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0;border-bottom:1px solid #E2E8E5">
-            <span style="font-size:14px;color:#67736F">单位隐含排放</span>
-            <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-variant-numeric:tabular-nums"><span style="border-bottom:2px solid #F2B705;padding-bottom:2px">4.431</span> tCO₂e/t</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;gap:16px;padding:11px 0">
-            <span style="font-size:14px;color:#67736F">状态</span>
-            <span style="font-size:15px;color:#47534F">专家复核完成</span>
-          </div>
-        </div>
-        <div style="margin-top:20px;padding-top:16px;border-top:2px solid #0B100E;font-size:14px;line-height:1.7;color:#47534F">你收到的就是这个：填好的交付件、结果说明与支撑材料清单。</div>
-      </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="timeline" class="on-dark" style="background:#07110E;color:#fff">
-  <div style="max-width:1200px;margin:0 auto;padding:clamp(64px,8vw,112px) 24px">
-    <h2 style="font-size:clamp(30px,4.2vw,42px);line-height:1.15;letter-spacing:-.02em;font-weight:600;max-width:24ch">确定期已经开始。时间不在你这边。</h2>
-    <div class="tl" style="margin-top:clamp(40px,5vw,64px)">
-      <div style="padding:22px 20px 24px 0;border-top:1px solid rgba(255,255,255,.14);border-right:1px solid rgba(255,255,255,.1);position:relative">
-        <span aria-hidden="true" style="position:absolute;top:-4.5px;left:0;width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.35)"></span>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:rgba(255,255,255,.62);font-variant-numeric:tabular-nums">2023–2025</div>
-        <div style="margin-top:10px;font-size:16px;line-height:1.6;color:rgba(255,255,255,.8)">过渡期：只报告，不缴费</div>
-      </div>
-      <div style="padding:22px 20px 24px;border-top:1px solid rgba(255,255,255,.14);border-right:1px solid rgba(255,255,255,.1);position:relative;background:rgba(242,183,5,.05)">
-        <span aria-hidden="true" style="position:absolute;top:-5.5px;left:20px;width:11px;height:11px;border-radius:50%;background:#F2B705"></span>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#F2B705;font-variant-numeric:tabular-nums">2026-01-01</div>
-        <div style="margin-top:10px;font-size:16px;line-height:1.6;font-weight:500">确定期启动：开始产生实际义务</div>
-      </div>
-      <div style="padding:22px 0 24px 20px;border-top:1px solid rgba(255,255,255,.14);position:relative">
-        <span aria-hidden="true" style="position:absolute;top:-4.5px;left:20px;width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.35)"></span>
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:rgba(255,255,255,.62);font-variant-numeric:tabular-nums">2027</div>
-        <div style="margin-top:10px;font-size:16px;line-height:1.6;color:rgba(255,255,255,.8)">首次提交年度 CBAM 申报，并交付证书</div>
-      </div>
-    </div>
-
-    <div style="margin-top:clamp(32px,4vw,48px);display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:clamp(20px,3vw,32px)">
-      <div style="border:1px solid rgba(255,255,255,.14);border-radius:3px;padding:20px 22px">
-        <div style="font-size:14px;color:rgba(255,255,255,.62)">缺省值加价（逐年）</div>
-        <div style="margin-top:10px;font-family:'IBM Plex Mono',monospace;font-size:15px;line-height:1.9;color:rgba(255,255,255,.86);font-variant-numeric:tabular-nums">2026 +10% · 2027 +20% · 2028 起 +30%</div>
-      </div>
-      <div style="border:1px solid rgba(255,255,255,.14);border-radius:3px;padding:20px 22px">
-        <div style="font-size:14px;color:rgba(255,255,255,.62)">免费配额调整</div>
-        <div style="margin-top:10px;font-size:16px;line-height:1.6;color:rgba(255,255,255,.86)">逐年递减至 2034 年归零</div>
-      </div>
-      <div style="border:1px solid rgba(255,255,255,.14);border-radius:3px;padding:20px 22px;background:rgba(242,183,5,.06)">
-        <div style="font-size:14px;color:#F2B705">最小豁免阈值</div>
-        <div style="margin-top:10px;font-size:16px;line-height:1.6;color:rgba(255,255,255,.9)">年进口量低于阈值可豁免——有些货根本不用申报，先判清楚边界再决定投入。</div>
-      </div>
-    </div>
-    <p style="margin-top:28px;font-size:13px;color:rgba(255,255,255,.6)">适用于钢铁、铝等 CBAM 覆盖品类。以上时间点与比例以最新实施条例为准。</p>
-  </div>
-</section>
-
-<section style="border-bottom:1px solid #E2E8E5">
-  <div style="max-width:1200px;margin:0 auto;padding:clamp(64px,8vw,112px) 24px">
-    <h2 style="font-size:clamp(30px,4.2vw,42px);line-height:1.15;letter-spacing:-.02em;font-weight:600">这件事真正的难处</h2>
-    <div style="margin-top:clamp(36px,4vw,56px);display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:clamp(24px,3vw,44px)">
-      <div style="border-top:1px solid #E2E8E5;padding-top:20px">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0E7C5A;font-variant-numeric:tabular-nums">01</div>
-        <h3 style="margin-top:14px;font-size:21px;font-weight:600;line-height:1.4">数据要不齐。</h3>
-        <p style="margin-top:10px;font-size:16px;line-height:1.75;color:#47534F">上游材料的排放数据在供应商手里。供应商未必愿意给，也未必知道该给什么。</p>
-      </div>
-      <div style="border-top:1px solid #E2E8E5;padding-top:20px">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0E7C5A;font-variant-numeric:tabular-nums">02</div>
-        <h3 style="margin-top:14px;font-size:21px;font-weight:600;line-height:1.4">结果没人敢签。</h3>
-        <p style="margin-top:10px;font-size:16px;line-height:1.75;color:#47534F">数字算出来了，但没人能保证它经得起欧盟客户与核查机构的追问。</p>
-      </div>
-      <div style="border-top:1px solid #E2E8E5;padding-top:20px">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0E7C5A;font-variant-numeric:tabular-nums">03</div>
-        <h3 style="margin-top:14px;font-size:21px;font-weight:600;line-height:1.4">规则一直在动。</h3>
-        <p style="margin-top:10px;font-size:16px;line-height:1.75;color:#47534F">申报口径与各项参数逐年调整。去年的做法，今年不一定还成立。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="how" style="background:#F7F9F8;border-bottom:1px solid #E2E8E5">
-  <div style="max-width:1200px;margin:0 auto;padding:clamp(64px,8vw,112px) 24px">
-    <h2 style="font-size:clamp(30px,4.2vw,42px);line-height:1.15;letter-spacing:-.02em;font-weight:600">托管式交付：你负责三件事，其余我们做</h2>
-    <div style="margin-top:clamp(36px,4vw,56px);display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
-      <div style="background:#fff;border:1px solid #E2E8E5;border-radius:3px;padding:24px;display:flex;flex-direction:column;gap:12px" style-hover="border-color:#0E7C5A">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:26px;color:#0E7C5A;font-weight:500;line-height:1">1</div>
-        <h3 style="font-size:18px;font-weight:600">一次对接</h3>
-        <p style="font-size:16px;line-height:1.7;color:#47534F">我们梳理你的产品清单与出口范围，确认这次要交付什么、什么时候要。</p>
-        <div style="margin-top:auto;padding-top:12px;border-top:1px solid #E2E8E5;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#47534F">线上 · 一次会议</div>
-      </div>
-      <div style="background:#fff;border:1px solid #E2E8E5;border-radius:3px;padding:24px;display:flex;flex-direction:column;gap:12px" style-hover="border-color:#0E7C5A">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:26px;color:#0E7C5A;font-weight:500;line-height:1">2</div>
-        <h3 style="font-size:18px;font-weight:600">按清单给数据</h3>
-        <p style="font-size:16px;line-height:1.7;color:#47534F">你只提供手上有的台账。要不到的部分由我们对接供应商，或走合规的替代路径。</p>
-        <div style="margin-top:auto;padding-top:12px;border-top:1px solid #E2E8E5;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#47534F">现有 Excel 即可 · 无需整理格式</div>
-      </div>
-      <div style="background:#fff;border:1px solid #E2E8E5;border-radius:3px;padding:24px;display:flex;flex-direction:column;gap:12px" style-hover="border-color:#0E7C5A">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:26px;color:#0E7C5A;font-weight:500;line-height:1">3</div>
-        <h3 style="font-size:18px;font-weight:600">我们完成核算与复核</h3>
-        <p style="font-size:16px;line-height:1.7;color:#47534F">取数、核算、交叉校验与专家复核在我们这边闭环。你不需要理解规则细节。</p>
-        <div style="margin-top:auto;padding-top:12px;border-top:1px solid #E2E8E5;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0A4F3A">你无需参与</div>
-      </div>
-      <div style="background:#fff;border:1px solid #E2E8E5;border-radius:3px;padding:24px;display:flex;flex-direction:column;gap:12px" style-hover="border-color:#0E7C5A">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:26px;color:#0E7C5A;font-weight:500;line-height:1">4</div>
-        <h3 style="font-size:18px;font-weight:600">确认并交付</h3>
-        <p style="font-size:16px;line-height:1.7;color:#47534F">你收到经复核的 Communication Form 与支撑材料，确认后即可交给欧盟客户。</p>
-        <div style="margin-top:auto;padding-top:12px;border-top:1px solid #E2E8E5;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#47534F">你只需确认一次</div>
-      </div>
-    </div>
-    <sc-if value="{{ showEffort }}" hint-placeholder-val="{{ false }}">
-      <div style="margin-top:24px;display:flex;flex-wrap:wrap;gap:12px 32px;padding:18px 22px;background:#fff;border:1px solid #E2E8E5;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:14px;color:#0B100E">
-        <span>客户侧总投入：{{ effortTotal }}</span>
-        <span>交付周期：{{ leadTime }}</span>
-      </div>
-    </sc-if>
-  </div>
-</section>
-
-<section id="cost" style="border-bottom:1px solid #E2E8E5">
-  <div style="max-width:1200px;margin:0 auto;padding:clamp(64px,8vw,112px) 24px">
-    <h2 style="font-size:clamp(30px,4.2vw,42px);line-height:1.15;letter-spacing:-.02em;font-weight:600;max-width:20ch">同样合规，成本可以差很多</h2>
-    <p style="margin-top:16px;font-size:18px;line-height:1.75;color:#47534F;max-width:56ch">证书成本记在欧盟进口方账上，但会通过价格谈判转嫁给出口方。两边真正该关心的是同一件事：这批货的合规成本，能不能更低。以下三个岔口决定了答案，我们的工作是先把它们判断清楚，再动手。</p>
-    <div style="margin-top:clamp(36px,4vw,56px);border-top:1px solid #0B100E">
-      <div class="fork" style="display:grid;grid-template-columns:74px minmax(0,24ch) minmax(0,1fr);gap:clamp(20px,3vw,40px);align-items:baseline;padding:clamp(24px,3vw,32px) 0;border-bottom:1px solid #E2E8E5">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0E7C5A;font-variant-numeric:tabular-nums">岔口 01</div>
-        <h3 style="font-size:21px;font-weight:600;line-height:1.4">缺省值，还是实测值。</h3>
-        <p style="font-size:16px;line-height:1.75;color:#47534F">缺省值逐年加价，实测值要付出取数成本。哪个更划算取决于你的产品与供应链，我们按你的实际情况算给你看。</p>
-      </div>
-      <div class="fork" style="display:grid;grid-template-columns:74px minmax(0,24ch) minmax(0,1fr);gap:clamp(20px,3vw,40px);align-items:baseline;padding:clamp(24px,3vw,32px) 0;border-bottom:1px solid #E2E8E5">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0E7C5A;font-variant-numeric:tabular-nums">岔口 02</div>
-        <h3 style="font-size:21px;font-weight:600;line-height:1.4">先判边界，再投入。</h3>
-        <p style="font-size:16px;line-height:1.75;color:#47534F">有些货落在豁免阈值或覆盖清单之外，根本不用申报。这一步没判清楚，后面的力气都可能白花。</p>
-      </div>
-      <div class="fork" style="display:grid;grid-template-columns:74px minmax(0,24ch) minmax(0,1fr);gap:clamp(20px,3vw,40px);align-items:baseline;padding:clamp(24px,3vw,32px) 0;border-bottom:1px solid #E2E8E5">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0E7C5A;font-variant-numeric:tabular-nums">岔口 03</div>
-        <h3 style="font-size:21px;font-weight:600;line-height:1.4">向谁要数，要到多细。</h3>
-        <p style="font-size:16px;line-height:1.75;color:#47534F">同一批料，向哪个供应商要、要到什么颗粒度，直接决定最终数字和你为此付出的协调成本。</p>
-      </div>
-    </div>
-    <p style="margin-top:32px;font-size:14px;color:#67736F;max-width:64ch">我们只承诺把这些岔口讲清楚并给出对比，不承诺任何具体的节省金额或比例。以最新实施条例为准。</p>
-  </div>
-</section>
-
-<section id="method" style="border-bottom:1px solid #E2E8E5">
-  <div style="max-width:1200px;margin:0 auto;padding:clamp(64px,8vw,112px) 24px">
-    <h2 style="font-size:clamp(30px,4.2vw,42px);line-height:1.15;letter-spacing:-.02em;font-weight:600;max-width:22ch">为什么这份结果站得住</h2>
-    <div style="margin-top:clamp(36px,4vw,56px);display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(28px,3vw,48px) clamp(32px,4vw,64px)">
-      <div style="display:flex;gap:18px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0E7C5A;padding-top:4px;flex:none;width:26px">I</span>
-        <div>
-          <h3 style="font-size:21px;font-weight:600;line-height:1.4">欧盟客户来问，你不用自己回答。</h3>
-          <p style="margin-top:9px;font-size:16px;line-height:1.75;color:#47534F;max-width:52ch">买方或核查机构提出问题，由我们出面说明数据来源与处理方式。</p>
-          <p style="margin-top:8px;font-size:13px;line-height:1.7;color:#67736F;max-width:52ch">支撑：每个数字都留有来源与依据记录，可按需调取。</p>
+  <section class="home-hero">
+    <div class="home-hero__line home-hero__line--one" aria-hidden="true"></div>
+    <div class="home-hero__line home-hero__line--two" aria-hidden="true"></div>
+    <div class="wrap home-hero__grid">
+      <div class="home-hero__copy">
+        <p class="eyebrow">LUMINO · ENTERPRISE COMPLIANCE SERVICES</p>
+        <h1><span>用 AI 与平台化服务</span><span><em>重新定义</em>合规核查</span></h1>
+        <p class="home-hero__lead">把企业、工厂、产品和证明材料沉淀为可复用的数据资产。每项服务独立确认、确定性计算、专家复核，持续交付经得起追问的结果。</p>
+        <div class="hero-actions">
+          <a class="button button--primary" href="#services">查看可用服务 <span aria-hidden="true">↓</span></a>
+          <a class="button button--secondary" href="/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html">了解工作机制</a>
         </div>
       </div>
-      <div style="display:flex;gap:18px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0E7C5A;padding-top:4px;flex:none;width:26px">II</span>
-        <div>
-          <h3 style="font-size:21px;font-weight:600;line-height:1.4">做一次和做一百次一样。</h3>
-          <p style="margin-top:9px;font-size:16px;line-height:1.75;color:#47534F;max-width:52ch">产品清单扩大、下一年度重做，不需要重新走一遍咨询流程，口径也不会因为换了人而改变。</p>
-          <p style="margin-top:8px;font-size:13px;line-height:1.7;color:#67736F;max-width:52ch">支撑：同一套确定性计算与留痕机制，结果可复现。</p>
-        </div>
-      </div>
-      <div style="display:flex;gap:18px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0E7C5A;padding-top:4px;flex:none;width:26px">III</span>
-        <div>
-          <h3 style="font-size:21px;font-weight:600;line-height:1.4">规则变了，我们会来找你。</h3>
-          <p style="margin-top:9px;font-size:16px;line-height:1.75;color:#47534F;max-width:52ch">法规调整后，我们主动告知哪些已交付的申报受影响、需不需要更正。</p>
-          <p style="margin-top:8px;font-size:13px;line-height:1.7;color:#67736F;max-width:52ch">支撑：参数与口径按版本与生效日期管理。</p>
-        </div>
-      </div>
-      <div style="display:flex;gap:18px">
-        <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#0E7C5A;padding-top:4px;flex:none;width:26px">IV</span>
-        <div>
-          <h3 style="font-size:21px;font-weight:600;line-height:1.4">交付件由专家复核后出具。</h3>
-          <p style="margin-top:9px;font-size:16px;line-height:1.75;color:#47534F;max-width:52ch">按现行实施条例与核查机构关注的口径组织数据，随件附支撑材料清单。</p>
-          <p style="margin-top:8px;font-size:13px;line-height:1.7;color:#67736F;max-width:52ch">支撑：每次修订保留历史版本，更正申报是内建流程。</p>
-        </div>
-      </div>
-    </div>
-    <div style="margin-top:clamp(40px,5vw,64px);background:#F7F9F8;border:1px solid #E2E8E5;border-radius:3px;padding:22px 24px">
-      <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#67736F;margin-bottom:10px">范围</div>
-      <p style="font-size:16px;line-height:1.75;color:#0B100E;max-width:64ch">CBAM 是当前的重点，不是终点。<span style="color:#47534F">同一套托管方式可以延伸到后续纳入的品类与其它出口合规要求。</span></p>
-    </div>
-  </div>
-</section>
 
-<section id="about" style="background:#F7F9F8;border-bottom:1px solid #E2E8E5">
-  <div style="max-width:1200px;margin:0 auto;padding:clamp(64px,8vw,112px) 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:clamp(32px,4vw,64px)">
-    <div><h2 style="font-size:clamp(30px,4.2vw,42px);line-height:1.15;letter-spacing:-.02em;font-weight:600;max-width:16ch">你的生产数据，是敏感资产</h2></div>
-    <div style="display:grid;gap:26px">
-      <div style="border-top:1px solid #E2E8E5;padding-top:18px">
-        <h3 style="font-size:18px;font-weight:600">数据按你的要求落地。</h3>
-        <p style="margin-top:8px;font-size:16px;line-height:1.75;color:#47534F">默认存放在你指定的区域内，不做多余的跨境传输；确需传输的场景逐条留痕。</p>
-      </div>
-      <div style="border-top:1px solid #E2E8E5;padding-top:18px">
-        <h3 style="font-size:18px;font-weight:600">可选私有化部署。</h3>
-        <p style="margin-top:8px;font-size:16px;line-height:1.75;color:#47534F">对数据出境有硬约束的客户，计算与存储可整体部署在客户侧。</p>
-      </div>
-      <div style="border-top:1px solid #E2E8E5;padding-top:18px">
-        <h3 style="font-size:18px;font-weight:600">核查防火墙。</h3>
-        <p style="margin-top:8px;font-size:16px;line-height:1.75;color:#47534F">咨询服务与核查服务在系统内严格隔离，避免利益冲突。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="scope" style="border-bottom:1px solid #E2E8E5">
-  <div style="max-width:1200px;margin:0 auto;padding:clamp(64px,8vw,112px) 24px">
-    <h2 style="font-size:clamp(30px,4.2vw,42px);line-height:1.15;letter-spacing:-.02em;font-weight:600">你是哪一方</h2>
-    <p style="margin-top:16px;font-size:18px;line-height:1.75;color:#47534F;max-width:56ch">CBAM 的申报义务在欧盟进口方，数据在出口方。两边我们都承接，交付物不同。</p>
-    <div style="margin-top:clamp(36px,4vw,56px);display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
-      <div style="border:1px solid #E2E8E5;border-radius:3px;padding:28px" style-hover="border-color:#0E7C5A">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#47534F;background:#F7F9F8;border:1px solid #E2E8E5;border-radius:3px;padding:4px 7px;display:inline-block">出口方 / 制造方</div>
-        <h3 style="margin-top:16px;font-size:21px;font-weight:600">欧盟客户点名要数据，你要拿得出来。</h3>
-        <p style="margin-top:12px;font-size:16px;line-height:1.75;color:#47534F">我们承接从台账收集到 Communication Form 出具的全过程，包括向上游供应商取数。</p>
-      </div>
-      <div style="border:1px solid #E2E8E5;border-radius:3px;padding:28px" style-hover="border-color:#0E7C5A">
-        <div style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#47534F;background:#F7F9F8;border:1px solid #E2E8E5;border-radius:3px;padding:4px 7px;display:inline-block">进口方 / 申报人</div>
-        <h3 style="margin-top:16px;font-size:21px;font-weight:600">义务在你，数据却在别人手里。</h3>
-        <p style="margin-top:12px;font-size:16px;line-height:1.75;color:#47534F">我们代你向供应方收集与核验数据，整理成可用于申报的材料，并跟进缺口与更正。</p>
-      </div>
-    </div>
-
-    <h3 style="margin-top:clamp(40px,5vw,64px);font-size:21px;font-weight:600">覆盖品类</h3>
-    <div style="margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
-      <div style="border:1px solid #E2E8E5;border-radius:3px;padding:28px" style-hover="border-color:#0E7C5A">
-        <div style="display:flex;align-items:center;gap:12px">
-          <h4 style="margin:0;font-size:21px;font-weight:600">钢铁制品</h4>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;background:#EFF7F4;color:#0A4F3A;border-radius:3px;padding:4px 7px">现已支持</span>
+      <aside class="proof-sheet" aria-label="可追溯事实档案示例">
+        <header class="proof-sheet__head">
+          <div><span>TRACEABLE FACT RECORD</span><strong>事实档案 · Rev 03</strong></div>
+          <span class="proof-seal">已确认</span>
+        </header>
+        <div class="proof-source">
+          <span>原始来源</span>
+          <strong>2026_Q3_上海一厂电费单.pdf</strong>
+          <small>EVD-HX-POWER-2026Q3 · 原文件不可变</small>
         </div>
-        <p style="margin-top:14px;font-size:16px;line-height:1.75;color:#47534F">典型场景：冷加工件、紧固件、管件、线材制品。</p>
-        <div style="margin-top:22px;display:grid;grid-template-columns:1fr 1fr;font-family:'IBM Plex Mono',monospace;font-size:14px;font-variant-numeric:tabular-nums;color:#0B100E">
-          <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#67736F;padding-bottom:8px;border-bottom:2px solid #0B100E">CN code · EU 8</span>
-          <span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#67736F;padding-bottom:8px;border-bottom:2px solid #0B100E;text-align:right">中国 HS</span>
-          <span style="padding:10px 0;border-bottom:1px solid #E2E8E5">73181510</span>
-          <span style="padding:10px 0;border-bottom:1px solid #E2E8E5;text-align:right;color:#67736F">7318151000</span>
-          <span style="padding:10px 0;border-bottom:1px solid #E2E8E5">73269098</span>
-          <span style="padding:10px 0;border-bottom:1px solid #E2E8E5;text-align:right;color:#67736F">7326909000</span>
-          <span style="padding:10px 0;border-bottom:1px solid #E2E8E5">72283069</span>
-          <span style="padding:10px 0;border-bottom:1px solid #E2E8E5;text-align:right;color:#67736F">7228309000</span>
+        <div class="proof-fact">
+          <div><span>提取事实</span><strong>购入电力</strong></div>
+          <div><span>期间</span><strong>2026 Q1–Q3</strong></div>
+          <div><span>数值</span><strong>12,480 <small>MWh</small></strong></div>
         </div>
-        <p style="margin-top:14px;font-size:13px;color:#67736F">编码对照以现行 CBAM 覆盖清单为准，实际适用需按货物逐项核对。</p>
-      </div>
-      <div style="border:1px solid #E2E8E5;border-radius:3px;padding:28px;background:#F7F9F8">
-        <div style="display:flex;align-items:center;gap:12px">
-          <h4 style="margin:0;font-size:21px;font-weight:600">铝制品</h4>
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;background:#E2E8E5;color:#47534F;border-radius:3px;padding:4px 7px">规划中</span>
+        <div class="proof-bindings">
+          <p>同一资产，被两个服务独立使用</p>
+          <div><span>CBAM</span><strong>设施间接排放</strong><em>事实已确认</em></div>
+          <div><span>PCF</span><strong>产品能源分配</strong><em>待确认边界</em></div>
         </div>
-        <p style="margin-top:14px;font-size:16px;line-height:1.75;color:#47534F">挤压材、轧制材与铝制结构件的交付路径正在建设中。</p>
+        <footer><span>来源</span><i></i><span>确认</span><i></i><span>计算</span><i></i><span>交付</span></footer>
+      </aside>
+    </div>
+  </section>
+
+  <section class="advantage-section" id="method">
+    <div class="wrap">
+      <div class="advantage-intro">
+        <p class="eyebrow">WHY LUMINO</p>
+        <h2>真正的优势，<br>不是多一个系统。</h2>
+        <p>而是每完成一项工作，企业都留下可以继续使用的资产、判断与证据。</p>
+      </div>
+      <div class="advantage-ledger">
+        <article><span>01</span><h3>资料不再反复提交。</h3><p>同一份企业、设施、产品和证明材料只维护一次，在授权范围内跨服务引用。</p></article>
+        <article><span>02</span><h3>AI 不会越过责任边界。</h3><p>Agent 可以读文件、找缺口和提出建议，但正式事实必须由授权人员确认。</p></article>
+        <article><span>03</span><h3>每个结果都能回到依据。</h3><p>输入、规则、计算、复核和交付版本连成完整链路，不依赖无法解释的生成结果。</p></article>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section id="guide" style="border-bottom:1px solid #E2E8E5">
-  <div style="max-width:1200px;margin:0 auto;padding:clamp(64px,8vw,112px) 24px">
-    <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:16px">
-      <h2 style="font-size:clamp(30px,4.2vw,42px);line-height:1.15;letter-spacing:-.02em;font-weight:600">CBAM 指南</h2>
-      <a class="link" href="Lumino CBAM 指南.dc.html" style="font-size:16px">全部文章 →</a>
-    </div>
-    <p style="margin-top:16px;font-size:16px;line-height:1.75;color:#47534F;max-width:56ch">这些你不需要读。写在这里，是因为我们希望你看得懂我们在替你做什么。</p>
-    <div style="margin-top:clamp(32px,4vw,48px);border-top:1px solid #E2E8E5">
-      <sc-for list="{{ articles }}" as="a" hint-placeholder-count="6">
-        <a href="Lumino 指南文章.dc.html" style="display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:baseline;padding:20px 4px;border-bottom:1px solid #E2E8E5" style-hover="background:#F7F9F8">
-          <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:#67736F;font-variant-numeric:tabular-nums">{{ a.no }}</span>
-          <span style="font-size:18px;line-height:1.5">{{ a.title }}</span>
-        </a>
-      </sc-for>
-    </div>
-  </div>
-</section>
-
-<section id="cta" class="on-dark" style="background:#07110E;color:#fff">
-  <div style="max-width:1200px;margin:0 auto;padding:clamp(64px,8vw,112px) 24px">
-    <div style="max-width:840px">
-      <h2 style="font-size:clamp(30px,4.2vw,42px);line-height:1.2;letter-spacing:-.02em;font-weight:600">先看看你的产品要交多少。</h2>
-      <p style="margin-top:18px;font-size:18px;line-height:1.75;color:rgba(255,255,255,.78);max-width:52ch">一次 30 分钟的线上诊断。我们用你的一个真实出口产品走完整个流程，给你一份可以直接看的结果，包含不同路径下的成本对比。</p>
-      <div style="margin-top:32px;display:flex;flex-wrap:wrap;gap:20px;align-items:center">
-        <a href="Lumino 联系.dc.html" style="background:#fff;color:#0A4F3A;font-size:16px;font-weight:500;height:44px;padding:0 22px;border-radius:3px;display:inline-flex;align-items:center" style-hover="background:#D6EBE3">预约诊断</a>
-        <a href="Lumino CBAM 指南.dc.html" style="color:#fff;font-size:16px;text-decoration:underline;text-underline-offset:3px">或先读一遍 CBAM 指南</a>
+  <section class="service-stage" id="services">
+    <div class="wrap">
+      <header class="section-intro section-intro--wide">
+        <div><p class="eyebrow">SERVICES YOU CAN START</p><h2>先解决正在发生的交付。</h2></div>
+        <p>六项服务共用企业数据底座，但开放状态、工作流、Agent、计算方法与责任边界始终独立。</p>
+      </header>
+      <div class="live-services">
+        <article class="live-service live-service--active">
+          <div class="live-service__meta"><span>01 · CBAM</span><b>已开通</b></div>
+          <h3>欧盟碳边境合规</h3>
+          <p>从产品范围、工厂与供应链数据，到确定性计算、专家复核和进口商交付。</p>
+          <div class="live-service__path"><span>范围</span><i></i><span>取数</span><i></i><span>计算</span><i></i><span>交付</span></div>
+          <a href="/services/cbam/">查看 CBAM 服务 <span aria-hidden="true">→</span></a>
+        </article>
+        <article class="live-service live-service--pilot">
+          <div class="live-service__meta"><span>02 · PCF</span><b>试点</b></div>
+          <h3>产品碳足迹</h3>
+          <p>从功能单位、系统边界和生命周期清单，到活动数据、排放热点、复核与报告。</p>
+          <div class="live-service__path"><span>目标</span><i></i><span>清单</span><i></i><span>热点</span><i></i><span>报告</span></div>
+          <a href="/services/pcf/">查看 PCF 试点 <span aria-hidden="true">→</span></a>
+        </article>
+      </div>
+      <div class="next-services" aria-label="后续服务">
+        <header><span>接下来</span><p>了解正在准备的服务，不会进入虚假的空工作空间。</p></header>
+        <a href="/services/esg/"><span>03</span><strong>ESG 报告</strong><em>即将上线</em><b>→</b></a>
+        <a href="/services/ghg-inventory/"><span>04</span><strong>企业碳盘查</strong><em>规划中</em><b>→</b></a>
+        <a href="/services/carbon-assets/"><span>05</span><strong>碳资产与绿证</strong><em>规划中</em><b>→</b></a>
+        <a href="/services/export-compliance/"><span>06</span><strong>出口合规服务</strong><em>规划中</em><b>→</b></a>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
+  <section class="asset-continuum">
+    <div class="wrap asset-continuum__grid">
+      <div class="asset-continuum__copy">
+        <p class="eyebrow">COMPOUNDING DATA VALUE</p>
+        <h2>每做一项服务，<br>下一项更快开始。</h2>
+        <p>原始资料只保存一份。服务分别记录用途、提取事实、确认、转换和计算血缘，既能复用，也不会混用结论。</p>
+        <a class="text-action" href="/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html">查看企业数据如何流转 →</a>
+      </div>
+      <div class="asset-orbit" aria-label="企业数据资产到多项服务的关系">
+        <div class="asset-core"><small>ENTERPRISE DATA ASSETS</small><strong>企业数据资产池</strong><span>企业 · 工厂 · 产品 · 台账 · 证据</span></div>
+        <div class="asset-uses">
+          <div><span>CBAM</span><small>独立确认</small></div>
+          <div><span>PCF</span><small>独立确认</small></div>
+          <div><span>ESG</span><small>受控引用</small></div>
+          <div><span>盘查</span><small>受控引用</small></div>
+        </div>
+        <p>复用资产，不复用结论。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="control-section">
+    <div class="wrap control-section__grid">
+      <div><p class="eyebrow">CONTROLLED INTELLIGENCE</p><h2>让自动化提速，<br>让责任始终可见。</h2></div>
+      <ol class="control-sequence">
+        <li><span>AGENT</span><div><h3>识别与建议</h3><p>读取材料、提取字段、发现缺口；建议始终与正式事实分开。</p></div></li>
+        <li><span>ENGINE</span><div><h3>确定性计算</h3><p>按锁定的输入、单位、因子、公式和规则包运行，可复现。</p></div></li>
+        <li><span>EXPERT</span><div><h3>专业复核</h3><p>判断范围与方法是否适用，处理异常、限制与专业结论。</p></div></li>
+        <li><span>OWNER</span><div><h3>企业确认</h3><p>授权人员确认业务事实、审批版本并对正式交付负责。</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="resource-section" id="resources">
+    <div class="wrap">
+      <header class="section-intro"><div><p class="eyebrow">TOOLS & KNOWLEDGE</p><h2>先判断，再投入。</h2></div></header>
+      <div class="resource-index">
+        <a href="/calculator/"><span>01 · TOOL</span><strong>CBAM 成本试算</strong><p>用于初步商务判断，不代替正式核算。</p><b>打开工具 ↗</b></a>
+        <a href="/knowledge/"><span>02 · KNOWLEDGE</span><strong>行业知识库</strong><p>按 CBAM、PCF/LCA、ESG/盘查和行业专题组织。</p><b>进入知识库 →</b></a>
+        <a href="/Lumino%20%E8%81%94%E7%B3%BB.dc.html"><span>03 · DIAGNOSIS</span><strong>服务诊断</strong><p>按产品、市场要求和时间，判断最先需要完成的工作。</p><b>预约诊断 →</b></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="home-closing">
+    <div class="wrap"><p>从一项真实交付开始。</p><h2>资料会留下，能力会累积，<br>下一次不再从头开始。</h2><div><a href="/Lumino%20%E8%81%94%E7%B3%BB.dc.html">预约服务诊断 →</a><a href="/portal/">已有项目，进入企业门户 ↗</a></div></div>
+  </section>
 </main>
-
-<footer style="background:#fff;border-top:1px solid #E2E8E5">
-  <div style="max-width:1200px;margin:0 auto;padding:clamp(48px,6vw,72px) 24px 32px">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:32px">
-      <div>
-        <div style="font-size:13px;color:#67736F;margin-bottom:14px">本页</div>
-        <ul style="display:grid;gap:10px;font-size:16px">
-          <li><a href="#how" style="color:#47534F" style-hover="color:#0E7C5A">服务方式</a></li>
-          <li><a href="#cost" style="color:#47534F" style-hover="color:#0E7C5A">成本与路径</a></li>
-          <li><a href="#scope" style="color:#47534F" style-hover="color:#0E7C5A">适用对象</a></li>
-          <li><a href="#timeline" style="color:#47534F" style-hover="color:#0E7C5A">法规动态</a></li>
-        </ul>
-      </div>
-      <div>
-        <div style="font-size:13px;color:#67736F;margin-bottom:14px">公司</div>
-        <ul style="display:grid;gap:10px;font-size:16px">
-          <li><a href="Lumino CBAM 指南.dc.html" style="color:#47534F" style-hover="color:#0E7C5A">CBAM 指南</a></li>
-          <li><a href="Lumino 关于.dc.html" style="color:#47534F" style-hover="color:#0E7C5A">关于我们</a></li>
-          <li><a href="Lumino 平台.dc.html" style="color:#47534F" style-hover="color:#0E7C5A">平台</a></li>
-          <li><a href="Lumino 报价器.dc.html" target="_blank" rel="noopener noreferrer" style="color:#47534F" style-hover="color:#0E7C5A">获取报价 ↗</a></li>
-        </ul>
-      </div>
-      <div>
-        <div style="font-size:13px;color:#67736F;margin-bottom:14px">联系</div>
-        <ul style="display:grid;gap:10px;font-size:16px">
-          <li><a href="Lumino 联系.dc.html" style="color:#47534F" style-hover="color:#0E7C5A">预约诊断</a></li>
-          <li><a href="{{ appUrl }}" style="color:#0E7C5A" style-hover="color:#0A4F3A">登录平台 ↗</a></li>
-        </ul>
-      </div>
-    </div>
-    <div style="margin-top:clamp(36px,4vw,56px);padding-top:20px;border-top:1px solid #E2E8E5;font-size:13px;color:#67736F">© 2026 Lumino</div>
-  </div>
-</footer>
-</div>
-</x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;appUrl&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;/portal/&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;平台入口&quot;},&quot;effortTotal&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;交付承诺（填了才显示）&quot;},&quot;leadTime&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;交付承诺（填了才显示）&quot;}}">
-const ARTICLES = [
-  { no: '01', title: 'CBAM 是什么，谁会被影响' },
-  { no: '02', title: '过渡期与确定期，规则变了哪些' },
-  { no: '03', title: '你的产品在不在清单里：HS / CN / TARIC 三级编码怎么看' },
-  { no: '04', title: '缺省值还是实测值：怎么选，代价差多少' },
-  { no: '05', title: 'Communication Form 要填什么' },
-  { no: '06', title: '最小豁免阈值：为什么出口商自己算不出来' }
-];
-class Component extends DCLogic {
-  state = { menuOpen: false };
-  componentDidMount() {
-    document.documentElement.lang = 'zh-CN';
-    this.onKey = e => { if (e.key === 'Escape' && this.state.menuOpen) this.setState({ menuOpen: false }); };
-    window.addEventListener('keydown', this.onKey);
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window) {
-      this.io = new IntersectionObserver(entries => {
-        entries.forEach(en => { if (en.isIntersecting) { en.target.setAttribute('data-anim', ''); this.io.unobserve(en.target); } });
-      }, { rootMargin: '0px 0px -12% 0px' });
-      document.querySelectorAll('main > section').forEach((s, i) => { if (i > 0) this.io.observe(s); });
-    }
-  }
-  componentDidUpdate() { document.body.style.overflow = this.state.menuOpen ? 'hidden' : ''; }
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.onKey);
-    document.body.style.overflow = '';
-    if (this.io) this.io.disconnect();
-  }
-  renderVals() {
-    const effortTotal = this.props.effortTotal ?? '';
-    const leadTime = this.props.leadTime ?? '';
-    return {
-      appUrl: this.props.appUrl ?? '/portal/',
-      articles: ARTICLES,
-      menuOpen: this.state.menuOpen ? 'true' : 'false',
-      menuExpanded: this.state.menuOpen ? 'true' : 'false',
-      menuLabel: this.state.menuOpen ? '关闭导航菜单' : '打开导航菜单',
-      toggleMenu: () => this.setState(s => ({ menuOpen: !s.menuOpen })),
-      closeMenu: () => this.setState({ menuOpen: false }),
-      showEffort: !!(effortTotal && leadTime),
-      effortTotal,
-      leadTime
-    };
-  }
-}
-</script>
+<lumino-footer></lumino-footer>
 </body>
 </html>

@@ -24,6 +24,7 @@
   }
 
   function renderCustomer() {
+    if (renderMultiServicePage()) return;
     if (state.page !== "work") return renderCustomerSecondary();
     const year = years[state.year];
     const profile = annualProfile();
@@ -223,8 +224,16 @@
       ? `<article class="record"><span class="record-code">DATA</span><div><strong>${state.quarter} 季度数据集</strong><p>产量、能源、前体与发运数据 · 最终版本</p></div><span class="record-state ok">已冻结</span></article><article class="record"><span class="record-code">PACK</span><div><strong>${state.quarter} Communication Package</strong><p>已分享并记录进口商回执</p></div><span class="record-state ok">已归档</span></article>`
       : planned
         ? `<article class="record"><span class="record-code">Q1</span><div><strong>Q1 材料清单尚未生成</strong><p>年度范围和监测计划确认后，Agent 将按岗位生成任务。</p></div><span class="record-state">待年度准备</span></article>`
-        : `<article class="record"><span class="record-code">BILL</span><div><strong>电力账单 · ${currentPeriod.months}</strong><p>上海一厂 · 财务 · 已解析 3/3</p></div><span class="record-state ok">已关联</span></article><article class="record"><span class="record-code">GAS</span><div><strong>天然气账单 · ${currentPeriod.months}</strong><p>江苏二厂 · ${state.uploadAdded ? "已解析 3/3" : `缺 ${currentPeriod.endMonth}`}</p></div>${gasState}</article><article class="record"><span class="record-code">PRE</span><div><strong>钢坯供应商数据</strong><p>北方特钢 · 请求已发送</p></div><span class="record-state warn">等待外部</span></article>`;
-    const reviewStep = state.uploadAdded ? `<section class="panel extraction-review"><div><small>AGENT EXTRACTION · 待协调人确认</small><h2>${currentPeriod.endMonth}天然气：18,420 Nm³</h2><p>识别自“江苏二厂天然气账单_${state.year}-${currentPeriod.endMonth.replace(" 月", "").padStart(2, "0")}.pdf”，账期与设施已匹配。确认后才进入正式事实建议。</p></div>${state.factConfirmed ? '<span class="status-chip">已确认并进入 Run 05</span>' : '<button class="button button--primary" type="button" data-action="confirm-fact">确认提取结果</button>'}</section>` : "";
+        : (() => {
+          const power = assetRegistry.get("REC-HX-POWER-2026Q3");
+          const powerEvidence = assetRegistry.get("EVD-HX-POWER-2026Q3");
+          const powerBinding = assetRegistry.bindings({ serviceId: "cbam", assetId: "REC-HX-POWER-2026Q3" })[0];
+          const shName = assetRegistry.get("FAC-SH-01")?.name || "上海一厂";
+          const jsName = assetRegistry.get("FAC-JS-02")?.name || "江苏二厂";
+          const powerValue = power?.payload?.originalValue ? `${Number(power.payload.originalValue).toLocaleString("zh-CN")} ${power.payload.originalUnit}` : "已解析";
+          return `<article class="record"><span class="record-code">BILL</span><div><strong>电力账单 · ${currentPeriod.months}</strong><p>${safe(shName)} · ${safe(powerEvidence?.id || "EVD-HX-POWER-2026Q3")} · ${safe(powerValue)} · ${safe(powerBinding?.status || "已关联")}</p></div><span class="record-state ok">资产已绑定</span></article><article class="record"><span class="record-code">GAS</span><div><strong>天然气账单 · ${currentPeriod.months}</strong><p>${safe(jsName)} · FAC-JS-02 · ${state.uploadAdded ? "已解析 3/3" : `缺 ${currentPeriod.endMonth}`}</p></div>${gasState}</article><article class="record"><span class="record-code">PRE</span><div><strong>钢坯供应商数据</strong><p>北方特钢 · 请求已发送</p></div><span class="record-state warn">等待外部</span></article>`;
+        })();
+    const reviewStep = state.uploadAdded ? `<section class="panel extraction-review"><div><small>AGENT EXTRACTION · 写入企业资产池后待确认</small><h2>${currentPeriod.endMonth}天然气：18,420 Nm³</h2><p>识别自“${safe(assetRegistry.get("FAC-JS-02")?.name || "江苏二厂")}天然气账单_${state.year}-${currentPeriod.endMonth.replace(" 月", "").padStart(2, "0")}.pdf”，账期与设施 FAC-JS-02 已匹配。确认后将登记为能源资产并绑定 CBAM。</p></div>${state.factConfirmed ? '<span class="status-chip">已确认并进入 Run 05</span>' : '<button class="button button--primary" type="button" data-action="confirm-fact">确认提取结果</button>'}</section>` : "";
     const dataNext = planned
       ? nextAction("年度准备", "先确认 2027 年度范围", "季度数据不从 2026 年复制。确认产品、工厂、进口商和监测方法后，系统会生成 Q1 材料清单。", "确认年度范围", 'data-page="products"')
       : !state.uploadAdded
@@ -246,30 +255,57 @@
       ${locked ? "" : dataNext}`;
   }
 
+  function cbamProductCatalog() {
+    const fromAssets = {};
+    assetRegistry.catalog({ tenantId: "TNT-0018", role: state.role, type: "product" }).forEach((asset) => {
+      const key = asset.payload?.uiKey || asset.payload?.internalCode?.toLowerCase() || asset.id;
+      fromAssets[key] = {
+        code: asset.payload?.internalCode || asset.id,
+        name: asset.name,
+        cn: asset.payload?.cnLabel || (asset.payload?.cnCodes?.length ? `CN ${asset.payload.cnCodes.join(" / ")}` : "CN Code 待确认"),
+        summary: asset.payload?.summary || "生产配置待完善",
+        scope: asset.payload?.scopeYears || ["2026"],
+        assetId: asset.id,
+        versionId: asset.versionId,
+        status: asset.status,
+      };
+    });
+    return {
+      hrc: fromAssets.hrc || { code: "HRC-01", name: "热轧非合金钢卷", cn: "CN 待确认", summary: "待同步资产池", scope: ["2026"] },
+      coated: fromAssets.coated || { code: "CTS-01", name: "镀层钢板", cn: "CN 待确认", summary: "待同步资产池", scope: ["2026"] },
+      section: fromAssets.section || { code: "SEC-01", name: "型钢", cn: "CN 待确认", summary: "待同步资产池", scope: ["2026"] },
+      wire: fromAssets.wire || { code: "WRD-01", name: "非合金钢盘条", cn: "CN 待确认", summary: "待同步资产池", scope: ["2026"] },
+      cold: { code: "CRS-02", name: "冷轧非合金钢板", cn: state.productCnCodes.length ? `CN ${state.productCnCodes.join(" / ")} · 候选待确认` : "CN Code 尚未设置 · 可由 Agent 建议", summary: "尚未添加生产配置", scope: state.productYears },
+      ...fromAssets,
+    };
+  }
+
+  function cbamFacilityOptions() {
+    return assetRegistry.catalog({ tenantId: "TNT-0018", role: state.role, type: "facility" });
+  }
+
   function renderProducts() {
     const locked = state.year === "2025";
-    const count = state.productAdded ? 5 : 4;
-    const products = {
-      hrc: { code: "HRC-01", name: "热轧非合金钢卷", cn: "CN 7208 候选已由关务确认", summary: "3 个生产配置", scope: ["2025", "2026", "2027"] },
-      coated: { code: "CTS-01", name: "镀层钢板", cn: "CN 7210 候选 · 待关务复核", summary: "1 个生产配置 · 缺外包证明", scope: ["2025", "2026", "2027"] },
-      section: { code: "SEC-01", name: "型钢", cn: "CN 7216 已确认", summary: "1 个生产配置", scope: ["2025", "2026", "2027"] },
-      wire: { code: "WRD-01", name: "非合金钢盘条", cn: "CN 7213 已确认", summary: "2 个生产配置", scope: ["2025", "2026", "2027"] },
-      cold: { code: "CRS-02", name: "冷轧非合金钢板", cn: state.productCnCodes.length ? `CN ${state.productCnCodes.join(" / ")} · 候选待确认` : "CN Code 尚未设置 · 可由 Agent 建议", summary: "尚未添加生产配置", scope: state.productYears },
-    };
+    const products = cbamProductCatalog();
     Object.entries(state.productOverrides).forEach(([id, overrides]) => {
       if (products[id]) products[id] = { ...products[id], ...overrides };
     });
+    const productKeys = ["hrc", "coated", "section", "wire"].filter((key) => products[key]);
+    if (state.productAdded) productKeys.push("cold");
+    const count = productKeys.length;
     if (!products[state.selectedProduct] || (state.selectedProduct === "cold" && !state.productAdded)) state.selectedProduct = "hrc";
     const selected = products[state.selectedProduct];
-    const productRow = (id) => `<button class="product-row ${state.selectedProduct === id ? "active" : ""}" type="button" data-product="${id}" aria-pressed="${state.selectedProduct === id}"><span>${safe(products[id].code)}</span><strong>${safe(products[id].name)}</strong><small>${safe(products[id].summary)}</small><em>${products[id].scope.length ? `纳入 ${safe(products[id].scope.join(" / "))}` : "尚未纳入年度项目"}</em></button>`;
+    const shFacility = assetRegistry.get("FAC-SH-01")?.name || "上海一厂";
+    const jsFacility = assetRegistry.get("FAC-JS-02")?.name || "江苏二厂";
+    const productRow = (id) => `<button class="product-row ${state.selectedProduct === id ? "active" : ""}" type="button" data-product="${id}" aria-pressed="${state.selectedProduct === id}"><span>${safe(products[id].code)}</span><strong>${safe(products[id].name)}</strong><small>${safe(products[id].summary)}${products[id].assetId ? ` · ${safe(products[id].assetId)}` : ""}</small><em>${products[id].scope.length ? `纳入 ${safe(products[id].scope.join(" / "))}` : "尚未纳入年度项目"}</em></button>`;
     const configurationDraft = state.configurationDrafts[state.selectedProduct];
-    const configurations = state.selectedProduct === "hrc" ? `<article><div class="config-top"><span>A</span><div><strong>上海一厂 · 自产钢坯</strong><small>高炉—转炉长流程 · 有效期 2025–至今</small></div><span class="record-state ok">37% 产量</span></div><dl><div><dt>主要前体</dt><dd>自产钢水、钢坯</dd></div><div><dt>数据路径</dt><dd>自身实测</dd></div><div><dt>单位排放</dt><dd>1.72 tCO₂e/t</dd></div></dl></article><article><div class="config-top"><span>B</span><div><strong>上海一厂 · 外购钢坯</strong><small>供应商甲 / 北方特钢 · 采购批次区分</small></div><span class="record-state warn">43% 产量</span></div><dl><div><dt>主要前体</dt><dd>外购非合金钢坯</dd></div><div><dt>数据路径</dt><dd>前体默认 + 自身实测</dd></div><div><dt>单位排放</dt><dd>1.96 tCO₂e/t</dd></div></dl></article><article><div class="config-top"><span>C</span><div><strong>江苏二厂 · 电弧炉</strong><small>供应商乙钢坯 · 订单号区分</small></div><span class="record-state ok">20% 产量</span></div><dl><div><dt>主要前体</dt><dd>外购低碳钢坯</dd></div><div><dt>数据路径</dt><dd>全链路实测 · 待核查</dd></div><div><dt>单位排放</dt><dd>1.31 tCO₂e/t</dd></div></dl></article>` : state.selectedProduct === "cold" ? `<div class="configuration-empty"><span>✦</span><h3>还没有生产配置</h3><p>告诉 Agent 这个产品在哪里生产、用了什么原料，我们会生成待确认的配置草稿。</p></div>` : `<article><div class="config-top"><span>A</span><div><strong>上海一厂 · 标准生产路径</strong><small>已从上一年度带入结构，待确认本年变化</small></div><span class="record-state warn">待完善</span></div><dl><div><dt>主要前体</dt><dd>待 Agent 确认</dd></div><div><dt>数据路径</dt><dd>暂用默认值</dd></div><div><dt>单位排放</dt><dd>待核算</dd></div></dl></article>`;
+    const configurations = state.selectedProduct === "hrc" ? `<article><div class="config-top"><span>A</span><div><strong>${safe(shFacility)} · 自产钢坯</strong><small>高炉—转炉长流程 · 有效期 2025–至今 · FAC-SH-01</small></div><span class="record-state ok">37% 产量</span></div><dl><div><dt>主要前体</dt><dd>自产钢水、钢坯</dd></div><div><dt>数据路径</dt><dd>自身实测</dd></div><div><dt>单位排放</dt><dd>1.72 tCO₂e/t</dd></div></dl></article><article><div class="config-top"><span>B</span><div><strong>${safe(shFacility)} · 外购钢坯</strong><small>供应商甲 / 北方特钢 · 采购批次区分</small></div><span class="record-state warn">43% 产量</span></div><dl><div><dt>主要前体</dt><dd>外购非合金钢坯</dd></div><div><dt>数据路径</dt><dd>前体默认 + 自身实测</dd></div><div><dt>单位排放</dt><dd>1.96 tCO₂e/t</dd></div></dl></article><article><div class="config-top"><span>C</span><div><strong>${safe(jsFacility)} · 电弧炉</strong><small>供应商乙钢坯 · 订单号区分 · FAC-JS-02</small></div><span class="record-state ok">20% 产量</span></div><dl><div><dt>主要前体</dt><dd>外购低碳钢坯</dd></div><div><dt>数据路径</dt><dd>全链路实测 · 待核查</dd></div><div><dt>单位排放</dt><dd>1.31 tCO₂e/t</dd></div></dl></article>` : state.selectedProduct === "cold" ? `<div class="configuration-empty"><span>✦</span><h3>还没有生产配置</h3><p>告诉 Agent 这个产品在哪里生产、用了什么原料，我们会生成待确认的配置草稿。</p></div>` : `<article><div class="config-top"><span>A</span><div><strong>${safe(shFacility)} · 标准生产路径</strong><small>已从上一年度带入结构，待确认本年变化</small></div><span class="record-state warn">待完善</span></div><dl><div><dt>主要前体</dt><dd>待 Agent 确认</dd></div><div><dt>数据路径</dt><dd>暂用默认值</dd></div><div><dt>单位排放</dt><dd>待核算</dd></div></dl></article>`;
     $("#main").innerHTML = `
       ${pageHeader(`${state.year} · PRODUCT & SUPPLY CHAIN`, "产品与供应链", locked ? yearBadge() : actionButton("＋ 新建产品", "primary", 'data-action="toggle-product-form"'))}
       <div class="product-workspace">
-        <section class="panel product-index"><div class="panel-head"><div><h2>企业产品主档</h2><small>当前查看 ${state.year} 年度范围</small></div><span>${count} 个</span></div><div class="product-list">${productRow("hrc")}${productRow("coated")}${productRow("section")}${productRow("wire")}${state.productAdded ? productRow("cold") : ""}</div><div class="product-index-foot"><button class="text-button" type="button" data-drawer="generic-action" data-drawer-label="Excel 批量导入产品">Excel 批量导入</button><button class="text-button" type="button" data-drawer="record-detail" data-drawer-label="重复产品检查" data-drawer-status="未发现重复项">查找重复</button></div></section>
+        <section class="panel product-index"><div class="panel-head"><div><h2>企业产品主档</h2><small>来自企业数据资产 · ${state.year} 年度范围</small></div><span>${count} 个</span></div><div class="product-list">${productKeys.map(productRow).join("")}</div><div class="product-index-foot"><button class="text-button" type="button" data-drawer="generic-action" data-drawer-label="Excel 批量导入产品">Excel 批量导入</button><button class="text-button" type="button" data-drawer="record-detail" data-drawer-label="重复产品检查" data-drawer-status="未发现重复项">查找重复</button></div></section>
         <section class="product-detail">
-          <div class="product-title"><div><small>PRODUCT MASTER · ${state.selectedProduct === "cold" ? "DRAFT" : "ACTIVE"}</small><h2>${safe(selected.name)}</h2><p>${safe(selected.code)} · ${safe(selected.cn)}</p><div class="product-year-line">适用年度 ${safe(selected.scope.join(" · ") || "尚未纳入年度项目")}</div></div><div>${locked ? '<span class="status-chip locked">快照只读</span>' : '<button class="button button--secondary" type="button" data-drawer="manage-cn">管理 CN Code</button><button class="button button--secondary" type="button" data-drawer="manage-years">管理年度</button><button class="button button--secondary" type="button" data-action="edit-product">编辑主档</button><button class="button button--secondary" type="button" data-staff-action="产品将从未来年度候选中停用">停用</button>'}</div></div>
+          <div class="product-title"><div><small>PRODUCT MASTER · ${selected.assetId || "UI"} · ${state.selectedProduct === "cold" ? "DRAFT" : (selected.status || "ACTIVE")}</small><h2>${safe(selected.name)}</h2><p>${safe(selected.code)} · ${safe(selected.cn)}${selected.versionId ? ` · ${safe(selected.versionId)}` : ""}</p><div class="product-year-line">适用年度 ${safe(selected.scope.join(" · ") || "尚未纳入年度项目")}</div></div><div>${locked ? '<span class="status-chip locked">快照只读</span>' : '<button class="button button--secondary" type="button" data-drawer="manage-cn">管理 CN Code</button><button class="button button--secondary" type="button" data-drawer="manage-years">管理年度</button><button class="button button--secondary" type="button" data-action="edit-product">编辑主档</button><button class="button button--secondary" type="button" data-staff-action="产品将从未来年度候选中停用">停用</button>'}</div></div>
           <section class="configuration-section"><div class="section-heading"><div><h3>生产配置</h3><p>同一销售产品可以有不同工厂、工艺和前体来源；分别核算后再汇总。</p></div>${locked ? "" : `<button class="button button--secondary" type="button" data-action="add-configuration">＋ 添加配置</button>`}</div>
             <div class="configuration-list">${configurations}${configurationDraft ? `<article class="new-config"><div class="config-top"><span>${state.selectedProduct === "hrc" ? "D" : "A"}</span><div><strong>${safe(configurationDraft.facility)} · ${safe(configurationDraft.precursor)}</strong><small>${safe(configurationDraft.process)}${configurationDraft.basis ? ` · ${safe(configurationDraft.basis)}` : ""}</small></div><span class="record-state warn">草稿</span></div><button class="text-button" type="button" data-page="work">让 Agent 帮我确认专业字段 →</button></article>` : ""}</div>
           </section>
@@ -365,19 +401,28 @@
       toast("只有企业管理员可以维护长期主档。");
       return;
     }
+    const seededFacilities = cbamFacilityOptions().map((facility) => ({
+      code: facility.payload?.internalCode || facility.id,
+      name: facility.name,
+      activity: facility.payload?.activity || "生产活动待补充",
+      status: facility.payload?.operationalStatus || (facility.status === "CONFIRMED" ? "在用" : "待确认"),
+      assetId: facility.id,
+      versionId: facility.versionId,
+    }));
     const facilityRows = [
-      { code: "SH-01", name: "上海浦东一厂", activity: "高炉—转炉、轧制与镀层 · 3 条生产线", status: "在用" },
-      { code: "JS-02", name: "江苏二厂", activity: "电弧炉与型钢 · 2 条生产线", status: "在用" },
+      ...seededFacilities,
       ...state.facilities,
-    ].map((facility) => `<article class="record"><span class="record-code">${safe(facility.code)}</span><div><strong>${safe(facility.name)}</strong><p>${safe(facility.activity || "生产活动待补充")}</p></div><button class="record-state ${facility.status === "在用" ? "ok" : "warn"}" type="button" data-drawer="record-detail" data-drawer-label="${safe(facility.name)}" data-drawer-object="设施 ${safe(facility.code)}" data-drawer-status="${safe(facility.status)}" data-drawer-description="查看设施版本、生产活动、年度引用和数据源。">查看</button></article>`).join("");
+    ].map((facility) => `<article class="record"><span class="record-code">${safe(facility.code)}</span><div><strong>${safe(facility.name)}</strong><p>${safe(facility.activity || "生产活动待补充")}${facility.assetId ? ` · ${safe(facility.assetId)}` : ""}</p></div><button class="record-state ${facility.status === "在用" ? "ok" : "warn"}" type="button" data-drawer="record-detail" data-drawer-label="${safe(facility.name)}" data-drawer-object="${safe(facility.versionId || `设施 ${facility.code}`)}" data-drawer-status="${safe(facility.status)}" data-drawer-description="查看设施版本、生产活动、年度引用和数据源。">查看</button></article>`).join("");
+    const facilityCount = seededFacilities.length + state.facilities.length;
+    const orgAsset = assetRegistry.get("ORG-HX-001");
     $("#main").innerHTML = `
       ${pageHeader("PROGRAM MASTER DATA", "企业设置", actionButton("编辑企业资料", "secondary", 'data-action="toggle-org-edit"'))}
-      <div class="master-data-note"><div><strong>这里维护长期主档</strong><p>年度项目引用当时有效的版本。修改不会覆盖已锁定年度；地址、设施或责任变化会创建新的有效期版本。</p></div><span class="status-chip">主档完整度 91%</span></div>
-      <div class="settings-layout"><nav class="settings-nav" aria-label="企业设置导航"><button class="active" type="button" data-drawer="organization-edit">企业与法定主体</button><button type="button" data-drawer="record-detail" data-drawer-label="生产设施主档" data-drawer-object="${2 + state.facilities.length} 座设施">生产设施 <span>${2 + state.facilities.length}</span></button><button type="button" data-drawer="permission-audit">组织与职责 <span>8</span></button><button type="button" data-drawer="record-detail" data-drawer-label="仪表与数据源" data-drawer-object="14 个数据源">仪表与数据源 <span>14</span></button><button type="button" data-drawer="record-detail" data-drawer-label="欧盟进口商目录" data-drawer-object="3 家进口商">欧盟进口商 <span>3</span></button><button type="button" data-drawer="record-detail" data-drawer-label="供应商目录" data-drawer-object="12 家供应商">供应商目录 <span>12</span></button><button type="button" data-drawer="permission-audit">授权与审计</button></nav>
+      <div class="master-data-note"><div><strong>这里维护长期主档</strong><p>企业、设施与产品写入企业数据资产池；年度项目引用当时有效的版本，修改不会覆盖已锁定年度。</p></div><span class="status-chip">主档完整度 91%</span></div>
+      <div class="settings-layout"><nav class="settings-nav" aria-label="企业设置导航"><button class="active" type="button" data-drawer="organization-edit">企业与法定主体</button><button type="button" data-drawer="record-detail" data-drawer-label="生产设施主档" data-drawer-object="${facilityCount} 座设施">生产设施 <span>${facilityCount}</span></button><button type="button" data-drawer="permission-audit">组织与职责 <span>8</span></button><button type="button" data-drawer="record-detail" data-drawer-label="仪表与数据源" data-drawer-object="14 个数据源">仪表与数据源 <span>14</span></button><button type="button" data-drawer="record-detail" data-drawer-label="欧盟进口商目录" data-drawer-object="3 家进口商">欧盟进口商 <span>3</span></button><button type="button" data-drawer="record-detail" data-drawer-label="供应商目录" data-drawer-object="12 家供应商">供应商目录 <span>12</span></button><button type="button" data-drawer="permission-audit">授权与审计</button></nav>
         <section class="settings-main">
-          <article class="panel master-section"><div class="panel-head"><div><h2>法定主体</h2><span>当前版本 · 2025-01-01 起有效</span></div><span class="record-state ok">已验证</span></div><dl class="master-fields"><div><dt>法定名称</dt><dd>${safe(state.organization.name)}</dd></div><div><dt>统一社会信用代码</dt><dd>${safe(state.organization.code)}</dd></div><div><dt>注册地址</dt><dd>${safe(state.organization.address)}</dd></div><div><dt>企业管理员</dt><dd>周岚 · zhou.lan@huaxing.cn</dd></div></dl></article>
-          <article class="panel master-section"><div class="panel-head"><div><h2>生产设施</h2><span>长期设施主档 · ${2 + state.facilities.length} 座</span></div><button class="text-button" type="button" data-drawer="new-facility">＋ 新建设施</button></div><div class="record-list">${facilityRows}</div></article>
-          <article class="panel master-section"><div class="panel-head"><div><h2>组织与职责</h2><span>新年度会询问是否变化</span></div><button class="text-button" type="button" data-drawer="permission-audit">查看全部 8 个职责</button></div><div class="responsibility-grid"><div><small>企业管理员</small><strong>周岚</strong><span>账号与长期主档</span></div><div><small>CBAM 协调人</small><strong>周岚</strong><span>年度项目推进</span></div><div><small>生产数据</small><strong>陈浩</strong><span>上海一厂</span></div><div><small>内部审批</small><strong>赵总</strong><span>交付与风险路径</span></div></div></article>
+          <article class="panel master-section"><div class="panel-head"><div><h2>法定主体</h2><span>${safe(orgAsset?.versionId || "ORG-HX-001")} · 当前有效</span></div><span class="record-state ok">已验证</span></div><dl class="master-fields"><div><dt>法定名称</dt><dd>${safe(state.organization.name)}</dd></div><div><dt>统一社会信用代码</dt><dd>${safe(state.organization.code)}</dd></div><div><dt>注册地址</dt><dd>${safe(state.organization.address)}</dd></div><div><dt>企业管理员</dt><dd>周岚 · zhou.lan@huaxing.cn</dd></div></dl></article>
+          <article class="panel master-section"><div class="panel-head"><div><h2>生产设施</h2><span>企业数据资产 · ${facilityCount} 座</span></div><button class="text-button" type="button" data-drawer="new-facility">＋ 新建设施</button></div><div class="record-list">${facilityRows}</div></article>
+          <article class="panel master-section"><div class="panel-head"><div><h2>组织与职责</h2><span>新年度会询问是否变化</span></div><button class="text-button" type="button" data-drawer="permission-audit">查看全部 8 个职责</button></div><div class="responsibility-grid"><div><small>企业管理员</small><strong>周岚</strong><span>账号与长期主档</span></div><div><small>CBAM 协调人</small><strong>周岚</strong><span>年度项目推进</span></div><div><small>生产数据</small><strong>陈浩</strong><span>${safe(assetRegistry.get("FAC-SH-01")?.name || "上海一厂")}</span></div><div><small>内部审批</small><strong>赵总</strong><span>交付与风险路径</span></div></div></article>
         </section>
       </div>`;
   }
