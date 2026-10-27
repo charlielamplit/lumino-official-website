@@ -62,9 +62,9 @@
 
   const customerGlobalNav = [
     ["services-hub", "▦", "服务总览"],
-    ["shared-tasks", "✓", "我的任务", "3"],
-    ["shared-files", "□", "数据资产", "2"],
-    ["shared-deliverables", "↗", "交付中心", "2"],
+    ["shared-tasks", "✓", "我的任务"],
+    ["shared-files", "□", "数据资产"],
+    ["shared-deliverables", "↗", "交付中心"],
     ["org-settings", "◎", "企业与权限"],
   ];
 

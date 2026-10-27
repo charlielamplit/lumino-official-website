@@ -10,8 +10,32 @@
   const canPerformPortalAction = (action, role = state.role) => window.LuminoPortalPermissions.canPerform(role, action);
   const portalActionDenial = (action) => window.LuminoPortalPermissions.denialMessage(action);
   const assetViews = window.LuminoAssetViewModel.create(assetRegistry, { tenantId: "TNT-0018" });
-  const sharedCenterViews = window.LuminoSharedCenterViewModel.create({ workflow: workflowEngine, assetViews, assetRegistry, services: serviceRegistry }, { tenantId: "TNT-0018", referenceDate: "2026-10-27" });
+  const sharedCenterViews = window.LuminoSharedCenterViewModel.create({
+    workflow: workflowEngine,
+    assetViews,
+    assetRegistry,
+    agentTasks: agentTaskEngine,
+    capabilities: window.LuminoAgentCapabilities,
+    services: serviceRegistry,
+  }, { tenantId: "TNT-0018", referenceDate: "2026-10-27" });
   const annualProfile = () => annualProfiles[state.year] || { mode: "planned", defaultQuarter: "Q1", step: 1, progress: years[state.year]?.progress || 0, position: "年度准备", foundation: "等待确认年度范围", quarters: { Q1: ["待计划", 0, ""], Q2: ["待计划", 0, ""], Q3: ["待计划", 0, ""], Q4: ["待计划", 0, ""] }, monitoring: ["待生成", ""], emissions: ["未开始", ""], verification: ["未开始", ""] };
+
+  function customerNavWithLiveBadges() {
+    const actor = roleConfig[state.role].name;
+    const taskView = sharedCenterViews.tasks({ role: state.role, actor });
+    const deliveryView = sharedCenterViews.deliverables({ role: state.role, actor });
+    const assetView = assetViews.overview({ role: state.role, serviceId: state.currentService, facet: "attention" });
+    const badgeFor = (id) => {
+      if (id === "shared-tasks") return taskView.summary.total || "";
+      if (id === "shared-files") return assetView.summary.attention || "";
+      if (id === "shared-deliverables") return deliveryView.summary.inReview || "";
+      return "";
+    };
+    return customerGlobalNav.map(([id, icon, label]) => {
+      const badge = badgeFor(id);
+      return badge ? [id, icon, label, String(badge)] : [id, icon, label];
+    });
+  }
 
   function periodKey() { return `${state.year}-${state.quarter}`; }
 
@@ -428,7 +452,7 @@
     $("#yearSelect").value = state.year;
     $("#quarterSelect").value = state.quarter;
     const nav = isCustomer()
-      ? [...customerGlobalNav, ...(state.currentService ? [["__service__", "", serviceRegistry[state.currentService].name], ...activeServiceNav()] : [])]
+      ? [...customerNavWithLiveBadges(), ...(state.currentService ? [["__service__", "", serviceRegistry[state.currentService].name], ...activeServiceNav()] : [])]
       : config.nav;
     $("#roleNav").innerHTML = `<p class="nav-label">${iconLabel(state.role)}</p>` + nav.map(([id, icon, label, badge]) => id === "__service__" ? `<p class="nav-section-label">${safe(label)}</p>` : `
       <button class="nav-item ${state.page === id ? "active" : ""}" type="button" data-page="${id}" ${state.page === id ? 'aria-current="page"' : ""}>

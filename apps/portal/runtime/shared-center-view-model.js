@@ -29,6 +29,8 @@
     const workflow = options.workflow;
     const assetViews = options.assetViews;
     const assetRegistry = options.assetRegistry;
+    const agentTasks = options.agentTasks || null;
+    const capabilities = options.capabilities || null;
     const services = options.services || {};
     if (!workflow || typeof workflow.list !== "function") throw new Error("Shared Center ViewModel requires a workflow engine");
     if (!assetViews || typeof assetViews.accessibleAsset !== "function") throw new Error("Shared Center ViewModel requires asset views");
@@ -139,9 +141,45 @@
       return null;
     }
 
+    function taskFromAgentTask(task, input = {}) {
+      const ctx = context(input);
+      if (!task || task.tenantId !== ctx.tenantId) return null;
+      if (!["READY", "READY_PARTIAL"].includes(task.status)) return null;
+      if (!serviceIsVisible(task.serviceId, ctx.role)) return null;
+      if (!["customer_admin", "customer_owner", "customer_contrib"].includes(ctx.role)) return null;
+      const capability = capabilities?.getCapability?.(task.businessType) || null;
+      const title = capability?.titleZh || capability?.title || task.businessType;
+      const page = task.serviceId === "pcf" ? "pcf-data" : "data";
+      return {
+        id: `TASK-AGENT-${task.id}`,
+        tenantId: task.tenantId,
+        serviceId: task.serviceId,
+        serviceName: services[task.serviceId]?.name || String(task.serviceId || "").toUpperCase(),
+        serviceCode: services[task.serviceId]?.code || String(task.serviceId || "").toUpperCase(),
+        sourceType: "agentTask",
+        sourceId: task.id,
+        sourceRevision: task.attempt || 1,
+        sourceStatus: task.status,
+        object: task.caseId || task.serialNo || task.id,
+        title: task.status === "READY_PARTIAL" ? `${title}（部分结果待核对）` : `核对 ${title} 提议`,
+        nextStep: "Agent 仅生成提议；确认后才会成为正式事实或服务绑定",
+        owner: ctx.actor,
+        due: formatDue(referenceDate),
+        priority: "high",
+        page,
+        promptId: task.promptId || null,
+      };
+    }
+
     function tasks(input = {}) {
       const ctx = context(input);
       const items = workflow.list({ tenantId: ctx.tenantId }).map((object) => taskFromObject(object, ctx)).filter(Boolean);
+      if (agentTasks && typeof agentTasks.list === "function") {
+        agentTasks.list({ tenantId: ctx.tenantId }).forEach((task) => {
+          const projected = taskFromAgentTask(task, ctx);
+          if (projected) items.push(projected);
+        });
+      }
       items.sort((a, b) => a.due.rank - b.due.rank || (a.due.at || "9999").localeCompare(b.due.at || "9999") || a.id.localeCompare(b.id));
       return {
         items,

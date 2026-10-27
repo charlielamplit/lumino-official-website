@@ -2,7 +2,7 @@
 
 > 本文供新的执行 Agent 直接读取。开始工作前必须重新读取所列文件，因为数据资产 Agent 可能正在并行更新底层框架。
 
-## 0. 最新检查点（2026-10-27）
+## 0. 最新检查点（2026-10-27 · 晚间）
 
 以下工作已经完成，不要重复实现：
 
@@ -14,9 +14,14 @@
 - PCF 独立复核员专属批准入口；
 - PCF 报告 `INTERNAL_REVIEW → APPROVED → LOCKED` 与输入快照锁定；
 - 资产只读 ViewModel 与跨租户／敏感资产负向过滤；
-- 49 项单元测试、42 个页面—视口组合、深链／注入专项与 PCF 复核链路浏览器检查。
+- 「我的任务／交付中心」已改为 `shared-center-view-model.js` 授权投影（非页面硬编码数组）；
+- 分包：`packages/agent`（domain + runtime）、`packages/shared/service-contract.js`、`apps/portal`、`apps/site`；
+- Agent Runtime 最小闭环：`capability-catalog`、`agent-task-engine`（serialNo／poll／proposal_only）、`proposal-bridge`、`prompts/` 分册；
+- Portal 上传／PCF 回传可见轮询态（SUBMITTING → PROCESSING → READY）；
+- 全局导航徽标改为共享中心／资产 ViewModel 实时计数；READY Agent 提议投影进「我的任务」；
+- 单元测试基线已超过 60 项；另有页面—视口、深链／注入与 PCF 复核链路浏览器检查。
 
-当前优先任务是：复用 `asset-view-model.js` 的授权投影方式，把“我的任务”和“交付中心”从页面硬编码数组改为统一查询结果。不要重复实现数据资产适配层，也不要继续横向扩建服务频道。
+当前优先任务是：进入 Phase 4 —— PCF 完整业务切片（核算声明 → 边界 → 模板／清单 → 因子 → 快照计算 → 热点解释 → 复核报告）。不要重写资产语义，不要横向扩建未开放服务频道。
 
 ## 1. 你的任务
 
@@ -147,7 +152,7 @@ node --test tests/*.test.* packages/agent/tests/*.test.*
 ## 7. 工程约束
 
 - 保持当前无构建静态原型架构，除非用户另行批准迁移。
-- 服务状态和路由以 `apps/portal/runtime/service-contract.js` 为基线；公开内容通过 `apps/site/site/service-registry.js` 扩展。
+- 服务状态和路由以 `packages/shared/service-contract.js` 为基线（portal 再导出／site 直接引用）；公开内容通过 `apps/site/site/service-registry.js` 扩展。
 - 页面不得直接修改资产存储；只能调用资产内核公开能力或前端适配层。
 - 关键状态来自 `domain/workflow-engine.js`，不要为显示另建一套状态机。
 - 新资产版本不得覆盖历史；修订不得自动切换服务绑定。

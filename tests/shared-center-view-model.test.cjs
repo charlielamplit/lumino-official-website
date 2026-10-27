@@ -82,3 +82,41 @@ test("数据贡献者不会自动获得企业受控交付物视图", () => {
   assert.equal(result.items.length, 0);
   assert.equal(result.summary.total, 0);
 });
+
+test("READY 的 Agent 提议进入我的任务，审批人不可见", () => {
+  const AssetViewModel = require("../apps/portal/runtime/asset-view-model.js");
+  const SharedCenterViewModel = require("../apps/portal/runtime/shared-center-view-model.js");
+  const { AgentTaskEngine } = require("../packages/agent/runtime/agent-task-engine.js");
+  const capabilities = require("../packages/agent/runtime/capability-catalog.js");
+
+  const base = fixture();
+  const agentTasks = new AgentTaskEngine({ storage: createMemoryStorage(), capabilities, clock: () => Date.parse("2026-10-27T08:00:00Z") });
+  const submitted = agentTasks.submit({
+    businessType: "CBAM_ENERGY_INVOICE_EXTRACT",
+    serialNo: "SER-SHARED-001",
+    tenantId: "TNT-0018",
+    caseId: "CBAM-2026-Q3",
+    input: { fileName: "gas.pdf" },
+  }, { actor: "陈浩" });
+  agentTasks.markProcessing(submitted.id);
+  agentTasks.complete(submitted.id, {
+    proposals: [{ assetId: "REC-GAS-DEMO", targetAssetType: "energyConsumption", proposedPatch: { originalValue: "100" } }],
+  });
+
+  const views = SharedCenterViewModel.create({
+    workflow: base.workflow,
+    assetViews: AssetViewModel.create(base.registry, { tenantId: "TNT-0018" }),
+    assetRegistry: base.registry,
+    agentTasks,
+    capabilities,
+    services: {
+      cbam: { id: "cbam", code: "CBAM", name: "CBAM", roles: ["customer_admin", "customer_owner", "customer_contrib", "customer_approver"] },
+      pcf: { id: "pcf", code: "PCF", name: "产品碳足迹 PCF", roles: ["customer_admin", "customer_owner", "customer_contrib", "customer_approver"] },
+    },
+  }, { tenantId: "TNT-0018", referenceDate: "2026-10-27" });
+
+  const owner = views.tasks({ role: "customer_owner", actor: "周岚" });
+  const approver = views.tasks({ role: "customer_approver", actor: "赵海峰" });
+  assert.ok(owner.items.some((item) => item.sourceType === "agentTask" && item.sourceId === submitted.id));
+  assert.equal(approver.items.some((item) => item.sourceType === "agentTask"), false);
+});
