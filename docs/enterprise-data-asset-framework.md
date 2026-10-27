@@ -598,11 +598,11 @@ LCA 结构推理
 | 能力 | 实现 | 状态 |
 |---|---|---|
 | 标准文档 | `docs/enterprise-data-asset-framework.md` | 已完成 |
-| 资产版本、确认、服务绑定、血缘、过滤 | `portal/domain/data-asset-engine.js` | 原型已实现（`FRAMEWORK_VERSION` 0.2.0） |
-| 资产、服务绑定、Agent 提议、快照、转换、计算运行 Schema | `portal/schemas/*.schema.json` | 已完成 |
+| 资产版本、确认、服务绑定、血缘、过滤 | `packages/agent/domain/data-asset-engine.js` | 原型已实现（`FRAMEWORK_VERSION` 0.2.0） |
+| 资产、服务绑定、Agent 提议、快照、转换、计算运行 Schema | `packages/agent/schemas/*.schema.json` | 已完成 |
 | 全局“数据资产”页 | `portal/pages/multi-service-pages.js` | 原型已实现 |
 | 资产内核自动测试 | `tests/data-asset-engine.test.cjs` | 已完成（含 STALE / supersede） |
-| `Snapshot` / `Transformation` / `CalculationRun` 与失效传播 | `portal/domain/data-asset-engine.js` | 原型已实现 |
+| `Snapshot` / `Transformation` / `CalculationRun` 与失效传播 | `packages/agent/domain/data-asset-engine.js` | 原型已实现 |
 | PCF 引用资产池与独立绑定确认 | `multi-service-pages.js` / `portal-events.js` | 原型已实现 |
 | CBAM 企业 / 设施 / 产品 / 电力迁入资产池 | `portal-config.js` / `customer-pages.js` | 原型已实现 |
 | PCF 七步计算与报告契约 | 本文 14.2 | 规范已建立，完整管道实现待建 |
@@ -632,3 +632,7 @@ LCA 结构推理
 | 0.2.1 | 2026-10-27 | Patch | 更新实施基线：Snapshot/Transformation/CalculationRun、STALE 传播、PCF/CBAM 资产池接入已在门户原型落地 |
 | 0.2.0 | 2026-10-27 | Minor | 结合 `pcf-calculation` 与 `pcf-report` 增加 PCF 核算声明、生命周期结构、数据/因子分层、七步计算和报告锁定契约 |
 | 0.1.0 | 2026-10-22 | Initial draft | 建立对象分类、字段外壳、版本、血缘、质量、权限、Agent 和服务绑定规范；明确修订影响、提议应用、新服务准入与实施基线 |
+
+### 2026-10-27 物理路径
+
+- 实现与 Schema 迁至 `packages/agent/`；对象语义未变。Portal／公开站分别位于 `apps/portal/`、`apps/site/`。

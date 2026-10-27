@@ -1,7 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const contract = require("../portal/runtime/service-contract.js");
-const publicServices = require("../site/service-registry.js");
+const contract = require("../apps/portal/runtime/service-contract.js");
+const publicServices = require("../apps/site/site/service-registry.js");
 
 test("公开站与 Portal 共享六项服务契约", () => {
   assert.deepEqual(Object.keys(publicServices), Object.keys(contract));

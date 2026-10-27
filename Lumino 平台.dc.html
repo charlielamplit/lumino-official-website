@@ -1,34 +1,7 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Lumino 平台 · 企业合规工作门户</title>
-  <meta name="description" content="Lumino 以统一企业数据底座和独立服务频道，管理任务、事实、计算、复核与交付。">
-  <link rel="icon" href="/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Fragment+Mono&family=Noto+Sans+SC:wght@400;500;600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="site/marketing.css"><script defer src="site/site-shell.js"></script>
-</head>
-<body><lumino-header current="platform"></lumino-header><main id="main">
-  <section class="platform-hero">
-    <div class="wrap platform-hero__grid">
-      <div class="platform-hero__copy"><p class="eyebrow">ONE DATA FOUNDATION · MULTIPLE SERVICES</p><h1>一个企业数据底座，<br><em>多个独立服务频道</em>。</h1><p>企业、工厂、产品和证明材料可跨服务复用；每项服务分别确认事实、处理数据、计算结果并锁定交付版本。</p><div class="hero-actions"><a class="button button--primary" href="/portal/">进入企业门户 →</a><a class="button button--secondary" href="#architecture">了解平台结构</a></div></div>
-      <div class="platform-map" aria-label="Lumino 平台结构示意">
-        <header><span>PLATFORM CONTROL MAP</span><b>企业工作门户</b></header>
-        <div class="platform-map__foundation"><small>FOUNDATION</small><strong>企业数据资产池</strong><span>原始资产 · 服务绑定 · 正式事实 · 计算快照</span></div>
-        <div class="platform-map__shared"><span>服务总览</span><span>我的任务</span><span>数据资产</span><span>交付中心</span><span>权限</span></div>
-        <div class="platform-map__channels"><div><small>ACTIVE</small><strong>CBAM</strong></div><div><small>PILOT</small><strong>PCF</strong></div><div><small>ROADMAP</small><strong>ESG · GHG · EAC · TRADE</strong></div></div>
-        <footer>共享底座 <i></i> 独立事实 <i></i> 受控交付</footer>
-      </div>
-    </div>
-  </section>
-
-  <section class="section"><div class="wrap"><p class="eyebrow">SHARED WORKSPACES</p><h2 class="section-title">跨服务共享的五个工作区。</h2><p class="lede" style="margin-top:16px">聚合不等于开放全部数据。每个视图同时按企业、角色、对象和服务范围过滤。</p><div class="data-flow" style="margin-top:40px"><div><small>01</small><strong>服务总览</strong><p>状态、当前工作与角色化入口</p></div><div><small>02</small><strong>我的任务</strong><p>对象、负责人、截止状态与下一步</p></div><div><small>03</small><strong>数据资产</strong><p>主档、记录、文件、质量与引用</p></div><div><small>04</small><strong>交付中心</strong><p>报告、版本、审批、锁定与回执</p></div><div><small>05</small><strong>企业与权限</strong><p>组织、角色、对象与服务范围</p></div></div></div></section>
-
-  <section class="section section--wash" id="architecture"><div class="wrap editorial-grid"><div><p class="eyebrow">DATA ARCHITECTURE</p><h2 class="section-title">原始资料不是结论，Agent 建议也不是事实。</h2><p class="lede" style="margin-top:16px">平台用分层和版本把“来自哪里”、“怎样处理”和“谁确认”分开记录。</p></div><div class="ledger"><div class="ledger-row"><span>01</span><div><h3>原始资产</h3><p>原文件、数据集与业务主档，保留不可变版本。</p></div></div><div class="ledger-row"><span>02</span><div><h3>服务绑定</h3><p>记录服务、案件、对象、用途、期间和可见范围。</p></div></div><div class="ledger-row"><span>03</span><div><h3>正式事实</h3><p>Agent 只生成提议，授权人员确认后形成特定服务事实。</p></div></div><div class="ledger-row"><span>04</span><div><h3>计算快照</h3><p>锁定资产版本、转换、规则包和参数版本。</p></div></div><div class="ledger-row"><span>05</span><div><h3>报告与交付</h3><p>经复核、审批和锁定后进入正式交付，历史可重现。</p></div></div></div></div></section>
-
-  <section class="section"><div class="wrap"><p class="eyebrow">CONTROL MODEL</p><h2 class="section-title">很多工作可以自动化，专业责任不能自动化。</h2><div class="responsibility" style="margin-top:40px"><div><span class="service-code">AGENT</span><h3>最小数据范围</h3><p>只读取当前企业、当前服务与当前用户有权访问的数据。</p></div><div><span class="service-code">CALCULATION</span><h3>确定性与可复现</h3><p>正式计算不依赖不可解释的生成式结果。</p></div><div><span class="service-code">REVIEW</span><h3>复核与职责分离</h3><p>制备、复核、审批与锁定是可审计的不同动作。</p></div></div></div></section>
-
-  <section class="section section--wash"><div class="wrap"><p class="eyebrow">SERVICE CHANNELS</p><h2 class="section-title">共用平台能力，保留专业工作流。</h2><div class="service-ledger" style="margin-top:40px"><article class="service-row"><span class="service-code">01</span><h3>CBAM</h3><p>年度范围、季度数据、计算成本、报告与交付。</p><a class="service-row__action" href="/services/cbam/">已开通 →</a></article><article class="service-row"><span class="service-code">02</span><h3>产品碳足迹</h3><p>目标与边界、活动数据、计算热点、复核与报告。</p><a class="service-row__action" href="/services/pcf/">试点 →</a></article><article class="service-row"><span class="service-code">03—06</span><h3>后续服务</h3><p>ESG 即将上线；盘查、碳资产与绿证、出口合规尚在规划中。</p><a class="service-row__action" href="/Lumino%20%E5%AE%98%E7%BD%91.dc.html#services">查看全部 →</a></article></div></div></section>
-
-  <section class="cta-band"><div class="wrap"><div><h2 class="section-title">用一项真实服务，看清平台如何工作。</h2><p>已有项目直接进入门户；未建立项目可先预约服务诊断。</p></div><div class="hero-actions"><a class="button" style="color:var(--paper)" href="/portal/">进入企业门户 →</a><a class="button" style="color:var(--paper)" href="/Lumino%20%E8%81%94%E7%B3%BB.dc.html">预约演示</a></div></div></section>
-</main><lumino-footer></lumino-footer></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"><meta http-equiv="refresh" content="0; url=/apps/site/Lumino 平台.dc.html">
+<link rel="canonical" href="/apps/site/Lumino 平台.dc.html">
+<title>Lumino 平台.dc.html</title>
+<script>location.replace('/apps/site/Lumino 平台.dc.html');</script>
+</head><body><p>Redirecting to <a href="/apps/site/Lumino 平台.dc.html">Lumino 平台.dc.html</a>…</p></body></html>

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createCalculator } from "../calculator/engine.mjs";
+import { createCalculator } from "../apps/site/calculator/engine.mjs";
 
 const calculator = createCalculator({
   parameters: {

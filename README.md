@@ -19,7 +19,7 @@
 
 **登录后统一工作门户原型**
 
-- 页面：`portal/index.html`
+- 页面：`apps/portal/index.html`（短路径 `/portal`）
 - 短路径：`/portal`
 - 支持：全局服务总览、我的任务、企业数据资产、交付中心和企业权限；CBAM 完整频道与 PCF 最小闭环；客户、专家、复核、运营与商务视图
 - 数据资产：企业、工厂、产品、证据、能源活动和产量等资产按不可变版本管理；同一资产可跨服务引用，但服务确认、转换和计算血缘互相独立
@@ -32,9 +32,10 @@
 - 免费试算结果可携带年度、CN Code、数量和估算摘要进入登录页；仍需登录确认后才建立正式项目
 - 登录页可使用任意演示入口；不会校验或提交页面中的演示账号
 - 页面数据均为原型演示值，不代表真实客户、项目状态或合规结论
-- Portal 的颜色、字体、间距、页头、按钮、状态和响应式契约见 `portal/DESIGN_SYSTEM.md`
+- Portal 的颜色、字体、间距、页头、按钮、状态和响应式契约见 `apps/portal/DESIGN_SYSTEM.md`
 - 跨服务数据对象、字段、版本、血缘、权限、Agent 边界和服务接入契约见 `docs/enterprise-data-asset-framework.md`
-- 可执行 Schema 位于 `portal/schemas/`，原型内核位于 `portal/domain/data-asset-engine.js`
+- 下一阶段执行计划与 Agent 交接分别见 `docs/portal-next-phase-plan.md`、`docs/portal-next-phase-handoff.md`
+- 可执行 Schema 与内核位于 `packages/agent/`（`schemas/`、`domain/`）；Portal UI 位于 `apps/portal/`；公开站位于 `apps/site/`
 
 **官网与服务说明**
 
@@ -136,3 +137,15 @@ Vercel 部署时配置 `LEAD_WEBHOOK_URL`，`/api/leads` 会将 JSON 线索数�
 ├── i18n-internal.js
 └── screenshots/                # 设计过程截图
 ```
+
+
+## 仓库分包（分仓／分部署预备）
+
+| 目录 | 职责 |
+|---|---|
+| `packages/agent` | 数据资产引擎、工作流、stage gates、Schema |
+| `apps/portal` | 企业工作门户 UI |
+| `apps/site` | 官网、服务页、试算器、知识库 |
+| `docs/` | 共享契约与交接（双方可读） |
+
+根目录保留短路径 redirect 与 `vercel.json` 重写，便于本地与现网 URL 稳定。

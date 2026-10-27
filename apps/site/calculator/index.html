@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lumino · CBAM 成本试算</title>
+  <meta name="description" content="输入 CN Code 和年出口量，免费试算 CBAM 证书数量与出口成本。">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <a class="skip" href="#calculator">跳到试算器</a>
+  <header class="site-header">
+    <a class="brand" href="../Lumino%20官网.dc.html" aria-label="Lumino 首页">
+      <span class="brand-word">LUMINO</span><span class="brand-line"></span>
+    </a>
+    <nav aria-label="主导航">
+      <a href="../Lumino%20官网.dc.html">首页</a>
+      <a href="../Lumino%20CBAM%20指南.dc.html">CBAM 指南</a>
+      <a href="../Lumino%20报价器.dc.html" target="_blank" rel="noopener">获取报价 ↗</a>
+      <a class="nav-cta" href="../Lumino%20联系.dc.html">预约诊断</a>
+    </nav>
+  </header>
+
+  <main class="dashboard-shell" id="calculator">
+      <aside class="tool-sidebar">
+      <form class="input-panel" id="calculatorForm" aria-label="CBAM 试算参数">
+        <div class="panel-heading">
+          <span class="panel-icon">∴</span>
+          <div><h2>核算参数</h2><p>PARAMETERS</p></div>
+        </div>
+
+        <div class="field-row">
+          <label><span>核算年份</span>
+            <select id="year" name="year">
+              <option value="2026">2026 年</option><option value="2027">2027 年</option>
+              <option value="2028">2028 年</option><option value="2029">2029 年</option>
+              <option value="2030">2030 年</option><option value="2031">2031 年</option>
+              <option value="2032">2032 年</option><option value="2033">2033 年</option>
+              <option value="2034">2034 年</option>
+            </select>
+          </label>
+          <label><span>原产国</span><input value="中国" disabled aria-label="原产国：中国"></label>
+        </div>
+
+        <label><span>行业</span><select id="sector" name="sector" required></select></label>
+        <label><span>产品 / CN Code</span><select id="cnCode" name="cnCode" required></select></label>
+
+        <p class="form-error" id="formError" role="alert" hidden></p>
+        <button class="primary-button calc-button" type="submit" disabled>计算碳成本 <span>→</span></button>
+
+        <div class="adjustment-block">
+          <div class="adjustment-title"><span>调整参数</span><small>结果实时更新</small></div>
+          <label><span>年出口欧盟量 <small>吨</small></span><input id="quantity" name="quantity" type="number" value="10000" min="0.01" step="0.01" inputmode="decimal" required></label>
+          <label><span>境外已付碳价 <small>¥/tCO₂e</small></span><input id="carbonPrice" name="carbonPrice" type="number" value="0" min="0" step="1" inputmode="decimal"></label>
+          <label class="switch-row" for="freeAllocation">
+            <span><strong>扣减欧盟免费配额</strong><small>关闭后可对比未扣减成本</small></span>
+            <input id="freeAllocation" type="checkbox" checked><i aria-hidden="true"></i>
+          </label>
+        </div>
+        <p class="privacy-line">基础试算在浏览器内完成，不上传企业参数。</p>
+      </form>
+      </aside>
+
+      <section class="dashboard-main" aria-live="polite">
+        <div id="loadingState" class="summary-card empty-summary"><span class="loader"></span><h2>正在加载规则数据</h2></div>
+        <div id="emptyState" class="summary-card empty-summary">
+          <div><p class="mono">READY TO CALCULATE</p><h2>选择产品，查看你的 CBAM 成本全景。</h2></div>
+          <p>免费查看基础成本、证书数量、免费配额及 2026–2034 年度趋势。</p>
+        </div>
+        <div id="resultState" hidden>
+          <section class="summary-card result-summary">
+            <div class="summary-total"><p>预计 CBAM 成本 <span>· 缺省值</span></p><strong id="totalCost">—</strong><small id="assumption"></small></div>
+            <div class="summary-metric"><span>需清缴证书</span><strong><b id="certificates">—</b> 张</strong></div>
+            <div class="summary-metric"><span>免费配额扣减</span><strong><b id="freeQuota">—</b> 张</strong></div>
+            <div class="summary-metric accent"><span>单位成本</span><strong id="unitCost">—</strong></div>
+          </section>
+
+          <button class="ai-cta" id="openLead" type="button"><span>✦</span> AI 推算实测成本 <small id="savingPreview">对比真实供应链成本</small></button>
+
+          <div class="chart-grid">
+            <section class="chart-card cost-chart"><header><h3>成本扣减过程</h3><span>CNY</span></header><div class="vertical-bars">
+              <div><span id="costGrossLabel">—</span><i id="costGrossBar"></i><small>总碳成本</small></div>
+              <div><span id="costDeductLabel">—</span><i class="yellow" id="costDeductBar"></i><small>配额扣减</small></div>
+              <div><span id="costNetLabel">—</span><i class="green" id="costNetBar"></i><small>净成本</small></div>
+            </div></section>
+            <section class="chart-card"><header><h3>排放构成</h3><span>tCO₂e</span></header><div class="donut-wrap"><div class="donut" id="emissionDonut"><div><strong id="donutTotal">—</strong><span>tCO₂e</span></div></div><div class="legend"><span><b></b>净排放</span><span><b></b>免费配额</span></div></div></section>
+            <section class="chart-card"><header><h3>嵌入排放拆解</h3><span>tCO₂e / t</span></header><div class="emission-column"><strong id="see">—</strong><div><i id="emissionStack"></i></div><small>每吨排放</small><p>净排放 <b id="netEmission">—</b> tCO₂e/t</p></div></section>
+            <section class="chart-card"><header><h3>免费配额成本趋势</h3><span>随退坡下降</span></header><div class="timeline-bars" id="allocationBars"></div></section>
+            <section class="chart-card"><header><h3>碳价敏感性</h3><span>已付碳价 → 单位成本</span></header><div class="line-chart" id="sensitivityChart"></div></section>
+            <section class="chart-card"><header><h3>单位成本年度趋势</h3><span>¥ / 吨</span></header><div class="line-chart" id="yearTrendChart"></div></section>
+          </div>
+
+          <div class="result-notes"><p class="scope-notice" id="scopeNotice" hidden></p><p class="scope-notice warning" id="exemptNotice" hidden>当前数量低于模型的最小起征参考阈值；实际豁免资格需按进口方全年累计情况判定。</p></div>
+          <section class="unlocked" id="unlockedComparison" hidden><div><span>实测参考成本</span><strong id="actualCost"></strong></div><div><span>潜在成本差额</span><strong id="potentialSaving"></strong></div><p>此处为行业参考估算，不是企业法定实测值。顾问将根据你的产品及供应链说明下一步要取哪些数。</p></section>
+          <a class="project-cta" id="projectCta" href="/portal/?source=calculator">
+            <span><small>需要形成正式申报材料？</small><strong>登录后建立年度 CBAM 项目</strong></span><b aria-hidden="true">→</b>
+          </a>
+        </div>
+      </section>
+  </main>
+
+  <div class="dialog-backdrop" id="leadDialog" hidden>
+    <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="leadTitle">
+      <button class="dialog-close" id="closeLead" type="button" aria-label="关闭">×</button>
+      <p class="mono">UNLOCK THE COMPARISON</p>
+      <h2 id="leadTitle">查看实测路径，<br>顺便让顾问帮你判一遍。</h2>
+      <p class="dialog-intro">我们会携带本次试算结果联系你，不用你重复描述产品和数量。</p>
+      <form id="leadForm">
+        <label><span>公司名称 *</span><input id="leadCompany" name="company" required maxlength="80" placeholder="公司全称"></label>
+        <div class="field-row">
+          <label><span>姓名 *</span><input name="name" required maxlength="30" placeholder="您的姓名"></label>
+          <label><span>手机号 *</span><input name="phone" required pattern="1[3-9][0-9]{9}" maxlength="11" inputmode="numeric" placeholder="11 位手机号"></label>
+        </div>
+        <label><span>企业邮箱 <small>选填</small></span><input name="email" type="email" maxlength="100" placeholder="name@company.com"></label>
+        <label class="consent"><input name="consent" type="checkbox" required><span>我同意 Lumino 就本次 CBAM 试算与我联系。信息仅用于本次业务沟通。</span></label>
+        <button class="primary-button" id="leadSubmit" type="submit">提交并查看实测对比</button>
+        <p class="form-status" id="leadStatus" role="status"></p>
+      </form>
+    </section>
+  </div>
+
+  <button id="retry" type="button" hidden>重试</button>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

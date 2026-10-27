@@ -29,6 +29,7 @@ const sleep=milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds))
 await call('Page.enable');
 await call('Runtime.enable');
 await call('Network.enable');
+await call('Network.setCacheDisabled',{cacheDisabled:true});
 
 async function viewport(width,height){
   await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<=520,screenWidth:width,screenHeight:height});
@@ -43,6 +44,8 @@ async function navigate(path){
     if(ready.result.value==='complete')break;
   }
   await sleep(900);
+  await call('Runtime.evaluate',{expression:'scrollTo(0,0)'});
+  await sleep(100);
 }
 
 async function audit(name,path,width){
@@ -65,15 +68,17 @@ async function screenshot(name,path,width,height,fullPage=true){
   await writeFile(new URL(`${name}.png`,outputDir),Buffer.from(result.data,'base64'));
 }
 
-await screenshot('portal-service-overview','/portal/?demoRole=customer_owner',1280,800,false);
+await screenshot('portal-service-overview','/apps/portal/?demoRole=customer_owner',1280,800,false);
 
 const pages=[
-  ['home','/Lumino%20%E5%AE%98%E7%BD%91.dc.html'],
-  ['platform','/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html'],
-  ['cbam','/services/cbam/'],['pcf','/services/pcf/'],['esg','/services/esg/'],
-  ['ghg-inventory','/services/ghg-inventory/'],['carbon-assets','/services/carbon-assets/'],['export-compliance','/services/export-compliance/'],
-  ['about','/Lumino%20%E5%85%B3%E4%BA%8E.dc.html'],['contact','/Lumino%20%E8%81%94%E7%B3%BB.dc.html?serviceId=pcf&source=review'],['knowledge','/knowledge/'],
-  ['portal','/portal/?demoRole=customer_owner']
+  ['home','/apps/site/Lumino%20%E5%AE%98%E7%BD%91.dc.html'],
+  ['platform','/apps/site/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html'],
+  ['cbam','/apps/site/services/cbam/'],['pcf','/apps/site/services/pcf/'],['esg','/apps/site/services/esg/'],
+  ['ghg-inventory','/apps/site/services/ghg-inventory/'],['carbon-assets','/apps/site/services/carbon-assets/'],['export-compliance','/apps/site/services/export-compliance/'],
+  ['about','/apps/site/Lumino%20%E5%85%B3%E4%BA%8E.dc.html'],['contact','/apps/site/Lumino%20%E8%81%94%E7%B3%BB.dc.html?serviceId=pcf&source=review'],['knowledge','/apps/site/knowledge/'],
+  ['portal','/apps/portal/?demoRole=customer_owner'],
+  ['portal-assets-owner','/apps/portal/?demoRole=customer_owner&page=shared-files'],
+  ['portal-assets-contributor','/apps/portal/?demoRole=customer_contrib&page=shared-files']
 ];
 const report={};
 for(const width of [390,768,1440]){
@@ -81,13 +86,17 @@ for(const width of [390,768,1440]){
   for(const [name,path] of pages)report[width][name]=await audit(name,path,width);
 }
 
-await screenshot('home-desktop','/Lumino%20%E5%AE%98%E7%BD%91.dc.html',1440,1000);
-await screenshot('home-mobile','/Lumino%20%E5%AE%98%E7%BD%91.dc.html',390,844);
-await screenshot('platform-desktop','/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html',1440,1000);
-await screenshot('pcf-desktop','/services/pcf/',1440,1000);
-await screenshot('pcf-mobile','/services/pcf/',390,844);
-await screenshot('esg-desktop','/services/esg/',1440,1000);
-await screenshot('portal-mobile','/portal/?demoRole=customer_owner',390,844);
+await screenshot('home-desktop','/apps/site/Lumino%20%E5%AE%98%E7%BD%91.dc.html',1440,1000);
+await screenshot('home-mobile','/apps/site/Lumino%20%E5%AE%98%E7%BD%91.dc.html',390,844);
+await screenshot('platform-desktop','/apps/site/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html',1440,1000);
+await screenshot('cbam-desktop','/apps/site/services/cbam/',1440,1000);
+await screenshot('cbam-mobile','/apps/site/services/cbam/',390,844);
+await screenshot('pcf-desktop','/apps/site/services/pcf/',1440,1000);
+await screenshot('pcf-mobile','/apps/site/services/pcf/',390,844);
+await screenshot('esg-desktop','/apps/site/services/esg/',1440,1000);
+await screenshot('portal-mobile','/apps/portal/?demoRole=customer_owner',390,844);
+await screenshot('portal-assets-desktop','/apps/portal/?demoRole=customer_owner&page=shared-files',1440,1000);
+await screenshot('portal-assets-mobile','/apps/portal/?demoRole=customer_owner&page=shared-files',390,844);
 await writeFile(new URL('browser-audit.json',outputDir),JSON.stringify(report,null,2));
 console.log(JSON.stringify(report,null,2));
 socket.close();
