@@ -175,6 +175,24 @@ test("锁定快照在资产修订后保持可重现并记录影响告警", () =>
   assert.equal(assets.getCalculationRun("ARUN-PCF-LOCKED").status, "CURRENT");
 });
 
+test("修订影响预览列出将过期快照与不会自动切换的绑定", () => {
+  const assets = registry();
+  assets.register(baseAsset({ status: "CONFIRMED" }), { actor: "周岚", role: "customer_owner", reason: "登记已确认事实" });
+  assets.bind({ id: "BIND-PCF-POWER", serviceId: "pcf", caseId: "PCF-2026-001", assetId: "REC-POWER-001" }, { actor: "王晨", role: "expert", reason: "申请 PCF 复用" });
+  assets.confirmBinding("BIND-PCF-POWER", { actor: "周岚", role: "customer_owner", reason: "确认 PCF 使用范围" });
+  assets.createSnapshot({
+    id: "SNAP-PCF-001",
+    tenantId: "TNT-0018",
+    serviceId: "pcf",
+    caseId: "PCF-2026-001",
+    bindingIds: ["BIND-PCF-POWER"],
+  }, { actor: "王晨", role: "expert", reason: "创建快照" });
+  const preview = assets.previewImpact("REC-POWER-001");
+  assert.equal(preview.bindings.length, 1);
+  assert.equal(preview.staleSnapshots[0].id, "SNAP-PCF-001");
+  assert.equal(preview.lockedSnapshots.length, 0);
+});
+
 test("reject 与 supersede 不自动切换旧绑定到新资产版本", () => {
   const assets = registry();
   assets.register(baseAsset({ status: "CONFIRMED" }), { actor: "周岚", role: "customer_owner", reason: "登记已确认事实" });

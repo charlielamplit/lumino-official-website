@@ -40,8 +40,211 @@
       productYears: state.productYears, productCnCodes: state.productCnCodes, productAdded: state.productAdded,
       configurationAdded: state.configurationAdded, yearCreated: state.yearCreated, selectedProduct: state.selectedProduct,
       currentService: state.currentService, page: state.page, consultationRequests: state.consultationRequests,
+      assetFacet: state.assetFacet,
     };
     window.localStorage.setItem(portalStateStorageKey, JSON.stringify(persisted));
+  }
+
+  const assetTypeLabels = {
+    organization: "企业主档", organizationUnit: "组织单元", facility: "设施主档", product: "产品主档", productVariant: "产品规格",
+    process: "工艺", productionLine: "产线", counterparty: "交易方", evidence: "原始证据", measurement: "测量记录",
+    energyConsumption: "能源活动", materialFlow: "物料流动", productionOutput: "产量活动", transportActivity: "运输活动",
+    wasteActivity: "废弃物活动", shipmentEvent: "发运事件", supplierDeclaration: "供应商声明", certificate: "证书",
+    referenceData: "参考数据", dataset: "数据集",
+  };
+  const assetStatusLabels = {
+    DRAFT: "草稿", PROPOSED: "Agent 提议", NEEDS_CONFIRMATION: "待确认", CONFIRMED: "企业已确认",
+    CONFLICTED: "存在冲突", SUPERSEDED: "已被替代", ARCHIVED: "已归档",
+  };
+  const assetBindingLabels = {
+    PROPOSED: "建议复用", PENDING_CONFIRMATION: "待本服务确认", CONFIRMED: "已确认使用", REJECTED: "已拒绝", SUPERSEDED: "已被替代",
+  };
+
+  function assetServiceName(id) {
+    return id === "cbam" ? "CBAM" : id === "pcf" ? "PCF" : String(id || "").toUpperCase();
+  }
+
+  function assetPlainSummary(asset) {
+    if (!asset) return "资产不存在或无权查看";
+    const type = assetTypeLabels[asset.type] || asset.type;
+    if (asset.type === "energyConsumption" && asset.payload?.originalValue) {
+      return `${type} · ${Number(asset.payload.originalValue).toLocaleString("zh-CN")} ${asset.payload.originalUnit || ""}`.trim();
+    }
+    if (asset.type === "evidence") return `${type} · ${asset.payload?.fileName || asset.name}`;
+    if (asset.type === "facility" || asset.type === "product" || asset.type === "organization") {
+      return `${type} · ${asset.payload?.internalCode || asset.id}`;
+    }
+    return type;
+  }
+
+  function assetCoverageText(asset) {
+    if (!asset) return "—";
+    if (asset.temporal?.periodStart && asset.temporal?.periodEnd) return `${asset.temporal.periodStart} — ${asset.temporal.periodEnd}`;
+    if (asset.temporal?.validFrom) return `${asset.temporal.validFrom} 起有效`;
+    return "长期主档";
+  }
+
+  function assetSubjectText(asset) {
+    if (!asset) return "—";
+    const refs = asset.subjectRefs || {};
+    const parts = [];
+    if (refs.facilityId) parts.push(assetRegistry.get(refs.facilityId)?.name || refs.facilityId);
+    if (refs.productId) parts.push(assetRegistry.get(refs.productId)?.name || refs.productId);
+    if (refs.organizationId) parts.push(assetRegistry.get(refs.organizationId)?.name || refs.organizationId);
+    if (refs.counterpartyId) parts.push(`交易方 ${refs.counterpartyId}`);
+    return parts.join(" · ") || asset.ownerOrganizationId || "企业范围";
+  }
+
+  function assetCapsule(assetId, options = {}) {
+    const asset = assetRegistry.get(assetId);
+    if (!asset) return "";
+    const serviceId = options.serviceId || null;
+    const binding = serviceId ? assetRegistry.bindings({ serviceId, assetId })[0] : null;
+    const otherBindings = assetRegistry.bindingsForAsset(assetId).filter((item) => !serviceId || item.serviceId !== serviceId);
+    const confirmedElsewhere = otherBindings.filter((item) => item.status === "CONFIRMED").map((item) => assetServiceName(item.serviceId));
+    const valueBit = asset.payload?.originalValue
+      ? `${Number(asset.payload.originalValue).toLocaleString("zh-CN")} ${asset.payload.originalUnit || ""}`.trim()
+      : asset.payload?.fileName || assetTypeLabels[asset.type] || asset.type;
+    const statusBit = binding
+      ? (assetBindingLabels[binding.status] || binding.status)
+      : (assetStatusLabels[asset.status] || asset.status);
+    const reuseBit = confirmedElsewhere.length
+      ? `也用于 ${confirmedElsewhere.join("、")}`
+      : otherBindings.length
+        ? `另有 ${otherBindings.length} 项服务引用`
+        : "尚未被其他服务使用";
+    const tone = binding?.status === "CONFIRMED" || asset.status === "CONFIRMED" ? "ok" : "warn";
+    return `<button type="button" class="asset-capsule asset-capsule--${tone}" data-drawer="asset-detail" data-asset-id="${safe(asset.id)}" aria-label="查看数据资产 ${safe(asset.name)}">
+      <span class="asset-capsule__kind">${safe(assetTypeLabels[asset.type] || asset.type)}</span>
+      <strong>${safe(asset.name)}</strong>
+      <span class="asset-capsule__meta">${safe(valueBit)} · ${safe(statusBit)}</span>
+      <small>${safe(reuseBit)}</small>
+    </button>`;
+  }
+
+  function assetImpactPreviewHtml(assetId) {
+    const impact = assetRegistry.previewImpact(assetId);
+    if (!impact.asset) return "<p>找不到该资产。</p>";
+    const bindingRows = impact.bindings.length
+      ? impact.bindings.map((binding) => `<li><strong>${safe(assetServiceName(binding.serviceId))}</strong><span>${safe(binding.usagePurpose || "服务引用")} · ${safe(assetBindingLabels[binding.status] || binding.status)}</span><small>不会自动切换到新版本</small></li>`).join("")
+      : "<li><strong>无活跃绑定</strong><span>修订不会影响服务使用状态</span></li>";
+    const staleRows = impact.staleSnapshots.length
+      ? impact.staleSnapshots.map((snapshot) => `<li><strong>${safe(snapshot.id)}</strong><span>${safe(assetServiceName(snapshot.serviceId))} 输入快照将标为过期</span></li>`).join("")
+      : "<li><strong>无未锁定快照</strong><span>当前没有会自动过期的计算输入</span></li>";
+    const lockedRows = impact.lockedSnapshots.length
+      ? impact.lockedSnapshots.map((snapshot) => `<li><strong>${safe(snapshot.id)}</strong><span>已锁定报告保持可重现，仅记录影响告警</span></li>`).join("")
+      : "<li><strong>无已锁定交付</strong><span>暂无锁定快照需要告警</span></li>";
+    return `<div class="asset-impact">
+      <p class="drawer-intro">修订「${safe(impact.asset.name)}」会生成新版本，不会覆盖 ${safe(impact.asset.versionId)}。各服务需自行决定是否改绑。</p>
+      <section><span>服务绑定</span><ul class="asset-impact-list">${bindingRows}</ul></section>
+      <section><span>将过期的计算输入</span><ul class="asset-impact-list">${staleRows}</ul></section>
+      <section><span>已锁定交付物</span><ul class="asset-impact-list">${lockedRows}</ul></section>
+      <footer class="drawer-actions">
+        <button class="button button--secondary" type="button" data-close-drawer>取消</button>
+        <button class="button button--secondary" type="button" data-drawer="asset-detail" data-asset-id="${safe(assetId)}">返回详情</button>
+        <button class="button button--primary" type="button" data-action="asset-revise-confirm" data-asset-id="${safe(assetId)}">确认创建修订版</button>
+      </footer>
+    </div>`;
+  }
+
+  function assetDetailHtml(assetId) {
+    const asset = assetRegistry.get(assetId);
+    if (!asset) {
+      return `<div class="asset-detail"><p class="drawer-intro">找不到数据资产，或当前角色无权查看。</p><footer class="drawer-actions"><button class="button button--secondary" type="button" data-close-drawer>关闭</button></footer></div>`;
+    }
+    const bindings = assetRegistry.bindingsForAsset(assetId);
+    const lineage = assetRegistry.lineage(assetId);
+    const history = assetRegistry.history(assetId);
+    const impact = assetRegistry.previewImpact(assetId);
+    const sourceIds = asset.provenance?.sourceAssetIds || [];
+    const sourceNames = sourceIds.map((id) => assetRegistry.get(id)?.name || id).join("、") || "未关联证据";
+    const quality = asset.quality || {};
+    const qualityDims = [
+      ["完整性", quality.completeness], ["准确性", quality.accuracy], ["一致性", quality.consistency],
+      ["及时性", quality.timeliness], ["唯一性", quality.uniqueness], ["可追溯性", quality.traceability],
+    ].map(([label, value]) => `<li><span>${label}</span><strong>${value == null ? "未知" : Math.round(Number(value) * 100) + "%"}</strong></li>`).join("");
+    const issues = (quality.issues || []).length ? quality.issues.map((issue) => `<li>${safe(issue)}</li>`).join("") : "<li>无开放质量问题</li>";
+    const bindingRows = bindings.length
+      ? bindings.map((binding) => {
+        const snapshot = binding.snapshotId ? assetRegistry.getSnapshot(binding.snapshotId) : null;
+        const staleNote = snapshot?.status === "STALE" ? "输入快照已过期" : snapshot?.locked ? "报告输入已锁定" : snapshot ? `快照 ${snapshot.id}` : "尚未进入计算快照";
+        return `<article class="asset-binding-row">
+          <div><span class="service-tag ${binding.serviceId === "pcf" ? "pilot" : ""}">${safe(assetServiceName(binding.serviceId))}</span><strong>${safe(binding.usagePurpose || "服务引用")}</strong><small>${safe(binding.id)} · 锁定 ${safe(binding.assetVersionId)}</small></div>
+          <div><span class="record-state ${binding.status === "CONFIRMED" ? "ok" : "warn"}">${safe(assetBindingLabels[binding.status] || binding.status)}</span><small>${safe(staleNote)}</small></div>
+        </article>`;
+      }).join("")
+      : `<p class="asset-empty">尚未被任何服务绑定。服务使用前需创建独立确认。</p>`;
+    const lineageSteps = lineage.length
+      ? lineage.map((edge) => `<li><strong>${safe(String(edge.activityType || "").replace(/_/g, " "))}</strong><span>${safe(assetRegistry.get(edge.fromAssetId)?.name || edge.fromAssetId)} → ${safe(assetRegistry.get(edge.toAssetId)?.name || edge.toAssetId)}</span><small>${safe(edge.agentId || "system")} · ${safe(edge.ruleVersion || "无规则版本")}</small></li>`).join("")
+      : "<li><strong>尚无处理血缘</strong><span>直接登记或主档对象</span></li>";
+    const versionSteps = history.slice().reverse().map((version) => `<li class="${version.versionId === asset.versionId ? "current" : ""}"><strong>${safe(version.versionId)}</strong><span>${safe(assetStatusLabels[version.status] || version.status)} · ${safe(version.createdBy)}</span><small>${safe(version.reason || "无说明")} · ${safe(new Date(version.createdAt).toLocaleString("zh-CN", { hour12: false }))}</small></li>`).join("");
+    const access = asset.access || {};
+    const accessText = access.confidentiality === "highly_sensitive"
+      ? "高度敏感：默认仅授权审批人与已绑定专家可见内容"
+      : access.confidentiality === "sensitive"
+        ? "敏感：企业授权角色与已绑定服务可访问；运营默认只看元数据"
+        : "一般/内部：当前企业授权范围内可见";
+    const canConfirmAsset = ["DRAFT", "PROPOSED", "NEEDS_CONFIRMATION", "CONFLICTED"].includes(asset.status)
+      && ["customer_admin", "customer_owner"].includes(state.role);
+    const pendingServiceBinding = bindings.find((item) => ["PROPOSED", "PENDING_CONFIRMATION"].includes(item.status));
+    const primaryAction = canConfirmAsset
+      ? `<button class="button button--primary" type="button" data-action="asset-confirm" data-asset-id="${safe(asset.id)}">确认企业事实</button>`
+      : pendingServiceBinding
+        ? `<button class="button button--primary" type="button" data-service-enter="${safe(pendingServiceBinding.serviceId)}" data-page-target="${pendingServiceBinding.serviceId === "pcf" ? "pcf-data" : "data"}">去 ${safe(assetServiceName(pendingServiceBinding.serviceId))} 确认绑定</button>`
+        : "";
+    const valueBlock = asset.payload?.originalValue
+      ? `<div class="asset-value-pair"><div><span>原始值</span><strong>${safe(Number(asset.payload.originalValue).toLocaleString("zh-CN"))} ${safe(asset.payload.originalUnit || "")}</strong></div><div><span>标准值</span><strong>${safe(asset.payload.normalizedValue ? `${Number(asset.payload.normalizedValue).toLocaleString("zh-CN")} ${asset.payload.normalizedUnit || ""}` : "未换算")}</strong></div></div>`
+      : asset.payload?.fileName
+        ? `<div class="asset-value-pair"><div><span>文件</span><strong>${safe(asset.payload.fileName)}</strong></div><div><span>类型</span><strong>${safe(asset.payload.documentType || asset.payload.mediaType || "—")}</strong></div></div>`
+        : `<div class="asset-value-pair"><div><span>业务对象</span><strong>${safe(assetPlainSummary(asset))}</strong></div><div><span>内部编码</span><strong>${safe(asset.payload?.internalCode || asset.id)}</strong></div></div>`;
+    const impactHint = impact.staleSnapshots.length || impact.lockedSnapshots.length
+      ? `<p class="asset-impact-hint">若修订此版本：${impact.staleSnapshots.length} 个未锁定快照将过期；${impact.lockedSnapshots.length} 个已锁定报告保持可重现。</p>`
+      : `<p class="asset-impact-hint">当前没有依赖此版本的计算快照。</p>`;
+
+    return `<div class="asset-detail">
+      <section class="asset-detail__hero">
+        <div><span>${safe(assetTypeLabels[asset.type] || asset.type)}</span><h3>${safe(asset.name)}</h3><p>${safe(assetPlainSummary(asset))} · 属于 ${safe(assetRegistry.get(asset.ownerOrganizationId)?.name || asset.ownerOrganizationId)}</p></div>
+        <span class="record-state ${asset.status === "CONFIRMED" ? "ok" : "warn"}">${safe(assetStatusLabels[asset.status] || asset.status)}</span>
+      </section>
+      <dl class="asset-detail__facts">
+        <div><dt>覆盖对象</dt><dd>${safe(assetSubjectText(asset))}</dd></div>
+        <div><dt>覆盖期间</dt><dd>${safe(assetCoverageText(asset))}</dd></div>
+        <div><dt>当前版本</dt><dd>${safe(asset.versionId)}</dd></div>
+        <div><dt>责任人</dt><dd>${safe(asset.steward?.ownerName || "待分配")}</dd></div>
+      </dl>
+      ${valueBlock}
+      <section class="asset-detail__block ${["PROPOSED", "NEEDS_CONFIRMATION"].includes(asset.status) ? "is-proposal" : ""}">
+        <header><span>${["PROPOSED", "NEEDS_CONFIRMATION"].includes(asset.status) ? "待确认来源" : "来源与确认"}</span><strong>${safe(asset.provenance?.sourceType || "manual")}</strong></header>
+        <p>来自 ${safe(sourceNames)}${asset.provenance?.confirmedBy ? ` · 由 ${safe(asset.provenance.confirmedBy)} 确认` : " · 尚未确认为企业正式事实"}</p>
+      </section>
+      <section class="asset-detail__block">
+        <header><span>数据质量</span><strong>${safe(quality.status || "待评估")}</strong></header>
+        <ul class="asset-quality-grid">${qualityDims}</ul>
+        <ul class="asset-issue-list">${issues}</ul>
+      </section>
+      <section class="asset-detail__block">
+        <header><span>服务使用情况</span><strong>${bindings.length} 项绑定</strong></header>
+        <div class="asset-binding-list">${bindingRows}</div>
+        ${impactHint}
+      </section>
+      <section class="asset-detail__block">
+        <header><span>处理血缘</span><strong>${lineage.length} 步</strong></header>
+        <ol class="asset-timeline">${lineageSteps}</ol>
+      </section>
+      <section class="asset-detail__block">
+        <header><span>历史版本</span><strong>Rev ${asset.revision}</strong></header>
+        <ol class="asset-timeline">${versionSteps}</ol>
+      </section>
+      <section class="asset-detail__block">
+        <header><span>谁可以访问</span><strong>${safe(access.confidentiality || "internal")}</strong></header>
+        <p>${safe(accessText)}</p>
+      </section>
+      <footer class="drawer-actions">
+        <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
+        <button class="button button--secondary" type="button" data-drawer="asset-impact" data-asset-id="${safe(asset.id)}">查看修订影响</button>
+        ${primaryAction}
+      </footer>
+    </div>`;
   }
 
   function workflowActor() {
@@ -306,6 +509,14 @@
       "pcf-report-preview": ["PCF REPORT PREVIEW", "产品碳足迹报告预览", `<div class="document-sheet"><small>PREVIEW · ${workflowEngine.get("PCF-2026-001")?.status === "DELIVERABLE_READY" ? "REV 1" : "DRAFT"}</small><h3>热轧非合金钢卷产品碳足迹报告</h3><dl><div><dt>核算目标</dt><dd>客户披露与供应链响应</dd></div><div><dt>系统边界</dt><dd>从摇篮到大门</dd></div><div><dt>功能单位</dt><dd>1 吨热轧非合金钢卷</dd></div><div><dt>结果</dt><dd>2.18 tCO₂e / t 产品</dd></div><div><dt>计算版本</dt><dd>PCF Run 01</dd></div></dl><p>结果仅用于原型演示。正式报告需完成专家复核、方法说明和证据完整性检查。</p></div>`],
       "generic-action": [context.eyebrow || "ACTION", context.title || "完成操作", drawerForm("generic-action", context.description || "补充必要信息后执行。动作、理由和影响范围会写入审计记录。", `${commonRole}${formField(context.fieldLabel || "处理说明", `<textarea rows="4" required placeholder="${context.placeholder || "说明处理内容或判断依据"}"></textarea>`)}${formField("责任人", '<select><option>我负责</option><option>转交项目协调人</option><option>转交制备专家</option><option>转交运营</option></select>')}${formField("期望完成时间", '<input type="date" value="2026-10-15">')}`, context.submitLabel || "确认并记录")],
       "record-detail": [context.eyebrow || "DETAIL", context.title || "记录详情", `<div class="detail-ledger">${commonRole}<dl><div><dt>对象</dt><dd>${context.object || `华星钢铁 · ${state.year}`}</dd></div><div><dt>当前状态</dt><dd>${context.status || "处理中"}</dd></div><div><dt>负责人</dt><dd>${context.owner || roleConfig[state.role].name}</dd></div><div><dt>权限范围</dt><dd>${context.scope || "当前服务订单与已授权数据"}</dd></div><div><dt>最近更新</dt><dd>今天 09:20</dd></div></dl><section><strong>当前需要处理</strong><p>${context.description || "查看记录、确认下一步，并保留处理依据。"}</p></section></div><footer class="drawer-actions"><button class="button button--secondary" type="button" data-close-drawer>关闭</button>${context.action ? `<button class="button button--primary" type="button" data-drawer="generic-action" data-drawer-label="${context.action}">${context.action}</button>` : ""}</footer>`],
+      "asset-detail": (() => {
+        const asset = assetRegistry.get(context.assetId);
+        return ["ENTERPRISE DATA ASSET", asset?.name || context.title || "数据资产详情", assetDetailHtml(context.assetId)];
+      })(),
+      "asset-impact": (() => {
+        const asset = assetRegistry.get(context.assetId);
+        return ["REVISION IMPACT", asset ? `修订影响 · ${asset.name}` : "修订影响预览", assetImpactPreviewHtml(context.assetId)];
+      })(),
     };
     return templates[id] || templates["record-detail"];
   }
@@ -318,6 +529,7 @@
     $("#drawerEyebrow").textContent = eyebrow;
     $("#drawerTitle").textContent = title;
     $("#drawerBody").innerHTML = body;
+    $("#drawerLayer").classList.toggle("drawer-layer--wide", id === "asset-detail" || id === "asset-impact");
     $("#drawerLayer").hidden = false;
     $("#drawer").querySelector("button, input, select, textarea, [href]")?.focus();
     $("#portal").inert = true;
@@ -327,6 +539,7 @@
 
   function closeDrawer() {
     $("#drawerLayer").hidden = true;
+    $("#drawerLayer").classList.remove("drawer-layer--wide");
     $("#portal").inert = false;
     $("#portal").removeAttribute("aria-hidden");
     document.body.classList.remove("drawer-open");

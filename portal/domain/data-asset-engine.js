@@ -459,6 +459,30 @@
       return clone(run);
     }
 
+    previewImpact(assetId, revision = null) {
+      const asset = this.get(assetId, revision);
+      if (!asset) return { asset: null, bindings: [], staleSnapshots: [], lockedSnapshots: [], staleRuns: [] };
+      const versionId = asset.versionId;
+      const bindings = Object.values(this.state.bindings)
+        .filter((item) => item.assetId === assetId && item.assetVersionId === versionId && !["SUPERSEDED", "REJECTED"].includes(item.status))
+        .map(clone);
+      const staleSnapshots = [];
+      const lockedSnapshots = [];
+      Object.values(this.state.snapshots).forEach((snapshot) => {
+        if (!snapshot.inputAssetVersionIds.includes(versionId)) return;
+        if (snapshot.locked || snapshot.status === "LOCKED") lockedSnapshots.push(clone(snapshot));
+        else if (!["STALE", "SUPERSEDED"].includes(snapshot.status)) staleSnapshots.push(clone(snapshot));
+      });
+      const staleRuns = Object.values(this.state.calculationRuns)
+        .filter((run) => run.inputAssetVersionIds.includes(versionId) && ["CURRENT", "SUCCEEDED"].includes(run.status))
+        .filter((run) => {
+          const snapshot = this.state.snapshots[run.snapshotId];
+          return !(snapshot?.locked || snapshot?.status === "LOCKED");
+        })
+        .map(clone);
+      return { asset: clone(asset), bindings, staleSnapshots, lockedSnapshots, staleRuns };
+    }
+
     notifyBindingsOfAssetRevision(assetId, fromVersionId, toVersionId, command) {
       Object.values(this.state.bindings).forEach((binding) => {
         if (binding.assetId !== assetId || binding.assetVersionId !== fromVersionId) return;

@@ -81,13 +81,21 @@
         submitLabel: drawerTrigger.dataset.drawerSubmit,
         flow: drawerTrigger.dataset.flow,
         serviceId: drawerTrigger.dataset.serviceId,
+        assetId: drawerTrigger.dataset.assetId,
       });
+      return;
+    }
+    const facetButton = event.target.closest("[data-asset-facet]");
+    if (facetButton) {
+      state.assetFacet = facetButton.dataset.assetFacet;
+      persistPortalState();
+      render();
       return;
     }
     const serviceEntry = event.target.closest("[data-service-enter]");
     if (serviceEntry) {
       setCustomerDestination(serviceEntry.dataset.serviceEnter, serviceEntry.dataset.pageTarget);
-      persistPortalState(); render();
+      persistPortalState(); render(); closeDrawer();
       $("#sidebar").classList.remove("open");
       $("#main").focus({ preventScroll: true });
       return;
@@ -128,6 +136,26 @@
     const customerAction = event.target.closest("[data-action]");
     if (customerAction) {
       const action = customerAction.dataset.action;
+      if (action === "asset-confirm") {
+        try {
+          const assetId = customerAction.dataset.assetId;
+          assetRegistry.confirm(assetId, { ...workflowActor(), reason: "确认企业数据资产事实", basis: "核对来源、期间与数值" });
+          openDrawer("asset-detail", { assetId });
+          toast("企业事实已确认；依赖此资产的服务绑定不会自动改变。");
+        } catch (error) { toast(error.message); }
+      }
+      if (action === "asset-revise-confirm") {
+        try {
+          const assetId = customerAction.dataset.assetId;
+          const current = assetRegistry.get(assetId);
+          assetRegistry.revise(assetId, {
+            status: current?.status === "CONFIRMED" ? "NEEDS_CONFIRMATION" : (current?.status || "NEEDS_CONFIRMATION"),
+            provenance: { ...(current?.provenance || {}), lastRevisionPreview: true },
+          }, { ...workflowActor(), reason: "按影响预览创建资产修订版", expectedRevision: current?.revision });
+          openDrawer("asset-detail", { assetId });
+          toast("已创建新修订版；未锁定快照已标为过期，服务绑定未自动切换。");
+        } catch (error) { toast(error.message); }
+      }
       if (action === "pcf-confirm-scope") { moveWorkflow("PCF-2026-001", ["COLLECTING"], "客户确认 PCF 核算目标和期间"); state.page = "pcf-boundary"; persistPortalState(); render(); toast("核算目标已确认。下一步确认系统边界和主要输入。"); }
       if (action === "pcf-confirm-boundary") { state.page = "pcf-data"; persistPortalState(); render(); toast("边界建议已记录。请上传活动数据和证明材料。"); }
       if (action === "pcf-confirm-proposal") {

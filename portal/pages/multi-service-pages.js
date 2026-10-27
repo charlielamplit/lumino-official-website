@@ -37,30 +37,59 @@
   }
 
   function renderSharedFiles() {
-    const typeLabels = { organization: "企业主档", facility: "设施主档", product: "产品主档", evidence: "原始证据", energyConsumption: "能源活动", productionOutput: "产量活动", supplierDeclaration: "供应商声明", shipmentEvent: "发运事件" };
-    const statusLabels = { DRAFT: "草稿", PROPOSED: "Agent 提议", NEEDS_CONFIRMATION: "待确认", CONFIRMED: "企业已确认", CONFLICTED: "存在冲突", SUPERSEDED: "已被替代", ARCHIVED: "已归档" };
-    const bindingLabels = { PROPOSED: "建议复用", PENDING_CONFIRMATION: "待本服务确认", CONFIRMED: "已确认使用", REJECTED: "已拒绝", SUPERSEDED: "已被替代" };
+    const masterTypes = new Set(["organization", "organizationUnit", "facility", "product", "productVariant", "process", "productionLine", "counterparty"]);
+    const activityTypes = new Set(["measurement", "energyConsumption", "materialFlow", "productionOutput", "transportActivity", "wasteActivity", "shipmentEvent", "businessTransaction"]);
     const assets = assetRegistry.catalog({ tenantId: "TNT-0018", role: state.role });
     const allBindings = assetRegistry.bindings();
-    const pendingBindings = allBindings.filter((item) => item.status === "PENDING_CONFIRMATION");
+    const pendingBindings = allBindings.filter((item) => ["PROPOSED", "PENDING_CONFIRMATION"].includes(item.status));
     const attentionAssets = assets.filter((item) => ["PROPOSED", "NEEDS_CONFIRMATION", "CONFLICTED"].includes(item.status));
     const evidenceCount = assets.filter((item) => item.type === "evidence").length;
     const reusableCount = assets.filter((item) => assetRegistry.bindingsForAsset(item.id).length > 1).length;
-    const serviceName = (id) => id === "cbam" ? "CBAM" : id === "pcf" ? "PCF" : id.toUpperCase();
+    const attentionIds = new Set([
+      ...attentionAssets.map((item) => item.id),
+      ...pendingBindings.map((item) => item.assetId),
+    ]);
+    const facet = state.assetFacet || "attention";
+    const facets = [
+      ["attention", "待我处理", attentionIds.size],
+      ["all", "全部", assets.length],
+      ["master", "主档", assets.filter((item) => masterTypes.has(item.type)).length],
+      ["activity", "活动数据", assets.filter((item) => activityTypes.has(item.type)).length],
+      ["evidence", "证据", evidenceCount],
+      ["bound", "被服务使用", assets.filter((item) => assetRegistry.bindingsForAsset(item.id).length > 0).length],
+    ];
+    const filtered = assets.filter((asset) => {
+      if (facet === "attention") return attentionIds.has(asset.id);
+      if (facet === "master") return masterTypes.has(asset.type);
+      if (facet === "activity") return activityTypes.has(asset.type);
+      if (facet === "evidence") return asset.type === "evidence" || asset.type === "certificate" || asset.type === "supplierDeclaration";
+      if (facet === "bound") return assetRegistry.bindingsForAsset(asset.id).length > 0;
+      return true;
+    });
     const qualityText = (asset) => asset.quality?.status === "verified" ? "已验证" : asset.quality?.status === "usable" ? "可使用" : asset.quality?.status === "needs_review" ? "需复核" : "待评估";
-    const coverage = (asset) => asset.temporal?.periodStart && asset.temporal?.periodEnd ? `${asset.temporal.periodStart} — ${asset.temporal.periodEnd}` : asset.temporal?.validFrom ? `${asset.temporal.validFrom} 起` : "长期主档";
-    const rows = assets.map((asset) => {
+    const rows = filtered.map((asset) => {
       const bindings = assetRegistry.bindingsForAsset(asset.id);
-      const serviceTags = bindings.length ? bindings.map((binding) => `<span class="service-tag ${binding.serviceId === "pcf" ? "pilot" : ""}" title="${safe(bindingLabels[binding.status] || binding.status)}">${safe(serviceName(binding.serviceId))}</span>`).join(" ") : '<span class="asset-unused">尚未用于服务</span>';
+      const serviceTags = bindings.length
+        ? bindings.map((binding) => `<span class="service-tag ${binding.serviceId === "pcf" ? "pilot" : ""}" title="${safe(assetBindingLabels[binding.status] || binding.status)}">${safe(assetServiceName(binding.serviceId))}</span>`).join(" ")
+        : '<span class="asset-unused">尚未用于服务</span>';
       const issue = asset.quality?.issues?.[0] || "无开放质量问题";
-      return `<tr><td><span class="asset-kind">${safe(typeLabels[asset.type] || asset.type)}</span><strong>${safe(asset.name)}</strong><small>${safe(asset.id)} · Rev ${asset.revision}</small></td><td><strong>${safe(coverage(asset))}</strong><small>${safe(asset.steward?.ownerName || "责任人待分配")}</small></td><td>${serviceTags}</td><td><span class="record-state ${asset.status === "CONFIRMED" ? "ok" : "warn"}">${safe(statusLabels[asset.status] || asset.status)}</span><small>${safe(qualityText(asset))} · ${safe(issue)}</small></td><td><button class="text-button" type="button" data-drawer="record-detail" data-drawer-label="${safe(asset.name)}" data-drawer-object="${safe(asset.versionId)}" data-drawer-status="${safe(statusLabels[asset.status] || asset.status)}" data-drawer-owner="${safe(asset.steward?.ownerName || "待分配")}" data-drawer-scope="${safe(bindings.map((item) => `${serviceName(item.serviceId)}：${bindingLabels[item.status] || item.status}`).join("；") || "尚未绑定服务")}" data-drawer-description="${safe(`来源、质量、历史版本与服务使用相互独立。${issue}`)}">查看资产 →</button></td></tr>`;
+      const pendingHere = bindings.some((item) => ["PROPOSED", "PENDING_CONFIRMATION"].includes(item.status));
+      return `<tr>
+        <td><span class="asset-kind">${safe(assetTypeLabels[asset.type] || asset.type)}</span><strong>${safe(asset.name)}</strong><small>${safe(assetPlainSummary(asset))} · ${safe(asset.versionId)}</small></td>
+        <td><strong>${safe(assetCoverageText(asset))}</strong><small>${safe(assetSubjectText(asset))} · ${safe(asset.steward?.ownerName || "责任人待分配")}</small></td>
+        <td>${serviceTags}</td>
+        <td><span class="record-state ${asset.status === "CONFIRMED" && !pendingHere ? "ok" : "warn"}">${safe(assetStatusLabels[asset.status] || asset.status)}</span><small>${safe(qualityText(asset))} · ${safe(issue)}</small></td>
+        <td><button class="text-button" type="button" data-drawer="asset-detail" data-asset-id="${safe(asset.id)}">查看详情 →</button></td>
+      </tr>`;
     }).join("");
     const primaryAttention = assets.some((item) => item.id === "REC-HX-POWER-2026Q3") && pendingBindings.some((item) => item.assetId === "REC-HX-POWER-2026Q3" && item.serviceId === "pcf");
+    const facetBar = `<div class="asset-facets" role="tablist" aria-label="数据资产分面">${facets.map(([id, label, count]) => `<button type="button" class="asset-facet ${facet === id ? "active" : ""}" data-asset-facet="${id}" role="tab" aria-selected="${facet === id}">${label}<span>${count}</span></button>`).join("")}</div>`;
     $("#main").innerHTML = `${pageHeader("ENTERPRISE DATA ASSETS · FRAMEWORK 0.2.0", "企业数据资产", statusChip(`${assets.length} 项当前资产`))}
-      <p class="page-lead">企业数据只维护一次；各项服务引用明确版本，并分别确认用途、范围和计算血缘。</p>
-      ${primaryAttention ? `<section class="asset-attention" aria-labelledby="assetAttentionTitle"><div><span>当前需要处理</span><h2 id="assetAttentionTitle">确认购入电力是否用于 PCF 产品分配</h2><p>CBAM 已确认使用企业电力事实；PCF 仍需独立确认产品范围和分配方法，原始账单不会被复制。</p></div><button class="button button--primary" type="button" data-service-enter="pcf" data-page-target="pcf-data">进入 PCF 确认</button></section>` : ""}
-      <dl class="asset-register-summary" aria-label="数据资产摘要"><div><dt>当前资产</dt><dd>${assets.length}</dd><span>按角色和对象范围过滤</span></div><div><dt>原始证据</dt><dd>${evidenceCount}</dd><span>原文件保持不可变</span></div><div><dt>跨服务复用</dt><dd>${reusableCount}</dd><span>每项服务独立确认</span></div><div><dt>待处理</dt><dd>${attentionAssets.length + pendingBindings.length}</dd><span>事实提议与服务绑定</span></div></dl>
-      <section class="asset-catalog" aria-labelledby="assetCatalogTitle"><header><div><span>ASSET REGISTER</span><h2 id="assetCatalogTitle">当前可访问的数据资产</h2><p>列表只展示当前企业和当前角色有权访问的最新版本；历史修订仍保留在资产详情中。</p></div><button class="button button--secondary" type="button" data-drawer="upload-evidence">登记新资料</button></header><div class="asset-table-wrap"><table><thead><tr><th>资产</th><th>覆盖范围 / 责任人</th><th>服务使用</th><th>状态 / 质量</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="5">当前授权范围内暂无数据资产。</td></tr>'}</tbody></table></div></section>
+      <p class="page-lead">先处理当前一件事；详情侧栏回答来源、确认、质量、服务使用与版本影响。</p>
+      ${primaryAttention ? `<section class="asset-attention" aria-labelledby="assetAttentionTitle"><div><span>当前需要处理</span><h2 id="assetAttentionTitle">确认购入电力是否用于 PCF 产品分配</h2><p>CBAM 已确认使用企业电力事实；PCF 仍需独立确认产品范围和分配方法，原始账单不会被复制。</p></div><div class="asset-attention__actions"><button class="button button--primary" type="button" data-service-enter="pcf" data-page-target="pcf-data">进入 PCF 确认</button><button class="button button--secondary" type="button" data-drawer="asset-detail" data-asset-id="REC-HX-POWER-2026Q3">查看电力资产</button></div></section>` : ""}
+      <dl class="asset-register-summary" aria-label="数据资产摘要"><div><dt>当前资产</dt><dd>${assets.length}</dd><span>按角色和对象范围过滤</span></div><div><dt>原始证据</dt><dd>${evidenceCount}</dd><span>原文件保持不可变</span></div><div><dt>跨服务复用</dt><dd>${reusableCount}</dd><span>每项服务独立确认</span></div><div><dt>待处理</dt><dd>${attentionIds.size}</dd><span>事实提议与服务绑定</span></div></dl>
+      ${facetBar}
+      <section class="asset-catalog" aria-labelledby="assetCatalogTitle"><header><div><span>ASSET REGISTER</span><h2 id="assetCatalogTitle">${facet === "attention" ? "需要你处理的资产" : "当前分面的数据资产"}</h2><p>点击「查看详情」打开宽侧栏，可看到来源、服务绑定、血缘、版本与修订影响。</p></div><button class="button button--secondary" type="button" data-drawer="upload-evidence">登记新资料</button></header><div class="asset-table-wrap"><table><thead><tr><th>资产</th><th>覆盖范围 / 责任人</th><th>服务使用</th><th>状态 / 质量</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="5">当前分面没有数据资产。</td></tr>'}</tbody></table></div></section>
       <section class="asset-governance" aria-label="数据资产处理原则"><article><span>AGENT STEWARDSHIP</span><h2>Agent 负责识别与建议，不负责越权确认</h2><ol><li>识别文件、期间、单位和业务对象</li><li>生成带来源引用的待确认记录</li><li>检测重复、冲突和跨服务复用机会</li><li>由授权人员确认后生成新资产版本</li></ol></article><article><span>CROSS-SERVICE CONTRACT</span><h2>复用资产，不复用结论</h2><p>服务必须通过绑定引用具体资产版本，并单独记录用途、转换、分配、确认和输入快照。一个服务的确认不会改变其他服务。</p><a class="text-button" href="../docs/enterprise-data-asset-framework.md" target="_blank" rel="noopener">查看标准框架 v0.2.0 →</a></article></section>`;
   }
 
@@ -199,7 +228,8 @@
       <header><div><span class="pcf-kicker">ASSET BINDING · ${safe(pack?.metadata?.templateVersion || "ENTERPRISE POOL")}</span><h2 id="pcfImportTitle">${safe(evidenceName)}</h2><p>活动数据引用企业资产池中的确定版本；PCF 绑定确认不会改变 CBAM 或其他服务状态。</p></div>${statusChip(factConfirmed ? "绑定已确认" : "1 项待确认", factConfirmed ? "ok" : "warn")}</header>
       <div class="pcf-import-checks"><div><span>企业资产</span><strong>${safe(ctx.power?.id || "—")}</strong><small>Rev ${safe(String(ctx.power?.revision || 1))} · ${safe(ctx.power?.status || "")}</small></div><div><span>服务绑定</span><strong>${safe(ctx.powerBinding?.id || "—")}</strong><small>${safe(ctx.powerBinding?.status || "未绑定")}</small></div><div><span>证明材料</span><strong>${safe(evidenceId)}</strong><small>${safe(ctx.evidence?.payload?.documentType || "energy_invoice")}</small></div><div><span>CBAM 复用</span><strong>独立确认</strong><small>不共享本服务结论</small></div></div>
       <div class="pcf-proposed-fact"><div><span class="pcf-kicker">${factConfirmed ? "SERVICE BINDING CONFIRMED" : "PENDING SERVICE BINDING"}</span><h3>${safe(ctx.power?.name || "上海一厂购入电力")}</h3><p>来源资产 ${safe(ctx.power?.versionId || "—")} · ${safe(ctx.period)}</p></div><dl><div><dt>活动数据</dt><dd>${safe(ctx.value)} ${safe(ctx.unit)}</dd></div><div><dt>用途</dt><dd>${safe(productLabel)}</dd></div><div><dt>证据</dt><dd>${safe(evidenceId)}</dd></div></dl>${canConfirmBinding ? actionButton("确认这项 PCF 绑定", "primary", 'data-action="pcf-confirm-proposal"') : statusChip(factConfirmed ? "已确认" : "等待范围确认", factConfirmed ? "ok" : "warn")}</div>
-      <footer><p>同一材料可以供 CBAM 引用，但每个服务的确认状态与计算血缘相互独立。</p><button class="button button--secondary" type="button" data-drawer="pcf-upload">回传修订版或补充材料</button></footer>
+      <div class="asset-capsule-row" aria-label="关联企业数据资产">${assetCapsule("REC-HX-POWER-2026Q3", { serviceId: "pcf" })}${assetCapsule("EVD-HX-POWER-2026Q3", { serviceId: "pcf" })}${assetCapsule("PRD-HRC-01", { serviceId: "pcf" })}</div>
+      <footer><p>同一材料可以供 CBAM 引用，但每个服务的确认状态与计算血缘相互独立。点胶囊可打开资产详情侧栏。</p><button class="button button--secondary" type="button" data-drawer="pcf-upload">回传修订版或补充材料</button></footer>
     </section>` : `<section class="pcf-awaiting-pack"><span class="pcf-kicker">WAITING FOR DATA PACK</span><h2>尚未进入数据采集</h2><p>先确认核算边界，系统将引用企业资产池中的电力与证据；也可下载 Excel 模板后整体回传。</p><button class="button button--primary" type="button" data-drawer="pcf-upload">上传已填写模板</button></section>`;
     $("#main").innerHTML = `${pcfChannelHeader("活动数据", "使用项目模板协调各部门填报，并把每项活动数据连接到来源文件、确认记录和后续计算。")}
       <section class="pcf-template-band" aria-labelledby="pcfTemplateTitle"><div><span class="pcf-kicker">PCF DATA PACK · HRC-01 · V1.0</span><h2 id="pcfTemplateTitle">先下载项目模板，再整体回传</h2><p>模板已预填产品、核算期间和“从摇篮到大门”边界；回传后会映射到企业资产池中的 ${safe(ctx.power?.id || "能源记录")}。</p><div class="pcf-template-actions"><a class="button button--secondary" href="../outputs/pcf-template/Lumino_PCF_%E6%95%B0%E6%8D%AE%E9%87%87%E9%9B%86%E6%A8%A1%E6%9D%BF_HRC-01.xlsx" download>下载 Excel 采集模板</a><button class="button button--primary" type="button" data-drawer="pcf-upload">上传已填写模板</button></div></div><aside><div><strong>10</strong><span>个工作表<br>含说明与证据索引</span></div><ul><li>原材料、能源、运输、产量与废弃物</li><li>供应商 PCF、分配依据和数据质量</li><li>下拉单位、日期格式与证明材料索引</li></ul></aside></section>
