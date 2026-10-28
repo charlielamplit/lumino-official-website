@@ -44,7 +44,7 @@
         { id: "boundary", title: "系统边界", validationSummary: "系统边界版本已确认，不得静默覆盖。", detail: "定义生命周期阶段、纳入／排除项、截断规则与理由；边界变更必须留下新版本，不能静默覆盖。" },
         { id: "template", title: "模板导出与回传", validationSummary: "回传模板通过结构与单位校验。", detail: "按当前范围导出版本化采集模板；回传后校验结构与单位，不兼容模板保留原文件并提示修订。" },
         { id: "inventory", title: "生命周期清单与活动数据", validationSummary: "清单活动数据绑定全部确认。", detail: "组织材料、能源、运输、产量与证明；活动数据进入资产池后，PCF 服务单独确认绑定事实。" },
-        { id: "factors", title: "排放因子与分配", validationSummary: "因子适用性与分配方法已由人工确认。", detail: "记录因子来源、数据集、版本、地域与适用理由；共产品分配方法须人工确认，Agent 仅可建议。" },
+        { id: "factors", title: "排放因子与分配", validationSummary: "因子适用性与分配方法已由人工确认。", detail: "记录因子来源、数据集、版本、地域与适用理由；因子来自外部数据集（如 CPCD／IPE／天工或 Ecoinvent／GaBi），非本平台内置库。共产品分配方法须人工确认，Agent 仅可建议。" },
         { id: "calc-hotspot", title: "计算与热点", validationSummary: "当前 Run 可用且输入快照未过期。", detail: "锁定输入快照后运行确定性计算，输出阶段结果与热点；历史 Run 不覆盖，过期输入会标为 STALE。" },
         { id: "review-report", title: "复核与报告版本", validationSummary: "专家复核通过并存在报告版本。", detail: "专家复核后生成版本化报告草稿；正式交付需审批与锁定，试点链路当前不接生产报告后端。" }
       ],

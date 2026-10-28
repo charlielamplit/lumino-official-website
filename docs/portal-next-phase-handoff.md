@@ -26,7 +26,9 @@
 6. 计算 Run／阶段结果／热点／限制写入 `metadata.calculation`；
 7. 报告锁定输入版本清单写入 `metadata.reportLock`（声明／边界／模板／因子／快照／Run／绑定）。
 
-当前优先任务是：Phase 5 一致性打磨（空状态／移动端／公开站与 Portal 名词对齐）或按审查清单做浏览器总审。不要重写资产语义，不要横向扩建未开放服务频道。
+排放因子核查见 `docs/emission-factors-status.md`：本地无真实因子库，仅有 demo_stub；skill 指向 CPCD／IPE／天工／Ecoinvent／GaBi 等外部库。
+
+当前优先任务是：继续 Phase 5 一致性打磨与审查；正式因子接入单独立项。不要重写资产语义，不要横向扩建未开放服务频道。
 
 ## 1. 你的任务
 

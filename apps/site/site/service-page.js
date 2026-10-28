@@ -160,7 +160,7 @@
         <li><span>02</span><strong>排放清单拆解</strong><em>生命周期结构</em></li>
         <li><span>03</span><strong>活动数据推算／确认</strong><em>来源与质量</em></li>
         <li><span>04</span><strong>运输距离与活动建模</strong><em>路线与假设</em></li>
-        <li><span>05</span><strong>排放因子及单位匹配</strong><em>数据集与版本</em></li>
+        <li><span>05</span><strong>排放因子及单位匹配</strong><em>外部数据集与版本</em></li>
         <li><span>06</span><strong>确定性计算</strong><em>输入快照与 Run</em></li>
         <li><span>07</span><strong>热点解读与减排建议</strong><em>与结果分层</em></li>
       </ol>
