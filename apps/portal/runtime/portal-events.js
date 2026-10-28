@@ -344,10 +344,13 @@
         if (!assertStageGate("pcf", "inventory").ok) return;
         if (!assertStageGate("pcf", "factors").ok) return;
         try {
-          const actor = { ...workflowActor(), reason: "锁定 PCF 输入快照并运行确定性计算" };
+          const actor = { ...workflowActor(), reason: "创建 PCF 输入快照并运行确定性计算" };
+          const caseItem = workflowEngine.get("PCF-2026-001");
           const powerBinding = assetRegistry.bindings({ serviceId: "pcf", assetId: "REC-HX-POWER-2026Q3" })[0];
           const evidenceBinding = assetRegistry.bindings({ serviceId: "pcf", assetId: "EVD-HX-POWER-2026Q3" })[0];
           const bindingIds = [powerBinding?.id, evidenceBinding?.id].filter(Boolean);
+          const power = assetRegistry.get("REC-HX-POWER-2026Q3");
+          const factors = caseItem?.metadata?.factors || window.LuminoPcfFactors.defaultSet(caseItem?.metadata?.declaration || {});
           if (!assetRegistry.getSnapshot("SNAP-PCF-HRC-01")) {
             assetRegistry.createSnapshot({
               id: "SNAP-PCF-HRC-01",
@@ -359,6 +362,15 @@
               status: "CURRENT",
             }, actor);
           }
+          const calculation = window.LuminoPcfCalculation.buildResult({
+            declaration: caseItem?.metadata?.declaration,
+            boundary: caseItem?.metadata?.boundary,
+            factors,
+            power,
+            snapshotId: "SNAP-PCF-HRC-01",
+            runId: "ARUN-PCF-001",
+            actor,
+          });
           if (!assetRegistry.getCalculationRun("ARUN-PCF-001")) {
             assetRegistry.createCalculationRun({
               id: "ARUN-PCF-001",
@@ -367,36 +379,98 @@
               caseId: "PCF-2026-001",
               snapshotId: "SNAP-PCF-HRC-01",
               status: "SUCCEEDED",
-              ruleVersion: "CN-EF-2026.1",
+              ruleVersion: calculation.factorSetId,
               workflowObjectId: "RUN-PCF-001",
-              resultSummary: { total: "2.18", unit: "tCO2e/t" },
+              resultSummary: {
+                total: String(calculation.total),
+                unit: calculation.unit,
+                stages: calculation.stages,
+                hotspots: calculation.hotspots,
+              },
             }, actor);
           }
           assetRegistry.markCurrent("ARUN-PCF-001", { ...workflowActor(), reason: "设为当前 PCF 计算结果" });
-          ensureWorkflowObject({ id: "RUN-PCF-001", type: "calculationRun", status: "QUEUED", owner: "PCF Agent", year: "2026", dependsOn: ["FACT-PCF-001-ELECTRICITY"], metadata: { serviceId: "pcf", rulepack: "CN-EF-2026.1", assetSnapshotId: "SNAP-PCF-HRC-01", assetRunId: "ARUN-PCF-001" } });
+          ensureWorkflowObject({ id: "RUN-PCF-001", type: "calculationRun", status: "QUEUED", owner: "PCF Agent", year: "2026", dependsOn: ["FACT-PCF-001-ELECTRICITY"], metadata: { serviceId: "pcf", rulepack: calculation.factorSetId, assetSnapshotId: "SNAP-PCF-HRC-01", assetRunId: "ARUN-PCF-001" } });
           moveWorkflow("RUN-PCF-001", ["RUNNING", "SUCCEEDED", "CURRENT"], "使用确认资产版本和固定因子集完成 PCF Run 01");
-          ensureWorkflowObject({ id: "PCF-RPT-2026-001-R1", type: "formalArtifact", status: "DRAFT", owner: "PCF 专家", year: "2026", scope: "热轧非合金钢卷", metadata: { serviceId: "pcf", artifactType: "PCF_REPORT", calculationRunId: "RUN-PCF-001", assetSnapshotId: "SNAP-PCF-HRC-01", assetRunId: "ARUN-PCF-001" } });
+          ensureWorkflowObject({
+            id: "PCF-RPT-2026-001-R1",
+            type: "formalArtifact",
+            status: "DRAFT",
+            owner: "PCF 专家",
+            year: "2026",
+            scope: caseItem?.metadata?.declaration?.productName || "热轧非合金钢卷",
+            metadata: {
+              serviceId: "pcf",
+              artifactType: "PCF_REPORT",
+              calculationRunId: "RUN-PCF-001",
+              assetSnapshotId: "SNAP-PCF-HRC-01",
+              assetRunId: "ARUN-PCF-001",
+              factorSetId: calculation.factorSetId,
+            },
+          });
           if (workflowEngine.get("PCF-RPT-2026-001-R1")?.status === "DRAFT") {
             moveWorkflow("PCF-RPT-2026-001-R1", ["GENERATED", "VALIDATED", "INTERNAL_REVIEW"], "生成报告草稿并提交独立复核");
           }
-          moveWorkflow("PCF-2026-001", ["EXPERT_REVIEW"], "确定性计算草稿已生成并进入专家复核"); state.page = "pcf-report"; persistPortalState(); render(); toast("PCF 计算已生成，输入快照 SNAP-PCF-HRC-01 已锁定资产版本。");
+          workflowEngine.patch("PCF-2026-001", {
+            metadata: { calculation },
+          }, { ...workflowActor(), reason: "写入结构化计算与热点结果" });
+          moveWorkflow("PCF-2026-001", ["EXPERT_REVIEW"], "确定性计算草稿已生成并进入专家复核");
+          state.page = "pcf-report";
+          persistPortalState();
+          render();
+          toast(`PCF 计算已生成（${calculation.total} ${calculation.unit}）。输入快照 SNAP-PCF-HRC-01 已固定资产版本，报告锁定前仍可复核。`);
         } catch (error) { toast(error.message); }
       }
       if (action === "pcf-complete-review") {
         if (!assertStageGate("pcf", "calc-hotspot").ok) return;
         try {
+          const caseItem = workflowEngine.get("PCF-2026-001");
           if (assetRegistry.getSnapshot("SNAP-PCF-HRC-01")?.status !== "LOCKED") {
             assetRegistry.lockSnapshot("SNAP-PCF-HRC-01", { ...workflowActor(), reason: "专家复核完成，锁定报告输入快照" });
           }
-          ensureWorkflowObject({ id: "PCF-RPT-2026-001-R1", type: "formalArtifact", status: "DRAFT", owner: "PCF 专家", year: "2026", scope: "热轧非合金钢卷", metadata: { serviceId: "pcf", artifactType: "PCF_REPORT", calculationRunId: "RUN-PCF-001", assetSnapshotId: "SNAP-PCF-HRC-01", assetRunId: "ARUN-PCF-001" } });
+          ensureWorkflowObject({
+            id: "PCF-RPT-2026-001-R1",
+            type: "formalArtifact",
+            status: "DRAFT",
+            owner: "PCF 专家",
+            year: "2026",
+            scope: caseItem?.metadata?.declaration?.productName || "热轧非合金钢卷",
+            metadata: { serviceId: "pcf", artifactType: "PCF_REPORT", calculationRunId: "RUN-PCF-001", assetSnapshotId: "SNAP-PCF-HRC-01", assetRunId: "ARUN-PCF-001" },
+          });
           const report = workflowEngine.get("PCF-RPT-2026-001-R1");
           if (report?.status === "DRAFT") moveWorkflow("PCF-RPT-2026-001-R1", ["GENERATED", "VALIDATED", "INTERNAL_REVIEW"], "生成报告草稿并提交独立复核");
           if (workflowEngine.get("PCF-RPT-2026-001-R1")?.status === "INTERNAL_REVIEW") {
             moveWorkflow("PCF-RPT-2026-001-R1", ["APPROVED"], "独立复核员批准方法、证据与计算血缘");
             workflowEngine.transition("PCF-RPT-2026-001-R1", "LOCKED", { ...workflowActor(), reason: "锁定 PCF 报告 Rev 1", metadata: { snapshotId: "SNAP-PCF-HRC-01" } });
           }
+          const snapshot = assetRegistry.getSnapshot("SNAP-PCF-HRC-01");
+          const run = assetRegistry.getCalculationRun("ARUN-PCF-001");
+          const reportLock = window.LuminoPcfReportLock.buildLockInventory({
+            declaration: caseItem?.metadata?.declaration,
+            boundary: caseItem?.metadata?.boundary,
+            template: caseItem?.metadata?.template,
+            factors: caseItem?.metadata?.factors,
+            calculation: caseItem?.metadata?.calculation,
+            snapshot,
+            run,
+            bindings: [
+              assetRegistry.bindings({ id: "BIND-REC-POWER-PCF" })[0],
+              assetRegistry.bindings({ id: "BIND-EVD-POWER-PCF" })[0],
+            ].filter(Boolean),
+            reportId: "PCF-RPT-2026-001-R1",
+            reportRevision: "Rev 1",
+            actor: workflowActor(),
+          });
+          workflowEngine.patch("PCF-2026-001", {
+            metadata: { reportLock, calculation: { ...(caseItem?.metadata?.calculation || {}), status: "LOCKED" } },
+          }, { ...workflowActor(), reason: "写入报告锁定输入版本清单" });
+          workflowEngine.patch("PCF-RPT-2026-001-R1", {
+            metadata: { reportLock, lockedInputCount: reportLock.items.length },
+          }, { ...workflowActor(), reason: "报告对象挂载锁定清单" });
           moveWorkflow("PCF-2026-001", ["DELIVERABLE_READY"], "独立复核完成且报告版本已锁定");
-          persistPortalState(); render(); toast("独立复核已完成，PCF 报告 Rev 1 已锁定并就绪。");
+          persistPortalState();
+          render();
+          toast(`独立复核已完成。报告 Rev 1 已锁定 ${reportLock.items.length} 项输入版本。`);
         } catch (error) { toast(error.message); }
       }
       if (action === "dismiss-onboarding") { state.onboardingDismissed = true; window.localStorage.setItem("lumino-portal-onboarding", "dismissed"); render(); toast("快速引导已收起；可随时从“操作指南”查看完整流程。"); }
