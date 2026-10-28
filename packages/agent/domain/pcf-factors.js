@@ -1,71 +1,124 @@
 (function (root, factory) {
   "use strict";
-  const api = factory();
+  const Catalog = typeof module === "object" && module.exports
+    ? require("./pcf-factor-catalog.js")
+    : (root && root.LuminoPcfFactorCatalog);
+  const Matcher = typeof module === "object" && module.exports
+    ? require("./pcf-factor-matcher.js")
+    : (root && root.LuminoPcfFactorMatcher);
+  const api = factory(Catalog, Matcher);
   if (typeof module === "object" && module.exports) module.exports = api;
   if (root) root.LuminoPcfFactors = api;
-})(typeof globalThis !== "undefined" ? globalThis : this, function () {
+})(typeof globalThis !== "undefined" ? globalThis : this, function (Catalog, Matcher) {
   "use strict";
 
-  const FACTORS_VERSION = "0.1.0";
+  const FACTORS_VERSION = "0.2.0";
 
-  function defaultSet(declaration) {
-    declaration = declaration || {};
+  function provenance() {
+    return {
+      localDatabase: false,
+      localCatalogAvailable: true,
+      skillReference: "pcf-calculation/reference.md#8-排放因子数据库指南",
+      statusDoc: "docs/emission-factors-status.md",
+      intendedSources: ["DatabaseofEmissionFactor", "天工ILCD", "CPCD", "IPE", "Ecoinvent", "GaBi"],
+      localPaths: [
+        "/Users/qikunmac01/Documents/01Charlie/03_Autocoding/DatabaseEmissionFactor/DatabaseofEmissionFactor",
+        "/Users/qikunmac01/Documents/01Charlie/01_工作文档/01_碳中和/1_项目工作/13_排放因子库"
+      ],
+      apiHint: "GET /api/v1/emission-factors/search（DatabaseofEmissionFactor backend）",
+      matcherVersion: Matcher && Matcher.MATCHER_VERSION || null,
+      catalogVersion: Catalog && Catalog.CATALOG_VERSION || null,
+      note: "系统按匹配逻辑自动推荐因子；用户确认适用性或改选备选。不要求业务用户自行检索专业因子库。"
+    };
+  }
+
+  function contextFromInputs(input) {
+    input = input || {};
+    if (input.declaration || input.activities || input.facilityGeography) return input;
+    return { declaration: input };
+  }
+
+  /**
+   * 基于核算声明／活动上下文自动推荐因子集（proposal_only）。
+   * 默认项 = 各需求的最高分匹配；备选保留在 alternatives 供改选。
+   */
+  function recommendSet(input) {
+    const ctx = contextFromInputs(input);
+    const declaration = ctx.declaration || {};
+    if (!Matcher || !Catalog) {
+      return legacyFallback(declaration);
+    }
+    const advice = Matcher.recommend(ctx);
+    const items = [];
+    const alternativesByNeed = {};
+
+    advice.selections.forEach(function (selection) {
+      const need = selection.need;
+      const top = selection.recommended;
+      const item = Catalog.toFactorItem(top.entry, {
+        id: "EF-" + need.id.replace(/^need-/, "").toUpperCase(),
+        needId: need.id,
+        role: "recommended",
+        matchScore: top.score,
+        matchReasons: top.reasons,
+        applicability: need.rationale + " 匹配分 " + top.score + "。"
+      });
+      items.push(item);
+      alternativesByNeed[need.id] = selection.alternatives.map(function (alt, index) {
+        return Catalog.toFactorItem(alt.entry, {
+          id: "EF-ALT-" + need.id.replace(/^need-/, "").toUpperCase() + "-" + (index + 1),
+          needId: need.id,
+          role: "alternative",
+          matchScore: alt.score,
+          matchReasons: alt.reasons,
+          applicability: "备选：" + alt.reasons.slice(0, 2).join("；")
+        });
+      });
+    });
+
     return {
       schemaVersion: FACTORS_VERSION,
-      setId: "CN-EF-2026.1",
-      setName: "中国区域电网与过程因子集 2026.1",
+      setId: "CN-EF-MATCH-" + (declaration.periodEnd || declaration.period || "DRAFT").toString().slice(0, 4),
+      setName: "系统推荐排放因子集",
       status: "PROPOSED",
-      sourceKind: "demo_stub",
-      provenance: {
-        localDatabase: false,
-        localCatalogAvailable: true,
-        skillReference: "pcf-calculation/reference.md#8-排放因子数据库指南",
-        statusDoc: "docs/emission-factors-status.md",
-        intendedSources: ["DatabaseofEmissionFactor", "天工ILCD", "CPCD", "IPE", "Ecoinvent", "GaBi"],
-        localPaths: [
-          "/Users/qikunmac01/Documents/01Charlie/03_Autocoding/DatabaseEmissionFactor/DatabaseofEmissionFactor",
-          "/Users/qikunmac01/Documents/01Charlie/01_工作文档/01_碳中和/1_项目工作/13_排放因子库"
-        ],
-        apiHint: "GET /api/v1/emission-factors/search（DatabaseofEmissionFactor backend）",
-        note: "当前为原型演示集；形态对齐本机因子库种子／样例，尚未联机调用 DatabaseofEmissionFactor 或加载天工 ILCD。"
+      sourceKind: "matcher_recommendation",
+      provenance: provenance(),
+      recommendation: {
+        proposalOnly: true,
+        matcherVersion: advice.matcherVersion,
+        summary: advice.summary,
+        needs: advice.needs,
+        gaps: advice.gaps,
+        alternativesByNeed: alternativesByNeed
       },
-      items: [
-        {
-          id: "EF-PCF-GRID-CN",
-          datasetId: "CN-GRID-NATIONAL-2024",
-          name: "全国电网平均电力",
-          library: "DatabaseofEmissionFactor-seed",
-          version: "2024",
-          geography: "CN-National",
-          year: "2024",
-          numeratorUnit: "kgCO2e",
-          denominatorUnit: "kWh",
-          value: "0.5703",
-          applicability: "适用于购入电力间接排放；数值取自本机因子库 init.sql 种子，需确认与核算期间／区域电网是否匹配",
-          applicabilityConfirmed: false,
-          sourceKind: "local_catalog_sample"
-        },
-        {
-          id: "EF-PCF-GRID-N",
-          datasetId: "CN-GRID-NORTH-COAL-2024",
-          name: "华北电网燃煤发电",
-          library: "DatabaseofEmissionFactor-seed",
-          version: "2024",
-          geography: "CN-North_China_Grid",
-          year: "2024",
-          numeratorUnit: "kgCO2e",
-          denominatorUnit: "kWh",
-          value: "0.8241",
-          applicability: "过程／区域电力参考；取自本机因子库种子与 02_排放因子样例.md，需确认工艺与地域适用性",
-          applicabilityConfirmed: false,
-          sourceKind: "local_catalog_sample"
-        }
-      ],
+      items: items,
       confirmed: false,
       confirmedAt: null,
       confirmedBy: null,
       functionalUnitRef: declaration.functionalUnit || null
     };
+  }
+
+  function legacyFallback(declaration) {
+    declaration = declaration || {};
+    return {
+      schemaVersion: FACTORS_VERSION,
+      setId: "CN-EF-2026.1",
+      setName: "中国区域电网与过程因子集（回退）",
+      status: "PROPOSED",
+      sourceKind: "demo_stub",
+      provenance: provenance(),
+      recommendation: null,
+      items: [],
+      confirmed: false,
+      confirmedAt: null,
+      confirmedBy: null,
+      functionalUnitRef: declaration.functionalUnit || null
+    };
+  }
+
+  function defaultSet(declarationOrContext) {
+    return recommendSet(declarationOrContext);
   }
 
   function normalize(input) {
@@ -77,11 +130,12 @@
     }) : [];
     return {
       schemaVersion: FACTORS_VERSION,
-      setId: input.setId || "CN-EF-2026.1",
+      setId: input.setId || "CN-EF-MATCH",
       setName: input.setName || "排放因子集",
       status: input.status || "PROPOSED",
-      sourceKind: input.sourceKind || "demo_stub",
-      provenance: input.provenance || null,
+      sourceKind: input.sourceKind || "matcher_recommendation",
+      provenance: input.provenance || provenance(),
+      recommendation: input.recommendation || null,
       items: items,
       confirmed: Boolean(input.confirmed),
       confirmedAt: input.confirmedAt || null,
@@ -93,7 +147,10 @@
   function validate(factorSet) {
     const set = normalize(factorSet);
     const blockers = [];
-    if (!set.items.length) blockers.push("尚未登记排放因子");
+    if (!set.items.length) {
+      const gaps = set.recommendation && set.recommendation.gaps || [];
+      blockers.push(gaps.length ? "因子目录缺口未补齐，无法确认" : "尚未登记排放因子");
+    }
     const pending = set.items.filter(function (item) { return !item.applicabilityConfirmed; });
     if (pending.length) blockers.push("仍有 " + pending.length + " 项因子适用性未确认");
     return {
@@ -118,14 +175,61 @@
       setId: set.setId,
       setName: set.setName,
       status: "CONFIRMED",
-      sourceKind: set.sourceKind || "demo_stub",
-      provenance: set.provenance || null,
+      sourceKind: set.sourceKind || "matcher_recommendation",
+      provenance: set.provenance || provenance(),
+      recommendation: set.recommendation,
       items: items,
       confirmed: true,
       confirmedAt: new Date().toISOString(),
       confirmedBy: (actor && (actor.actor || actor.name)) || null,
       functionalUnitRef: set.functionalUnitRef
     };
+  }
+
+  /**
+   * 用户改选某需求的备选因子；仍为提议态，需再次确认适用性。
+   */
+  function selectAlternative(factorSet, needId, datasetId) {
+    const set = normalize(factorSet);
+    const alts = set.recommendation && set.recommendation.alternativesByNeed
+      ? set.recommendation.alternativesByNeed[needId] || []
+      : [];
+    const chosen = alts.find(function (row) { return row.datasetId === datasetId || row.id === datasetId; });
+    if (!chosen) {
+      const fromCatalog = Catalog && Catalog.getById ? Catalog.getById(datasetId) : null;
+      if (!fromCatalog) {
+        const error = new Error("找不到可改选的备选因子");
+        error.code = "PCF_FACTOR_ALT_MISSING";
+        throw error;
+      }
+      const mapped = Catalog.toFactorItem(fromCatalog, {
+        needId: needId,
+        role: "manual_override",
+        applicability: "用户从目录改选；须重新确认适用性。"
+      });
+      return replaceNeedItem(set, needId, mapped);
+    }
+    const override = Object.assign({}, chosen, {
+      role: "manual_override",
+      applicabilityConfirmed: false,
+      applicability: (chosen.applicability || "") + "（用户改选备选）"
+    });
+    return replaceNeedItem(set, needId, override);
+  }
+
+  function replaceNeedItem(set, needId, nextItem) {
+    const items = set.items.slice();
+    const index = items.findIndex(function (row) { return row.needId === needId; });
+    if (index >= 0) items[index] = nextItem;
+    else items.push(nextItem);
+    return normalize(Object.assign({}, set, {
+      status: "PROPOSED",
+      confirmed: false,
+      confirmedAt: null,
+      confirmedBy: null,
+      items: items,
+      setName: set.setName.indexOf("改选") >= 0 ? set.setName : set.setName + "（含改选）"
+    }));
   }
 
   function toStageGate(factorSet) {
@@ -142,9 +246,11 @@
   return {
     FACTORS_VERSION: FACTORS_VERSION,
     defaultSet: defaultSet,
+    recommendSet: recommendSet,
     normalize: normalize,
     validate: validate,
     confirm: confirm,
+    selectAlternative: selectAlternative,
     toStageGate: toStageGate
   };
 });

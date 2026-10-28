@@ -26,7 +26,7 @@
 6. 计算 Run／阶段结果／热点／限制写入 `metadata.calculation`；
 7. 报告锁定输入版本清单写入 `metadata.reportLock`（声明／边界／模板／因子／快照／Run／绑定）。
 
-排放因子见 `docs/emission-factors-status.md`：Lumino 内仍为演示集；本机可参考 DatabaseofEmissionFactor（API／种子）与 `13_排放因子库`（模型／样例／天工 ILCD）。联机接入单独立项。
+排放因子见 `docs/emission-factors-status.md`：Lumino 内仍为演示集；本机可参考 DatabaseofEmissionFactor（API／种子）与 `13_排放因子库`（模型／样例／天工 ILCD）。已实现只读目录 + 自动匹配推荐（proposal_only，用户确认／可改选）；联机 DatabaseofEmissionFactor API 仍可后续替换 catalog.list。
 
 Phase 5.4–5.5 与术语审计 P0／P1 已收口（registry↔gates、CBAM 六步、试算本地线索、Agent 提议用语、CLM-013 全称）。Portal 因子门槛仍挂在计算页，不另开导航频道。下一步可为产品评审或全量截图复跑；正式因子接入单独立项。不要重写资产语义，不要横向扩建未开放服务频道。
 

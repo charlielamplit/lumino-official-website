@@ -60,3 +60,12 @@
 - 不得宣称 Lumino 已联机生产因子库或已加载全部天工过程。
 - 演示因子可标注「形态对齐本地因子库种子／样例」，数值仍须人工适用性确认。
 - 正式接入前保持 `sourceKind` 区分：`demo_stub`｜`local_catalog_sample`｜`remote_api`。
+
+
+## 匹配推荐（已实现于原型）
+
+- `pcf-factor-catalog.js`：本机因子库种子只读快照。
+- `pcf-factor-matcher.js`：按活动类型、地域／电网区、参考年、单位兼容性、质量等级评分。
+- `pcf-factors.recommendSet`：为每个活动需求自动选出最高分推荐，并保留备选。
+- Portal：展示推荐理由；用户可改选备选后确认适用性。**不要求业务用户自行检索专业库。**
+- Agent／系统推荐均为 `proposal_only`；确认后才进入正式计算。

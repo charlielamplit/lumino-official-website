@@ -307,14 +307,46 @@
         if (!assertStageGate("pcf", "inventory").ok) return;
         try {
           const item = workflowEngine.get("PCF-2026-001");
-          const draft = item?.metadata?.factors || window.LuminoPcfFactors.defaultSet(item?.metadata?.declaration || {});
+          const factorCtx = typeof pcfFactorContext === "function" ? pcfFactorContext(item) : { declaration: item?.metadata?.declaration || {} };
+          const draft = item?.metadata?.factors || window.LuminoPcfFactors.recommendSet(factorCtx);
           const confirmed = window.LuminoPcfFactors.confirm(draft, workflowActor());
-          workflowEngine.patch("PCF-2026-001", { metadata: { factors: confirmed } }, { ...workflowActor(), reason: "确认排放因子适用性" });
+          workflowEngine.patch("PCF-2026-001", { metadata: { factors: confirmed } }, { ...workflowActor(), reason: "确认系统推荐排放因子适用性" });
           persistPortalState();
           render();
-          toast("排放因子适用性已确认。可以进入确定性计算。");
+          toast("已确认系统推荐因子的适用性。可以进入确定性计算。");
         } catch (error) {
           toast(error.message || "因子确认失败");
+        }
+      }
+      if (action === "pcf-refresh-factor-recommendations") {
+        if (!assertStageGate("pcf", "inventory").ok) return;
+        try {
+          const item = workflowEngine.get("PCF-2026-001");
+          const factorCtx = typeof pcfFactorContext === "function" ? pcfFactorContext(item) : { declaration: item?.metadata?.declaration || {} };
+          const recommended = window.LuminoPcfFactors.recommendSet(factorCtx);
+          workflowEngine.patch("PCF-2026-001", { metadata: { factors: recommended } }, { ...workflowActor(), reason: "按匹配逻辑刷新排放因子推荐" });
+          persistPortalState();
+          render();
+          toast(recommended.recommendation?.summary || "已刷新系统推荐因子。");
+        } catch (error) {
+          toast(error.message || "刷新推荐失败");
+        }
+      }
+      if (action === "pcf-select-factor-alt") {
+        if (!assertStageGate("pcf", "inventory").ok) return;
+        try {
+          const item = workflowEngine.get("PCF-2026-001");
+          const needId = button.dataset.needId;
+          const datasetId = button.dataset.datasetId;
+          const factorCtx = typeof pcfFactorContext === "function" ? pcfFactorContext(item) : { declaration: item?.metadata?.declaration || {} };
+          const draft = item?.metadata?.factors || window.LuminoPcfFactors.recommendSet(factorCtx);
+          const next = window.LuminoPcfFactors.selectAlternative(draft, needId, datasetId);
+          workflowEngine.patch("PCF-2026-001", { metadata: { factors: next } }, { ...workflowActor(), reason: `改选因子备选 ${datasetId}` });
+          persistPortalState();
+          render();
+          toast("已改选备选因子。请确认适用性后继续计算。");
+        } catch (error) {
+          toast(error.message || "改选失败");
         }
       }
       if (action === "pcf-confirm-proposal") {
@@ -333,7 +365,7 @@
           const currentCase = workflowEngine.get("PCF-2026-001");
           if (!currentCase?.metadata?.factors) {
             workflowEngine.patch("PCF-2026-001", {
-              metadata: { factors: window.LuminoPcfFactors.defaultSet(currentCase?.metadata?.declaration || {}) },
+              metadata: { factors: window.LuminoPcfFactors.recommendSet(typeof pcfFactorContext === "function" ? pcfFactorContext(currentCase) : { declaration: currentCase?.metadata?.declaration || {} }) },
             }, { ...workflowActor(), reason: "绑定确认后生成排放因子草稿" });
           }
           moveWorkflow("PCF-2026-001", ["CALCULATING"], "PCF 服务绑定已确认"); state.page = "pcf-results"; persistPortalState(); render(); toast("PCF 绑定已确认；下一步请确认排放因子适用性。");
@@ -350,7 +382,7 @@
           const evidenceBinding = assetRegistry.bindings({ serviceId: "pcf", assetId: "EVD-HX-POWER-2026Q3" })[0];
           const bindingIds = [powerBinding?.id, evidenceBinding?.id].filter(Boolean);
           const power = assetRegistry.get("REC-HX-POWER-2026Q3");
-          const factors = caseItem?.metadata?.factors || window.LuminoPcfFactors.defaultSet(caseItem?.metadata?.declaration || {});
+          const factors = caseItem?.metadata?.factors || window.LuminoPcfFactors.recommendSet(typeof pcfFactorContext === "function" ? pcfFactorContext(caseItem) : { declaration: caseItem?.metadata?.declaration || {} });
           if (!assetRegistry.getSnapshot("SNAP-PCF-HRC-01")) {
             assetRegistry.createSnapshot({
               id: "SNAP-PCF-HRC-01",
@@ -362,11 +394,21 @@
               status: "CURRENT",
             }, actor);
           }
+          const inventory = window.LuminoPcfCalculation.buildDemoInventory({
+            declaration: caseItem?.metadata?.declaration,
+            boundary: caseItem?.metadata?.boundary,
+            factors,
+            power,
+          });
           const calculation = window.LuminoPcfCalculation.buildResult({
             declaration: caseItem?.metadata?.declaration,
             boundary: caseItem?.metadata?.boundary,
             factors,
             power,
+            inventory,
+            inputMode: "demo_seed",
+            formalUseAllowed: false,
+            ruleVersion: `pcf-deterministic@${window.LuminoPcfCalculation.CALC_VERSION}`,
             snapshotId: "SNAP-PCF-HRC-01",
             runId: "ARUN-PCF-001",
             actor,
@@ -386,6 +428,10 @@
                 unit: calculation.unit,
                 stages: calculation.stages,
                 hotspots: calculation.hotspots,
+                lineItemCount: calculation.lineItems.length,
+                inputMode: calculation.inputMode,
+                formalUseAllowed: calculation.formalUseAllowed,
+                dataQuality: calculation.dataQuality,
               },
             }, actor);
           }
@@ -418,7 +464,7 @@
           state.page = "pcf-report";
           persistPortalState();
           render();
-          toast(`PCF 计算已生成（${calculation.total} ${calculation.unit}）。输入快照 SNAP-PCF-HRC-01 已固定资产版本，报告锁定前仍可复核。`);
+          toast(`PCF 演示计算已生成（${calculation.total} ${calculation.unit}）。输入快照 SNAP-PCF-HRC-01 已固定资产版本；当前清单仅用于验证流程，不可正式披露。`);
         } catch (error) { toast(error.message); }
       }
       if (action === "pcf-complete-review") {
@@ -750,7 +796,7 @@
                   }, { actor: "PCF Agent", role: "agent", reason: `Agent 任务 ${completed.id} 提出 PCF 绑定` });
                 }
                 const caseMeta = workflowEngine.get("PCF-2026-001")?.metadata || {};
-                const factors = caseMeta.factors || window.LuminoPcfFactors.defaultSet(caseMeta.declaration || {});
+                const factors = caseMeta.factors || window.LuminoPcfFactors.recommendSet({ declaration: caseMeta.declaration || {} });
                 moveWorkflow("EVD-PCF-DATAPACK-001", ["SECURITY_SCANNED", "PARSED"], `PCF Agent 任务 ${completed.id} 完成（proposal_only）`, {
                   confirmationScope: "pcf-only",
                   importedRecords: sealed.domains.reduce((sum, item) => sum + (item.imported || 0), 0),

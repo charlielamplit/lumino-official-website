@@ -143,6 +143,30 @@
     return { item, product, declaration, confirmed: Boolean(declaration.confirmed) };
   }
 
+
+  function pcfFactorContext(item) {
+    const declaration = item?.metadata?.declaration || {};
+    const ctx = pcfPowerContext();
+    return {
+      declaration,
+      facilityGeography: declaration.geography || "中国 · 上海",
+      siteLabel: ctx.power?.name || "",
+      powerUnit: ctx.unit || "MWh",
+      activities: [
+        { id: "energy", name: ctx.power?.name || "购入电力", domain: "能源", unit: ctx.unit || "MWh", type: "purchased_electricity" }
+      ],
+      assumePurchasedElectricity: true
+    };
+  }
+
+  function pcfRecommendedFactors(item) {
+    if (!window.LuminoPcfFactors) return null;
+    if (item?.metadata?.factors) return item.metadata.factors;
+    return window.LuminoPcfFactors.recommendSet
+      ? window.LuminoPcfFactors.recommendSet(pcfFactorContext(item))
+      : window.LuminoPcfFactors.defaultSet(pcfFactorContext(item));
+  }
+
   function pcfPowerContext() {
     const power = assetRegistry.get("REC-HX-POWER-2026Q3");
     const evidence = assetRegistry.get("EVD-HX-POWER-2026Q3");
@@ -316,31 +340,54 @@
     const calculation = item?.metadata?.calculation || null;
     const snapshotId = calculation?.snapshotId || ctx.snapshot?.id || "SNAP-PCF-HRC-01";
     const runId = calculation?.runId || ctx.run?.id || "ARUN-PCF-001";
-    const factors = item?.metadata?.factors || (window.LuminoPcfFactors ? window.LuminoPcfFactors.defaultSet(item?.metadata?.declaration || {}) : null);
+    const factors = pcfRecommendedFactors(item);
     const factorsConfirmed = Boolean(factors?.confirmed) || ((factors?.items || []).length > 0 && (factors?.items || []).every((row) => row.applicabilityConfirmed));
     const canRun = item?.status === "CALCULATING" && factorsConfirmed;
     const blocked = ["SCOPING", "COLLECTING", "NEEDS_CONFIRMATION"].includes(item?.status) || !ctx.bindingConfirmed;
     const needsFactors = ctx.bindingConfirmed && !factorsConfirmed && !["EXPERT_REVIEW", "DELIVERABLE_READY"].includes(item?.status);
     const hasResult = Boolean(calculation) || ["EXPERT_REVIEW", "DELIVERABLE_READY"].includes(item?.status);
-    const factorRows = (factors?.items || []).map((row) => `<tr>
-      <td>${safe(row.name)}</td><td>${safe(row.datasetId)} · ${safe(row.version)}</td><td>${safe(row.geography)} / ${safe(row.year)}</td>
+    const rec = factors?.recommendation || null;
+    const factorRows = (factors?.items || []).map((row) => {
+      const alts = (rec?.alternativesByNeed && row.needId && rec.alternativesByNeed[row.needId]) || [];
+      const altButtons = (!factorsConfirmed && alts.length)
+        ? `<div class="pcf-factor-alts"><span>改选备选</span>${alts.map((alt) => `<button class="text-button" type="button" data-action="pcf-select-factor-alt" data-need-id="${safe(row.needId)}" data-dataset-id="${safe(alt.datasetId)}">${safe(alt.name)} · ${safe(alt.matchScore)}</button>`).join("")}</div>`
+        : "";
+      const reasons = (row.matchReasons || []).slice(0, 3).map((reason) => safe(reason)).join("；");
+      const roleLabel = row.role === "manual_override" ? "用户改选" : row.role === "recommended" ? "系统推荐" : "候选";
+      return `<tr>
+      <td><strong>${safe(row.name)}</strong><small>${safe(roleLabel)}${row.matchScore != null ? ` · 分 ${safe(row.matchScore)}` : ""}</small>${reasons ? `<small class="pcf-match-reasons">${reasons}</small>` : ""}</td>
+      <td>${safe(row.datasetId)} · ${safe(row.version)}</td>
+      <td>${safe(row.geographyLabel || row.geography)} / ${safe(row.year)}</td>
       <td>${safe(row.value)} ${safe(row.numeratorUnit)}/${safe(row.denominatorUnit)}</td>
-      <td>${row.applicabilityConfirmed || factorsConfirmed ? "已确认" : "待确认"}</td>
-    </tr>`).join("");
-    const factorPanel = `<section class="pcf-card" aria-labelledby="pcfFactorTitle"><header class="pcf-card__header"><div><span class="pcf-kicker">EMISSION FACTORS</span><h2 id="pcfFactorTitle">${safe(factors?.setName || "排放因子集")}</h2></div><small>${safe(factors?.setId || "CN-EF-2026.1")} · ${factorsConfirmed ? "适用性已确认" : "待确认适用性"}</small></header>
-      <div class="pcf-stage-table"><table><thead><tr><th>因子</th><th>数据集 / 版本</th><th>地域 / 年份</th><th>数值与单位</th><th>适用性</th></tr></thead><tbody>${factorRows || "<tr><td colspan='5'>尚未登记因子</td></tr>"}</tbody></table></div>
-      <footer class="pcf-card__actions"><p>确认适用性不会改写活动数据；未确认前不能运行正式计算。</p><p class="pcf-factor-disclaimer"><small>演示集 · sourceKind=${safe(factors?.sourceKind || "demo_stub")}。数值形态对齐本机 DatabaseofEmissionFactor 种子／样例，尚未联机 API；正式项目经因子库检索后确认适用性（亦可引用 CPCD／IPE／天工／Ecoinvent／GaBi）。见 docs/emission-factors-status.md。</small></p>${factorsConfirmed ? statusChip("因子已确认", "ok") : actionButton("确认因子适用性", "primary", 'data-action="pcf-confirm-factors"')}</footer>
+      <td>${row.applicabilityConfirmed || factorsConfirmed ? "已确认" : "待确认"}${altButtons}</td>
+    </tr>`;
+    }).join("");
+    const gapNote = (rec?.gaps || []).length
+      ? `<p class="pcf-factor-gaps" role="status">目录缺口 ${rec.gaps.length} 项：${safe(rec.gaps.map((gap) => gap.label).join("、"))}。系统已登记，不要求你自行检索专业库。</p>`
+      : "";
+    const factorPanel = `<section class="pcf-card" aria-labelledby="pcfFactorTitle"><header class="pcf-card__header"><div><span class="pcf-kicker">EMISSION FACTORS · AUTO MATCH</span><h2 id="pcfFactorTitle">${safe(factors?.setName || "系统推荐排放因子")}</h2><p>${safe(rec?.summary || "系统已按活动类型、地域、年份与单位自动匹配；你只需确认或改选备选。")}</p></div><small>${safe(factors?.setId || "CN-EF-MATCH")} · ${factorsConfirmed ? "适用性已确认" : "待确认适用性"}</small></header>
+      <div class="pcf-stage-table"><table><thead><tr><th>推荐因子与匹配理由</th><th>数据集 / 版本</th><th>地域 / 年份</th><th>数值与单位</th><th>确认／改选</th></tr></thead><tbody>${factorRows || "<tr><td colspan='5'>系统尚未生成推荐；请刷新推荐。</td></tr>"}</tbody></table></div>
+      ${gapNote}
+      <footer class="pcf-card__actions"><p>确认适用性不会改写活动数据；未确认前不能运行正式计算。改选后需重新确认。</p><p class="pcf-factor-disclaimer"><small>sourceKind=${safe(factors?.sourceKind || "matcher_recommendation")} · matcher ${safe(rec?.matcherVersion || factors?.provenance?.matcherVersion || "—")}。只读目录对齐 DatabaseofEmissionFactor 种子；推荐由匹配逻辑完成，不把专业选因子工作推给业务用户。</small></p>${factorsConfirmed ? statusChip("因子已确认", "ok") : `<div class="pcf-card__action-row">${actionButton("刷新系统推荐", "secondary", 'data-action="pcf-refresh-factor-recommendations"')}${actionButton("确认推荐因子适用性", "primary", 'data-action="pcf-confirm-factors"')}</div>`}</footer>
     </section>`;
     const stages = calculation?.stages || [];
     const hotspots = calculation?.hotspots || [];
-    const stageRows = stages.map((row) => `<tr><td>${safe(row.name)}</td><td>${safe(row.value)} ${safe(row.unit)}</td><td>${Math.round((row.share || 0) * 1000) / 10}%</td><td>${safe(row.basis)}</td></tr>`).join("");
+    const stageRows = stages.map((row) => `<tr><td>${safe(row.name)}${row.included === false ? "<small>本次边界外</small>" : ""}</td><td>${row.included === false ? "—" : `${safe(row.value)} ${safe(row.unit)}`}</td><td>${row.included === false ? "—" : `${Math.round((row.share || 0) * 1000) / 10}%`}</td><td>${safe(row.basis)}</td></tr>`).join("");
+    const lineRows = (calculation?.lineItems || []).map((row) => `<tr>
+      <td><strong>${safe(row.name)}</strong><small>${safe(row.stageId)} · ${safe(row.id)}${row.included === false ? " · 边界外" : ""}</small></td>
+      <td>${safe(row.activity?.value)} ${safe(row.activity?.unit)}</td>
+      <td>${safe(row.factor?.id)}<small>${safe(row.factor?.value)} ${safe(row.factor?.numeratorUnit)}/${safe(row.factor?.denominatorUnit)}</small></td>
+      <td>${safe(row.emissionTCO2e)} tCO2e</td>
+      <td>${safe(row.activity?.sourceLabel || row.activity?.sourceKind || "—")}<small>${safe(row.activity?.sourceId || row.evidenceId || "未关联证据")}</small></td>
+    </tr>`).join("");
     const hotspotList = hotspots.map((row) => `<li style="--share:${Math.round((row.share || 0) * 100)}%"><span>${safe(row.name)}</span><b>${safe(row.shareLabel || `${Math.round((row.share || 0) * 100)}%`)}</b></li>`).join("");
     const dq = calculation?.dataQuality || {};
-    const resultDetail = `<section class="pcf-result-detail"><div class="pcf-stage-table"><header><span class="pcf-kicker">RESULT BREAKDOWN</span><h2>生命周期阶段结果</h2></header><table><thead><tr><th>阶段</th><th>排放量</th><th>占比</th><th>数据基础</th></tr></thead><tbody>${stageRows || "<tr><td colspan='4'>尚未生成计算结果</td></tr>"}</tbody></table></div><aside class="pcf-quality-register"><span class="pcf-kicker">METHOD & DATA QUALITY</span><h2>方法与数据质量</h2><dl><div><dt>一次活动数据覆盖</dt><dd>${dq.primaryActivityCoverage != null ? `${Math.round(dq.primaryActivityCoverage * 100)}%` : "—"}</dd></div><div><dt>排放因子覆盖</dt><dd>${dq.factorCoverage != null ? `${Math.round(dq.factorCoverage * 100)}%` : "—"}</dd></div><div><dt>分配方法</dt><dd>${safe(dq.allocationMethod || "—")}</dd></div><div><dt>生物源碳 / 移除</dt><dd>${safe(dq.biogenicCarbon || "—")}</dd></div><div><dt>因子集</dt><dd>${safe(calculation?.factorSetId || factors?.setId || "CN-EF-2026.1")}</dd></div><div><dt>输入快照</dt><dd>${safe(snapshotId)}</dd></div></dl><p>${(calculation?.limitations || ["数据质量、排除项和不确定性将在报告中单独说明。"]).map((item) => safe(item)).join("；")}</p></aside></section>`;
+    const resultDetail = `<section class="pcf-result-detail"><div class="pcf-stage-table"><header><span class="pcf-kicker">RESULT BREAKDOWN</span><h2>生命周期阶段结果</h2></header><table><thead><tr><th>阶段</th><th>排放量</th><th>占比</th><th>数据基础</th></tr></thead><tbody>${stageRows || "<tr><td colspan='4'>尚未生成计算结果</td></tr>"}</tbody></table></div><aside class="pcf-quality-register"><span class="pcf-kicker">METHOD & DATA QUALITY</span><h2>方法与数据质量</h2><dl><div><dt>一次活动数据覆盖</dt><dd>${dq.primaryActivityCoverage != null ? `${Math.round(dq.primaryActivityCoverage * 100)}%` : "—"}</dd></div><div><dt>证据完整度</dt><dd>${dq.completeness != null ? `${Math.round(dq.completeness * 100)}%` : "—"}</dd></div><div><dt>Tier 1 / 2 / 3</dt><dd>${dq.tier1Percentage != null ? `${safe(dq.tier1Percentage)}% / ${safe(dq.tier2Percentage)}% / ${safe(dq.tier3Percentage)}%` : "—"}</dd></div><div><dt>分配方法</dt><dd>${safe(dq.allocationMethod || "—")}</dd></div><div><dt>因子集</dt><dd>${safe(calculation?.factorSetId || factors?.setId || "CN-EF-2026.1")}</dd></div><div><dt>输入快照</dt><dd>${safe(snapshotId)}</dd></div></dl><p>${(calculation?.limitations || ["数据质量、排除项和不确定性将在报告中单独说明。"]).map((item) => safe(item)).join("；")}</p></aside></section>
+      <section class="pcf-card" aria-labelledby="pcfLedgerTitle"><header class="pcf-card__header"><div><span class="pcf-kicker">CALCULATION LEDGER</span><h2 id="pcfLedgerTitle">逐项计算台账</h2></div><small>${safe(calculation?.lineItems?.length || 0)} 项 · ${safe(calculation?.ruleVersion || "尚未计算")}</small></header><div class="pcf-stage-table"><table><thead><tr><th>清单项</th><th>活动数据</th><th>排放因子</th><th>排放量</th><th>数据来源</th></tr></thead><tbody>${lineRows || "<tr><td colspan='5'>运行计算后显示逐项台账</td></tr>"}</tbody></table></div><footer class="pcf-card__actions"><p>每一行都保留活动数据、单位换算、因子标识、分配比例和证据来源，可在复核时逐项追溯。</p></footer></section>`;
     $("#main").innerHTML = `${pcfChannelHeader("计算与排放热点", "先完成排放因子适用性门槛，再基于已确认事实生成可重现的计算草稿，并识别主要排放来源。")}
       ${stageGatePanelHtml("pcf")}
       ${factorPanel}
-      ${state.pcfCalculationFailed ? pcfRecovery("计算未完成", "排放因子版本读取失败。已确认的数据和输入快照均已保留，可安全重试。", "重新加载因子并计算", 'data-action="pcf-retry-calculation"') : blocked ? pcfRecovery("活动数据尚未确认", "完成模板校验并确认待处理服务绑定后，才能建立输入快照和运行计算。", "返回活动数据", 'data-page="pcf-data"') : needsFactors ? pcfRecovery("排放因子适用性未确认", "请先确认因子集的来源、版本、单位与适用理由。", "确认因子适用性", 'data-action="pcf-confirm-factors"') : canRun ? `<section class="pcf-calculation-ready"><div><span class="pcf-kicker">STEP 04 · READY TO CALCULATE</span><h2>输入已锁定，可以生成计算草稿</h2><p>本次运行将锁定绑定 ${safe(ctx.powerBinding?.id || "BIND-REC-POWER-PCF")} 引用的资产版本 ${safe(ctx.powerBinding?.assetVersionId || ctx.power?.versionId || "")}，并使用因子集 ${safe(factors?.setId || "CN-EF-2026.1")}。</p>${actionButton("运行确定性计算", "primary", 'data-action="pcf-run-calculation"')}</div><dl><div><dt>确认绑定</dt><dd>${safe(ctx.powerBinding?.id || "—")}</dd></div><div><dt>资产版本</dt><dd>${safe(ctx.powerBinding?.assetVersionId || "—")}</dd></div><div><dt>因子集</dt><dd>${safe(factors?.setId || "CN-EF-2026.1")}</dd></div><div><dt>功能单位</dt><dd>${safe(item?.metadata?.declaration?.functionalUnit || "1 吨产品")}</dd></div></dl></section>` : hasResult && ctx.snapshot?.status === "STALE" ? `${pcfRecovery("输入快照已过期（STALE）", "上游资产或绑定已修订；当前计算结果不可再作为正式依据。请回到活动数据确认绑定后重新运行计算。", "返回活动数据", 'data-page="pcf-data"')}<section class="result-summary" aria-disabled="true"><div class="pcf-result-total"><span class="pcf-kicker">${safe(runId)} · STALE</span><strong>${safe(calculation?.total ?? "2.18")}</strong><span>${safe(calculation?.unit || "tCO₂e / t 产品")}</span><p>历史结果保留供对照，不可直接进入独立复核。</p></div></section>` : hasResult ? `<section class="result-summary"><div class="pcf-result-total"><span class="pcf-kicker">${safe(runId)} · ${safe(calculation?.status || "计算草稿")}</span><strong>${safe(calculation?.total ?? "2.18")}</strong><span>${safe(calculation?.unit || "tCO₂e / t 产品")}</span><p>因子集 ${safe(calculation?.factorSetId || factors?.setId || "CN-EF-2026.1")}<br>输入快照 ${safe(snapshotId)}</p></div><div class="hotspot-list"><header><div><span class="pcf-kicker">EMISSION HOTSPOTS</span><h2>排放热点</h2></div>${statusChip("可重现", "ok")}</header><ol>${hotspotList || "<li><span>暂无热点</span><b>—</b></li>"}</ol><footer><p>结果尚未成为正式报告，需完成独立复核。</p><button class="text-button" data-page="pcf-report">进入独立复核 →</button></footer></div></section>${resultDetail}` : pcfRecovery("尚未生成计算草稿", "确认因子后运行确定性计算，结果会写入可追溯的 Run 与热点结构。", "确认因子适用性", 'data-action="pcf-confirm-factors"')}`;
+      ${state.pcfCalculationFailed ? pcfRecovery("计算未完成", "排放因子版本读取失败。已确认的数据和输入快照均已保留，可安全重试。", "重新加载因子并计算", 'data-action="pcf-retry-calculation"') : blocked ? pcfRecovery("活动数据尚未确认", "完成模板校验并确认待处理服务绑定后，才能建立输入快照和运行计算。", "返回活动数据", 'data-page="pcf-data"') : needsFactors ? pcfRecovery("排放因子适用性未确认", "系统已按匹配逻辑给出推荐；请确认适用性，或改选备选后再确认。无需自行检索因子库。", "确认推荐因子适用性", 'data-action="pcf-confirm-factors"') : canRun ? `<section class="pcf-calculation-ready"><div><span class="pcf-kicker">STEP 04 · READY TO CALCULATE</span><h2>输入已锁定，可以生成计算草稿</h2><p>本次运行使用逐项清单和固定因子执行确定性计算。原型中除购入电力外的清单行为明示演示输入，不可正式披露。</p>${actionButton("运行确定性计算", "primary", 'data-action="pcf-run-calculation"')}</div><dl><div><dt>确认绑定</dt><dd>${safe(ctx.powerBinding?.id || "—")}</dd></div><div><dt>资产版本</dt><dd>${safe(ctx.powerBinding?.assetVersionId || "—")}</dd></div><div><dt>因子集</dt><dd>${safe(factors?.setId || "CN-EF-2026.1")}</dd></div><div><dt>功能单位</dt><dd>${safe(item?.metadata?.declaration?.functionalUnit || "1 吨产品")}</dd></div></dl></section>` : hasResult && ctx.snapshot?.status === "STALE" ? `${pcfRecovery("输入快照已过期（STALE）", "上游资产或绑定已修订；当前计算结果不可再作为正式依据。请回到活动数据确认绑定后重新运行计算。", "返回活动数据", 'data-page="pcf-data"')}<section class="result-summary" aria-disabled="true"><div class="pcf-result-total"><span class="pcf-kicker">${safe(runId)} · STALE</span><strong>${safe(calculation?.total ?? "—")}</strong><span>${safe(calculation?.unit || "tCO₂e / t 产品")}</span><p>历史结果保留供对照，不可直接进入独立复核。</p></div></section>` : hasResult ? `<section class="result-summary"><div class="pcf-result-total"><span class="pcf-kicker">${safe(runId)} · ${calculation?.formalUseAllowed ? "受控计算草稿" : "演示计算草稿"}</span><strong>${safe(calculation?.total ?? "—")}</strong><span>${safe(calculation?.unit || "tCO₂e / t 产品")}</span><p>${calculation?.formalUseAllowed ? "已固定正式输入" : "含演示清单·不可正式披露"}<br>输入快照 ${safe(snapshotId)}</p></div><div class="hotspot-list"><header><div><span class="pcf-kicker">EMISSION HOTSPOTS</span><h2>排放热点</h2></div>${statusChip("可重现", "ok")}</header><ol>${hotspotList || "<li><span>暂无热点</span><b>—</b></li>"}</ol><footer><p>结果尚未成为正式报告，需替换演示输入并完成独立复核。</p><button class="text-button" data-page="pcf-report">进入独立复核 →</button></footer></div></section>${resultDetail}` : pcfRecovery("尚未生成计算草稿", "确认因子后运行确定性计算，结果会写入可追溯的 Run 与热点结构。", "确认因子适用性", 'data-action="pcf-confirm-factors"')}`;
   }
 
   function renderPcfReport() {

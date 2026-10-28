@@ -2437,3 +2437,37 @@ body.drawer-open { overflow: hidden; }
 .pcf-factor-disclaimer small {
   font: 500 .75rem/1.45 var(--font-body);
 }
+
+
+.pcf-match-reasons,
+.pcf-factor-gaps {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: .75rem;
+  line-height: 1.45;
+  font-weight: 400;
+}
+.pcf-factor-alts {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+}
+.pcf-factor-alts > span {
+  color: var(--muted);
+  font-size: .7rem;
+}
+.pcf-card__action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+.pcf-stage-table td strong {
+  display: block;
+}
+.pcf-stage-table td small {
+  display: block;
+  color: var(--muted);
+  font-weight: 400;
+}

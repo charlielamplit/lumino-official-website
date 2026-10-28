@@ -56,17 +56,21 @@ test("清单域由模板与绑定投影，不再返回空壳", () => {
   assert.ok(ledger.summary.ready >= 1);
 });
 
-test("因子确认为演示桩，确认后 stage gate 通过", () => {
-  const draft = Factors.defaultSet(declaration);
-  assert.equal(draft.sourceKind, "demo_stub");
+test("因子由匹配引擎推荐，确认后 stage gate 通过", () => {
+  const draft = Factors.defaultSet({
+    declaration,
+    facilityGeography: "上海",
+    activities: [{ id: "energy", name: "购入电力", unit: "MWh" }]
+  });
+  assert.equal(draft.sourceKind, "matcher_recommendation");
   assert.equal(draft.provenance.localDatabase, false);
   assert.equal(draft.provenance.localCatalogAvailable, true);
   assert.ok(draft.provenance.intendedSources.includes("DatabaseofEmissionFactor"));
-  assert.ok(draft.items.every((item) => item.sourceKind === "local_catalog_sample"));
+  assert.ok(draft.items.length >= 1);
+  assert.ok(draft.recommendation.proposalOnly);
   assert.equal(evaluateGate("pcf", "factors", { factors: Factors.toStageGate(draft) }).ok, false);
   const confirmed = Factors.confirm(draft, { actor: "周岚" });
   assert.equal(confirmed.confirmed, true);
-  assert.equal(confirmed.sourceKind, "demo_stub");
-  assert.equal(confirmed.provenance.localCatalogAvailable, true);
+  assert.equal(confirmed.sourceKind, "matcher_recommendation");
   assert.equal(evaluateGate("pcf", "factors", { factors: Factors.toStageGate(confirmed) }).ok, true);
 });

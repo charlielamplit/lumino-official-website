@@ -15,6 +15,8 @@
     "./pcf-boundary": "./domain/pcf-boundary.js",
     "./pcf-template": "./domain/pcf-template.js",
     "./pcf-inventory": "./domain/pcf-inventory.js",
+    "./pcf-factor-catalog": "./domain/pcf-factor-catalog.js",
+    "./pcf-factor-matcher": "./domain/pcf-factor-matcher.js",
     "./pcf-factors": "./domain/pcf-factors.js",
     "./pcf-calculation": "./domain/pcf-calculation.js",
     "./pcf-report-lock": "./domain/pcf-report-lock.js"
