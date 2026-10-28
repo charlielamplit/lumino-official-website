@@ -381,6 +381,28 @@
     return Boolean(roleConfig[role]?.nav.some(([id]) => id === page));
   }
 
+  function customerHubVisitKey() {
+    return `lumino-portal-hub-seen:${state.organization?.id || "ORG-HX-001"}`;
+  }
+
+  function customerHasEnterableServices() {
+    return Object.values(serviceRegistry).some((service) => service.roles?.includes(state.role) && service.entryPage);
+  }
+
+  function hasSeenCustomerHub() {
+    try { return window.localStorage.getItem(customerHubVisitKey()) === "1"; } catch { return false; }
+  }
+
+  function markCustomerHubSeen() {
+    try { window.localStorage.setItem(customerHubVisitKey(), "1"); } catch { /* ignore */ }
+  }
+
+  /** First portal visit → service catalog; later visits with open services → continue via tasks. */
+  function resolveCustomerHomePage() {
+    if (!customerHasEnterableServices() || !hasSeenCustomerHub()) return "services-hub";
+    return "shared-tasks";
+  }
+
   function setCustomerDestination(serviceId, page) {
     if (globalCustomerPages.has(page)) {
       state.currentService = null;
@@ -412,7 +434,7 @@
       const requestedPage = incoming.get("page");
       if (requestedService || requestedPage) setCustomerDestination(requestedService, requestedPage);
       else if (options.restore && isValidCustomerDestination(state.currentService, state.page)) setCustomerDestination(state.currentService, state.page);
-      else setCustomerDestination(null, "services-hub");
+      else setCustomerDestination(null, resolveCustomerHomePage());
     } else state.page = defaultPages[state.role];
     state.loggedIn = true;
     window.sessionStorage.setItem("lumino-portal-session-role", state.role);

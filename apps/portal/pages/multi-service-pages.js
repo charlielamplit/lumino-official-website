@@ -8,21 +8,83 @@
     return null;
   }
 
-  function servicePrimaryAction(service) {
-    if (!service.roles.includes(state.role)) return `<button class="button button--secondary" type="button" data-drawer="service-consultation" data-service-id="${service.id}">预约咨询</button>`;
+  function servicePrimaryAction(service, { compact = false } = {}) {
+    if (!service.roles.includes(state.role)) {
+      return compact
+        ? `<button class="text-button" type="button" data-drawer="service-consultation" data-service-id="${service.id}">预约咨询 →</button>`
+        : `<button class="button button--secondary" type="button" data-drawer="service-consultation" data-service-id="${service.id}">预约咨询</button>`;
+    }
     const page = serviceEntryPage(service.id);
-    const label = service.id === "pcf" ? (workflowEngine.get("PCF-2026-001")?.status === "SCOPING" ? "开始 PCF 项目" : "继续 PCF 项目")
-      : state.role === "customer_contrib" ? "查看分配给我" : state.role === "customer_approver" ? "处理待审批事项" : "继续当前工作";
-    return `<button class="button button--primary" type="button" data-service-enter="${service.id}" data-page-target="${page}">${label}</button>`;
+    const label = service.id === "pcf" ? (workflowEngine.get("PCF-2026-001")?.status === "SCOPING" ? "开始项目" : "继续项目")
+      : state.role === "customer_contrib" ? "查看分配" : state.role === "customer_approver" ? "处理审批" : "继续工作";
+    return compact
+      ? `<button class="button button--primary button--compact" type="button" data-service-enter="${service.id}" data-page-target="${page}">${label}</button>`
+      : `<button class="button button--primary" type="button" data-service-enter="${service.id}" data-page-target="${page}">${label}</button>`;
+  }
+
+  function serviceProgressLine(service) {
+    if (service.id === "cbam") {
+      if (state.role === "customer_contrib") return { title: "2 项材料待补充", detail: "按你的分工筛选" };
+      if (state.role === "customer_approver") return { title: "2 项决定待审批", detail: "按你的授权筛选" };
+      return { title: "Q3 数据采集 · 68%", detail: "2026 年度进行中" };
+    }
+    if (service.id === "pcf") {
+      return { title: workflowStateLabel(workflowEngine.get("PCF-2026-001")?.status || "SCOPING"), detail: "热轧非合金钢卷 · 试点" };
+    }
+    return null;
   }
 
   function renderServicesHub() {
-    const cards = Object.values(serviceRegistry).map((service, index) => `<article class="service-card service-card--${service.status}">
-      <header><span class="service-index">0${index + 1}</span>${statusChip(service.statusLabel, service.status === "active" ? "ok" : service.status === "pilot" ? "warn" : "")}</header>
-      <p class="service-code">${service.code}</p><h2>${service.name}</h2><p>${service.description}</p>
-      ${service.id === "cbam" ? `<div class="service-current"><strong>${state.role === "customer_contrib" ? "2 项材料待补充" : state.role === "customer_approver" ? "2 项决定待审批" : "Q3 数据采集 · 68%"}</strong><span>下一步已按你的角色筛选</span></div>` : service.id === "pcf" ? `<div class="service-current"><strong>${workflowStateLabel(workflowEngine.get("PCF-2026-001")?.status || "SCOPING")}</strong><span>热轧非合金钢卷 · 试点项目</span></div>` : ""}
-      <footer>${servicePrimaryAction(service)}</footer></article>`).join("");
-    $("#main").innerHTML = `${pageHeader("LUMINO SERVICE PORTAL", "服务总览", statusChip("6 项企业服务"))}<p class="page-lead">从已开通的服务继续；未开放的服务只接受咨询预约。</p><section class="service-grid" aria-label="企业服务">${cards}</section>`;
+    const firstVisit = typeof hasSeenCustomerHub === "function" ? !hasSeenCustomerHub() : true;
+    if (typeof markCustomerHubSeen === "function") markCustomerHubSeen();
+
+    const services = Object.values(serviceRegistry);
+    const open = services.filter((service) => service.roles.includes(state.role) && service.entryPage);
+    const catalog = services.filter((service) => !(service.roles.includes(state.role) && service.entryPage));
+
+    const openRows = open.map((service, index) => {
+      const progress = serviceProgressLine(service);
+      return `<article class="service-row service-row--${service.status}">
+        <span class="service-row__index">${String(index + 1).padStart(2, "0")}</span>
+        <div class="service-row__identity">
+          <div class="service-row__title">
+            <span class="service-row__code">${safe(service.code)}</span>
+            <h2>${safe(service.name)}</h2>
+            ${statusChip(service.statusLabel, service.status === "active" ? "ok" : service.status === "pilot" ? "warn" : "")}
+          </div>
+          ${progress ? `<p class="service-row__progress"><strong>${safe(progress.title)}</strong><span>· ${safe(progress.detail)}</span></p>` : `<p class="service-row__progress">${safe(service.description)}</p>`}
+        </div>
+        <div class="service-row__action">${servicePrimaryAction(service, { compact: true })}</div>
+      </article>`;
+    }).join("");
+
+    const catalogRows = catalog.map((service) => `<li class="service-catalog__item">
+      <span class="service-catalog__code">${safe(service.code)}</span>
+      <div><strong>${safe(service.name)}</strong><small>${safe(service.description)}</small></div>
+      ${statusChip(service.statusLabel || "可咨询", "")}
+      ${servicePrimaryAction(service, { compact: true })}
+    </li>`).join("");
+
+    const lead = firstVisit
+      ? "首次进入：先确认本企业已开通的服务。之后登录会优先进入待办，不必每次再选服务。"
+      : "从已开通服务继续；未开通的只接受咨询，不会打开空工作区。";
+
+    $("#main").innerHTML = `
+      <header class="page-head page-head--compact">
+        <div><p>SERVICES</p><h1>服务</h1></div>
+        ${statusChip(`${open.length} 项已开通 · ${catalog.length} 项可咨询`)}
+      </header>
+      <p class="page-lead page-lead--hub">${lead}</p>
+      <section class="service-hub" aria-label="企业服务">
+        <div class="service-hub__group">
+          <header class="service-hub__label"><span>进行中</span><small>可直接进入频道</small></header>
+          <div class="service-row-list" aria-label="已开通服务">${openRows || `<p class="service-hub__empty">当前角色还没有可进入的服务。</p>`}</div>
+        </div>
+        <div class="service-hub__group service-hub__group--catalog">
+          <header class="service-hub__label"><span>尚未开通</span><small>了解范围后预约咨询</small></header>
+          <ul class="service-catalog" aria-label="可咨询服务">${catalogRows}</ul>
+        </div>
+      </section>`;
   }
 
   function renderSharedTasks() {
@@ -34,7 +96,7 @@
       <td data-label="截止状态"><span class="due-state due-state--${safe(task.due.tone)}">${safe(task.due.label)}</span></td>
       <td data-label="操作"><button class="text-button" type="button" data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}">继续处理 →</button></td>
     </tr>`).join("");
-    const empty = `<tr class="shared-empty-row"><td colspan="5"><strong>暂时没有需要你处理的事项</strong><p>已完成的、或超出你授权范围的任务不会出现在这里。需要时从服务总览进入对应频道。</p><button class="text-button" type="button" data-page="services-hub">返回服务总览 →</button></td></tr>`;
+    const empty = `<tr class="shared-empty-row"><td colspan="5"><strong>暂时没有需要你处理的事项</strong><p>已完成的、或超出你授权范围的任务不会出现在这里。需要时从「服务」进入对应频道。</p><button class="text-button" type="button" data-page="services-hub">查看服务 →</button></td></tr>`;
     $("#main").innerHTML = `${pageHeader("CROSS-SERVICE WORK", "我的任务", statusChip(`${view.summary.total} 项待办`, view.summary.urgent ? "warn" : "ok"))}
       <p class="page-lead">这里只列出你当前需要处理的事项；状态随工作流自动更新。</p>
       <dl class="shared-center-summary" aria-label="任务摘要"><div><dt>当前待办</dt><dd>${view.summary.total}</dd></div><div><dt>今天或已逾期</dt><dd>${view.summary.urgent}</dd></div><div><dt>涉及服务</dt><dd>${view.summary.services}</dd></div><div><dt>授权范围</dt><dd>${safe(roleConfig[state.role].title)}</dd></div></dl>
@@ -77,7 +139,7 @@
       <dl class="delivery-control-line" aria-label="${safe(item.name)}控制状态"><div><dt>审批</dt><dd>${safe(item.controls.approval)}</dd></div><div><dt>锁定</dt><dd>${safe(item.controls.lock)}</dd></div><div><dt>交付</dt><dd>${safe(item.controls.delivery)}</dd></div></dl>
       <div class="delivery-ledger-row__action"><small>${item.snapshotId ? `输入快照 ${safe(item.snapshotId)}` : `工作流记录 Rev ${safe(item.workflowRevision)}`}</small><button class="text-button" type="button" data-service-enter="${safe(item.serviceId)}" data-page-target="${safe(item.page)}">进入服务处理 →</button></div>
     </article>`).join("");
-    const empty = `<section class="shared-empty-state"><span>NO AUTHORIZED OUTPUTS</span><h2>还没有可查看的交付物</h2><p>报告或数据包在对应服务里生成、且你有权限后，会出现在这里。正式锁定与发送仍回服务频道完成。</p><button class="button button--secondary" type="button" data-page="services-hub">返回服务总览</button></section>`;
+    const empty = `<section class="shared-empty-state"><span>NO AUTHORIZED OUTPUTS</span><h2>还没有可查看的交付物</h2><p>报告或数据包在对应服务里生成、且你有权限后，会出现在这里。正式锁定与发送仍回服务频道完成。</p><button class="button button--secondary" type="button" data-page="services-hub">查看服务</button></section>`;
     $("#main").innerHTML = `${pageHeader("CONTROLLED OUTPUTS", "交付中心", statusChip(`${view.summary.total} 项交付物`))}
       <p class="page-lead">查看报告与数据包的版本、审批和交付状态；正式操作回到对应服务完成。</p>
       <dl class="shared-center-summary" aria-label="交付物摘要"><div><dt>受控交付物</dt><dd>${view.summary.total}</dd></div><div><dt>复核处理中</dt><dd>${view.summary.inReview}</dd></div><div><dt>已锁定</dt><dd>${view.summary.locked}</dd></div><div><dt>已发送 / 回执</dt><dd>${view.summary.delivered}</dd></div></dl>
@@ -111,7 +173,7 @@
         <section class="pcf-context" aria-label="当前 PCF 项目">
           <div class="pcf-context__identity"><span>PCF · 试点项目</span><strong>${safe(productName)}</strong><small>${safe(productCode)} · 华星钢铁有限公司${declaration.confirmed ? ` · ${safe(declaration.functionalUnit || "")}` : ""}</small></div>
           <p class="pcf-channel-lead">${description}</p>
-          <button class="text-button" type="button" data-page="services-hub">返回服务总览</button>
+          <button class="text-button" type="button" data-page="services-hub">返回服务</button>
         </section>
         <ol class="pcf-progress" aria-label="PCF 工作流状态">${pcfSteps.map((step, i) => `<li class="${i < index ? "done" : i === index ? "current" : ""}" ${i === index ? 'aria-current="step"' : ""}><span aria-hidden="true">${i < index ? "✓" : i + 1}</span><small>${pcfStepLabels[step]}</small></li>`).join("")}</ol>
       </div>`;
