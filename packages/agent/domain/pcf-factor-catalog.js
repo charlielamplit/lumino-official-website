@@ -8,7 +8,6 @@
 
   const CATALOG_VERSION = "0.1.0";
 
-  /** ?? DatabaseofEmissionFactor init.sql??????????? API ??? list()? */
   const LOCAL_SEED = Object.freeze([
     Object.freeze({
       id: "ef-seed-cn-grid-national-2024",
@@ -17,18 +16,18 @@
         level1: "Energy",
         level2: "Electricity",
         level3: "Grid_Average",
-        displayNameCn: "??????"
+        displayNameCn: "\u5168\u56fd\u7535\u7f51\u5e73\u5747"
       }),
       geographicScope: Object.freeze({
         countryCode: "CN",
         region: "National",
-        displayNameCn: "????",
+        displayNameCn: "\u5168\u56fd\u5e73\u5747",
         gridZone: "National"
       }),
       emissionValue: Object.freeze({ value: 0.5703, unit: "kgCO2eq/kWh", referenceYear: 2024 }),
       dataSource: Object.freeze({
-        organization: "?????",
-        publication: "2024??????????????????",
+        organization: "\u751f\u6001\u73af\u5883\u90e8",
+        publication: "2024\u5e74\u4f01\u4e1a\u6e29\u5ba4\u6c14\u4f53\u6392\u653e\u6838\u7b97\u65b9\u6cd5\u4e0e\u62a5\u544a\u6307\u5357",
         publicationDate: "2024-01-10"
       }),
       qualityInfo: Object.freeze({ grade: "A", confidence: "High" }),
@@ -43,18 +42,18 @@
         level1: "Energy",
         level2: "Electricity",
         level3: "Coal_Power",
-        displayNameCn: "????????"
+        displayNameCn: "\u534e\u5317\u7535\u7f51\u71c3\u7164\u53d1\u7535"
       }),
       geographicScope: Object.freeze({
         countryCode: "CN",
         region: "North_China_Grid",
-        displayNameCn: "????",
+        displayNameCn: "\u534e\u5317\u7535\u7f51",
         gridZone: "North_China_Grid"
       }),
       emissionValue: Object.freeze({ value: 0.8241, unit: "kgCO2eq/kWh", referenceYear: 2024 }),
       dataSource: Object.freeze({
-        organization: "?????????",
-        publication: "????????????2024",
+        organization: "\u4e2d\u56fd\u7535\u529b\u4f01\u4e1a\u8054\u5408\u4f1a",
+        publication: "\u4e2d\u56fd\u7535\u529b\u884c\u4e1a\u5e74\u5ea6\u53d1\u5c55\u62a5\u544a2024",
         publicationDate: "2024-02-28"
       }),
       qualityInfo: Object.freeze({ grade: "A", confidence: "High" }),
@@ -69,18 +68,18 @@
         level1: "Energy",
         level2: "Electricity",
         level3: "Grid_Average",
-        displayNameCn: "????????"
+        displayNameCn: "\u534e\u4e1c\u533a\u57df\u7535\u7f51\u5e73\u5747"
       }),
       geographicScope: Object.freeze({
         countryCode: "CN",
         region: "East_China_Grid",
-        displayNameCn: "????",
+        displayNameCn: "\u534e\u4e1c\u7535\u7f51",
         gridZone: "East_China_Grid"
       }),
       emissionValue: Object.freeze({ value: 0.581, unit: "kgCO2eq/kWh", referenceYear: 2024 }),
       dataSource: Object.freeze({
-        organization: "??????????????",
-        publication: "???????????????",
+        organization: "\u533a\u57df\u7535\u7f51\u516c\u5f00\u53c2\u6570\uff08\u6f14\u793a\u6269\u5c55\uff09",
+        publication: "\u5bf9\u9f50\u534e\u4e1c\u8d2d\u7535\u573a\u666f\u7684\u533a\u57df\u7535\u7f51\u5e73\u5747",
         publicationDate: "2024-06-01"
       }),
       qualityInfo: Object.freeze({ grade: "B", confidence: "Medium" }),
@@ -95,18 +94,18 @@
         level1: "Industry",
         level2: "Steel",
         level3: "Coke",
-        displayNameCn: "??????"
+        displayNameCn: "\u7126\u70ad\u8fc7\u7a0b\u6392\u653e"
       }),
       geographicScope: Object.freeze({
         countryCode: "CN",
         region: "National",
-        displayNameCn: "??",
+        displayNameCn: "\u4e2d\u56fd",
         gridZone: null
       }),
       emissionValue: Object.freeze({ value: 0.302, unit: "tCO2eq/t", referenceYear: 2024 }),
       dataSource: Object.freeze({
-        organization: "??????????",
-        publication: "????????????",
+        organization: "\u884c\u4e1a\u8fc7\u7a0b\u53c2\u6570\uff08\u6f14\u793a\uff09",
+        publication: "\u94a2\u94c1\u7126\u70ad\u6295\u5165\u4e8c\u6b21\u6570\u636e\u5360\u4f4d",
         publicationDate: "2024-01-01"
       }),
       qualityInfo: Object.freeze({ grade: "C", confidence: "Low" }),
