@@ -546,7 +546,7 @@
       })(),
       "resources": ["GLOBAL RESOURCES", "资源中心", `<div class="resource-list"><a href="../calculator/index.html"><strong>CBAM 成本试算工具</strong><span>打开公开工具 →</span></a><a href="../Lumino%20指南文章.dc.html"><strong>CBAM 操作指南</strong><span>查看知识文章 →</span></a><button type="button" data-page="shared-files"><strong>企业数据资产</strong><span>查看已授权资产与服务使用 →</span></button></div>`],
       "service-consultation": ["SERVICE CONSULTATION", `咨询${safe(serviceRegistry[context.serviceId]?.name || "专业服务")}`, drawerForm("service-consultation", "我们会把当前企业、账号角色和服务类型一并带给顾问；不会为尚未开放的服务创建工作空间。", `<input type="hidden" name="serviceId" value="${safe(context.serviceId || "")}">${formField("需求说明", '<textarea name="needs" rows="5" required placeholder="希望解决的问题、涉及产品或交付时间"></textarea>')}${formField("期望联系时间", '<input name="preferredAt" type="datetime-local" required>')}${formField("联系电话", '<input name="phone" type="tel" placeholder="电话或手机号码">')}${formField("联系邮箱", '<input name="email" type="email" placeholder="name@company.com">', "电话或邮箱至少填写一项")}`, "提交咨询")],
-      "pcf-upload": ["PCF DATA PACK", "回传 PCF 数据包", drawerForm("pcf-upload", "请回传完整 Excel 模板，并可同时附上账单、台账和供应商声明。系统先校验表结构、单位、期间和证据引用；确认前不会进入正式计算。", `<div class="drawer-template-link"><div><span>项目模板 · HRC-01 · V1.0</span><strong>还没有填写模板？</strong><small>模板已预填产品、核算期、功能单位和系统边界。</small></div><a class="button button--secondary" href="../outputs/pcf-template/Lumino_PCF_%E6%95%B0%E6%8D%AE%E9%87%87%E9%9B%86%E6%A8%A1%E6%9D%BF_HRC-01.xlsx" download>下载模板</a></div><input type="hidden" name="templateVersion" value="PCF-DATA-PACK-1.0">${formField("核算期间", '<input name="period" value="2026-01-01 至 2026-09-30" readonly>')}<label class="upload-drop"><input name="file" type="file" accept=".xlsx" required><strong>选择已填写的 Excel 模板</strong><small>必须保留原工作表名称和字段结构</small></label><label class="upload-drop upload-drop--secondary"><input name="supportFiles" type="file" accept=".pdf,.xlsx,.xls,.csv,.jpg,.jpeg,.png" multiple><strong>添加证明材料（可多选）</strong><small>账单、ERP 导出、采购或物流台账、供应商 PCF / EPD</small></label>${formField("回传说明", '<textarea name="note" rows="3" placeholder="例如：采购和能源数据已完成，供应商 PCF 尚在收集中"></textarea>')}`, "上传并开始校验")],
+      "pcf-upload": ["PCF DATA PACK", "回传 PCF 数据包", drawerForm("pcf-upload", "请回传完整 Excel 模板，并可同时附上账单、台账和供应商声明。系统先校验表结构、单位、期间和证据引用；确认前不会进入正式计算。", `<div class="drawer-template-link"><div><span>项目模板 · HRC-01 · V1.0</span><strong>还没有填写模板？</strong><small>模板已预填产品、核算期、功能单位和系统边界。</small></div><a class="button button--secondary" href="../outputs/pcf-template/Lumino_PCF_%E6%95%B0%E6%8D%AE%E9%87%87%E9%9B%86%E6%A8%A1%E6%9D%BF_HRC-01.xlsx" download>下载模板</a></div><input type="hidden" name="templateVersion" value="PCF-DATA-PACK-1.0">${formField("核算期间", '<input name="period" value="2026-01-01 至 2026-09-30" readonly>')}${formField("演示校验场景", '<select name="validationScenario"><option value="valid">正常通过</option><option value="structure_error">结构错误（缺表／改名）</option><option value="unit_error">单位错误</option><option value="missing_evidence">缺证据引用</option><option value="partial">部分通过（能源缺口）</option></select>', "原型专用：用于验证失败恢复路径，不代表生产上传选项。")}<label class="upload-drop"><input name="file" type="file" accept=".xlsx" required><strong>选择已填写的 Excel 模板</strong><small>必须保留原工作表名称和字段结构</small></label><label class="upload-drop upload-drop--secondary"><input name="supportFiles" type="file" accept=".pdf,.xlsx,.xls,.csv,.jpg,.jpeg,.png" multiple><strong>添加证明材料（可多选）</strong><small>账单、ERP 导出、采购或物流台账、供应商 PCF / EPD</small></label>${formField("回传说明", '<textarea name="note" rows="3" placeholder="例如：采购和能源数据已完成，供应商 PCF 尚在收集中"></textarea>')}`, "上传并开始校验")],
       "pcf-report-preview": ["PCF REPORT PREVIEW", "产品碳足迹报告预览", `<div class="document-sheet"><small>PREVIEW · ${workflowEngine.get("PCF-2026-001")?.status === "DELIVERABLE_READY" ? "REV 1" : "DRAFT"}</small><h3>热轧非合金钢卷产品碳足迹报告</h3><dl><div><dt>核算目标</dt><dd>客户披露与供应链响应</dd></div><div><dt>系统边界</dt><dd>从摇篮到大门</dd></div><div><dt>功能单位</dt><dd>1 吨热轧非合金钢卷</dd></div><div><dt>结果</dt><dd>2.18 tCO₂e / t 产品</dd></div><div><dt>计算版本</dt><dd>PCF Run 01</dd></div></dl><p>结果仅用于原型演示。正式报告需完成专家复核、方法说明和证据完整性检查。</p></div>`],
       "generic-action": [context.eyebrow || "ACTION", context.title || "完成操作", drawerForm("generic-action", context.description || "补充必要信息后执行。动作、理由和影响范围会写入审计记录。", `${commonRole}${formField(context.fieldLabel || "处理说明", `<textarea rows="4" required placeholder="${context.placeholder || "说明处理内容或判断依据"}"></textarea>`)}${formField("责任人", '<select><option>我负责</option><option>转交项目协调人</option><option>转交制备专家</option><option>转交运营</option></select>')}${formField("期望完成时间", '<input type="date" value="2026-10-15">')}`, context.submitLabel || "确认并记录")],
       "record-detail": [context.eyebrow || "DETAIL", context.title || "记录详情", `<div class="detail-ledger">${commonRole}<dl><div><dt>对象</dt><dd>${context.object || `华星钢铁 · ${state.year}`}</dd></div><div><dt>当前状态</dt><dd>${context.status || "处理中"}</dd></div><div><dt>负责人</dt><dd>${context.owner || roleConfig[state.role].name}</dd></div><div><dt>权限范围</dt><dd>${context.scope || "当前服务订单与已授权数据"}</dd></div><div><dt>最近更新</dt><dd>今天 09:20</dd></div></dl><section><strong>当前需要处理</strong><p>${context.description || "查看记录、确认下一步，并保留处理依据。"}</p></section></div><footer class="drawer-actions"><button class="button button--secondary" type="button" data-close-drawer>关闭</button>${context.action ? `<button class="button button--primary" type="button" data-drawer="generic-action" data-drawer-label="${context.action}">${context.action}</button>` : ""}</footer>`],
@@ -633,8 +633,11 @@
       const pastScope = pcfCase && !["NOT_STARTED", "SCOPING"].includes(pcfCase.status);
       const pastBoundary = pcfCase && !["NOT_STARTED", "SCOPING", "COLLECTING"].includes(pcfCase.status)
         || ["NEEDS_CONFIRMATION", "CALCULATING", "EXPERT_REVIEW", "DELIVERABLE_READY", "CLOSED"].includes(pcfCase?.status);
-      const templateValidated = Boolean(workflowEngine?.get("EVD-PCF-DATAPACK-001"));
+      const storedTemplate = pcfCase?.metadata?.template || {};
+      const templateValidated = ["VALIDATED", "VALIDATED_PARTIAL"].includes(storedTemplate.status)
+        || Boolean(workflowEngine?.get("EVD-PCF-DATAPACK-001") && !storedTemplate.status);
       const inventoryConfirmed = pcfBinding?.status === "CONFIRMED" || ["CALCULATING", "EXPERT_REVIEW", "DELIVERABLE_READY", "CLOSED"].includes(pcfCase?.status);
+      const storedFactors = pcfCase?.metadata?.factors;
       const storedDeclaration = pcfCase?.metadata?.declaration || {};
       const declaration = window.LuminoPcfDeclaration
         ? window.LuminoPcfDeclaration.toStageGate({
@@ -677,16 +680,35 @@
           excludedItems: boundaryFallbackConfirmed ? ["销售运输"] : [],
           cutOffRule: boundaryFallbackConfirmed ? "单项 <1% 且合计 ≤5% 可截断" : "",
         };
+      const template = window.LuminoPcfTemplate
+        ? window.LuminoPcfTemplate.toStageGate({
+          ...storedTemplate,
+          status: storedTemplate.status
+            || (templateValidated || inventoryConfirmed ? "VALIDATED" : (workflowEngine?.get("EVD-PCF-DATAPACK-001") ? "UPLOADED" : "NOT_UPLOADED")),
+        })
+        : { status: templateValidated || inventoryConfirmed ? "VALIDATED" : "UPLOADED" };
+      const factorFallbackConfirmed = inventoryConfirmed || ["CALCULATING", "EXPERT_REVIEW", "DELIVERABLE_READY", "CLOSED"].includes(pcfCase?.status);
+      const factorSource = storedFactors || window.LuminoPcfFactors?.defaultSet(pcfCase?.metadata?.declaration || {}) || null;
+      const factors = window.LuminoPcfFactors && factorSource
+        ? window.LuminoPcfFactors.toStageGate({
+          ...factorSource,
+          confirmed: Boolean(factorSource.confirmed) || factorFallbackConfirmed,
+          items: (factorSource.items || []).map((item) => ({
+            ...item,
+            applicabilityConfirmed: Boolean(item.applicabilityConfirmed) || factorFallbackConfirmed,
+          })),
+        })
+        : (factorFallbackConfirmed
+          ? [{ id: "EF-PCF-GRID", applicabilityConfirmed: true }]
+          : [{ id: "EF-PCF-GRID", applicabilityConfirmed: false }]);
       return {
         declaration,
         boundary,
-        template: { status: templateValidated || inventoryConfirmed ? "VALIDATED" : "UPLOADED" },
+        template,
         inventoryBindings: inventoryConfirmed
           ? [{ id: pcfBinding?.id || "BIND-PCF-POWER", status: "CONFIRMED" }]
           : (pcfBinding ? [{ id: pcfBinding.id, status: pcfBinding.status }] : []),
-        factors: inventoryConfirmed || ["CALCULATING", "EXPERT_REVIEW", "DELIVERABLE_READY", "CLOSED"].includes(pcfCase?.status)
-          ? [{ id: "EF-PCF-GRID", applicabilityConfirmed: true }]
-          : [{ id: "EF-PCF-GRID", applicabilityConfirmed: false }],
+        factors,
         calculation: {
           currentRun: ["CURRENT", "SUCCEEDED"].includes(pcfRun?.status) || ["EXPERT_REVIEW", "DELIVERABLE_READY", "CLOSED"].includes(pcfCase?.status),
           snapshotStatus: snap?.status === "STALE" ? "STALE" : "LOCKED"

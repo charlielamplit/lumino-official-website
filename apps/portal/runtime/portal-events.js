@@ -303,6 +303,20 @@
           toast(error.message || "系统边界不完整");
         }
       }
+      if (action === "pcf-confirm-factors") {
+        if (!assertStageGate("pcf", "inventory").ok) return;
+        try {
+          const item = workflowEngine.get("PCF-2026-001");
+          const draft = item?.metadata?.factors || window.LuminoPcfFactors.defaultSet(item?.metadata?.declaration || {});
+          const confirmed = window.LuminoPcfFactors.confirm(draft, workflowActor());
+          workflowEngine.patch("PCF-2026-001", { metadata: { factors: confirmed } }, { ...workflowActor(), reason: "确认排放因子适用性" });
+          persistPortalState();
+          render();
+          toast("排放因子适用性已确认。可以进入确定性计算。");
+        } catch (error) {
+          toast(error.message || "因子确认失败");
+        }
+      }
       if (action === "pcf-confirm-proposal") {
         if (!assertStageGate("pcf", "boundary").ok) return;
         try {
@@ -316,7 +330,13 @@
           ensureWorkflowObject({ id: "FACT-PCF-001-ELECTRICITY", type: "fact", status: "MISSING", owner: roleConfig[state.role].name, year: "2026", scope: "上海一厂购入电力", metadata: { serviceId: "pcf", assetId: "REC-HX-POWER-2026Q3", assetVersionId: assetRegistry.get("REC-HX-POWER-2026Q3")?.versionId } });
           moveWorkflow("FACT-PCF-001-ELECTRICITY", ["PROPOSED", "NEEDS_CONFIRMATION", "CONFIRMED"], "用户独立确认 PCF 服务绑定", { evidenceId: "EVD-HX-POWER-2026Q3", assetId: "REC-HX-POWER-2026Q3" });
           if (["SCOPING", "COLLECTING"].includes(workflowEngine.get("PCF-2026-001")?.status)) moveWorkflow("PCF-2026-001", ["NEEDS_CONFIRMATION"], "进入 PCF 绑定确认");
-          moveWorkflow("PCF-2026-001", ["CALCULATING"], "PCF 服务绑定已确认"); state.page = "pcf-results"; persistPortalState(); render(); toast("PCF 绑定已确认；CBAM 的确认状态不受影响。");
+          const currentCase = workflowEngine.get("PCF-2026-001");
+          if (!currentCase?.metadata?.factors) {
+            workflowEngine.patch("PCF-2026-001", {
+              metadata: { factors: window.LuminoPcfFactors.defaultSet(currentCase?.metadata?.declaration || {}) },
+            }, { ...workflowActor(), reason: "绑定确认后生成排放因子草稿" });
+          }
+          moveWorkflow("PCF-2026-001", ["CALCULATING"], "PCF 服务绑定已确认"); state.page = "pcf-results"; persistPortalState(); render(); toast("PCF 绑定已确认；下一步请确认排放因子适用性。");
         } catch (error) { toast(error.message); }
       }
       if (action === "pcf-retry-calculation") { state.pcfCalculationFailed = false; render(); toast("排放因子已重新加载，可以再次运行计算。"); }
@@ -558,8 +578,22 @@
         toast("咨询请求已在原型中记录，顾问将按期望时间联系。"); return;
       }
       if (id === "pcf-upload") {
+        if (!assertStageGate("pcf", "boundary").ok) {
+          state.actionBusy = false;
+          if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }
+          return;
+        }
         const file = formData.get("file");
         const supportFileCount = activeDrawerForm.querySelector('[name="supportFiles"]')?.files?.length || 0;
+        const filename = file?.name || "Lumino_PCF_数据采集模板_HRC-01.xlsx";
+        const templateVersion = String(formData.get("templateVersion") || "PCF-DATA-PACK-1.0");
+        const scenario = String(formData.get("validationScenario") || "valid");
+        const validation = window.LuminoPcfTemplate.validateUpload({
+          filename,
+          templateVersion,
+          supportFileCount,
+          scenario,
+        });
         ensureWorkflowObject({
           id: "EVD-PCF-DATAPACK-001",
           type: "evidence",
@@ -570,23 +604,39 @@
           metadata: {
             serviceId: "pcf",
             referencedBy: ["pcf", "cbam"],
-            filename: file?.name || "Lumino_PCF_数据采集模板_HRC-01.xlsx",
+            filename,
             materialType: "PCF 数据包",
-            templateVersion: String(formData.get("templateVersion") || "PCF-DATA-PACK-1.0"),
+            templateVersion,
             supportFileCount,
+            validationScenario: scenario,
             assetId: "EVD-HX-POWER-2026Q3",
             activityAssetId: "REC-HX-POWER-2026Q3",
             productAssetId: "PRD-HRC-01",
           },
         });
+        if (validation.status === "INVALID") {
+          workflowEngine.patch("PCF-2026-001", { metadata: { template: validation } }, { ...workflowActor(), reason: "PCF 模板校验未通过" });
+          state.currentService = "pcf";
+          state.page = "pcf-data";
+          persistPortalState();
+          state.actionBusy = false;
+          closeDrawer();
+          render();
+          toast(`模板校验未通过：${validation.issues.map((item) => item.message).join("；")}`);
+          return;
+        }
         try {
-          const serialNo = "pcf-datapack-EVD-PCF-DATAPACK-001";
+          const serialNo = `pcf-datapack-EVD-PCF-DATAPACK-001-${scenario}`;
+          const existing = agentTaskEngine.getBySerialNo(serialNo);
+          if (existing) {
+            // allow re-upload demos by using unique serial when prior task exists
+          }
           const task = agentTaskEngine.submit({
-            serialNo,
+            serialNo: existing ? `${serialNo}-${Date.now()}` : serialNo,
             businessType: "PCF_DATA_PACK_VALIDATE",
             tenantId: "TNT-0018",
             caseId: "PCF-2026-001",
-            input: { evidenceId: "EVD-PCF-DATAPACK-001", templateVersion: String(formData.get("templateVersion") || "PCF-DATA-PACK-1.0"), supportFileCount, filename: file?.name || "Lumino_PCF_数据采集模板_HRC-01.xlsx" },
+            input: { evidenceId: "EVD-PCF-DATAPACK-001", templateVersion, supportFileCount, filename, scenario, validationStatus: validation.status },
           }, { actor: roleConfig[state.role].name });
           const power = assetRegistry.get("REC-HX-POWER-2026Q3");
           const pendingResult = {
@@ -602,7 +652,11 @@
               reviseIfExists: false,
               binding: { id: "BIND-REC-POWER-PCF", serviceId: "pcf", caseId: "PCF-2026-001", usagePurpose: "产品活动数据", scopeId: "PRD-HRC-01" },
             }],
-            summary: "模板结构校验通过；提出 PCF 服务绑定待确认",
+            summary: validation.status === "VALIDATED_PARTIAL"
+              ? "模板部分通过；能源域仍有缺口，仅生成待确认绑定"
+              : "模板结构校验通过；提出 PCF 服务绑定待确认",
+            partial: validation.status === "VALIDATED_PARTIAL",
+            warnings: validation.status === "VALIDATED_PARTIAL" ? ["能源域仍有 1 项待补"] : [],
           };
           setSubmitBusyLabel(submitButton, "校验中…");
           toast(`Agent 任务 ${task.id} 已提交，正在轮询…`);
@@ -612,6 +666,7 @@
             onStatus: (snapshot) => setSubmitBusyLabel(submitButton, snapshot.status === "PROCESSING" ? "处理中…" : "提交中…"),
             onReady: (completed) => {
               try {
+                const sealed = { ...validation, agentTaskId: completed.id, validatedAt: new Date().toISOString() };
                 if (!assetRegistry.get("REC-HX-POWER-2026Q3")) {
                   window.LuminoProposalBridge.applyTaskResult(assetRegistry, completed, { tenantId: "TNT-0018", ownerOrganizationId: "ORG-HX-001" });
                 } else if (!assetRegistry.bindings({ id: "BIND-REC-POWER-PCF" }).length) {
@@ -620,11 +675,27 @@
                     usagePurpose: "产品活动数据", scopeId: "PRD-HRC-01", status: "PROPOSED",
                   }, { actor: "PCF Agent", role: "agent", reason: `Agent 任务 ${completed.id} 提出 PCF 绑定` });
                 }
-                moveWorkflow("EVD-PCF-DATAPACK-001", ["SECURITY_SCANNED", "PARSED"], `PCF Agent 任务 ${completed.id} 完成（proposal_only）`, { confirmationScope: "pcf-only", importedRecords: 16, supportFileCount, assetId: "EVD-HX-POWER-2026Q3", agentTaskId: completed.id });
+                const caseMeta = workflowEngine.get("PCF-2026-001")?.metadata || {};
+                const factors = caseMeta.factors || window.LuminoPcfFactors.defaultSet(caseMeta.declaration || {});
+                moveWorkflow("EVD-PCF-DATAPACK-001", ["SECURITY_SCANNED", "PARSED"], `PCF Agent 任务 ${completed.id} 完成（proposal_only）`, {
+                  confirmationScope: "pcf-only",
+                  importedRecords: sealed.domains.reduce((sum, item) => sum + (item.imported || 0), 0),
+                  supportFileCount,
+                  assetId: "EVD-HX-POWER-2026Q3",
+                  agentTaskId: completed.id,
+                  templateStatus: sealed.status,
+                });
+                workflowEngine.patch("PCF-2026-001", {
+                  metadata: { template: sealed, factors },
+                }, { ...workflowActor(), reason: "写入模板校验结果与因子草稿" });
                 if (workflowEngine.get("PCF-2026-001")?.status === "SCOPING") moveWorkflow("PCF-2026-001", ["COLLECTING"], "开始采集 PCF 活动数据");
-                moveWorkflow("PCF-2026-001", ["NEEDS_CONFIRMATION"], "PCF Agent 已提出待确认服务绑定");
+                if (workflowEngine.get("PCF-2026-001")?.status === "COLLECTING") {
+                  moveWorkflow("PCF-2026-001", ["NEEDS_CONFIRMATION"], "PCF Agent 已提出待确认服务绑定");
+                }
                 state.currentService = "pcf"; state.page = "pcf-data"; persistPortalState(); state.actionBusy = false; closeDrawer(); render();
-                toast("数据包校验任务已完成：仅生成待确认绑定，不会自动确认 PCF 事实。");
+                toast(sealed.status === "VALIDATED_PARTIAL"
+                  ? "模板部分通过：请先补齐缺口，再确认服务绑定。"
+                  : "数据包校验通过：仅生成待确认绑定，不会自动确认 PCF 事实。");
               } catch (error) {
                 state.actionBusy = false;
                 if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }

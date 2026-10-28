@@ -13,6 +13,7 @@
     "pcf-confirm-boundary": Object.freeze(["customer_admin", "customer_owner"]),
     "pcf-apply-boundary-proposal": Object.freeze(["customer_admin", "customer_owner", "customer_contrib"]),
     "pcf-confirm-proposal": Object.freeze(["customer_admin", "customer_owner"]),
+    "pcf-confirm-factors": Object.freeze(["customer_admin", "customer_owner"]),
     "pcf-run-calculation": Object.freeze(["customer_admin", "customer_owner"]),
     "pcf-complete-review": Object.freeze(["reviewer"]),
     "workflow-approval": Object.freeze(["customer_approver"]),

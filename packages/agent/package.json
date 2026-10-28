@@ -12,7 +12,10 @@
     "./agent-task-engine": "./runtime/agent-task-engine.js",
     "./proposal-bridge": "./runtime/proposal-bridge.js",
     "./pcf-declaration": "./domain/pcf-declaration.js",
-    "./pcf-boundary": "./domain/pcf-boundary.js"
+    "./pcf-boundary": "./domain/pcf-boundary.js",
+    "./pcf-template": "./domain/pcf-template.js",
+    "./pcf-inventory": "./domain/pcf-inventory.js",
+    "./pcf-factors": "./domain/pcf-factors.js"
   },
   "scripts": {
     "test": "node --test tests/*.test.*"

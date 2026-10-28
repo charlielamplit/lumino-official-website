@@ -276,7 +276,20 @@
         confirmed: false,
         confirmedAt: null,
         confirmedBy: null
-      }
+      },
+      template: {
+        schemaVersion: "0.1.0",
+        packVersion: "PCF-DATA-PACK-1.0",
+        filename: "",
+        status: "NOT_UPLOADED",
+        scenario: "valid",
+        supportFileCount: 0,
+        issues: [],
+        domains: [],
+        validatedAt: null,
+        agentTaskId: null
+      },
+      factors: null
     } },
   ]);
 
