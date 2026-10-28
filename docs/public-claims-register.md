@@ -17,7 +17,7 @@
 | CLM-008 | Agent 建议与正式事实分离 | SUPPORTED | 数据资产内核限制 Agent 仅创建带来源的待确认提议 | 首页、平台、服务页 |
 | CLM-009 | 确定性计算可复现 | SUPPORTED / PILOT | 表示工作机制与原型能力；正式计算仍取决于锁定输入、规则和生产后端 | 首页、平台、CBAM/PCF 页 |
 | CLM-010 | 专家复核正式交付 | SUPPORTED / PILOT | 仅在相应服务范围和项目约定中适用，不泛化为第三方认证 | 首页、平台、服务页 |
-| CLM-011 | 公开联系表单会提交到外部系统 | UNVERIFIED（禁用） | 本轮本地原型只提供本地状态反馈，页面已明确不会外发 | 联系页 |
+| CLM-011 | 公开联系表单／试算线索会提交到外部系统 | UNVERIFIED（禁用） | 联系页与试算解锁表单均为本地演示；无 Webhook 时不宣称顾问跟进 | 联系页、试算页 |
 | CLM-012 | CBAM 公开页按「适用判断→范围编码→数据准备→计算→核查支持→进口商交付」说明工作路径 | SUPPORTED | 表达现有频道与交付机制；不宣称监管认定或生产后端已接入 | CBAM 服务页、平台页 |
 | CLM-013 | PCF 公开页按「声明／功能单位→边界→模板→清单→因子／分配→计算热点→复核报告」说明试点路径 | PILOT | 与试点链路一致；明确不接真实计算与报告后端 | PCF 服务页、平台页 |
 | CLM-014 | 平台页说明「资产→绑定→正式事实→快照／计算→受控交付」 | SUPPORTED | 对应数据资产内核与 Portal 工作机制原型；非 Portal 截图证明 | 平台页 |
@@ -30,3 +30,7 @@
 4. 声明变化必须先更新本登记表和公共服务注册表，再更新页面文案。
 | CLM-015 | CBAM／PCF 每一步均有对应校验门禁 | SUPPORTED / PILOT | 规则在 packages/agent stage-gates；Portal 展示并拦截；公开页仅说明门槛 | CBAM/PCF 服务页、Portal |
 | CLM-016 | Agent 内核与 Portal／公开站分目录部署就绪 | SUPPORTED | 物理分包 packages/agent、apps/portal、apps/site；非生产后端拆分 | README、架构说明 |
+
+| CLM-017 | 排放因子来自外部数据集，非平台内置库 | PILOT | 见 docs/emission-factors-status.md；Portal 演示为 demo_stub | PCF 服务页、Portal 因子面板 |
+| CLM-018 | 公开站与 Portal 共用同一套 PCF 阶段名称 | SUPPORTED / PILOT | 以 stage-gates 与 service-registry.stages 为准：核算声明、系统边界、模板与结构校验、活动数据与服务绑定、排放因子适用性、计算与热点、复核与受控报告 | 官网、平台、PCF、Portal |
+

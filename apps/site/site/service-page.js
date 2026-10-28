@@ -54,11 +54,12 @@
     <section class="service-section service-section--ink"><div class="wrap">
       <div class="service-heading service-heading--light"><p class="eyebrow">CONTROLLED DELIVERY CHAIN</p><h2>不是一次填表，<br>是一条持续履约链。</h2><p>每一步都留下对象、责任人、输入版本和下一步门槛。</p></div>
       <ol class="delivery-chain">
-        <li><span>01</span><div><small>SCOPE</small><h3>范围与编码</h3><p>确认产品、期间和候选编码，登记仍需关务或专家判断的内容。</p></div><strong>范围决定记录</strong></li>
-        <li><span>02</span><div><small>STRUCTURE</small><h3>产品与生产关系</h3><p>建立产品、工厂、工艺路线和前体来源之间的版本化关系。</p></div><strong>生产配置底稿</strong></li>
-        <li><span>03</span><div><small>COLLECTION</small><h3>期间数据与证据</h3><p>按设施和期间收集产量、能源、材料及供应商证明，并确认提取事实。</p></div><strong>数据包与缺口</strong></li>
-        <li><span>04</span><div><small>CALCULATION</small><h3>计算与差异检查</h3><p>锁定输入、方法和规则版本，保留重新计算与异常处理记录。</p></div><strong>可复现计算版本</strong></li>
-        <li><span>05</span><div><small>DELIVERY</small><h3>复核与交付</h3><p>专家复核关键判断，审批后锁定报告、证明索引和对外交付版本。</p></div><strong>受控交付包</strong></li>
+        <li><span>01</span><div><small>APPLICABILITY</small><h3>适用判断</h3><p>确认出口产品是否落入 CBAM 范围，以及本期是否需要正式履约。</p></div><strong>适用范围记录</strong></li>
+        <li><span>02</span><div><small>SCOPE</small><h3>范围与编码</h3><p>确认产品、期间和候选编码，登记仍需关务或专家判断的内容。</p></div><strong>范围决定记录</strong></li>
+        <li><span>03</span><div><small>DATA</small><h3>数据准备</h3><p>按设施和期间收集产量、能源、材料及供应商证明，并确认提取事实。</p></div><strong>数据包与缺口</strong></li>
+        <li><span>04</span><div><small>CALCULATION</small><h3>计算</h3><p>锁定输入、方法和规则版本，保留重新计算与异常处理记录。</p></div><strong>可复现计算版本</strong></li>
+        <li><span>05</span><div><small>VERIFICATION</small><h3>核查支持</h3><p>组织证据索引、Finding 与整改记录，支持独立核查沟通。</p></div><strong>核查工作底稿</strong></li>
+        <li><span>06</span><div><small>DELIVERY</small><h3>进口商交付</h3><p>审批后锁定报告、证明索引和对外交付版本，保留回执。</p></div><strong>受控交付包</strong></li>
       </ol>
     </div></section>
     ${stageValidation(item)}
@@ -114,7 +115,7 @@
     </section>
 
     <section class="service-section service-section--paper"><div class="wrap declaration-layout">
-      <div class="service-heading"><p class="eyebrow">STUDY FOUNDATION</p><h2>先定义研究问题，<br>再要求企业提供数据。</h2><p>功能单位和边界改变，数据需求与最终结果也会改变。它们必须由责任人确认，不能由 Agent 自动决定。</p></div>
+      <div class="service-heading"><p class="eyebrow">STUDY FOUNDATION</p><h2>先确认核算声明，<br>再要求企业提供数据。</h2><p>功能单位和边界改变，数据需求与最终结果也会改变。它们必须由责任人确认，不能由 Agent 自动决定。</p></div>
       <dl class="declaration-ledger">
         <div><dt>01 · 目标与用途</dt><dd>为什么核算、结果提供给谁、是否用于外部沟通。</dd></div>
         <div><dt>02 · 产品与参考流</dt><dd>产品规格、生产地点，以及实现功能单位所需的产品数量。</dd></div>
@@ -160,7 +161,7 @@
         <li><span>02</span><strong>排放清单拆解</strong><em>生命周期结构</em></li>
         <li><span>03</span><strong>活动数据推算／确认</strong><em>来源与质量</em></li>
         <li><span>04</span><strong>运输距离与活动建模</strong><em>路线与假设</em></li>
-        <li><span>05</span><strong>排放因子及单位匹配</strong><em>外部数据集与版本</em></li>
+        <li><span>05</span><strong>排放因子适用性</strong><em>外部数据集与版本</em></li>
         <li><span>06</span><strong>确定性计算</strong><em>输入快照与 Run</em></li>
         <li><span>07</span><strong>热点解读与减排建议</strong><em>与结果分层</em></li>
       </ol>
@@ -170,7 +171,7 @@
       <div class="service-heading"><p class="eyebrow">CONTROLLED REPORT</p><h2>报告不是一个 PDF，<br>而是一组被锁定的版本。</h2><p>报告草稿同时记录方法、数据质量、限制和复核意见。后续更正生成新修订版，不覆盖历史。</p></div>
       <div class="report-lock">
         <header><div><span>PCF REPORT</span><strong>受控报告草稿</strong></div><em>Rev 01</em></header>
-        <div class="report-lock__grid"><span>核算声明</span><span>系统边界</span><span>生命周期清单</span><span>因子与分配</span><span>计算快照</span><span>热点与质量</span><span>限制与不确定性</span><span>专家复核</span></div>
+        <div class="report-lock__grid"><span>核算声明</span><span>系统边界</span><span>活动数据绑定</span><span>排放因子适用性</span><span>计算快照</span><span>热点与质量</span><span>限制与不确定性</span><span>独立复核</span></div>
         <footer><p>锁定：资产版本 · 模板版本 · 因子版本 · 计算运行 · 报告模板</p><b>试点能力</b></footer>
       </div>
     </div></section>

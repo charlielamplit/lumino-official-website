@@ -258,6 +258,16 @@ async function submitLead(event) {
     potentialSavingCny: latest.potentialSaving,
   } : null;
 
+  const unlockComparison = () => {
+    $("#unlockedComparison").hidden = false;
+    $("#actualCost").textContent = `¥${money.format(latest.actualResult.totalCostLocal)}`;
+    $("#potentialSaving").textContent = `¥${money.format(latest.potentialSaving)}`;
+    button.textContent = "已解锁";
+    event.currentTarget.reset();
+    closeLeadModal();
+    $("#unlockedComparison").scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   try {
     const response = await fetch("/api/leads", {
       method: "POST",
@@ -273,22 +283,31 @@ async function submitLead(event) {
       }),
     });
     const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(payload.error || "提交失败");
-
-    status.textContent = "已收到。顾问将在一个工作日内联系你。";
-    status.classList.add("success");
-    $("#unlockedComparison").hidden = false;
-    $("#actualCost").textContent = `¥${money.format(latest.actualResult.totalCostLocal)}`;
-    $("#potentialSaving").textContent = `¥${money.format(latest.potentialSaving)}`;
-    button.textContent = "已提交";
-    event.currentTarget.reset();
-    closeLeadModal();
-    $("#unlockedComparison").scrollIntoView({ behavior: "smooth", block: "center" });
+    if (response.ok) {
+      status.textContent = "已记录本次试算上下文。正式跟进仍以受控联系流程为准。";
+      status.classList.add("success");
+      unlockComparison();
+      return;
+    }
+    // 本地原型：Webhook 未配置或接口不可用时仍解锁对比，不伪造顾问跟进
+    if (response.status >= 500 || response.status === 404) {
+      status.textContent = "本页为本地演示：未向外部系统发送。已解锁实测对比；正式咨询请使用联系页。";
+      status.classList.add("success");
+      unlockComparison();
+      return;
+    }
+    throw new Error(payload.error || "提交失败");
   } catch (error) {
+    if (error instanceof TypeError) {
+      status.textContent = "本页为本地演示：未向外部系统发送。已解锁实测对比；正式咨询请使用联系页。";
+      status.classList.add("success");
+      unlockComparison();
+      return;
+    }
     status.innerHTML = `${escapeHtml(error.message || "提交失败")} <a href="../Lumino%20联系.dc.html">改用预约诊断 →</a>`;
     status.classList.add("error");
     button.disabled = false;
-    button.textContent = "提交并查看实测对比";
+    button.textContent = "解锁实测对比";
   }
 }
 

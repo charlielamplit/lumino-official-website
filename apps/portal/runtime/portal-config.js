@@ -87,8 +87,8 @@
       entryPage: "pcf-scope", roles: ["customer_admin", "customer_owner", "customer_contrib", "customer_approver"],
       primaryAction: { default: "开始或继续 PCF 项目" }, consultation: { enabled: false },
       nav: [
-        ["pcf-scope", "◎", "核算目标"], ["pcf-boundary", "◇", "边界与产品"], ["pcf-data", "▦", "活动数据", "1"],
-        ["pcf-results", "∿", "计算与热点"], ["pcf-report", "□", "复核与报告"],
+        ["pcf-scope", "◎", "核算声明"], ["pcf-boundary", "◇", "系统边界"], ["pcf-data", "▦", "活动数据", "1"],
+        ["pcf-results", "∿", "计算与热点"], ["pcf-report", "□", "复核与受控报告"],
       ],
     },
     esg: { ...window.LuminoServiceContract.esg, serviceId: "esg", code: "ESG", agent: "ESG Agent", description: "组织议题、指标、证据与披露内容协同。", entryPage: null, roles: [], primaryAction: { default: "预约咨询" }, consultation: { enabled: true, requestType: "service_consultation" } },
