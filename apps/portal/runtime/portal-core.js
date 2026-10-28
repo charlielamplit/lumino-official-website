@@ -26,6 +26,7 @@
     const deliveryView = sharedCenterViews.deliverables({ role: state.role, actor });
     const assetView = assetViews.overview({ role: state.role, serviceId: state.currentService, facet: "attention" });
     const badgeFor = (id) => {
+      if (id === "workbench") return taskView.summary.urgent || "";
       if (id === "shared-tasks") return taskView.summary.total || "";
       if (id === "shared-files") return assetView.summary.attention || "";
       if (id === "shared-deliverables") return deliveryView.summary.inReview || "";
@@ -397,10 +398,10 @@
     try { window.localStorage.setItem(customerHubVisitKey(), "1"); } catch { /* ignore */ }
   }
 
-  /** First portal visit → service catalog; later visits with open services → continue via tasks. */
+  /** First portal visit → service catalog; later visits with open services → workbench (not the task ledger). */
   function resolveCustomerHomePage() {
     if (!customerHasEnterableServices() || !hasSeenCustomerHub()) return "services-hub";
-    return "shared-tasks";
+    return "workbench";
   }
 
   function setCustomerDestination(serviceId, page) {

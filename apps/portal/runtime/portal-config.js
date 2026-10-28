@@ -61,10 +61,11 @@
   };
 
   const customerGlobalNav = [
-    ["services-hub", "▦", "服务"],
+    ["workbench", "▣", "工作台"],
     ["shared-tasks", "✓", "我的任务"],
     ["shared-files", "□", "数据资产"],
     ["shared-deliverables", "↗", "交付中心"],
+    ["services-hub", "▦", "服务"],
     ["org-settings", "◎", "企业与权限"],
   ];
 
@@ -421,7 +422,7 @@
     ],
   });
 
-  const defaultPages = { customer_admin: "services-hub", customer_owner: "services-hub", customer_contrib: "services-hub", customer_approver: "services-hub", expert: "queue", reviewer: "review", ops: "engagements", sales: "leads", importer: "received-packages", verifier: "verification-cases", supplier: "supplier-requests", support: "support-cases", platform_admin: "tenant-governance" };
+  const defaultPages = { customer_admin: "workbench", customer_owner: "workbench", customer_contrib: "workbench", customer_approver: "workbench", expert: "queue", reviewer: "review", ops: "engagements", sales: "leads", importer: "received-packages", verifier: "verification-cases", supplier: "supplier-requests", support: "support-cases", platform_admin: "tenant-governance" };
   const incoming = new URLSearchParams(window.location.search);
   const incomingYear = incoming.get("year") || "2027";
   const incomingCnCode = incoming.get("cnCode") || "72081000";

@@ -87,6 +87,126 @@
       </section>`;
   }
 
+  function renderWorkbench() {
+    const actor = roleConfig[state.role].name;
+    const taskView = sharedCenterViews.tasks({ role: state.role, actor });
+    const deliveryView = sharedCenterViews.deliverables({ role: state.role, actor });
+    const assetView = assetViews.overview({ role: state.role, serviceId: null, facet: "attention" });
+    const openServices = Object.values(serviceRegistry).filter((service) => service.roles.includes(state.role) && service.entryPage);
+    const focus = taskView.items[0] || null;
+    const nextTasks = taskView.items.slice(1, 3);
+    const attentionAssets = (assetView.items || []).slice(0, 2);
+    const orgName = state.organization?.name || "当前企业";
+
+    const focusBlock = focus
+      ? `<section class="workbench-focus" aria-labelledby="workbenchFocusTitle">
+          <div class="workbench-focus__copy">
+            <span class="workbench-kicker">现在先做这一件</span>
+            <h2 id="workbenchFocusTitle">${safe(focus.title)}</h2>
+            <p>${safe(focus.object)} · ${safe(focus.nextStep)}</p>
+            <div class="workbench-focus__meta">
+              <span class="service-tag ${focus.serviceId === "pcf" ? "pilot" : ""}">${safe(focus.serviceCode)}</span>
+              <span class="due-state due-state--${safe(focus.due.tone)}">${safe(focus.due.label)}</span>
+              <span class="workbench-focus__owner">${safe(focus.owner)}</span>
+            </div>
+          </div>
+          <div class="workbench-focus__actions">
+            <button class="button button--primary" type="button" data-service-enter="${safe(focus.serviceId)}" data-page-target="${safe(focus.page)}">继续处理</button>
+            <button class="button button--secondary" type="button" data-page="shared-tasks">全部任务</button>
+          </div>
+        </section>`
+      : `<section class="workbench-focus workbench-focus--empty" aria-labelledby="workbenchFocusTitle">
+          <div class="workbench-focus__copy">
+            <span class="workbench-kicker">当前没有紧急事项</span>
+            <h2 id="workbenchFocusTitle">可以从已开通服务继续推进</h2>
+            <p>任务会随工作流自动出现在这里；需要开通新服务时再去「服务」。</p>
+          </div>
+          <div class="workbench-focus__actions">
+            <button class="button button--primary" type="button" data-page="services-hub">查看服务</button>
+          </div>
+        </section>`;
+
+    const servicePulse = openServices.map((service) => {
+      const progress = serviceProgressLine(service);
+      const page = serviceEntryPage(service.id);
+      return `<article class="workbench-service">
+        <div>
+          <span class="workbench-service__code">${safe(service.code)}</span>
+          <strong>${safe(service.name)}</strong>
+          <small>${progress ? `${safe(progress.title)} · ${safe(progress.detail)}` : safe(service.description)}</small>
+        </div>
+        <button class="text-button" type="button" data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}">进入 →</button>
+      </article>`;
+    }).join("");
+
+    const queuePreview = nextTasks.length
+      ? `<ul class="workbench-task-preview">${nextTasks.map((task) => `<li>
+          <span class="service-tag ${task.serviceId === "pcf" ? "pilot" : ""}">${safe(task.serviceCode)}</span>
+          <div><strong>${safe(task.title)}</strong><small>${safe(task.nextStep)}</small></div>
+          <span class="due-state due-state--${safe(task.due.tone)}">${safe(task.due.label)}</span>
+          <button class="text-button" type="button" data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}">打开 →</button>
+        </li>`).join("")}</ul>
+        <footer class="workbench-section__footer"><button class="text-button" type="button" data-page="shared-tasks">在「我的任务」查看全部 ${safe(taskView.summary.total)} 项 →</button></footer>`
+      : `<p class="workbench-quiet">${taskView.summary.total ? "其余事项请在「我的任务」中按清单处理。" : "暂无其他待办。"}</p>`;
+
+    const assetPreview = attentionAssets.length
+      ? `<ul class="workbench-asset-preview">${attentionAssets.map(({ asset, primaryIssue }) => `<li>
+          <div><strong>${safe(asset.name)}</strong><small>${safe(primaryIssue || assetPlainSummary(asset))}</small></div>
+          <button class="text-button" type="button" data-drawer="asset-detail" data-asset-id="${safe(asset.id)}">详情 →</button>
+        </li>`).join("")}</ul>
+        <footer class="workbench-section__footer"><button class="text-button" type="button" data-page="shared-files">打开数据资产 →</button></footer>`
+      : `<p class="workbench-quiet">当前分面没有需要你立刻处理的资产问题。<button class="text-button" type="button" data-page="shared-files">查看资产 →</button></p>`;
+
+    const deliveryGlance = `<div class="workbench-delivery">
+      <dl>
+        <div><dt>受控交付</dt><dd>${safe(deliveryView.summary.total)}</dd></div>
+        <div><dt>复核中</dt><dd>${safe(deliveryView.summary.inReview)}</dd></div>
+        <div><dt>已锁定</dt><dd>${safe(deliveryView.summary.locked)}</dd></div>
+        <div><dt>已发送</dt><dd>${safe(deliveryView.summary.delivered)}</dd></div>
+      </dl>
+      <button class="text-button" type="button" data-page="shared-deliverables">打开交付中心 →</button>
+    </div>`;
+
+    $("#main").innerHTML = `
+      <header class="page-head page-head--compact workbench-head">
+        <div>
+          <p>WORKBENCH</p>
+          <h1>工作台</h1>
+        </div>
+        ${statusChip(viewChipLabel(taskView), taskView.summary.urgent ? "warn" : "ok")}
+      </header>
+      <p class="page-lead page-lead--hub">${safe(orgName)} · ${safe(state.year)} ${safe(state.quarter)} · ${safe(roleConfig[state.role].title)}。工作台是续办首页；完整待办清单在「我的任务」。</p>
+      ${focusBlock}
+      <div class="workbench-grid">
+        <section class="workbench-panel" aria-labelledby="workbenchServicesTitle">
+          <header class="workbench-panel__head"><div><h2 id="workbenchServicesTitle">进行中的服务</h2><p>进入频道继续，不必重新挑选服务目录。</p></div></header>
+          <div class="workbench-service-list">${servicePulse || `<p class="workbench-quiet">还没有可进入的服务。<button class="text-button" type="button" data-page="services-hub">去开通 →</button></p>`}</div>
+        </section>
+        <section class="workbench-panel" aria-labelledby="workbenchQueueTitle">
+          <header class="workbench-panel__head"><div><h2 id="workbenchQueueTitle">接下来</h2><p>焦点之外的优先事项预览。</p></div><button class="text-button" type="button" data-page="shared-tasks">全部任务</button></header>
+          ${queuePreview}
+        </section>
+        <section class="workbench-panel" aria-labelledby="workbenchAssetsTitle">
+          <header class="workbench-panel__head"><div><h2 id="workbenchAssetsTitle">需要留意的资产</h2><p>待确认绑定与质量问题。</p></div></header>
+          ${assetPreview}
+        </section>
+        <section class="workbench-panel" aria-labelledby="workbenchDeliveryTitle">
+          <header class="workbench-panel__head"><div><h2 id="workbenchDeliveryTitle">交付动态</h2><p>版本、审批与发送状态一览。</p></div></header>
+          ${deliveryGlance}
+        </section>
+      </div>
+      <aside class="workbench-agent" aria-label="协调提示">
+        <span class="workbench-kicker">LUMINO · 协调提示</span>
+        <p>先处理焦点事项；Agent 只会提出建议，正式确认仍由你或授权同事完成。需要换服务或开通新品时，再打开「服务」。</p>
+      </aside>`;
+  }
+
+  function viewChipLabel(taskView) {
+    if (taskView.summary.urgent) return `${taskView.summary.urgent} 项紧急`;
+    if (taskView.summary.total) return `${taskView.summary.total} 项待办`;
+    return "暂无紧急事项";
+  }
+
   function renderSharedTasks() {
     const view = sharedCenterViews.tasks({ role: state.role, actor: roleConfig[state.role].name });
     const rows = view.items.map((task) => `<tr>
@@ -96,9 +216,9 @@
       <td data-label="截止状态"><span class="due-state due-state--${safe(task.due.tone)}">${safe(task.due.label)}</span></td>
       <td data-label="操作"><button class="text-button" type="button" data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}">继续处理 →</button></td>
     </tr>`).join("");
-    const empty = `<tr class="shared-empty-row"><td colspan="5"><strong>暂时没有需要你处理的事项</strong><p>已完成的、或超出你授权范围的任务不会出现在这里。需要时从「服务」进入对应频道。</p><button class="text-button" type="button" data-page="services-hub">查看服务 →</button></td></tr>`;
-    $("#main").innerHTML = `${pageHeader("CROSS-SERVICE WORK", "我的任务", statusChip(`${view.summary.total} 项待办`, view.summary.urgent ? "warn" : "ok"))}
-      <p class="page-lead">这里只列出你当前需要处理的事项；状态随工作流自动更新。</p>
+    const empty = `<tr class="shared-empty-row"><td colspan="5"><strong>暂时没有需要你处理的事项</strong><p>已完成的、或超出你授权范围的任务不会出现在这里。可回到工作台查看服务进度，或从「服务」进入频道。</p><button class="text-button" type="button" data-page="workbench">返回工作台 →</button></td></tr>`;
+    $("#main").innerHTML = `${pageHeader("TASK LEDGER", "我的任务", statusChip(`${view.summary.total} 项待办`, view.summary.urgent ? "warn" : "ok"))}
+      <p class="page-lead">完整待办清单：按截止时间排序，供逐项处理。工作台只展示焦点与摘要，不会替代本页。</p>
       <dl class="shared-center-summary" aria-label="任务摘要"><div><dt>当前待办</dt><dd>${view.summary.total}</dd></div><div><dt>今天或已逾期</dt><dd>${view.summary.urgent}</dd></div><div><dt>涉及服务</dt><dd>${view.summary.services}</dd></div><div><dt>授权范围</dt><dd>${safe(roleConfig[state.role].title)}</dd></div></dl>
       <section class="panel shared-table shared-task-ledger" aria-label="已授权任务"><table><thead><tr><th>服务</th><th>任务 / 下一步</th><th>负责人</th><th>截止状态</th><th></th></tr></thead><tbody>${rows || empty}</tbody></table></section>`;
   }
@@ -480,6 +600,7 @@
   }
 
   function renderMultiServicePage() {
+    if (state.page === "workbench") { renderWorkbench(); return true; }
     if (state.page === "services-hub") { renderServicesHub(); return true; }
     if (state.page === "shared-tasks") { renderSharedTasks(); return true; }
     if (state.page === "shared-files") { renderSharedFiles(); return true; }
