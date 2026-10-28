@@ -740,13 +740,15 @@
   function stageGatePanelHtml(serviceId) {
     const pipeline = evaluateServicePipeline(serviceId);
     if (!pipeline.length) return "";
+    const passed = pipeline.filter((item) => item.ok).length;
+    const current = pipeline.find((item) => !item.ok) || pipeline[pipeline.length - 1];
     const rows = pipeline.map((item, index) => {
       const tone = item.ok ? "pass" : item.blocked ? "blocked" : "fail";
-      const label = item.ok ? "通过" : item.blocked ? "阻塞" : "未通过";
+      const label = item.ok ? "通过" : item.blocked ? "阻塞" : "待完成";
       const detail = item.ok ? (item.nextAction || "可进入下一步") : (item.blockers || []).slice(0, 2).join("；") || item.message;
       return `<li class="stage-gate-row stage-gate-row--${tone}"><span>${String(index + 1).padStart(2, "0")}</span><div><strong>${safe(item.title || item.stageId)}</strong><small>${safe(detail)}</small></div><em>${label}</em></li>`;
     }).join("");
-    return `<section class="stage-gate-panel" aria-label="${serviceId.toUpperCase()} 分步校验"><header><p class="eyebrow">STAGE GATES</p><h2>${serviceId.toUpperCase()} 分步校验</h2><p>规则由 Agent 内核执行；未通过时不能把后续步骤当作已就绪。</p></header><ol>${rows}</ol></section>`;
+    return `<section class="stage-gate-panel is-compact" aria-label="${serviceId.toUpperCase()} 分步门槛"><header><p class="eyebrow">PROGRESS CHECK</p><h2>本项目进度</h2></header><p class="stage-gate-summary"><strong>${passed}/${pipeline.length}</strong> 已通过 · 当前：${safe(current?.title || "—")}${current && !current.ok ? ` · ${safe((current.blockers || [])[0] || current.message || "待处理")}` : ""}</p><ol>${rows}</ol></section>`;
   }
 
   function assertStageGate(serviceId, stageId) {
