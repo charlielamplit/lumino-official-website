@@ -66,25 +66,27 @@
     </li>`).join("");
 
     const lead = firstVisit
-      ? "首次进入：先确认本企业已开通的服务。之后登录会优先进入待办，不必每次再选服务。"
-      : "从已开通服务继续；未开通的只接受咨询，不会打开空工作区。";
+      ? "首次进入：先看本企业开通了哪些服务频道。日常续办请用「工作台」；要处理的事项清单在「我的任务」。"
+      : "这里是服务目录：开通、切换或预约咨询。日常续办请回「工作台」，不要把这里当待办列表。";
 
     $("#main").innerHTML = `
-      <header class="page-head page-head--compact">
-        <div><p>SERVICES</p><h1>服务</h1></div>
-        ${statusChip(`${open.length} 项已开通 · ${catalog.length} 项可咨询`)}
-      </header>
-      <p class="page-lead page-lead--hub">${lead}</p>
-      <section class="service-hub" aria-label="企业服务">
-        <div class="service-hub__group">
-          <header class="service-hub__label"><span>进行中</span><small>可直接进入频道</small></header>
-          <div class="service-row-list" aria-label="已开通服务">${openRows || `<p class="service-hub__empty">当前角色还没有可进入的服务。</p>`}</div>
-        </div>
-        <div class="service-hub__group service-hub__group--catalog">
-          <header class="service-hub__label"><span>尚未开通</span><small>了解范围后预约咨询</small></header>
-          <ul class="service-catalog" aria-label="可咨询服务">${catalogRows}</ul>
-        </div>
-      </section>`;
+      <div class="service-hub-shell">
+        <header class="page-head page-head--compact">
+          <div><p>SERVICE CATALOG</p><h1>服务目录</h1></div>
+          ${statusChip(`${open.length} 项已开通 · ${catalog.length} 项可咨询`)}
+        </header>
+        <p class="page-lead page-lead--aligned">${lead}</p>
+        <section class="service-hub" aria-label="企业服务">
+          <div class="service-hub__group">
+            <header class="service-hub__label"><span>已开通频道</span><small>进入后在频道内工作</small></header>
+            <div class="service-row-list" aria-label="已开通服务">${openRows || `<p class="service-hub__empty">当前角色还没有可进入的服务。</p>`}</div>
+          </div>
+          <div class="service-hub__group service-hub__group--catalog">
+            <header class="service-hub__label"><span>尚未开通</span><small>只接受咨询，不生成空工作区</small></header>
+            <ul class="service-catalog" aria-label="可咨询服务">${catalogRows}</ul>
+          </div>
+        </section>
+      </div>`;
   }
 
   function renderWorkbench() {
@@ -112,42 +114,42 @@
           </div>
           <div class="workbench-focus__actions">
             <button class="button button--primary" type="button" data-service-enter="${safe(focus.serviceId)}" data-page-target="${safe(focus.page)}">继续处理</button>
-            <button class="button button--secondary" type="button" data-page="shared-tasks">全部任务</button>
+            <button class="button button--secondary" type="button" data-page="shared-tasks">打开任务清单</button>
           </div>
         </section>`
       : `<section class="workbench-focus workbench-focus--empty" aria-labelledby="workbenchFocusTitle">
           <div class="workbench-focus__copy">
             <span class="workbench-kicker">当前没有紧急事项</span>
-            <h2 id="workbenchFocusTitle">可以从已开通服务继续推进</h2>
-            <p>任务会随工作流自动出现在这里；需要开通新服务时再去「服务」。</p>
+            <h2 id="workbenchFocusTitle">可以从已开通频道继续推进</h2>
+            <p>待办会随工作流出现在这里；要开通新频道时再去「服务目录」。</p>
           </div>
           <div class="workbench-focus__actions">
-            <button class="button button--primary" type="button" data-page="services-hub">查看服务</button>
+            <button class="button button--primary" type="button" data-page="services-hub">打开服务目录</button>
           </div>
         </section>`;
 
     const servicePulse = openServices.map((service) => {
       const progress = serviceProgressLine(service);
       const page = serviceEntryPage(service.id);
-      return `<article class="workbench-service">
-        <div>
-          <span class="workbench-service__code">${safe(service.code)}</span>
+      return `<article class="workbench-channel workbench-channel--${service.status}">
+        <span class="workbench-channel__code">${safe(service.code)}</span>
+        <div class="workbench-channel__body">
           <strong>${safe(service.name)}</strong>
           <small>${progress ? `${safe(progress.title)} · ${safe(progress.detail)}` : safe(service.description)}</small>
         </div>
-        <button class="text-button" type="button" data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}">进入 →</button>
+        <button class="text-button" type="button" data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}">进入频道 →</button>
       </article>`;
     }).join("");
 
     const queuePreview = nextTasks.length
-      ? `<ul class="workbench-task-preview">${nextTasks.map((task) => `<li>
-          <span class="service-tag ${task.serviceId === "pcf" ? "pilot" : ""}">${safe(task.serviceCode)}</span>
-          <div><strong>${safe(task.title)}</strong><small>${safe(task.nextStep)}</small></div>
+      ? `<ol class="workbench-queue">${nextTasks.map((task, index) => `<li>
+          <span class="workbench-queue__n">${String(index + 2).padStart(2, "0")}</span>
+          <div><strong>${safe(task.title)}</strong><small>${safe(task.serviceCode)} · ${safe(task.nextStep)}</small></div>
           <span class="due-state due-state--${safe(task.due.tone)}">${safe(task.due.label)}</span>
           <button class="text-button" type="button" data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}">打开 →</button>
-        </li>`).join("")}</ul>
-        <footer class="workbench-section__footer"><button class="text-button" type="button" data-page="shared-tasks">在「我的任务」查看全部 ${safe(taskView.summary.total)} 项 →</button></footer>`
-      : `<p class="workbench-quiet">${taskView.summary.total ? "其余事项请在「我的任务」中按清单处理。" : "暂无其他待办。"}</p>`;
+        </li>`).join("")}</ol>
+        <footer class="workbench-section__footer"><button class="text-button" type="button" data-page="shared-tasks">完整清单共 ${safe(taskView.summary.total)} 项 →</button></footer>`
+      : `<p class="workbench-quiet">${taskView.summary.total ? "其余事项请到「我的任务」按清单处理。" : "暂无其他待办。"}</p>`;
 
     const assetPreview = attentionAssets.length
       ? `<ul class="workbench-asset-preview">${attentionAssets.map(({ asset, primaryIssue }) => `<li>
@@ -155,50 +157,69 @@
           <button class="text-button" type="button" data-drawer="asset-detail" data-asset-id="${safe(asset.id)}">详情 →</button>
         </li>`).join("")}</ul>
         <footer class="workbench-section__footer"><button class="text-button" type="button" data-page="shared-files">打开数据资产 →</button></footer>`
-      : `<p class="workbench-quiet">当前分面没有需要你立刻处理的资产问题。<button class="text-button" type="button" data-page="shared-files">查看资产 →</button></p>`;
-
-    const deliveryGlance = `<div class="workbench-delivery">
-      <dl>
-        <div><dt>受控交付</dt><dd>${safe(deliveryView.summary.total)}</dd></div>
-        <div><dt>复核中</dt><dd>${safe(deliveryView.summary.inReview)}</dd></div>
-        <div><dt>已锁定</dt><dd>${safe(deliveryView.summary.locked)}</dd></div>
-        <div><dt>已发送</dt><dd>${safe(deliveryView.summary.delivered)}</dd></div>
-      </dl>
-      <button class="text-button" type="button" data-page="shared-deliverables">打开交付中心 →</button>
-    </div>`;
+      : `<p class="workbench-quiet">没有需要立刻处理的资产问题。<button class="text-button" type="button" data-page="shared-files">查看资产 →</button></p>`;
 
     $("#main").innerHTML = `
-      <header class="page-head page-head--compact workbench-head">
-        <div>
-          <p>WORKBENCH</p>
-          <h1>工作台</h1>
+      <div class="workbench">
+        <header class="workbench__head">
+          <div>
+            <p class="workbench-kicker">WORKBENCH · ${safe(state.year)} ${safe(state.quarter)}</p>
+            <h1>工作台</h1>
+            <p class="workbench__lead">${safe(orgName)} · ${safe(roleConfig[state.role].title)}。这里回答「接下来做什么」；频道入口看下方，完整待办去「我的任务」，开通／切换去「服务目录」。</p>
+          </div>
+          ${statusChip(viewChipLabel(taskView), taskView.summary.urgent ? "warn" : "ok")}
+        </header>
+
+        ${focusBlock}
+
+        <section class="workbench-channels" aria-labelledby="workbenchChannelsTitle">
+          <header class="workbench-section-label">
+            <div>
+              <h2 id="workbenchChannelsTitle">进行中的频道</h2>
+              <p>服务是工作空间，不是待办列表。</p>
+            </div>
+            <button class="text-button" type="button" data-page="services-hub">服务目录 →</button>
+          </header>
+          <div class="workbench-channel-list">${servicePulse || `<p class="workbench-quiet">还没有可进入的频道。<button class="text-button" type="button" data-page="services-hub">去开通 →</button></p>`}</div>
+        </section>
+
+        <div class="workbench-split">
+          <section class="workbench-stack" aria-labelledby="workbenchQueueTitle">
+            <header class="workbench-section-label">
+              <div>
+                <h2 id="workbenchQueueTitle">焦点之后</h2>
+                <p>预览而已；逐项处理请用任务清单。</p>
+              </div>
+            </header>
+            ${queuePreview}
+          </section>
+          <section class="workbench-stack" aria-labelledby="workbenchAssetsTitle">
+            <header class="workbench-section-label">
+              <div>
+                <h2 id="workbenchAssetsTitle">资产留意</h2>
+                <p>待确认绑定与质量问题。</p>
+              </div>
+            </header>
+            ${assetPreview}
+          </section>
         </div>
-        ${statusChip(viewChipLabel(taskView), taskView.summary.urgent ? "warn" : "ok")}
-      </header>
-      <p class="page-lead page-lead--hub">${safe(orgName)} · ${safe(state.year)} ${safe(state.quarter)} · ${safe(roleConfig[state.role].title)}。工作台是续办首页；完整待办清单在「我的任务」。</p>
-      ${focusBlock}
-      <div class="workbench-grid">
-        <section class="workbench-panel" aria-labelledby="workbenchServicesTitle">
-          <header class="workbench-panel__head"><div><h2 id="workbenchServicesTitle">进行中的服务</h2><p>进入频道继续，不必重新挑选服务目录。</p></div></header>
-          <div class="workbench-service-list">${servicePulse || `<p class="workbench-quiet">还没有可进入的服务。<button class="text-button" type="button" data-page="services-hub">去开通 →</button></p>`}</div>
+
+        <section class="workbench-delivery" aria-label="交付动态">
+          <span class="workbench-kicker">DELIVERABLES</span>
+          <dl>
+            <div><dt>受控交付</dt><dd>${safe(deliveryView.summary.total)}</dd></div>
+            <div><dt>复核中</dt><dd>${safe(deliveryView.summary.inReview)}</dd></div>
+            <div><dt>已锁定</dt><dd>${safe(deliveryView.summary.locked)}</dd></div>
+            <div><dt>已发送</dt><dd>${safe(deliveryView.summary.delivered)}</dd></div>
+          </dl>
+          <button class="text-button" type="button" data-page="shared-deliverables">交付中心 →</button>
         </section>
-        <section class="workbench-panel" aria-labelledby="workbenchQueueTitle">
-          <header class="workbench-panel__head"><div><h2 id="workbenchQueueTitle">接下来</h2><p>焦点之外的优先事项预览。</p></div><button class="text-button" type="button" data-page="shared-tasks">全部任务</button></header>
-          ${queuePreview}
-        </section>
-        <section class="workbench-panel" aria-labelledby="workbenchAssetsTitle">
-          <header class="workbench-panel__head"><div><h2 id="workbenchAssetsTitle">需要留意的资产</h2><p>待确认绑定与质量问题。</p></div></header>
-          ${assetPreview}
-        </section>
-        <section class="workbench-panel" aria-labelledby="workbenchDeliveryTitle">
-          <header class="workbench-panel__head"><div><h2 id="workbenchDeliveryTitle">交付动态</h2><p>版本、审批与发送状态一览。</p></div></header>
-          ${deliveryGlance}
-        </section>
-      </div>
-      <aside class="workbench-agent" aria-label="协调提示">
-        <span class="workbench-kicker">LUMINO · 协调提示</span>
-        <p>先处理焦点事项；Agent 只会提出建议，正式确认仍由你或授权同事完成。需要换服务或开通新品时，再打开「服务」。</p>
-      </aside>`;
+
+        <aside class="workbench-agent" aria-label="协调提示">
+          <span class="workbench-kicker">LUMINO · 协调提示</span>
+          <p>先处理焦点；Agent 只提建议，确认由你或授权同事完成。换频道或开通新品时，打开「服务目录」。</p>
+        </aside>
+      </div>`;
   }
 
   function viewChipLabel(taskView) {
@@ -217,10 +238,13 @@
       <td data-label="操作"><button class="text-button" type="button" data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}">继续处理 →</button></td>
     </tr>`).join("");
     const empty = `<tr class="shared-empty-row"><td colspan="5"><strong>暂时没有需要你处理的事项</strong><p>已完成的、或超出你授权范围的任务不会出现在这里。可回到工作台查看服务进度，或从「服务」进入频道。</p><button class="text-button" type="button" data-page="workbench">返回工作台 →</button></td></tr>`;
-    $("#main").innerHTML = `${pageHeader("TASK LEDGER", "我的任务", statusChip(`${view.summary.total} 项待办`, view.summary.urgent ? "warn" : "ok"))}
-      <p class="page-lead">完整待办清单：按截止时间排序，供逐项处理。工作台只展示焦点与摘要，不会替代本页。</p>
-      <dl class="shared-center-summary" aria-label="任务摘要"><div><dt>当前待办</dt><dd>${view.summary.total}</dd></div><div><dt>今天或已逾期</dt><dd>${view.summary.urgent}</dd></div><div><dt>涉及服务</dt><dd>${view.summary.services}</dd></div><div><dt>授权范围</dt><dd>${safe(roleConfig[state.role].title)}</dd></div></dl>
-      <section class="panel shared-table shared-task-ledger" aria-label="已授权任务"><table><thead><tr><th>服务</th><th>任务 / 下一步</th><th>负责人</th><th>截止状态</th><th></th></tr></thead><tbody>${rows || empty}</tbody></table></section>`;
+    $("#main").innerHTML = `
+      <div class="task-ledger-shell">
+        ${pageHeader("TASK LEDGER", "我的任务", statusChip(`${view.summary.total} 项待办`, view.summary.urgent ? "warn" : "ok"))}
+        <p class="page-lead page-lead--aligned">完整待办清单（动词：确认／上传／审批）。「服务目录」是频道清单，「工作台」只给焦点与摘要。</p>
+        <dl class="shared-center-summary" aria-label="任务摘要"><div><dt>当前待办</dt><dd>${view.summary.total}</dd></div><div><dt>今天或已逾期</dt><dd>${view.summary.urgent}</dd></div><div><dt>涉及服务</dt><dd>${view.summary.services}</dd></div><div><dt>授权范围</dt><dd>${safe(roleConfig[state.role].title)}</dd></div></dl>
+        <section class="panel shared-table shared-task-ledger" aria-label="已授权任务"><table><thead><tr><th>服务</th><th>任务 / 下一步</th><th>负责人</th><th>截止状态</th><th></th></tr></thead><tbody>${rows || empty}</tbody></table></section>
+      </div>`;
   }
 
   function renderSharedFiles() {

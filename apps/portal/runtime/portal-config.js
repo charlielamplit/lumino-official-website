@@ -65,7 +65,7 @@
     ["shared-tasks", "✓", "我的任务"],
     ["shared-files", "□", "数据资产"],
     ["shared-deliverables", "↗", "交付中心"],
-    ["services-hub", "▦", "服务"],
+    ["services-hub", "▦", "服务目录"],
     ["org-settings", "◎", "企业与权限"],
   ];
 
