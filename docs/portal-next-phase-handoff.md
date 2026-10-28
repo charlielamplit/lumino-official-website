@@ -28,7 +28,7 @@
 
 排放因子核查见 `docs/emission-factors-status.md`：本地无真实因子库，仅有 demo_stub；skill 指向 CPCD／IPE／天工／Ecoinvent／GaBi 等外部库。
 
-Phase 5.4–5.5 文案对齐与 STALE／Drawer／空状态收口已落地；下一步优先浏览器总审（主路径 + 390px）。正式因子接入单独立项。不要重写资产语义，不要横向扩建未开放服务频道。
+Phase 5.4–5.5 与术语审计 P0／P1 已收口（registry↔gates、CBAM 六步、试算本地线索、Agent 提议用语、CLM-013 全称）。Portal 因子门槛仍挂在计算页，不另开导航频道。下一步可为产品评审或全量截图复跑；正式因子接入单独立项。不要重写资产语义，不要横向扩建未开放服务频道。
 
 ## 1. 你的任务
 

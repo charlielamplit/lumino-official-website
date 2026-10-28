@@ -185,7 +185,7 @@
           </div>
           <footer class="pcf-card__actions">
             <p>${confirmed
-              ? `已由 ${safe(declaration.confirmedBy || "授权人员")} 确认；后续步骤继承本声明，修订需在专家复核前提出。`
+              ? `已由 ${safe(declaration.confirmedBy || "授权人员")} 确认；后续步骤继承本声明，修订需在独立复核前提出。`
               : "确认会写入工作流元数据，并成为分步校验的正式输入；Agent 不能代替你确认。"}</p>
             ${status === "SCOPING" && !confirmed
               ? actionButton("确认核算声明，继续定义边界", "primary", 'data-action="pcf-confirm-scope"')
@@ -248,7 +248,7 @@
           <footer class="pcf-card__actions">
             <p>${confirmed
               ? `已由 ${safe(boundary.confirmedBy || "授权人员")} 确认；后续模板与清单将继承本边界。`
-              : "确认会写入工作流元数据。Agent 建议可以填入表单，但不能代替你确认。"}</p>
+              : "确认会写入工作流元数据。Agent 提议可以填入表单，但不能代替你确认。"}</p>
             ${boundaryAction}
           </footer>
         </section>
@@ -337,7 +337,7 @@
     const hotspotList = hotspots.map((row) => `<li style="--share:${Math.round((row.share || 0) * 100)}%"><span>${safe(row.name)}</span><b>${safe(row.shareLabel || `${Math.round((row.share || 0) * 100)}%`)}</b></li>`).join("");
     const dq = calculation?.dataQuality || {};
     const resultDetail = `<section class="pcf-result-detail"><div class="pcf-stage-table"><header><span class="pcf-kicker">RESULT BREAKDOWN</span><h2>生命周期阶段结果</h2></header><table><thead><tr><th>阶段</th><th>排放量</th><th>占比</th><th>数据基础</th></tr></thead><tbody>${stageRows || "<tr><td colspan='4'>尚未生成计算结果</td></tr>"}</tbody></table></div><aside class="pcf-quality-register"><span class="pcf-kicker">METHOD & DATA QUALITY</span><h2>方法与数据质量</h2><dl><div><dt>一次活动数据覆盖</dt><dd>${dq.primaryActivityCoverage != null ? `${Math.round(dq.primaryActivityCoverage * 100)}%` : "—"}</dd></div><div><dt>排放因子覆盖</dt><dd>${dq.factorCoverage != null ? `${Math.round(dq.factorCoverage * 100)}%` : "—"}</dd></div><div><dt>分配方法</dt><dd>${safe(dq.allocationMethod || "—")}</dd></div><div><dt>生物源碳 / 移除</dt><dd>${safe(dq.biogenicCarbon || "—")}</dd></div><div><dt>因子集</dt><dd>${safe(calculation?.factorSetId || factors?.setId || "CN-EF-2026.1")}</dd></div><div><dt>输入快照</dt><dd>${safe(snapshotId)}</dd></div></dl><p>${(calculation?.limitations || ["数据质量、排除项和不确定性将在报告中单独说明。"]).map((item) => safe(item)).join("；")}</p></aside></section>`;
-    $("#main").innerHTML = `${pcfChannelHeader("计算与排放热点", "基于已确认事实和固定因子版本生成可重现的计算草稿，并识别主要排放来源。")}
+    $("#main").innerHTML = `${pcfChannelHeader("计算与排放热点", "先完成排放因子适用性门槛，再基于已确认事实生成可重现的计算草稿，并识别主要排放来源。")}
       ${stageGatePanelHtml("pcf")}
       ${factorPanel}
       ${state.pcfCalculationFailed ? pcfRecovery("计算未完成", "排放因子版本读取失败。已确认的数据和输入快照均已保留，可安全重试。", "重新加载因子并计算", 'data-action="pcf-retry-calculation"') : blocked ? pcfRecovery("活动数据尚未确认", "完成模板校验并确认待处理服务绑定后，才能建立输入快照和运行计算。", "返回活动数据", 'data-page="pcf-data"') : needsFactors ? pcfRecovery("排放因子适用性未确认", "请先确认因子集的来源、版本、单位与适用理由。", "确认因子适用性", 'data-action="pcf-confirm-factors"') : canRun ? `<section class="pcf-calculation-ready"><div><span class="pcf-kicker">STEP 04 · READY TO CALCULATE</span><h2>输入已锁定，可以生成计算草稿</h2><p>本次运行将锁定绑定 ${safe(ctx.powerBinding?.id || "BIND-REC-POWER-PCF")} 引用的资产版本 ${safe(ctx.powerBinding?.assetVersionId || ctx.power?.versionId || "")}，并使用因子集 ${safe(factors?.setId || "CN-EF-2026.1")}。</p>${actionButton("运行确定性计算", "primary", 'data-action="pcf-run-calculation"')}</div><dl><div><dt>确认绑定</dt><dd>${safe(ctx.powerBinding?.id || "—")}</dd></div><div><dt>资产版本</dt><dd>${safe(ctx.powerBinding?.assetVersionId || "—")}</dd></div><div><dt>因子集</dt><dd>${safe(factors?.setId || "CN-EF-2026.1")}</dd></div><div><dt>功能单位</dt><dd>${safe(item?.metadata?.declaration?.functionalUnit || "1 吨产品")}</dd></div></dl></section>` : hasResult && ctx.snapshot?.status === "STALE" ? `${pcfRecovery("输入快照已过期（STALE）", "上游资产或绑定已修订；当前计算结果不可再作为正式依据。请回到活动数据确认绑定后重新运行计算。", "返回活动数据", 'data-page="pcf-data"')}<section class="result-summary" aria-disabled="true"><div class="pcf-result-total"><span class="pcf-kicker">${safe(runId)} · STALE</span><strong>${safe(calculation?.total ?? "2.18")}</strong><span>${safe(calculation?.unit || "tCO₂e / t 产品")}</span><p>历史结果保留供对照，不可直接进入独立复核。</p></div></section>` : hasResult ? `<section class="result-summary"><div class="pcf-result-total"><span class="pcf-kicker">${safe(runId)} · ${safe(calculation?.status || "计算草稿")}</span><strong>${safe(calculation?.total ?? "2.18")}</strong><span>${safe(calculation?.unit || "tCO₂e / t 产品")}</span><p>因子集 ${safe(calculation?.factorSetId || factors?.setId || "CN-EF-2026.1")}<br>输入快照 ${safe(snapshotId)}</p></div><div class="hotspot-list"><header><div><span class="pcf-kicker">EMISSION HOTSPOTS</span><h2>排放热点</h2></div>${statusChip("可重现", "ok")}</header><ol>${hotspotList || "<li><span>暂无热点</span><b>—</b></li>"}</ol><footer><p>结果尚未成为正式报告，需完成独立复核。</p><button class="text-button" data-page="pcf-report">进入独立复核 →</button></footer></div></section>${resultDetail}` : pcfRecovery("尚未生成计算草稿", "确认因子后运行确定性计算，结果会写入可追溯的 Run 与热点结构。", "确认因子适用性", 'data-action="pcf-confirm-factors"')}`;

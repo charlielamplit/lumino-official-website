@@ -397,7 +397,7 @@
       { id: "BIND-EVD-POWER-CBAM", serviceId: "cbam", caseId: "CBAM-2026-Q3", assetId: "EVD-HX-POWER-2026Q3", status: "CONFIRMED", usagePurpose: "季度能源证据", scopeId: "FAC-SH-01" },
       { id: "BIND-EVD-POWER-PCF", serviceId: "pcf", caseId: "PCF-2026-001", assetId: "EVD-HX-POWER-2026Q3", status: "PENDING_CONFIRMATION", usagePurpose: "产品能源证据", scopeId: "PCF-SCOPE-HRC-01" },
       { id: "BIND-REC-POWER-CBAM", serviceId: "cbam", caseId: "CBAM-2026-Q3", assetId: "REC-HX-POWER-2026Q3", status: "CONFIRMED", usagePurpose: "季度间接排放", scopeId: "FAC-SH-01" },
-      { id: "BIND-REC-POWER-PCF", serviceId: "pcf", caseId: "PCF-2026-001", assetId: "REC-HX-POWER-2026Q3", status: "PENDING_CONFIRMATION", usagePurpose: "产品能源分配", scopeId: "PCF-SCOPE-HRC-01", allocationRuleId: "MASS-ALLOCATION@1" },
+      { id: "BIND-REC-POWER-PCF", serviceId: "pcf", caseId: "PCF-2026-001", assetId: "REC-HX-POWER-2026Q3", status: "PENDING_CONFIRMATION", usagePurpose: "产品活动数据用途", scopeId: "PCF-SCOPE-HRC-01", allocationRuleId: "MASS-ALLOCATION@1" },
       { id: "BIND-EVD-SHIP-CBAM", serviceId: "cbam", caseId: "CBAM-2026-Q3", assetId: "EVD-HX-SHIPMENT-2026Q3", status: "CONFIRMED", usagePurpose: "出口发运对账", scopeId: "CBAM-2026-Q3" },
     ],
     lineage: [
