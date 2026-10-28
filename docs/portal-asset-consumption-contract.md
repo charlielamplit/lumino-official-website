@@ -14,7 +14,7 @@
 |---|---|
 | `git status` | 存在营销/审查相关未提交改动与本计划文档；未对资产内核做破坏性覆盖 |
 | `git diff --check` | 通过 |
-| `node --test tests/*.test.* packages/agent/tests/*.test.*` | 49 项通过 |
+| `node --test tests/*.test.* packages/agent/tests/*.test.*` | 67 项通过（当前回归基线） |
 | 资产框架版本 | `FRAMEWORK_VERSION = 0.2.0`（文档基线记为 0.2.1） |
 | 并行禁改区 | `data-asset-engine.js`、`packages/agent/schemas/`、框架核心语义——本轮不修改 |
 
@@ -104,7 +104,7 @@
 
 | 项 | 状态 |
 |---|---|
-| 基线与加固测试 | 49 pass |
+| 基线与加固测试 | 67 pass（含共享中心与 Agent Runtime） |
 | 前端消费契约 | 本文档 |
 | `/services/cbam/` | 六步专业路径（适用判断→进口商交付） |
 | `/services/pcf/` | 七步试点路径（声明→报告版本） |
@@ -115,7 +115,7 @@
 | 专项浏览器检查 | URL 注入、越权深链、复核／快照／报告锁定均通过 |
 | Phase 3 首切片 | `asset-view-model.js` 已接管资产概览、详情、胶囊和修订影响的授权投影 |
 
-下一步：以同样方式建立 Task 与 Artifact 的只读投影，替换“我的任务”和“交付中心”的硬编码数组；仍不修改资产内核。
+Task 与 Artifact 的只读授权投影已经落地，契约见 `portal-shared-center-contract.md`；下一步进入 PCF 模板、清单、因子、计算快照和报告产物的完整业务切片，仍不修改资产内核语义。
 
 ## 8. 分步校验
 
