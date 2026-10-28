@@ -1,0 +1,15 @@
+{
+  "before": {
+    "title": "复核与锁定 · Lumino",
+    "heading": "复核与锁定",
+    "hasApproveAction": true,
+    "role": "reviewer"
+  },
+  "after": {
+    "serviceStatus": "DELIVERABLE_READY",
+    "reportStatus": "LOCKED",
+    "snapshotStatus": "LOCKED",
+    "reportSnapshotId": "SNAP-PCF-HRC-01"
+  },
+  "pass": true
+}

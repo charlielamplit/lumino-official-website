@@ -1,0 +1,64 @@
+name: Feature
+description: Epic 下可独立验收的功能或治理交付物
+title: "[Feature] "
+labels:
+  - Roadmap
+  - type/feature
+  - status/backlog
+assignees: []
+body:
+  - type: input
+    id: epic
+    attributes:
+      label: 父 Epic
+      description: "使用 `#N`；同步脚本创建的 Feature 正文首行会自动写入 `Epic: #N`。"
+      placeholder: "#12"
+    validations:
+      required: true
+  - type: textarea
+    id: user_value
+    attributes:
+      label: 用户价值
+      description: 使用“作为…我能够…从而…”描述具体价值。
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 业务行为与数据边界
+      description: 说明输入、关键规则、输出、权限和跨服务数据关系。
+    validations:
+      required: true
+  - type: textarea
+    id: states
+    attributes:
+      label: 状态与恢复路径
+      placeholder: |
+        - 初始：
+        - 处理中：
+        - 空状态：
+        - 失败：
+        - 无权限：
+        - 完成：
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收标准
+      description: 至少两条，每条可独立验证。
+      placeholder: |
+        AC-1: ...
+        AC-2: ...
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 验收证据
+      description: 预期的测试、截图、文档或计算快照。
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: 依赖
+      placeholder: "Depends: #N"

@@ -1,0 +1,464 @@
+{
+  "origin": "http://127.0.0.1:4173",
+  "generatedAt": "2026-10-28T06:12:14.733Z",
+  "pages": {
+    "workbench": {
+      "path": "/apps/portal/?demoRole=customer_owner&page=workbench",
+      "topbarH": 56,
+      "sidebarW": 220,
+      "contentMax": 1156,
+      "englishEyebrows": [],
+      "systemLead": false,
+      "minRadius": 8,
+      "thickTop": [],
+      "focusPrimaries": 0,
+      "rowOpenButtons": [],
+      "yellowServiceCards": [],
+      "font": "\"IBM Plex Sans\", \"Noto Sans SC\", \"PingFang SC\", sans-serif",
+      "hasIbm": true,
+      "h1": [
+        "工作台"
+      ],
+      "checks": [
+        {
+          "id": "topbar-height",
+          "ok": true,
+          "detail": 56
+        },
+        {
+          "id": "sidebar-width",
+          "ok": true,
+          "detail": 220
+        },
+        {
+          "id": "content-max",
+          "ok": true,
+          "detail": 1156
+        },
+        {
+          "id": "no-english-eyebrow",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "card-radius",
+          "ok": true,
+          "detail": 8
+        },
+        {
+          "id": "no-thick-top-stripe",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "focus-primary-le-1",
+          "ok": true,
+          "detail": 0
+        },
+        {
+          "id": "no-row-open-buttons",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "no-system-lead",
+          "ok": true,
+          "detail": false
+        },
+        {
+          "id": "no-yellow-service-cards",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "ibm-plex-sans",
+          "ok": true,
+          "detail": "\"IBM Plex Sans\", \"Noto Sans SC\", \"PingFang SC\", sans-serif"
+        }
+      ],
+      "runtimeIssues": []
+    },
+    "tasks": {
+      "path": "/apps/portal/?demoRole=customer_owner&page=shared-tasks",
+      "topbarH": 56,
+      "sidebarW": 220,
+      "contentMax": 1156,
+      "englishEyebrows": [],
+      "systemLead": false,
+      "minRadius": 8,
+      "thickTop": [],
+      "focusPrimaries": 0,
+      "rowOpenButtons": [],
+      "yellowServiceCards": [],
+      "font": "\"IBM Plex Sans\", \"Noto Sans SC\", \"PingFang SC\", sans-serif",
+      "hasIbm": true,
+      "h1": [
+        "我的任务"
+      ],
+      "checks": [
+        {
+          "id": "topbar-height",
+          "ok": true,
+          "detail": 56
+        },
+        {
+          "id": "sidebar-width",
+          "ok": true,
+          "detail": 220
+        },
+        {
+          "id": "content-max",
+          "ok": true,
+          "detail": 1156
+        },
+        {
+          "id": "no-english-eyebrow",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "card-radius",
+          "ok": true,
+          "detail": 8
+        },
+        {
+          "id": "no-thick-top-stripe",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "focus-primary-le-1",
+          "ok": true,
+          "detail": 0
+        },
+        {
+          "id": "no-row-open-buttons",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "no-system-lead",
+          "ok": true,
+          "detail": false
+        },
+        {
+          "id": "no-yellow-service-cards",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "ibm-plex-sans",
+          "ok": true,
+          "detail": "\"IBM Plex Sans\", \"Noto Sans SC\", \"PingFang SC\", sans-serif"
+        }
+      ],
+      "runtimeIssues": []
+    },
+    "services": {
+      "path": "/apps/portal/?demoRole=customer_owner&page=services-hub",
+      "topbarH": 56,
+      "sidebarW": 220,
+      "contentMax": 1156,
+      "englishEyebrows": [],
+      "systemLead": false,
+      "minRadius": 8,
+      "thickTop": [],
+      "focusPrimaries": 0,
+      "rowOpenButtons": [],
+      "yellowServiceCards": [],
+      "font": "\"IBM Plex Sans\", \"Noto Sans SC\", \"PingFang SC\", sans-serif",
+      "hasIbm": true,
+      "h1": [
+        "服务目录"
+      ],
+      "checks": [
+        {
+          "id": "topbar-height",
+          "ok": true,
+          "detail": 56
+        },
+        {
+          "id": "sidebar-width",
+          "ok": true,
+          "detail": 220
+        },
+        {
+          "id": "content-max",
+          "ok": true,
+          "detail": 1156
+        },
+        {
+          "id": "no-english-eyebrow",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "card-radius",
+          "ok": true,
+          "detail": 8
+        },
+        {
+          "id": "no-thick-top-stripe",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "focus-primary-le-1",
+          "ok": true,
+          "detail": 0
+        },
+        {
+          "id": "no-row-open-buttons",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "no-system-lead",
+          "ok": true,
+          "detail": false
+        },
+        {
+          "id": "no-yellow-service-cards",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "ibm-plex-sans",
+          "ok": true,
+          "detail": "\"IBM Plex Sans\", \"Noto Sans SC\", \"PingFang SC\", sans-serif"
+        }
+      ],
+      "runtimeIssues": []
+    },
+    "assets": {
+      "path": "/apps/portal/?demoRole=customer_owner&page=shared-files",
+      "topbarH": 56,
+      "sidebarW": 220,
+      "contentMax": 1156,
+      "englishEyebrows": [],
+      "systemLead": false,
+      "minRadius": 8,
+      "thickTop": [],
+      "focusPrimaries": 0,
+      "rowOpenButtons": [],
+      "yellowServiceCards": [],
+      "font": "\"IBM Plex Sans\", \"Noto Sans SC\", \"PingFang SC\", sans-serif",
+      "hasIbm": true,
+      "h1": [
+        "数据资产"
+      ],
+      "checks": [
+        {
+          "id": "topbar-height",
+          "ok": true,
+          "detail": 56
+        },
+        {
+          "id": "sidebar-width",
+          "ok": true,
+          "detail": 220
+        },
+        {
+          "id": "content-max",
+          "ok": true,
+          "detail": 1156
+        },
+        {
+          "id": "no-english-eyebrow",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "card-radius",
+          "ok": true,
+          "detail": 8
+        },
+        {
+          "id": "no-thick-top-stripe",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "focus-primary-le-1",
+          "ok": true,
+          "detail": 0
+        },
+        {
+          "id": "no-row-open-buttons",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "no-system-lead",
+          "ok": true,
+          "detail": false
+        },
+        {
+          "id": "no-yellow-service-cards",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "ibm-plex-sans",
+          "ok": true,
+          "detail": "\"IBM Plex Sans\", \"Noto Sans SC\", \"PingFang SC\", sans-serif"
+        }
+      ],
+      "runtimeIssues": []
+    },
+    "deliverables": {
+      "path": "/apps/portal/?demoRole=customer_owner&page=shared-deliverables",
+      "topbarH": 56,
+      "sidebarW": 220,
+      "contentMax": 1156,
+      "englishEyebrows": [],
+      "systemLead": false,
+      "minRadius": 8,
+      "thickTop": [],
+      "focusPrimaries": 0,
+      "rowOpenButtons": [],
+      "yellowServiceCards": [],
+      "font": "\"IBM Plex Sans\", \"Noto Sans SC\", \"PingFang SC\", sans-serif",
+      "hasIbm": true,
+      "h1": [
+        "交付中心"
+      ],
+      "checks": [
+        {
+          "id": "topbar-height",
+          "ok": true,
+          "detail": 56
+        },
+        {
+          "id": "sidebar-width",
+          "ok": true,
+          "detail": 220
+        },
+        {
+          "id": "content-max",
+          "ok": true,
+          "detail": 1156
+        },
+        {
+          "id": "no-english-eyebrow",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "card-radius",
+          "ok": true,
+          "detail": 8
+        },
+        {
+          "id": "no-thick-top-stripe",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "focus-primary-le-1",
+          "ok": true,
+          "detail": 0
+        },
+        {
+          "id": "no-row-open-buttons",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "no-system-lead",
+          "ok": true,
+          "detail": false
+        },
+        {
+          "id": "no-yellow-service-cards",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "ibm-plex-sans",
+          "ok": true,
+          "detail": "\"IBM Plex Sans\", \"Noto Sans SC\", \"PingFang SC\", sans-serif"
+        }
+      ],
+      "runtimeIssues": []
+    },
+    "access": {
+      "path": "/apps/portal/?demoRole=customer_owner&page=shared-organization",
+      "topbarH": 56,
+      "sidebarW": 220,
+      "contentMax": 1156,
+      "englishEyebrows": [],
+      "systemLead": false,
+      "minRadius": 8,
+      "thickTop": [],
+      "focusPrimaries": 0,
+      "rowOpenButtons": [],
+      "yellowServiceCards": [],
+      "font": "\"IBM Plex Sans\", \"Noto Sans SC\", \"PingFang SC\", sans-serif",
+      "hasIbm": true,
+      "h1": [
+        "服务目录"
+      ],
+      "checks": [
+        {
+          "id": "topbar-height",
+          "ok": true,
+          "detail": 56
+        },
+        {
+          "id": "sidebar-width",
+          "ok": true,
+          "detail": 220
+        },
+        {
+          "id": "content-max",
+          "ok": true,
+          "detail": 1156
+        },
+        {
+          "id": "no-english-eyebrow",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "card-radius",
+          "ok": true,
+          "detail": 8
+        },
+        {
+          "id": "no-thick-top-stripe",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "focus-primary-le-1",
+          "ok": true,
+          "detail": 0
+        },
+        {
+          "id": "no-row-open-buttons",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "no-system-lead",
+          "ok": true,
+          "detail": false
+        },
+        {
+          "id": "no-yellow-service-cards",
+          "ok": true,
+          "detail": []
+        },
+        {
+          "id": "ibm-plex-sans",
+          "ok": true,
+          "detail": "\"IBM Plex Sans\", \"Noto Sans SC\", \"PingFang SC\", sans-serif"
+        }
+      ],
+      "runtimeIssues": []
+    }
+  },
+  "pass": true,
+  "failures": []
+}

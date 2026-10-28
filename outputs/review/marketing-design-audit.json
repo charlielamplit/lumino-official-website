@@ -1,0 +1,72 @@
+{
+  "origin": "http://127.0.0.1:4173",
+  "results": [
+    {
+      "path": "/apps/site/Lumino%20%E5%AE%98%E7%BD%91.dc.html",
+      "googleFonts": 0,
+      "navCount": 7,
+      "cta": "预约咨询",
+      "float": 1,
+      "h1": "应对全球绿色要求，一个平台就够",
+      "tiles": 6,
+      "eyebrowVisible": false,
+      "title": "Lumino · 出口与制造企业的碳与 ESG 合规服务"
+    },
+    {
+      "path": "/apps/site/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html",
+      "googleFonts": 0,
+      "navCount": 7,
+      "cta": "预约咨询",
+      "float": 1,
+      "h1": "资料准备一次，服务按需开展",
+      "tiles": 4,
+      "eyebrowVisible": false,
+      "title": "我们的平台 · Lumino"
+    },
+    {
+      "path": "/apps/site/industries/",
+      "googleFonts": 0,
+      "navCount": 7,
+      "cta": "预约咨询",
+      "float": 1,
+      "h1": "解决方案",
+      "tiles": 0,
+      "eyebrowVisible": false,
+      "title": "解决方案 · Lumino"
+    },
+    {
+      "path": "/apps/site/tools/",
+      "googleFonts": 0,
+      "navCount": 7,
+      "cta": "预约咨询",
+      "float": 1,
+      "h1": "测算工具",
+      "tiles": 0,
+      "eyebrowVisible": false,
+      "title": "工具 · Lumino"
+    },
+    {
+      "path": "/apps/site/knowledge/",
+      "googleFonts": 0,
+      "navCount": 7,
+      "cta": "预约咨询",
+      "float": 1,
+      "h1": "行业知识库",
+      "tiles": 0,
+      "eyebrowVisible": false,
+      "title": "行业知识库 · Lumino"
+    },
+    {
+      "path": "/apps/site/Lumino%20%E8%81%94%E7%B3%BB.dc.html",
+      "googleFonts": 0,
+      "navCount": 7,
+      "cta": "预约咨询",
+      "float": 1,
+      "h1": "预约咨询",
+      "tiles": 0,
+      "eyebrowVisible": false,
+      "title": "联系 Lumino · 预约咨询"
+    }
+  ],
+  "failures": []
+}

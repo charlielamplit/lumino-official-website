@@ -6,3 +6,10 @@ node_modules/
 .vercel
 *.zip
 .firecrawl/
+
+# Local credentials and machine-specific configuration
+.env
+.env.local
+.env.gitea
+.env.*.local
+!.env.example

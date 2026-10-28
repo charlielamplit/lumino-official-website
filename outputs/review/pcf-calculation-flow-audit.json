@@ -1,0 +1,28 @@
+{
+  "desktop": {
+    "title": "计算与热点 · Lumino",
+    "heading": "计算与排放热点",
+    "total": "1.976",
+    "lineRows": 6,
+    "stageRows": 6,
+    "usesRecommendedFactor": true,
+    "demoBoundaryVisible": true,
+    "viewportWidth": 1440,
+    "scrollWidth": 1440,
+    "horizontalOverflow": false
+  },
+  "mobile": {
+    "title": "计算与热点 · Lumino",
+    "heading": "计算与排放热点",
+    "total": "1.976",
+    "lineRows": 6,
+    "stageRows": 6,
+    "usesRecommendedFactor": true,
+    "demoBoundaryVisible": true,
+    "viewportWidth": 390,
+    "scrollWidth": 390,
+    "horizontalOverflow": false
+  },
+  "issues": [],
+  "pass": true
+}

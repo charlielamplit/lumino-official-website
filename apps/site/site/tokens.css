@@ -1,0 +1,65 @@
+/* Lumino marketing + Portal shared tokens (v3) */
+:root {
+  --ink: #17211C;
+  --ink-secondary: #4A5651;
+  --muted: #6B7771;
+  --faint: #A3ADA8;
+  --line: #E2E7E4;
+  --line-soft: #EDF1EE;
+  --line-strong: #C9D2CD;
+  --border-secondary: #D5DCD8;
+  --paper: #FFFFFF;
+  --wash: #F5F7F6;
+  --green: #0E7A52;
+  --green-dark: #0A5C3E;
+  --green-2: #0B6B47;
+  --green-soft: #E6F2EB;
+  --yellow-soft: #FBF0DC;
+  --pending: #8A5300;
+  --danger: #B42318;
+  --danger-soft: #FDECEA;
+  --gray-chip: #EEF1EF;
+  --deep: #0F2A1F;
+  --deep-2: #0B2219;
+  --platform-wash: #EAF2ED;
+  --kicker: #7FD1A8;
+
+  --font-sans: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-mono: "IBM Plex Mono", "Noto Sans SC", monospace;
+
+  --type-hero: 48px;
+  --type-hero-lh: 56px;
+  --type-section: 32px;
+  --type-section-lh: 40px;
+  --type-card: 20px;
+  --type-card-lh: 28px;
+  --type-lede: 18px;
+  --type-lede-lh: 30px;
+  --type-body: 16px;
+  --type-body-lh: 26px;
+  --type-ui: 14px;
+  --type-ui-lh: 22px;
+  --type-meta: 12px;
+  --type-meta-lh: 18px;
+
+  --space-2xs: 4px;
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --space-4xl: 96px;
+
+  --radius: 6px;
+  --radius-card: 8px;
+  --control-h: 48px;
+  --max: 1200px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-soft: cubic-bezier(0.32, 0.72, 0, 1);
+  --shadow-soft: 0 1px 0 rgba(23, 33, 28, .04), 0 12px 32px -16px rgba(23, 33, 28, .14);
+  --shadow-lift: 0 1px 0 rgba(23, 33, 28, .05), 0 20px 48px -20px rgba(14, 122, 82, .22);
+  --ring: 0 0 0 3px color-mix(in srgb, var(--green) 28%, transparent);
+}

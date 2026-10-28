@@ -445,7 +445,7 @@
     yearCreated: false, deliveryExpanded: null, productAdded: false,
     configurationAdded: false, orgEditing: false, selectedProduct: "hrc",
     productYears: [], productCnCodes: [], questionHelpOpen: false, findingChoiceOpen: false, dataPathChoice: null,
-    drawer: null, assetFacet: "attention", periodData: {}, productOverrides: {}, configurationDrafts: {}, facilities: [], invitedMembers: [], consultationRequests: [], actionBusy: false,
+    drawer: null, assetFacet: "attention", taskTab: "全部", periodData: {}, productOverrides: {}, configurationDrafts: {}, facilities: [], invitedMembers: [], consultationRequests: [], actionBusy: false,
     pcfCalculationFailed: incoming.get("scenario") === "pcf-calculation-failed",
     onboardingDismissed: window.localStorage.getItem("lumino-portal-onboarding") === "dismissed", online: navigator.onLine,
     organization: (() => {

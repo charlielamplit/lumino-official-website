@@ -1,7 +1,103 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>联系 Lumino · 服务诊断</title><meta name="description" content="按当前合规任务预约 Lumino 服务诊断。"><link rel="icon" href="/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Fragment+Mono&family=Noto+Sans+SC:wght@400;500;600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="site/marketing.css"><script defer src="site/site-shell.js"></script><script defer src="site/contact.js"></script></head>
-<body><lumino-header current="contact"></lumino-header><main id="main">
-<section class="service-hero"><div class="wrap service-hero__grid"><div><p class="eyebrow">SERVICE DIAGNOSIS</p><h1 class="display">先说清任务，<br>再决定如何投入。</h1><p class="lede" style="margin-top:22px">告诉我们产品、目标市场、客户要求和时间节点。我们会先判断适用服务、资料基础与下一步，不承诺未经核实的结果。</p></div><aside class="service-meta" aria-label="预约说明"><div class="meta-row"><span>适用范围</span><strong>六项企业合规服务</strong></div><div class="meta-row"><span>回复时间</span><strong>通常一个工作日内</strong></div><div class="meta-row"><span>原型说明</span><strong>本地演示不会发送数据</strong></div></aside></div></section>
-<section class="section"><div class="wrap editorial-grid"><div><p class="eyebrow">YOUR REQUEST</p><h2 class="section-title">描述你正在面对的交付。</h2><div class="contact-aside" style="margin-top:32px"><div><strong>我们会先确认</strong><p>服务是否适用、需要哪些输入、哪些结果可以交付。</p></div><div><strong>规划中服务</strong><p>只登记场景与联系需求，不会创建虚假工作空间。</p></div><div><strong>数据边界</strong><p>请勿在公开表单提交敏感原始材料；正式资料应进入受控门户。</p></div></div></div>
-<form class="form" id="contactForm" novalidate><div class="form-grid"><label class="field">公司名称 <span>必填</span><input name="company" autocomplete="organization" required></label><label class="field">姓名 <span>必填</span><input name="name" autocomplete="name" required></label></div><div class="form-grid"><label class="field">工作邮箱<input name="email" type="email" autocomplete="email" placeholder="name@company.com"></label><label class="field">电话 / 微信<input name="phone" autocomplete="tel" placeholder="至少填写一种联系方式"></label></div><label class="field">需要的服务 <span>必填</span><select name="serviceId" id="serviceSelect" required><option value="">请选择</option><option value="cbam">欧盟碳边境合规 · 已开通</option><option value="pcf">产品碳足迹 PCF · 试点</option><option value="esg">ESG 报告 · 即将上线</option><option value="inventory">企业碳盘查 · 规划中</option><option value="assets">碳资产与绿证 · 规划中</option><option value="export">出口合规服务 · 规划中</option><option value="unsure">暂不确定</option></select></label><label class="field">需求说明 <span>必填</span><textarea name="note" required placeholder="例如：产品、目标市场、客户要求、期望交付和最晚时间"></textarea></label><div class="form-grid"><label class="field">期望联系时间<select name="contactTime"><option>工作日上午</option><option>工作日下午</option><option>工作日晚间</option><option>请先邮件联系</option></select></label><label class="field">你的角色<input name="portalRole" placeholder="外贸 / EHS / 采购 / 管理层"></label></div><input type="hidden" name="requestType" value="service-consultation"><input type="hidden" name="source" id="sourceField" value="public-contact"><div class="form-actions"><button class="button button--primary" type="submit">提交服务需求 →</button><p class="small">提交即表示同意我们仅为本次需求与你联系。</p></div><div class="form-message" id="formMessage" role="status" aria-live="polite" hidden></div></form></div></section>
-</main><lumino-footer></lumino-footer></body></html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>联系我们 · Lumino</title>
+  <meta name="description" content="说明行业、产品与时间要求，我们通常在一个工作日内回复。">
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="site/site-v3.css">
+  <script defer src="site/i18n.js"></script>
+  <script defer src="site/site-shell.js"></script>
+  <script defer src="site/contact.js"></script>
+  <script defer src="site/float-tools.js"></script>
+</head>
+<body>
+<lumino-header current="contact"></lumino-header>
+<main id="main">
+  <section class="m-page-hero">
+    <div class="wrap">
+      <p class="crumb"><a href="Lumino%20官网.dc.html" data-i18n-zh="首页" data-i18n-en="Home"></a> / <span data-i18n-zh="联系我们" data-i18n-en="Contact"></span></p>
+      <h1 data-i18n-zh="告诉我们你的需求" data-i18n-en="Tell us what you need"></h1>
+      <p data-i18n-zh="说明行业、产品和时间要求。我们通常在一个工作日内回复，并给出适用方向与资料清单。" data-i18n-en="Share your industry, products and deadlines. We usually reply within one business day with what applies and what to prepare."></p>
+    </div>
+  </section>
+  <section class="m-section">
+    <div class="wrap contact-layout">
+      <aside class="contact-steps">
+        <div class="contact-step"><span class="n">01</span><div><strong data-i18n-zh="提交需求" data-i18n-en="Send your request"></strong><span data-i18n-zh="说明行业、产品与时间要求。" data-i18n-en="Share your industry, products and deadlines."></span></div></div>
+        <div class="contact-step"><span class="n">02</span><div><strong data-i18n-zh="确认适用服务" data-i18n-en="We confirm what applies"></strong><span data-i18n-zh="一个工作日内回复适用服务与资料清单。" data-i18n-en="Within one business day, with a list of what to prepare."></span></div></div>
+        <div class="contact-step"><span class="n">03</span><div><strong data-i18n-zh="确定方案与报价" data-i18n-en="Scope and quote"></strong><span data-i18n-zh="确认范围、周期与费用后开始项目。" data-i18n-en="We agree scope, timing and fees, then begin."></span></div></div>
+        <div style="padding-top:20px;border-top:1px solid var(--line);font-size:var(--type-ui);color:var(--ink-secondary);display:grid;gap:4px">
+          <span>contact@lumino.example</span>
+          <span data-i18n-zh="上海 · [办公地址]" data-i18n-en="Shanghai · [office address]"></span>
+        </div>
+      </aside>
+      <form class="contact-card m-form" id="contactForm" novalidate>
+        <div class="m-form__grid">
+          <label class="m-field">姓名 <span>必填</span><input name="name" autocomplete="name" required></label>
+          <label class="m-field">公司 <span>必填</span><input name="company" autocomplete="organization" required></label>
+          <label class="m-field">工作邮箱<input name="email" type="email" autocomplete="email" placeholder="name@company.com"></label>
+          <label class="m-field">行业
+            <select name="industry" id="industrySelect">
+              <option value="">请选择</option>
+              <option value="steel">钢铁</option>
+              <option value="aluminium">铝及铝制品</option>
+              <option value="textile">纺织服装</option>
+              <option value="packaging">包装</option>
+              <option value="chem">化工</option>
+              <option value="elec">电子电器</option>
+              <option value="other">其他</option>
+            </select>
+          </label>
+        </div>
+        <div class="m-field">
+          <span style="color:var(--ink-secondary)">关注的服务（可多选）</span>
+          <div class="svc-chip-pick" id="svcChips">
+            <button type="button" data-svc="cbam">欧盟碳边境调节</button>
+            <button type="button" data-svc="pcf">产品碳足迹</button>
+            <button type="button" data-svc="esg">ESG 报告</button>
+            <button type="button" data-svc="inventory">碳盘查</button>
+            <button type="button" data-svc="assets">碳资产与绿证</button>
+            <button type="button" data-svc="export">出口合规</button>
+          </div>
+          <input type="hidden" name="serviceId" id="serviceSelect" value="">
+        </div>
+        <label class="m-field">时间要求<input name="timeline" id="timelineField" placeholder="例如：本季度 / 客户要求 12 月前"></label>
+        <label class="m-field">需求说明 <span>必填</span>
+          <textarea name="note" required placeholder="例如：欧盟客户要求 12 月前提供热轧钢卷的排放数据"></textarea>
+        </label>
+        <input type="hidden" name="requestType" value="service-consultation">
+        <input type="hidden" name="source" id="sourceField" value="public-contact">
+        <div class="m-form__actions">
+          <button class="button button--primary" type="submit">提交</button>
+          <p class="m-form__hint">请勿在此提交敏感原始资料。正式资料将在签约后通过客户门户提交。</p>
+        </div>
+        <div class="m-form__message" id="formMessage" role="status" aria-live="polite" hidden></div>
+      </form>
+    </div>
+  </section>
+</main>
+<lumino-footer></lumino-footer>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const chips = document.getElementById("svcChips");
+  const hidden = document.getElementById("serviceSelect");
+  const picked = new Set();
+  const params = new URLSearchParams(location.search);
+  if (params.get("serviceId")) picked.add(params.get("serviceId"));
+  function sync() {
+    chips.querySelectorAll("button").forEach((b) => b.classList.toggle("is-on", picked.has(b.dataset.svc)));
+    hidden.value = [...picked].join(",") || (params.get("serviceId") || "");
+  }
+  chips.addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (picked.has(b.dataset.svc)) picked.delete(b.dataset.svc); else picked.add(b.dataset.svc);
+    sync();
+  });
+  sync();
+});
+</script>
+</body>
+</html>

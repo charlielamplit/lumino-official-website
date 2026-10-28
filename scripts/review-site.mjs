@@ -78,7 +78,12 @@ const pages=[
   ['about','/apps/site/Lumino%20%E5%85%B3%E4%BA%8E.dc.html'],['contact','/apps/site/Lumino%20%E8%81%94%E7%B3%BB.dc.html?serviceId=pcf&source=review'],['knowledge','/apps/site/knowledge/'],
   ['portal','/apps/portal/?demoRole=customer_owner'],
   ['portal-assets-owner','/apps/portal/?demoRole=customer_owner&page=shared-files'],
-  ['portal-assets-contributor','/apps/portal/?demoRole=customer_contrib&page=shared-files']
+  ['portal-assets-contributor','/apps/portal/?demoRole=customer_contrib&page=shared-files'],
+  ['portal-tasks-owner','/apps/portal/?demoRole=customer_owner&page=shared-tasks'],
+  ['portal-tasks-contributor','/apps/portal/?demoRole=customer_contrib&page=shared-tasks'],
+  ['portal-tasks-approver','/apps/portal/?demoRole=customer_approver&page=shared-tasks'],
+  ['portal-deliverables-owner','/apps/portal/?demoRole=customer_owner&page=shared-deliverables'],
+  ['portal-deliverables-contributor','/apps/portal/?demoRole=customer_contrib&page=shared-deliverables']
 ];
 const report={};
 for(const width of [390,768,1440]){
@@ -97,6 +102,10 @@ await screenshot('esg-desktop','/apps/site/services/esg/',1440,1000);
 await screenshot('portal-mobile','/apps/portal/?demoRole=customer_owner',390,844);
 await screenshot('portal-assets-desktop','/apps/portal/?demoRole=customer_owner&page=shared-files',1440,1000);
 await screenshot('portal-assets-mobile','/apps/portal/?demoRole=customer_owner&page=shared-files',390,844);
+await screenshot('portal-tasks-desktop','/apps/portal/?demoRole=customer_owner&page=shared-tasks',1440,1000);
+await screenshot('portal-tasks-mobile','/apps/portal/?demoRole=customer_owner&page=shared-tasks',390,844);
+await screenshot('portal-deliverables-desktop','/apps/portal/?demoRole=customer_owner&page=shared-deliverables',1440,1000);
+await screenshot('portal-deliverables-mobile','/apps/portal/?demoRole=customer_owner&page=shared-deliverables',390,844);
 await writeFile(new URL('browser-audit.json',outputDir),JSON.stringify(report,null,2));
 console.log(JSON.stringify(report,null,2));
 socket.close();

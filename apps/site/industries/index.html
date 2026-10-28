@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>解决方案 · Lumino</title>
+  <meta name="description" content="按行业看清法规压力、关键卡点与可落地路径；钢铁、铝材、纺织、包装等，我们熟悉并交付。">
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="../site/site-v3.css">
+  <script defer src="../site/i18n.js"></script>
+  <script defer src="../site/site-shell.js"></script>
+  <script defer src="../site/industries.js"></script>
+  <script defer src="../site/float-tools.js"></script>
+</head>
+<body>
+<lumino-header current="industries"></lumino-header>
+<main id="main">
+  <section class="m-page-hero">
+    <div class="wrap">
+      <p class="crumb"><a href="../Lumino%20官网.dc.html" data-i18n-zh="首页" data-i18n-en="Home"></a> / <span data-i18n-zh="解决方案" data-i18n-en="Industries"></span></p>
+      <h1 data-i18n-zh="按行业看清，下一步该做什么" data-i18n-en="See what to do next—by industry"></h1>
+      <p data-i18n-zh="不同行业的法规、客户要求和常见卡点并不一样。选择你的行业，查看关键挑战、我们能帮你做到什么，以及建议优先推进的事项。" data-i18n-en="Rules, customer asks and blockers differ by industry. Pick yours to see the key challenges, what we can help you deliver, and what to advance first."></p>
+    </div>
+  </section>
+  <section class="m-section">
+    <div class="wrap">
+      <div class="ind-pills-bar"><div class="ind-pills" id="ind-pills" role="tablist"></div></div>
+      <div id="ind-detail"></div>
+    </div>
+  </section>
+  <section class="m-section m-section--dark">
+    <div class="wrap m-closing">
+      <div>
+        <h2 data-i18n-zh="说清产品和时间，我们给出优先顺序" data-i18n-en="Tell us the products and deadline—we set the order of work"></h2>
+        <p data-i18n-zh="按你的行业与客户要求，我们给出优先顺序、资料清单与交付范围。" data-i18n-en="Based on your industry and buyer asks, we set priorities, the document list and the delivery scope."></p>
+      </div>
+      <div class="m-closing__actions">
+        <a class="button button--on-dark button--sm" id="ind-cta" href="../Lumino%20联系.dc.html" data-i18n-zh="预约咨询" data-i18n-en="Book a consultation"></a>
+      </div>
+    </div>
+  </section>
+</main>
+<lumino-footer></lumino-footer>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const i18n = window.LuminoI18n;
+  const lang = i18n && i18n.detectLang() === "en" ? "en" : "zh";
+  const t = (o) => (o && o.zh !== undefined ? o[lang] || o.zh : o);
+  const list = window.LuminoIndustries || [];
+  const params = new URLSearchParams(location.search);
+  let current = params.get("industry") || (list[0] && list[0].id);
+  const pills = document.getElementById("ind-pills");
+  const detail = document.getElementById("ind-detail");
+  const cta = document.getElementById("ind-cta");
+
+  function render() {
+    const item = list.find((x) => x.id === current) || list[0];
+    if (!item) return;
+    pills.innerHTML = list.map((i) => {
+      const on = i.id === item.id;
+      return `<button type="button" role="tab" aria-selected="${on}" data-id="${i.id}" class="ind-pill${on ? " is-on" : ""}">${t(i.name)}</button>`;
+    }).join("");
+
+    const bgLabel = lang === "en" ? "Industry background" : "行业背景";
+    const helpLabel = lang === "en" ? "How we help" : "我们能为你做的";
+    const chainLabel = lang === "en" ? "Typical path" : "典型落地路径";
+    const reqsLabel = lang === "en" ? "What typically applies" : "常见适用要求";
+    const pkgLabel = lang === "en" ? "Priority work packages" : "优先推进的工作包";
+    const prepLabel = lang === "en" ? "What you should have ready" : "建议提前准备的资料";
+    const moreLabel = lang === "en"
+      ? "Customer templates, surveys and disclosure portals—we deliver those on the same foundation as the services above."
+      : "客户指定模板、供应链问卷、披露平台对接等，我们与上述服务在同一底座上交付。";
+
+    const helps = (item.helps || []).map(([a, b]) =>
+      `<article class="ind-help"><strong>${t(a)}</strong><span>${t(b)}</span></article>`
+    ).join("");
+    const chain = (item.chain || []).map((step, i) =>
+      `<li><span class="mono">${String(i + 1).padStart(2, "0")}</span><span>${t(step)}</span></li>`
+    ).join("");
+    const reqs = (item.reqs || []).map(([a, b]) =>
+      `<div class="ind-req"><strong>${t(a)}</strong><span>${t(b)}</span></div>`
+    ).join("");
+    const pkgs = (item.packages || []).map((p) => {
+      const bullets = (p.bullets || []).map((b) => `<li>${t(b)}</li>`).join("");
+      return `<article class="ind-pkg">
+        <div class="ind-pkg__top"><strong>${t(p.title)}</strong><span class="mono">${p.tag || ""}</span></div>
+        <p>${t(p.body)}</p>
+        <ul>${bullets}</ul>
+      </article>`;
+    }).join("");
+    const prep = (item.prepare || []).map((x) => `<li>${t(x)}</li>`).join("");
+
+    detail.innerHTML = `
+      <div class="ind-hero-block">
+        <h2>${t(item.name)}</h2>
+        <p class="ind-tagline">${t(item.tagline || item.challenge)}</p>
+      </div>
+      <div class="ind-bg">
+        <strong class="ind-label">${bgLabel}</strong>
+        <p>${t(item.background || item.challenge)}</p>
+      </div>
+      <div class="ind-helps-wrap">
+        <strong class="ind-label">${helpLabel}</strong>
+        <div class="ind-helps">${helps}</div>
+      </div>
+      <div class="ind-chain-wrap">
+        <strong class="ind-label">${chainLabel}</strong>
+        <ol class="ind-chain">${chain}</ol>
+      </div>
+      <div class="ind-layout">
+        <div class="ind-main">
+          <p class="ind-challenge">${t(item.challenge)}</p>
+          <div><strong class="ind-label">${reqsLabel}</strong><div class="ind-req-list">${reqs}</div></div>
+          <div class="ind-prepare"><strong>${prepLabel}</strong><ul>${prep}</ul></div>
+        </div>
+        <div class="ind-side">
+          <strong class="ind-label">${pkgLabel}</strong>
+          ${pkgs}
+          <p class="svc-more-note">${moreLabel}</p>
+        </div>
+      </div>`;
+    cta.href = `../Lumino%20联系.dc.html?industry=${encodeURIComponent(item.id)}`;
+    if (i18n) i18n.applyDataI18n(document);
+    if (window.LuminoEnhanceChrome) window.LuminoEnhanceChrome(detail);
+  }
+  pills.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-id]");
+    if (!btn) return;
+    current = btn.getAttribute("data-id");
+    const url = new URL(location.href);
+    url.searchParams.set("industry", current);
+    history.replaceState(null, "", url);
+    render();
+  });
+  render();
+});
+</script>
+</body>
+</html>

@@ -3,151 +3,300 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Lumino · 企业绿色合规服务</title>
-  <meta name="description" content="Lumino 以企业数据资产为基础，通过 AI 辅助、确定性计算和专家复核，持续交付可追溯的绿色合规结果。">
+  <title>Lumino · 出口与制造企业的碳与 ESG 合规服务</title>
+  <meta name="description" content="应对全球绿色要求，一个平台就够。从碳边境调节、产品碳足迹到 ESG 报告，资料只需准备一次。">
   <link rel="icon" href="/favicon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Fragment+Mono&family=Noto+Sans+SC:wght@400;500;600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="site/marketing.css">
+  <link rel="stylesheet" href="site/site-v3.css">
+  <script defer src="site/i18n.js"></script>
   <script defer src="site/site-shell.js"></script>
+  <script defer src="site/float-tools.js"></script>
 </head>
 <body>
 <lumino-header current="services"></lumino-header>
 <main id="main">
-  <section class="home-hero">
-    <div class="home-hero__line home-hero__line--one" aria-hidden="true"></div>
-    <div class="home-hero__line home-hero__line--two" aria-hidden="true"></div>
-    <div class="wrap home-hero__grid">
-      <div class="home-hero__copy">
-        <p class="eyebrow">LUMINO · ENTERPRISE COMPLIANCE SERVICES</p>
-        <h1><span>用 AI 与平台化服务</span><span><em>重新定义</em>合规核查</span></h1>
-        <p class="home-hero__lead">把企业、工厂、产品和证明材料沉淀为可复用的数据资产。每项服务独立确认；在锁定输入后可做确定性计算，并由专家独立复核，持续交付经得起追问的结果。</p>
-        <div class="hero-actions">
-          <a class="button button--primary" href="#services">查看可用服务 <span aria-hidden="true">↓</span></a>
-          <a class="button button--secondary" href="/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html">了解工作机制</a>
+
+  <section class="m-hero" aria-label="首屏">
+    <div class="m-hero__media" data-empty="true" id="hero-media">
+      <img src="site/assets/hero.jpg" alt="" width="2400" height="1400" decoding="async">
+    </div>
+    <div class="m-hero__mask" aria-hidden="true"></div>
+    <div class="m-hero__grid-tex" aria-hidden="true"></div>
+    <span class="m-hero__ph" id="hero-ph" data-i18n-zh="首屏背景图占位：港口集装箱 / 工厂 / 产线航拍（待替换无水印图）" data-i18n-en="Hero photo placeholder: port, factory or production aerial"></span>
+    <div class="m-hero__grid">
+      <div class="m-hero__copy">
+        <span class="m-hero__kicker" data-i18n-zh="面向出口与制造企业" data-i18n-en="For exporters and manufacturers"></span>
+        <h1 data-i18n-zh="应对全球绿色要求，一个平台就够" data-i18n-en="One platform for every green requirement"></h1>
+        <p class="m-hero__lead" data-i18n-zh="从碳边境调节、产品碳足迹到 ESG 报告，Lumino 帮你备齐数据、完成核算、通过复核。资料只需准备一次。" data-i18n-en="From CBAM and product carbon footprints to ESG reporting, Lumino gets your data ready, runs the numbers and sees them through review. You only prepare your records once."></p>
+        <div class="m-hero__actions">
+          <a class="button button--primary" href="Lumino%20联系.dc.html" data-i18n-zh="预约咨询" data-i18n-en="Book a consultation"></a>
+          <a class="button button--ghost-light" href="#services" data-i18n-zh="查看服务" data-i18n-en="Explore services"></a>
         </div>
       </div>
-
-      <aside class="proof-sheet" aria-label="可追溯事实档案示例">
-        <header class="proof-sheet__head">
-          <div><span>TRACEABLE FACT RECORD</span><strong>事实档案 · Rev 03</strong></div>
-          <span class="proof-seal">已确认</span>
-        </header>
-        <div class="proof-source">
-          <span>原始来源</span>
-          <strong>2026_Q3_上海一厂电费单.pdf</strong>
-          <small>EVD-HX-POWER-2026Q3 · 原文件不可变</small>
+      <aside class="m-panel" aria-label="平台全景">
+        <div class="m-panel__head">
+          <strong data-i18n-zh="Lumino 平台" data-i18n-en="The Lumino platform"></strong>
+          <span data-i18n-zh="6 项核心服务" data-i18n-en="6 core services"></span>
         </div>
-        <div class="proof-fact">
-          <div><span>提取事实</span><strong>购入电力</strong></div>
-          <div><span>期间</span><strong>2026 Q1–Q3</strong></div>
-          <div><span>数值</span><strong>12,480 <small>MWh</small></strong></div>
+        <div class="m-panel__channels">
+          <a href="services/cbam/"><span class="code">CBAM</span><strong data-i18n-zh="欧盟碳边境调节" data-i18n-en="EU CBAM"></strong></a>
+          <a href="services/pcf/"><span class="code">PCF</span><strong data-i18n-zh="产品碳足迹" data-i18n-en="Product carbon footprint"></strong></a>
+          <a href="services/esg/"><span class="code">ESG</span><strong data-i18n-zh="ESG 报告" data-i18n-en="ESG reporting"></strong></a>
+          <a href="services/ghg-inventory/"><span class="code">GHG</span><strong data-i18n-zh="碳盘查" data-i18n-en="GHG inventory"></strong></a>
+          <a href="services/carbon-assets/"><span class="code">EAC</span><strong data-i18n-zh="碳资产与绿证" data-i18n-en="Carbon assets & EACs"></strong></a>
+          <a href="services/export-compliance/"><span class="code">TRADE</span><strong data-i18n-zh="出口合规服务" data-i18n-en="Export compliance"></strong></a>
         </div>
-        <div class="proof-bindings">
-          <p>同一资产，被两个服务独立使用</p>
-          <div><span>CBAM</span><strong>设施间接排放</strong><em>事实已确认</em></div>
-          <div><span>PCF</span><strong>产品活动数据用途</strong><em>绑定待确认</em></div>
+        <div class="m-panel__foot">
+          <div class="m-panel__foot-top">
+            <strong data-i18n-zh="企业数据底座" data-i18n-en="Shared company data"></strong>
+            <span data-i18n-zh="资料只准备一次，各项服务按授权引用" data-i18n-en="Prepared once, used by each service with permission"></span>
+          </div>
+          <div class="m-chips">
+            <span data-i18n-zh="企业" data-i18n-en="Company"></span>
+            <span data-i18n-zh="工厂" data-i18n-en="Sites"></span>
+            <span data-i18n-zh="产品" data-i18n-en="Products"></span>
+            <span data-i18n-zh="能源与生产台账" data-i18n-en="Energy & output"></span>
+            <span data-i18n-zh="证明材料" data-i18n-en="Evidence"></span>
+          </div>
         </div>
-        <footer><span>来源</span><i></i><span>确认</span><i></i><span>计算</span><i></i><span>交付</span></footer>
       </aside>
     </div>
   </section>
 
-  <section class="advantage-section" id="method">
-    <div class="wrap">
-      <div class="advantage-intro">
-        <p class="eyebrow">WHY LUMINO</p>
-        <h2>真正的优势，<br>不是多一个系统。</h2>
-        <p>而是每完成一项工作，企业都留下可以继续使用的资产、判断与证据。</p>
-      </div>
-      <div class="advantage-ledger">
-        <article><span>01</span><h3>资料不再反复提交。</h3><p>同一份企业、设施、产品和证明材料只维护一次，在授权范围内跨服务引用。</p></article>
-        <article><span>02</span><h3>AI 不会越过责任边界。</h3><p>Agent 可以读文件、找缺口并提出待确认提议，但正式事实必须由授权人员确认。</p></article>
-        <article><span>03</span><h3>每个结果都能回到依据。</h3><p>输入、规则、计算、复核和交付版本连成完整链路；确定性计算在锁定输入后可复现，正式结果仍取决于项目约定与后端能力。</p></article>
-      </div>
-    </div>
-  </section>
-
-  <section class="service-stage" id="services">
-    <div class="wrap">
-      <header class="section-intro section-intro--wide">
-        <div><p class="eyebrow">SERVICES YOU CAN START</p><h2>先解决正在发生的交付。</h2></div>
-        <p>六项服务共用企业数据底座，但开放状态、工作流、Agent、计算方法与责任边界始终独立。</p>
-      </header>
-      <div class="live-services">
-        <article class="live-service live-service--active">
-          <div class="live-service__meta"><span>01 · CBAM</span><b>已开通</b></div>
-          <h3>欧盟碳边境合规</h3>
-          <p>从产品范围、工厂与供应链数据，到确定性计算、专家复核和进口商交付。</p>
-          <div class="live-service__path"><span>范围</span><i></i><span>取数</span><i></i><span>计算</span><i></i><span>交付</span></div>
-          <a href="/services/cbam/">查看 CBAM 服务 <span aria-hidden="true">→</span></a>
-        </article>
-        <article class="live-service live-service--pilot">
-          <div class="live-service__meta"><span>02 · PCF</span><b>试点</b></div>
-          <h3>产品碳足迹</h3>
-          <p>从功能单位、系统边界和生命周期清单，到活动数据、排放热点、复核与报告。</p>
-          <div class="live-service__path"><span>目标</span><i></i><span>清单</span><i></i><span>热点</span><i></i><span>报告</span></div>
-          <a href="/services/pcf/">查看 PCF 试点 <span aria-hidden="true">→</span></a>
-        </article>
-      </div>
-      <div class="next-services" aria-label="后续服务">
-        <header><span>接下来</span><p>了解正在准备的服务，不会进入虚假的空工作空间。</p></header>
-        <a href="/services/esg/"><span>03</span><strong>ESG 报告</strong><em>即将上线</em><b>→</b></a>
-        <a href="/services/ghg-inventory/"><span>04</span><strong>企业碳盘查</strong><em>规划中</em><b>→</b></a>
-        <a href="/services/carbon-assets/"><span>05</span><strong>碳资产与绿证</strong><em>规划中</em><b>→</b></a>
-        <a href="/services/export-compliance/"><span>06</span><strong>出口合规服务</strong><em>规划中</em><b>→</b></a>
+  <section class="m-standards" aria-label="依据的法规与标准">
+    <div class="m-standards__inner">
+      <span class="m-standards__label" data-i18n-zh="依据的法规与标准" data-i18n-en="Regulations and standards we work to"></span>
+      <div class="m-standards__list">
+        <span>EU CBAM 2023/956</span>
+        <span>ISO 14067</span>
+        <span>ISO 14064-1</span>
+        <span>GHG Protocol</span>
+        <span>GRI</span>
+        <span>ISSB / ESRS</span>
       </div>
     </div>
   </section>
 
-  <section class="asset-continuum">
-    <div class="wrap asset-continuum__grid">
-      <div class="asset-continuum__copy">
-        <p class="eyebrow">COMPOUNDING DATA VALUE</p>
-        <h2>每做一项服务，<br>下一项更快开始。</h2>
-        <p>原始资料只保存一份。服务分别记录用途、提取事实、确认、转换和计算血缘，既能复用，也不会混用结论。</p>
-        <a class="text-action" href="/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html">查看企业数据如何流转 →</a>
-      </div>
-      <div class="asset-orbit" aria-label="企业数据资产到多项服务的关系">
-        <div class="asset-core"><small>ENTERPRISE DATA ASSETS</small><strong>企业数据资产池</strong><span>企业 · 工厂 · 产品 · 台账 · 证据</span></div>
-        <div class="asset-uses">
-          <div><span>CBAM</span><small>独立确认</small></div>
-          <div><span>PCF</span><small>独立确认</small></div>
-          <div><span>ESG</span><small>受控引用</small></div>
-          <div><span>盘查</span><small>受控引用</small></div>
+  <section class="m-section" id="services">
+    <div class="wrap">
+      <header class="m-section__head">
+        <div class="m-section__copy">
+          <h2 data-i18n-zh="六项核心服务，覆盖买家、市场与监管要求" data-i18n-en="Six core services for buyer, market and regulator requirements"></h2>
+          <p data-i18n-zh="从最紧急的一项开始，也可组合推进。客户指定模板、供应链问卷、披露平台对接等，我们同样能交付。" data-i18n-en="Start with the most urgent service, or combine several. Customer templates, supply-chain surveys and disclosure portals—we deliver those too."></p>
         </div>
-        <p>复用资产，不复用结论。</p>
+        <a class="m-link" href="#services" data-i18n-zh="核心服务 →" data-i18n-en="Core services →"></a>
+      </header>
+      <div class="m-service-grid">
+        <a class="m-service-tile" href="services/cbam/">
+          <div class="m-service-tile__top"><span class="m-service-tile__code">CBAM</span></div>
+          <h3 data-i18n-zh="欧盟碳边境调节" data-i18n-en="EU CBAM"></h3>
+          <p data-i18n-zh="为出口欧盟的钢铁、铝、水泥、化肥等产品，准备进口商所需的嵌入排放数据。" data-i18n-en="The embedded emissions data your EU importers need for steel, aluminium, cement, fertilisers and more."></p>
+          <span class="m-link" data-i18n-zh="了解服务 →" data-i18n-en="Learn more →"></span>
+        </a>
+        <a class="m-service-tile" href="services/pcf/">
+          <div class="m-service-tile__top"><span class="m-service-tile__code">PCF</span></div>
+          <h3 data-i18n-zh="产品碳足迹" data-i18n-en="Product carbon footprint"></h3>
+          <p data-i18n-zh="按 ISO 14067 核算产品从原料到出厂的碳排放，回应品牌与采购方要求。" data-i18n-en="Cradle-to-gate footprints to ISO 14067, for brand and procurement requests."></p>
+          <span class="m-link" data-i18n-zh="了解服务 →" data-i18n-en="Learn more →"></span>
+        </a>
+        <a class="m-service-tile" href="services/esg/">
+          <div class="m-service-tile__top"><span class="m-service-tile__code">ESG</span></div>
+          <h3 data-i18n-zh="ESG 报告" data-i18n-en="ESG reporting"></h3>
+          <p data-i18n-zh="梳理重要议题、指标与证据，编制符合披露框架的 ESG 报告。" data-i18n-en="Material topics, metrics and evidence, assembled into a framework-aligned report."></p>
+          <span class="m-link" data-i18n-zh="了解服务 →" data-i18n-en="Learn more →"></span>
+        </a>
+        <a class="m-service-tile" href="services/ghg-inventory/">
+          <div class="m-service-tile__top"><span class="m-service-tile__code">GHG</span></div>
+          <h3 data-i18n-zh="碳盘查" data-i18n-en="GHG inventory"></h3>
+          <p data-i18n-zh="按 GHG Protocol 与 ISO 14064-1，盘查组织范围一、二、三排放。" data-i18n-en="Scope 1, 2 and 3 inventories to the GHG Protocol and ISO 14064-1."></p>
+          <span class="m-link" data-i18n-zh="了解服务 →" data-i18n-en="Learn more →"></span>
+        </a>
+        <a class="m-service-tile" href="services/carbon-assets/">
+          <div class="m-service-tile__top"><span class="m-service-tile__code">EAC</span></div>
+          <h3 data-i18n-zh="碳资产与绿证" data-i18n-en="Carbon assets & EACs"></h3>
+          <p data-i18n-zh="梳理绿电与绿证需求，支持采购、注销与环境属性声明。" data-i18n-en="Plan, source and retire renewable electricity certificates and carbon assets."></p>
+          <span class="m-link" data-i18n-zh="了解服务 →" data-i18n-en="Learn more →"></span>
+        </a>
+        <a class="m-service-tile" href="services/export-compliance/">
+          <div class="m-service-tile__top"><span class="m-service-tile__code">TRADE</span></div>
+          <h3 data-i18n-zh="出口合规服务" data-i18n-en="Export compliance"></h3>
+          <p data-i18n-zh="对照目标市场的法规、材料与交付要求，补齐出口所需文件与数据。" data-i18n-en="Market-by-market rules, documents and data requirements for exporters."></p>
+          <span class="m-link" data-i18n-zh="了解服务 →" data-i18n-en="Learn more →"></span>
+        </a>
       </div>
+      <p class="svc-more-note" data-i18n-zh="除上述六项外，供应链问卷、客户指定模板、行业披露平台对接等，我们按你的客户与市场要求一并交付。" data-i18n-en="Beyond these six, we also deliver supply-chain surveys, customer templates and industry disclosure portals—scoped to your buyers and markets."></p>
     </div>
   </section>
 
-  <section class="control-section">
-    <div class="wrap control-section__grid">
-      <div><p class="eyebrow">CONTROLLED INTELLIGENCE</p><h2>让自动化提速，<br>让责任始终可见。</h2></div>
-      <ol class="control-sequence">
-        <li><span>AGENT</span><div><h3>识别与提议</h3><p>读取材料、提取字段、发现缺口；提议始终与正式事实分开。</p></div></li>
-        <li><span>ENGINE</span><div><h3>确定性计算</h3><p>按锁定的输入、单位、因子、公式和规则包运行，可复现。</p></div></li>
-        <li><span>EXPERT</span><div><h3>专业复核</h3><p>判断范围与方法是否适用，处理异常、限制与专业结论。</p></div></li>
-        <li><span>OWNER</span><div><h3>企业确认</h3><p>授权人员确认业务事实、审批版本并对正式交付负责。</p></div></li>
-      </ol>
+  <section class="m-section m-section--platform" id="platform">
+    <div class="wrap m-platform">
+      <div class="m-platform__copy">
+        <div class="m-section__copy">
+          <h2 data-i18n-zh="新增一项要求，不必从头整理资料" data-i18n-en="A new requirement shouldn’t mean starting over"></h2>
+          <p data-i18n-zh="企业、工厂、产品和证明材料在平台上保存一次。下一项服务开始时，已有资料直接可用。" data-i18n-en="Your company, site and product records live on the platform. When the next requirement arrives, the groundwork is already done."></p>
+        </div>
+        <ol class="m-platform__points">
+          <li><span class="n">01</span><div><strong data-i18n-zh="资料准备一次" data-i18n-en="Prepare once"></strong><span data-i18n-zh="同一份资料可被多项服务引用，无需重复提交。" data-i18n-en="One set of records can be used by several services."></span></div></li>
+          <li><span class="n">02</span><div><strong data-i18n-zh="服务各自确认" data-i18n-en="Confirmed per service"></strong><span data-i18n-zh="每项服务单独确认用途与计算，结论互不影响。" data-i18n-en="Each service confirms its own use and calculation."></span></div></li>
+          <li><span class="n">03</span><div><strong data-i18n-zh="专家复核交付" data-i18n-en="Expert-reviewed"></strong><span data-i18n-zh="所有正式结果经专家复核后交付，可追溯到原始资料。" data-i18n-en="Every formal result is reviewed and traceable to source."></span></div></li>
+        </ol>
+        <a class="m-link" href="Lumino%20平台.dc.html" data-i18n-zh="了解平台如何工作 →" data-i18n-en="How the platform works →"></a>
+      </div>
+      <div class="m-shot" aria-hidden="true"><span data-i18n-zh="产品截图：客户门户工作台" data-i18n-en="Product shot: client portal"></span></div>
     </div>
   </section>
 
-  <section class="resource-section" id="resources">
+  <section class="m-section" id="industries">
     <div class="wrap">
-      <header class="section-intro"><div><p class="eyebrow">TOOLS & KNOWLEDGE</p><h2>先判断，再投入。</h2></div></header>
-      <div class="resource-index">
-        <a href="/calculator/"><span>01 · TOOL</span><strong>CBAM 成本试算</strong><p>用于初步商务判断，不代替正式核算。</p><b>打开工具 ↗</b></a>
-        <a href="/knowledge/"><span>02 · KNOWLEDGE</span><strong>行业知识库</strong><p>按 CBAM、PCF/LCA、ESG/盘查和行业专题组织。</p><b>进入知识库 →</b></a>
-        <a href="/Lumino%20%E8%81%94%E7%B3%BB.dc.html"><span>03 · DIAGNOSIS</span><strong>服务诊断</strong><p>按产品、市场要求和时间，判断最先需要完成的工作。</p><b>预约诊断 →</b></a>
+      <header class="m-section__head">
+        <div class="m-section__copy">
+          <h2 data-i18n-zh="按行业看清，下一步该做什么" data-i18n-en="See what to do next—by industry"></h2>
+          <p data-i18n-zh="每个行业的法规压力和客户要求不同。点进去看关键卡点、可达成的结果，以及建议优先推进的事项。" data-i18n-en="Regulatory pressure and customer asks differ by industry. Open one to see the blockers, outcomes you can reach, and what to advance first."></p>
+        </div>
+        <a class="m-link" href="industries/" data-i18n-zh="全部行业 →" data-i18n-en="All industries →"></a>
+      </header>
+      <div class="m-ind-grid">
+        <a class="m-ind-cell" href="industries/?industry=steel">
+          <div class="m-ind-cell__top"><h3 data-i18n-zh="钢铁" data-i18n-en="Steel"></h3><span>→</span></div>
+          <p data-i18n-zh="计量按车间、申报要按产品；前体声明与季度窗口是常见卡点。" data-i18n-en="Meters at shop level, filings at product level—precursors and quarterly windows are the usual blockers."></p>
+        </a>
+        <a class="m-ind-cell" href="industries/?industry=aluminium">
+          <div class="m-ind-cell__top"><h3 data-i18n-zh="铝及铝制品" data-i18n-en="Aluminium"></h3><span>→</span></div>
+          <p data-i18n-zh="电解电耗与绿电声明同时影响进口商申报和下游低碳采购门槛。" data-i18n-en="Smelting power and renewable claims shape both importer filings and low-carbon buyer thresholds."></p>
+        </a>
+        <a class="m-ind-cell" href="industries/?industry=textile">
+          <div class="m-ind-cell__top"><h3 data-i18n-zh="纺织服装" data-i18n-en="Textiles & apparel"></h3><span>→</span></div>
+          <p data-i18n-zh="品牌要面料 / 成衣级结果；染整与外发数据分散，边界一变结果就变。" data-i18n-en="Brands want fabric or garment results; dyeing and subcontract data scatter, and boundaries move the number."></p>
+        </a>
+        <a class="m-ind-cell" href="industries/?industry=packaging">
+          <div class="m-ind-cell__top"><h3 data-i18n-zh="包装" data-i18n-en="Packaging"></h3><span>→</span></div>
+          <p data-i18n-zh="材料声明、工厂排放与产品碳数据常被一起要；多厂区口径更难对齐。" data-i18n-en="Material claims, plant emissions and product carbon are often requested together—harder across sites."></p>
+        </a>
+        <a class="m-ind-cell" href="industries/?industry=chem">
+          <div class="m-ind-cell__top"><h3 data-i18n-zh="化工" data-i18n-en="Chemicals"></h3><span>→</span></div>
+          <p data-i18n-zh="工艺排放与燃烧排放缠在一起；路线不同，证明要求就不同。" data-i18n-en="Process and combustion emissions tangle; different routes mean different evidence."></p>
+        </a>
+        <a class="m-ind-cell" href="industries/?industry=elec">
+          <div class="m-ind-cell__top"><h3 data-i18n-zh="电子电器" data-i18n-en="Electronics"></h3><span>→</span></div>
+          <p data-i18n-zh="零部件碳足迹、厂区绿电占比与 ESG 审核表，往往同一季压下来。" data-i18n-en="Part footprints, site renewable share and ESG audits often land in the same season."></p>
+        </a>
       </div>
     </div>
   </section>
 
-  <section class="home-closing">
-    <div class="wrap"><p>从一项真实交付开始。</p><h2>资料会留下，能力会累积，<br>下一次不再从头开始。</h2><div><a href="/Lumino%20%E8%81%94%E7%B3%BB.dc.html">预约服务诊断 →</a><a href="/portal/">已有项目，进入企业门户 ↗</a></div></div>
+  <section class="m-section m-section--wash" id="cases">
+    <div class="wrap">
+      <header class="m-section__head">
+        <div class="m-section__copy">
+          <h2 data-i18n-zh="我们做过的项目" data-i18n-en="Recent work"></h2>
+          <p data-i18n-zh="客户名称已匿名，项目内容经客户同意后公开。" data-i18n-en="Client names are withheld. Details are shared with permission."></p>
+        </div>
+        <a class="m-link" href="cases/" data-i18n-zh="全部案例 →" data-i18n-en="All case studies →"></a>
+      </header>
+      <div class="m-card-grid">
+        <article class="m-card">
+          <div class="m-card__media"><span class="m-shot-label" data-i18n-zh="项目图片：热轧产线" data-i18n-en="Project photo: rolling mill"></span></div>
+          <div class="m-card__body">
+            <div class="m-card__meta"><span data-i18n-zh="钢铁 · 华东" data-i18n-en="Steel · East China"></span><span class="status-chip">CBAM</span></div>
+            <h3 data-i18n-zh="热轧钢材出口企业，[X] 周完成首次 CBAM 季度数据交付" data-i18n-en="A hot-rolled steel exporter delivers its first CBAM quarterly data in [X] weeks"></h3>
+            <p data-i18n-zh="欧盟进口商临时要求设施级排放数据，企业此前没有系统台账。" data-i18n-en="An EU importer asked for installation-level data at short notice, with no existing records in place."></p>
+            <div class="m-card__kpis">
+              <div><strong>[X]</strong><span data-i18n-zh="CN 编码" data-i18n-en="CN codes"></span></div>
+              <div><strong>[X]%</strong><span data-i18n-zh="实测数据占比" data-i18n-en="Measured data"></span></div>
+              <div><strong>[X] 周</strong><span data-i18n-zh="交付周期" data-i18n-en="Timeline"></span></div>
+            </div>
+          </div>
+        </article>
+        <article class="m-card">
+          <div class="m-card__media"><span class="m-shot-label" data-i18n-zh="项目图片：面料车间" data-i18n-en="Project photo: fabric mill"></span></div>
+          <div class="m-card__body">
+            <div class="m-card__meta"><span data-i18n-zh="纺织服装 · 华南" data-i18n-en="Textiles · South China"></span><span class="status-chip">PCF</span></div>
+            <h3 data-i18n-zh="面料供应商按品牌要求完成 [X] 款产品碳足迹" data-i18n-en="A fabric supplier completes [X] product footprints for a global brand"></h3>
+            <p data-i18n-zh="品牌客户要求供应商按 ISO 14067 提供碳足迹，并标出排放热点。" data-i18n-en="A brand required ISO 14067 footprints with hotspots identified."></p>
+            <div class="m-card__kpis">
+              <div><strong>[X]</strong><span data-i18n-zh="产品" data-i18n-en="Products"></span></div>
+              <div><strong>[X]</strong><span data-i18n-zh="上游供应商" data-i18n-en="Suppliers"></span></div>
+              <div><strong>[X] 周</strong><span data-i18n-zh="交付周期" data-i18n-en="Timeline"></span></div>
+            </div>
+          </div>
+        </article>
+        <article class="m-card">
+          <div class="m-card__media"><span class="m-shot-label" data-i18n-zh="项目图片：包装工厂" data-i18n-en="Project photo: packaging plant"></span></div>
+          <div class="m-card__body">
+            <div class="m-card__meta"><span data-i18n-zh="包装 · 华北" data-i18n-en="Packaging · North China"></span><span class="status-chip">GHG</span><span class="status-chip">ESG</span></div>
+            <h3 data-i18n-zh="包装企业完成首次碳盘查，并编制 ESG 报告" data-i18n-en="A packaging manufacturer completes its first GHG inventory and ESG report"></h3>
+            <p data-i18n-zh="客户要求提供范围一、二排放与 ESG 指标，企业此前没有盘查基础。" data-i18n-en="Customers asked for Scope 1 and 2 data and ESG metrics, with no prior inventory."></p>
+            <div class="m-card__kpis">
+              <div><strong>[X]</strong><span data-i18n-zh="厂区" data-i18n-en="Sites"></span></div>
+              <div><strong>[X]</strong><span data-i18n-zh="披露指标" data-i18n-en="Metrics"></span></div>
+              <div><strong>[X] 周</strong><span data-i18n-zh="交付周期" data-i18n-en="Timeline"></span></div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <p class="m-note" data-i18n-zh="原型说明：方括号内为待填写的真实项目数据，请勿使用示例数值上线。" data-i18n-en="Prototype note: bracketed values are placeholders for real project data."></p>
+    </div>
   </section>
+
+  <section class="m-section" id="tools-insights">
+    <div class="wrap m-dual">
+      <div class="m-dual__col" id="tools">
+        <div class="m-section__copy">
+          <h2 data-i18n-zh="免费测算，先心里有数" data-i18n-en="Free calculators for a quick estimate"></h2>
+          <p data-i18n-zh="几分钟得到初步结果，用于商务判断，不替代正式核算。" data-i18n-en="Get an indicative figure in minutes. Useful for planning, not a substitute for a formal calculation."></p>
+        </div>
+        <div class="m-row-list">
+          <a href="calculator/"><div class="grow"><strong data-i18n-zh="CBAM 成本估算" data-i18n-en="CBAM cost estimate"></strong><small data-i18n-zh="按产品与出口量估算证书成本" data-i18n-en="Certificate cost by product and volume"></small></div></a>
+          <a href="Lumino%20联系.dc.html?serviceId=pcf&source=tools"><div class="grow"><strong data-i18n-zh="产品碳足迹快速估算" data-i18n-en="Quick footprint estimate"></strong><small data-i18n-zh="按材料与工艺估算单位产品排放" data-i18n-en="Per-unit emissions from materials and process"></small></div></a>
+          <a href="Lumino%20联系.dc.html?serviceId=inventory&source=tools"><div class="grow"><strong data-i18n-zh="企业排放量估算" data-i18n-en="Company emissions estimate"></strong><small data-i18n-zh="按能源用量估算范围一、二排放" data-i18n-en="Scope 1 and 2 from energy use"></small></div></a>
+          <a href="Lumino%20联系.dc.html?serviceId=assets&source=tools"><div class="grow"><strong data-i18n-zh="绿电需求测算" data-i18n-en="Renewable power needs"></strong><small data-i18n-zh="按用电量与目标测算绿证需求" data-i18n-en="Certificates needed for your target"></small></div></a>
+        </div>
+      </div>
+      <div class="m-dual__col" id="insights">
+        <div class="m-section__copy">
+          <h2 data-i18n-zh="行业知识库" data-i18n-en="Insights"></h2>
+          <p data-i18n-zh="按行业整理最新法规、行业规则与常见问题。" data-i18n-en="The latest rules, industry guidance and common questions, organised by industry."></p>
+        </div>
+        <div class="m-row-list">
+          <a href="Lumino%20CBAM%20指南.dc.html"><span class="meta" data-i18n-zh="法规解读 · 钢铁" data-i18n-en="Regulations · Steel"></span><div class="grow"><strong data-i18n-zh="CBAM 正式期：进口商需要供应商提供哪些数据" data-i18n-en="CBAM definitive period: what importers need from suppliers"></strong></div></a>
+          <a href="knowledge/"><span class="meta" data-i18n-zh="方法指南 · 纺织服装" data-i18n-en="Methods · Textiles"></span><div class="grow"><strong data-i18n-zh="ISO 14067：产品碳足迹的系统边界怎么定" data-i18n-en="ISO 14067: setting the system boundary for a footprint"></strong></div></a>
+          <a href="knowledge/"><span class="meta" data-i18n-zh="法规解读 · 包装" data-i18n-en="Regulations · Packaging"></span><div class="grow"><strong data-i18n-zh="欧盟包装法规（PPWR）对出口企业意味着什么" data-i18n-en="What the EU PPWR means for exporters"></strong></div></a>
+          <a href="knowledge/"><span class="meta" data-i18n-zh="方法指南 · 铝" data-i18n-en="Methods · Aluminium"></span><div class="grow"><strong data-i18n-zh="哪些绿电与绿证可以用于碳足迹声明" data-i18n-en="Which renewable electricity claims count in a footprint"></strong></div></a>
+        </div>
+        <a class="m-link" href="knowledge/" data-i18n-zh="进入知识库 →" data-i18n-en="Browse insights →"></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="m-section m-section--dark">
+    <div class="wrap m-closing">
+      <div>
+        <h2 data-i18n-zh="告诉我们你的行业、产品和时间要求" data-i18n-en="Tell us your industry, products and deadlines"></h2>
+        <p data-i18n-zh="我们先判断适用哪些服务，再给出需要准备的资料清单。" data-i18n-en="We’ll tell you which services apply and what you’ll need to prepare."></p>
+      </div>
+      <div class="m-closing__actions">
+        <a class="button button--on-dark button--sm" href="Lumino%20联系.dc.html" data-i18n-zh="预约咨询" data-i18n-en="Book a consultation"></a>
+        <a class="button button--ghost-light button--sm" href="/apps/portal/" data-i18n-zh="客户门户 ↗" data-i18n-en="Client portal ↗"></a>
+      </div>
+    </div>
+  </section>
+
 </main>
 <lumino-footer></lumino-footer>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const media = document.getElementById("hero-media");
+  const img = media && media.querySelector("img");
+  const ph = document.getElementById("hero-ph");
+  if (img) {
+    const show = () => { media.dataset.empty = "false"; if (ph) ph.hidden = true; };
+    const hide = () => { media.dataset.empty = "true"; if (ph) ph.hidden = false; };
+    img.addEventListener("load", show);
+    img.addEventListener("error", hide);
+    if (img.complete && img.naturalWidth) show();
+    else hide();
+  }
+  if (window.LuminoI18n) window.LuminoI18n.applyDataI18n(document);
+});
+</script>
 </body>
 </html>

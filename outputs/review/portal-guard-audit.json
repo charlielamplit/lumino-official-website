@@ -1,0 +1,24 @@
+{
+  "importedTrial": {
+    "injectedElements": 0,
+    "executed": false,
+    "text": "已保留刚才的试算摘要2027 年 · CN 72081000 · 10,000 吨。登录后可核对并建立正式项目。"
+  },
+  "contributorDeepLink": {
+    "title": "活动数据 · Lumino",
+    "page": "pcf-data",
+    "service": "pcf",
+    "hasReviewLockAction": false
+  },
+  "ownerDemoPage": {
+    "title": "服务总览 · Lumino",
+    "page": "services-hub",
+    "service": null
+  },
+  "ownerGlobalDeepLink": {
+    "title": "数据资产 · Lumino",
+    "page": "shared-files",
+    "service": null
+  },
+  "pass": true
+}

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>工具 · Lumino</title>
+  <meta name="description" content="免费测算：先得到量级，再决定是否正式核算。">
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="../site/site-v3.css">
+  <script defer src="../site/i18n.js"></script>
+  <script defer src="../site/site-shell.js"></script>
+  <script defer src="../site/float-tools.js"></script>
+</head>
+<body>
+<lumino-header current="tools"></lumino-header>
+<main id="main">
+  <section class="m-page-hero">
+    <div class="wrap">
+      <p class="crumb"><a href="../Lumino%20官网.dc.html" data-i18n-zh="首页" data-i18n-en="Home"></a> / <span data-i18n-zh="工具" data-i18n-en="Tools"></span></p>
+      <h1 data-i18n-zh="免费测算工具" data-i18n-en="Free calculators"></h1>
+      <p data-i18n-zh="几分钟得到初步结果，用于商务判断，不替代正式核算。" data-i18n-en="Get an indicative figure in minutes. Useful for planning, not a substitute for a formal calculation."></p>
+    </div>
+  </section>
+  <section class="m-section">
+    <div class="wrap tools-layout">
+      <div class="m-row-list" id="tool-list" role="tablist">
+        <button type="button" role="tab" aria-selected="true" data-tool="cbam" class="tool-row is-on">
+          <div class="grow"><strong data-i18n-zh="CBAM 成本估算" data-i18n-en="CBAM cost estimate"></strong><small data-i18n-zh="按产品与出口量估算证书成本" data-i18n-en="Certificate cost by product and volume"></small></div>
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tool="pcf" class="tool-row">
+          <div class="grow"><strong data-i18n-zh="产品碳足迹快速估算" data-i18n-en="Quick footprint estimate"></strong><small data-i18n-zh="按材料与工艺估算单位产品排放" data-i18n-en="Per-unit emissions from materials and process"></small></div>
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tool="ghg" class="tool-row">
+          <div class="grow"><strong data-i18n-zh="企业排放量估算" data-i18n-en="Company emissions estimate"></strong><small data-i18n-zh="按能源用量估算范围一、二排放" data-i18n-en="Scope 1 and 2 from energy use"></small></div>
+        </button>
+        <button type="button" role="tab" aria-selected="false" data-tool="eac" class="tool-row">
+          <div class="grow"><strong data-i18n-zh="绿电需求测算" data-i18n-en="Renewable power needs"></strong><small data-i18n-zh="按用电量与目标测算绿证需求" data-i18n-en="Certificates needed for your target"></small></div>
+        </button>
+      </div>
+      <div class="tools-panel" id="tools-panel">
+        <!-- filled by script -->
+      </div>
+    </div>
+  </section>
+</main>
+<lumino-footer></lumino-footer>
+<script>
+(function () {
+  const prods = [
+    { k: "steel", zh: "钢铁制品", en: "Iron & steel", factor: 1.9 },
+    { k: "alu", zh: "铝制品", en: "Aluminium", factor: 8.5 },
+    { k: "cement", zh: "水泥", en: "Cement", factor: 0.8 },
+    { k: "fert", zh: "化肥", en: "Fertilisers", factor: 2.6 },
+  ];
+  const tools = {
+    cbam: {
+      zh: { title: "CBAM 成本估算", sub: "按产品类别与年出口量，估算嵌入排放与 CBAM 证书成本。", note: "原型示例参数，非官方默认值；未计免费配额与原产国碳价抵扣。", cta: "获取正式核算" },
+      en: { title: "CBAM cost estimate", sub: "Estimate embedded emissions and CBAM certificate costs from product type and annual volume.", note: "Prototype parameters, not official default values. Excludes free allocation and carbon price paid at origin.", cta: "Get a formal calculation" },
+      kind: "calc",
+      href: "../calculator/",
+      contact: "../Lumino%20联系.dc.html?serviceId=cbam&source=tools",
+    },
+    pcf: {
+      zh: { title: "产品碳足迹快速估算", sub: "按材料与主要工序粗看单位产品排放。正式核算需锁定边界与活动数据。", note: "测算结果仅供内部沟通，不替代 ISO 14067 报告。", cta: "预约咨询" },
+      en: { title: "Quick footprint estimate", sub: "Indicative per-unit emissions from materials and key steps. Formal work needs a locked boundary and activity data.", note: "For internal discussion only—not an ISO 14067 report.", cta: "Book a consultation" },
+      kind: "soon",
+      contact: "../Lumino%20联系.dc.html?serviceId=pcf&source=tools",
+    },
+    ghg: {
+      zh: { title: "企业排放量估算", sub: "按能源用量粗看范围一、二量级，便于立项前沟通。", note: "不含范围三；口径与因子需在正式盘查中确认。", cta: "预约咨询" },
+      en: { title: "Company emissions estimate", sub: "Indicative Scope 1–2 from energy use, for pre-project planning.", note: "Scope 3 excluded; definitions and factors are confirmed in a formal inventory.", cta: "Book a consultation" },
+      kind: "soon",
+      contact: "../Lumino%20联系.dc.html?serviceId=inventory&source=tools",
+    },
+    eac: {
+      zh: { title: "绿电需求测算", sub: "按用电量与目标占比，粗看绿证需求量级。", note: "不构成采购建议；声明规则取决于目标市场与客户要求。", cta: "预约咨询" },
+      en: { title: "Renewable power needs", sub: "Indicative certificates for a renewable share target.", note: "Not procurement advice; claim rules depend on market and customer requirements.", cta: "Book a consultation" },
+      kind: "soon",
+      contact: "../Lumino%20联系.dc.html?serviceId=assets&source=tools",
+    },
+  };
+  let tool = new URLSearchParams(location.search).get("tool") || "cbam";
+  let prod = "steel", tons = 1000, price = 80;
+
+  function lang() {
+    const i18n = window.LuminoI18n;
+    return i18n && i18n.detectLang() === "en" ? "en" : "zh";
+  }
+  function fmt(n) { return Math.round(n).toLocaleString("en-US"); }
+
+  function renderPanel() {
+    const L = lang();
+    const meta = tools[tool] || tools.cbam;
+    const copy = meta[L];
+    const panel = document.getElementById("tools-panel");
+    if (meta.kind === "calc") {
+      const pd = prods.find((p) => p.k === prod) || prods[0];
+      const emb = tons * pd.factor;
+      const cost = emb * price;
+      const opts = prods.map((p) => `<option value="${p.k}" ${p.k === prod ? "selected" : ""}>${p[L]}</option>`).join("");
+      panel.innerHTML = `
+        <div class="tools-panel__head"><strong>${copy.title}</strong><span>${copy.sub}</span></div>
+        <div class="tools-panel__fields">
+          <label class="m-field">${L === "en" ? "Product type" : "产品类别"}<select id="calc-prod">${opts}</select></label>
+          <label class="m-field">${L === "en" ? "Annual exports (tonnes)" : "年出口量（吨）"}<input id="calc-tons" type="number" min="0" value="${tons}"></label>
+          <label class="m-field">${L === "en" ? "Certificate price (€/tCO₂e)" : "证书价格（€/tCO₂e）"}<input id="calc-price" type="number" min="0" value="${price}"></label>
+        </div>
+        <div class="tools-panel__results">
+          <div><span>${L === "en" ? "Emissions intensity (example)" : "排放强度（示例）"}</span><strong class="mono">${pd.factor} tCO₂e/t</strong></div>
+          <div><span>${L === "en" ? "Embedded emissions" : "嵌入排放"}</span><strong class="mono">${fmt(emb)} tCO₂e</strong></div>
+          <div><span>${L === "en" ? "Estimated cost / year" : "估算成本 / 年"}</span><strong class="mono tools-panel__cost">€ ${fmt(cost)}</strong></div>
+        </div>
+        <div class="tools-panel__note">
+          <span>${copy.note}</span>
+          <a class="m-link" href="${meta.contact}">${copy.cta} →</a>
+        </div>`;
+      document.getElementById("calc-prod").onchange = (e) => { prod = e.target.value; renderPanel(); };
+      document.getElementById("calc-tons").onchange = (e) => { tons = Number(e.target.value) || 0; renderPanel(); };
+      document.getElementById("calc-price").onchange = (e) => { price = Number(e.target.value) || 0; renderPanel(); };
+    } else {
+      panel.innerHTML = `
+        <div class="tools-panel__head"><strong>${copy.title}</strong><span>${copy.sub}</span></div>
+        <div class="tools-panel__body">
+          <p style="font-size:var(--type-ui);line-height:var(--type-ui-lh);color:var(--ink-secondary)">${copy.note}</p>
+          <a class="button button--primary" href="${meta.contact}">${copy.cta}</a>
+        </div>`;
+    }
+  }
+
+  function renderList() {
+    document.querySelectorAll("#tool-list .tool-row").forEach((btn) => {
+      const on = btn.dataset.tool === tool;
+      btn.classList.toggle("is-on", on);
+      btn.setAttribute("aria-selected", String(on));
+    });
+  }
+
+  document.getElementById("tool-list").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-tool]");
+    if (!btn) return;
+    tool = btn.dataset.tool;
+    const url = new URL(location.href);
+    url.searchParams.set("tool", tool);
+    history.replaceState(null, "", url);
+    renderList();
+    renderPanel();
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    renderList();
+    renderPanel();
+    if (window.LuminoI18n) window.LuminoI18n.applyDataI18n(document);
+    if (window.LuminoEnhanceChrome) window.LuminoEnhanceChrome(document.querySelector(".tools-layout"));
+  });
+})();
+</script>
+</body>
+</html>

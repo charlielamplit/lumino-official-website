@@ -1,49 +1,182 @@
-(function(){
-  const nav=[
-    ['services','/Lumino%20%E5%AE%98%E7%BD%91.dc.html#services','服务'],
-    ['method','/Lumino%20%E5%AE%98%E7%BD%91.dc.html#method','我们如何工作'],
-    ['platform','/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html','平台'],
-    ['knowledge','/knowledge/','知识库'],
-    ['about','/Lumino%20%E5%85%B3%E4%BA%8E.dc.html','关于']
-  ];
-  const navLinks=current=>nav.map(([id,href,label])=>`<a href="${href}" ${id===current?'aria-current="page"':''}>${label}</a>`).join('');
+(function () {
+  "use strict";
+  const i18n = window.LuminoI18n || {
+    detectLang: () => "zh",
+    setLang: () => {},
+    applyDataI18n: () => {},
+  };
 
-  class LuminoHeader extends HTMLElement{
-    connectedCallback(){
-      const current=this.getAttribute('current')||'';
-      const links=navLinks(current);
-      this.innerHTML=`<a class="skip" href="#main">跳到主要内容</a>
+  const navDef = [
+    { id: "services", href: "/apps/site/Lumino%20官网.dc.html#services", zh: "我们的服务", en: "Services" },
+    { id: "platform", href: "/apps/site/Lumino%20平台.dc.html", zh: "我们的平台", en: "Platform" },
+    { id: "industries", href: "/apps/site/industries/", zh: "解决方案", en: "Industries" },
+    { id: "tools", href: "/apps/site/tools/", zh: "工具", en: "Tools" },
+    { id: "knowledge", href: "/apps/site/knowledge/", zh: "行业知识库", en: "Insights" },
+    { id: "about", href: "/apps/site/Lumino%20关于.dc.html", zh: "关于我们", en: "About" },
+    { id: "contact", href: "/apps/site/Lumino%20联系.dc.html", zh: "联系我们", en: "Contact" },
+  ];
+
+  function lang() { return i18n.detectLang(); }
+  function label(item) { return lang() === "en" ? item.en : item.zh; }
+  function withLang(href) {
+    if (!href || href.startsWith("#")) return href;
+    try {
+      const url = new URL(href, location.origin);
+      url.searchParams.set("lang", lang());
+      return url.pathname + url.search + url.hash;
+    } catch (_) { return href; }
+  }
+  function navLinks(current) {
+    return navDef.map((item) => {
+      const on = item.id === current || (current === "cases" && item.id === "industries");
+      return `<a href="${withLang(item.href)}" ${on ? 'aria-current="page"' : ""}>${label(item)}</a>`;
+    }).join("");
+  }
+
+  class LuminoHeader extends HTMLElement {
+    connectedCallback() {
+      const current = this.getAttribute("current") || "";
+      const links = navLinks(current);
+      const L = lang();
+      const consult = L === "en" ? "Book a consultation" : "预约咨询";
+      const portal = L === "en" ? "Client portal" : "客户门户";
+      const menu = L === "en" ? "Menu" : "菜单";
+      this.innerHTML = `<a class="skip" href="#main" style="position:absolute;left:-9999px">${L === "en" ? "Skip to content" : "跳到主要内容"}</a>
         <header class="site-header">
-          <div class="site-header__accent" aria-hidden="true"></div>
           <div class="site-header__row">
-            <a class="brand-lockup" href="/" aria-label="Lumino 首页">
+            <a class="brand-lockup" href="${withLang("/apps/site/Lumino%20官网.dc.html")}" aria-label="Lumino">
               <span class="logo">LUMINO</span>
-              <span class="brand-discipline">COMPLIANCE<br>SERVICES</span>
             </a>
-            <nav class="site-nav" aria-label="主导航">${links}</nav>
+            <nav class="site-nav" aria-label="${L === "en" ? "Primary" : "主导航"}">${links}</nav>
             <div class="header-actions">
-              <a class="portal-entry" href="/portal/"><span>企业门户</span><b aria-hidden="true">↗</b></a>
-              <a class="header-cta" href="/Lumino%20%E8%81%94%E7%B3%BB.dc.html">预约诊断</a>
-              <button class="menu-button" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="site-mobile-nav"><span></span><span></span></button>
+              <div class="lang-switch" aria-label="Language">
+                <a href="#" data-lang="zh" aria-current="${L === "zh"}">中</a>
+                <a href="#" data-lang="en" aria-current="${L === "en"}">EN</a>
+              </div>
+              <a class="portal-entry" href="/apps/portal/"><span>${portal}</span><b aria-hidden="true">↗</b></a>
+              <a class="header-cta" href="${withLang("/apps/site/Lumino%20联系.dc.html")}">${consult}</a>
+              <button class="menu-button" type="button" data-label="${menu}" aria-label="${menu}" aria-expanded="false" aria-controls="site-mobile-nav"></button>
             </div>
           </div>
-          <div class="mobile-nav-shell" data-open="false"><div><nav id="site-mobile-nav" class="mobile-nav" aria-label="移动导航">${links}<a href="/portal/">企业门户 ↗</a><a href="/Lumino%20%E8%81%94%E7%B3%BB.dc.html">预约诊断</a></nav></div></div>
+          <div class="mobile-nav-shell" data-open="false">
+            <nav id="site-mobile-nav" class="mobile-nav" aria-label="Mobile">${links}<a href="/apps/portal/">${portal} ↗</a><a href="${withLang("/apps/site/Lumino%20联系.dc.html")}">${consult}</a></nav>
+          </div>
         </header>`;
-      const button=this.querySelector('.menu-button');
-      const shell=this.querySelector('.mobile-nav-shell');
-      const close=()=>{button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','打开导航菜单');shell.dataset.open='false'};
-      button.addEventListener('click',()=>{const open=button.getAttribute('aria-expanded')!=='true';button.setAttribute('aria-expanded',String(open));button.setAttribute('aria-label',open?'关闭导航菜单':'打开导航菜单');shell.dataset.open=String(open)});
-      shell.addEventListener('click',event=>{if(event.target.closest('a'))close()});
-      document.addEventListener('keydown',event=>{if(event.key==='Escape')close()});
+
+      this.querySelectorAll("[data-lang]").forEach((el) => {
+        el.addEventListener("click", (event) => {
+          event.preventDefault();
+          i18n.setLang(el.getAttribute("data-lang"));
+        });
+      });
+      const button = this.querySelector(".menu-button");
+      const shell = this.querySelector(".mobile-nav-shell");
+      const close = () => { button.setAttribute("aria-expanded", "false"); shell.dataset.open = "false"; };
+      button.addEventListener("click", () => {
+        const open = button.getAttribute("aria-expanded") !== "true";
+        button.setAttribute("aria-expanded", String(open));
+        shell.dataset.open = String(open);
+      });
+      shell.addEventListener("click", (event) => { if (event.target.closest("a")) close(); });
+      document.addEventListener("keydown", (event) => { if (event.key === "Escape") close(); });
     }
   }
 
-  class LuminoFooter extends HTMLElement{
-    connectedCallback(){
-      this.innerHTML=`<footer class="site-footer"><div class="site-footer__inner"><div class="footer-brand"><a class="logo" href="/">LUMINO</a><p>企业绿色合规服务<br>AI 辅助 · 确定性计算 · 专家复核</p></div><nav class="footer-links" aria-label="页脚导航">${nav.map(([,href,label])=>`<a href="${href}">${label}</a>`).join('')}<a href="/Lumino%20%E8%81%94%E7%B3%BB.dc.html">联系我们</a><a href="/portal/">企业门户 ↗</a></nav><div class="copyright"><span>© 2026 Lumino</span><span>演示站中的企业、项目和数据均为原型示例。</span></div></div></footer>`;
+  class LuminoFooter extends HTMLElement {
+    connectedCallback() {
+      const L = lang();
+      const svcLinks = [
+        { zh: "欧盟碳边境调节", en: "EU CBAM", href: "/apps/site/services/cbam/" },
+        { zh: "产品碳足迹", en: "Product carbon footprint", href: "/apps/site/services/pcf/" },
+        { zh: "ESG 报告", en: "ESG reporting", href: "/apps/site/services/esg/" },
+        { zh: "碳盘查", en: "GHG inventory", href: "/apps/site/services/ghg-inventory/" },
+        { zh: "碳资产与绿证", en: "Carbon assets & EACs", href: "/apps/site/services/carbon-assets/" },
+        { zh: "出口合规服务", en: "Export compliance", href: "/apps/site/services/export-compliance/" },
+      ];
+      const resource = [
+        { zh: "我们的平台", en: "Platform", href: "/apps/site/Lumino%20平台.dc.html" },
+        { zh: "解决方案", en: "Industries", href: "/apps/site/industries/" },
+        { zh: "服务案例", en: "Case studies", href: "/apps/site/cases/" },
+        { zh: "工具", en: "Tools", href: "/apps/site/tools/" },
+        { zh: "行业知识库", en: "Insights", href: "/apps/site/knowledge/" },
+      ];
+      const company = [
+        { zh: "关于我们", en: "About", href: "/apps/site/Lumino%20关于.dc.html" },
+        { zh: "联系我们", en: "Contact", href: "/apps/site/Lumino%20联系.dc.html" },
+        { zh: "客户门户 ↗", en: "Client portal ↗", href: "/apps/portal/" },
+      ];
+      const col = (titleZh, titleEn, items) =>
+        `<div class="footer-col"><strong>${L === "en" ? titleEn : titleZh}</strong>${items.map((i) => `<a href="${withLang(i.href)}">${L === "en" ? i.en : i.zh}</a>`).join("")}</div>`;
+
+      this.innerHTML = `<footer class="site-footer"><div class="site-footer__inner">
+        <div class="footer-brand">
+          <a class="logo" href="${withLang("/apps/site/Lumino%20官网.dc.html")}">LUMINO</a>
+          <p data-i18n-zh="出口与制造企业的碳与 ESG 合规服务" data-i18n-en="Carbon and ESG compliance for exporters and manufacturers"></p>
+        </div>
+        <nav class="footer-links" aria-label="${L === "en" ? "Footer" : "页脚导航"}">
+          ${col("服务", "Services", svcLinks)}
+          ${col("资源", "Resources", resource)}
+          ${col("公司", "Company", company)}
+        </nav>
+        <div class="copyright">
+          <span>© 2026 Lumino</span>
+          <span data-i18n-zh="原型 · 页面中的企业与项目数据为示例" data-i18n-en="Prototype · company and project data are examples"></span>
+        </div>
+      </div></footer>`;
+      i18n.applyDataI18n(this);
     }
   }
 
-  customElements.define('lumino-header',LuminoHeader);
-  customElements.define('lumino-footer',LuminoFooter);
+  customElements.define("lumino-header", LuminoHeader);
+  customElements.define("lumino-footer", LuminoFooter);
+
+  let revealIo = null;
+  function enhanceChrome(root) {
+    const scope = root || document;
+    const header = document.querySelector(".site-header");
+    if (header && !header.dataset.scrollBound) {
+      header.dataset.scrollBound = "1";
+      const onScroll = () => header.classList.toggle("is-scrolled", window.scrollY > 8);
+      onScroll();
+      window.addEventListener("scroll", onScroll, { passive: true });
+    }
+    const selector = [
+      ".m-section__head", ".m-service-tile", ".m-ind-cell", ".m-card",
+      ".m-dual > *", ".m-platform > *", ".ind-hero-block", ".ind-bg",
+      ".ind-helps-wrap", ".ind-helps", ".ind-chain-wrap", ".ind-chain",
+      ".ind-layout", ".ind-help", ".ind-pkg", ".pf-map", ".pf-shots",
+      ".about-team", ".about-mission", ".about-principles",
+      ".tools-layout", ".contact-layout", ".svc-layout", ".svc-detail > *",
+      ".ins-grid", ".ins-card", ".case-stack > *", ".case-row"
+    ].join(", ");
+    const targets = [...scope.querySelectorAll(selector)].filter((el) => !el.closest(".m-hero"));
+    targets.forEach((el, i) => {
+      if (el.classList.contains("m-reveal") && el.classList.contains("is-in")) return;
+      el.classList.add("m-reveal");
+      el.style.setProperty("--d", `${Math.min(i % 6, 5) * 60}ms`);
+    });
+    if (!("IntersectionObserver" in window)) {
+      targets.forEach((el) => el.classList.add("is-in"));
+      return;
+    }
+    if (!revealIo) {
+      revealIo = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("is-in");
+            revealIo.unobserve(e.target);
+          }
+        });
+      }, { rootMargin: "0px 0px -6% 0px", threshold: 0.08 });
+    }
+    targets.forEach((el) => {
+      if (!el.classList.contains("is-in")) revealIo.observe(el);
+    });
+  }
+  window.LuminoEnhanceChrome = enhanceChrome;
+
+  document.addEventListener("DOMContentLoaded", () => {
+    i18n.applyDataI18n(document);
+    enhanceChrome();
+  });
 })();

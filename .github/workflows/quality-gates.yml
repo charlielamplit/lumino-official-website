@@ -1,0 +1,76 @@
+name: Quality Gates
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  pr-body:
+    name: PR body contract
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check required PR sections
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          failed=false
+          for section in "变更说明" "关联" "影响范围" "测试结果"; do
+            if printf '%s' "$PR_BODY" | grep -q "## $section"; then
+              echo "OK: ## $section"
+            else
+              echo "Missing: ## $section"
+              failed=true
+            fi
+          done
+          test "$failed" = false
+
+  repository-quality:
+    name: Roadmap, syntax and tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current revision
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate Roadmap manifest
+        run: node scripts/github-roadmap-sync.mjs --check
+
+      - name: Check JavaScript syntax
+        run: |
+          search_paths=()
+          for directory in api apps calculator packages portal scripts services site tests; do
+            if [ -d "$directory" ]; then
+              search_paths+=("$directory")
+            fi
+          done
+          find "${search_paths[@]}" -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' \) -print0 | xargs -0 -n1 node --check
+
+      - name: Run deterministic tests
+        run: |
+          shopt -s nullglob
+          test_files=(tests/*.test.* packages/agent/tests/*.test.*)
+          if [ "${#test_files[@]}" -eq 0 ]; then
+            echo "No deterministic tests found"
+            exit 1
+          fi
+          node --test "${test_files[@]}"
+
+      - name: Check whitespace errors
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff --check "${{ github.event.pull_request.base.sha }}...HEAD"
+          else
+            git show --check --format=fuller HEAD
+          fi

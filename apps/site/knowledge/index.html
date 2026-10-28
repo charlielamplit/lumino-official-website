@@ -1,4 +1,102 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lumino 行业知识库</title><meta name="description" content="按任务与行业组织的绿色合规知识入口。"><link rel="icon" href="/favicon.svg"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Fragment+Mono&family=Noto+Sans+SC:wght@400;500;600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../site/marketing.css"><script defer src="../site/site-shell.js"></script></head>
-<body><lumino-header current="knowledge"></lumino-header><main id="main"><section class="service-hero"><div class="wrap service-hero__grid"><div><p class="eyebrow">KNOWLEDGE BASE</p><h1 class="display">按任务寻找规则，<br>不从术语开始。</h1><p class="lede" style="margin-top:22px">将法规、核算方法与行业实践组织到具体任务中。只有已审查内容提供阅读入口；试点、即将上线与规划中专题会明确标记。</p><div class="hero-actions" style="margin-top:28px"><a class="button button--primary" href="/Lumino%20CBAM%20%E6%8C%87%E5%8D%97.dc.html">阅读已开通指南 →</a></div></div><aside class="service-meta"><div class="meta-row"><span>已开通</span><strong>CBAM 与欧盟贸易</strong></div><div class="meta-row"><span>试点／即将上线</span><strong>PCF/LCA、ESG</strong></div><div class="meta-row"><span>审查方式</span><strong>来源、适用期与边界</strong></div></aside></div></section>
-<section class="section"><div class="wrap"><div class="topic-index"><article><span class="status">已开通</span><h2>CBAM 与欧盟贸易</h2><p>范围判断、CN Code、设施与产品数据、默认值和实测值、进口商沟通与交付。</p><footer><a class="link" href="/Lumino%20CBAM%20%E6%8C%87%E5%8D%97.dc.html">进入 CBAM 指南 →</a></footer></article><article><span class="status status--pilot">试点内容</span><h2>PCF 与 LCA</h2><p>功能单位、系统边界、生命周期清单、排放因子、数据质量、不确定性与报告版本。</p><footer>随 PCF 试点逐步开放</footer></article><article><span class="status status--soon">即将上线</span><h2>ESG 报告</h2><p>议题与指标、证据索引与披露版本；企业碳盘查仍为规划中，不提前开放虚构文章。</p><footer>当前不提供虚构文章入口</footer></article><article><span class="status status--planned">规划中</span><h2>行业专题</h2><p>按钢铁、铝、机械、纺织和包装等行业组织产品、工艺、供应链与市场要求。</p><footer>内容审查后发布</footer></article></div></div></section></main><lumino-footer></lumino-footer></body></html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>行业知识库 · Lumino</title>
+  <meta name="description" content="按行业整理最新法规、行业规则与常见问题。">
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="../site/site-v3.css">
+  <script defer src="../site/i18n.js"></script>
+  <script defer src="../site/site-shell.js"></script>
+  <script defer src="../site/float-tools.js"></script>
+</head>
+<body>
+<lumino-header current="knowledge"></lumino-header>
+<main id="main">
+  <section class="m-page-hero">
+    <div class="wrap">
+      <p class="crumb"><a href="../Lumino%20官网.dc.html" data-i18n-zh="首页" data-i18n-en="Home"></a> / <span data-i18n-zh="行业知识库" data-i18n-en="Insights"></span></p>
+      <h1 data-i18n-zh="按行业了解最新要求" data-i18n-en="The latest requirements, by industry"></h1>
+      <p data-i18n-zh="按行业整理最新法规、行业规则与常见问题。" data-i18n-en="The latest rules, industry guidance and common questions, organised by industry."></p>
+    </div>
+  </section>
+  <section class="m-section">
+    <div class="wrap">
+      <div class="kb-filters" id="kb-filters">
+        <div class="kb-filter-row">
+          <span class="kb-filter-label" data-i18n-zh="行业" data-i18n-en="Industry"></span>
+          <div class="m-filters" id="kb-ind">
+            <button type="button" data-industry="all" aria-pressed="true">全部</button>
+            <button type="button" data-industry="steel">钢铁</button>
+            <button type="button" data-industry="aluminium">铝</button>
+            <button type="button" data-industry="textile">纺织服装</button>
+            <button type="button" data-industry="packaging">包装</button>
+            <button type="button" data-industry="chem">化工</button>
+            <button type="button" data-industry="elec">电子电器</button>
+          </div>
+        </div>
+        <div class="kb-filter-row">
+          <span class="kb-filter-label" data-i18n-zh="类型" data-i18n-en="Type"></span>
+          <div class="m-filters" id="kb-type">
+            <button type="button" data-type="all" aria-pressed="true">全部</button>
+            <button type="button" data-type="reg">法规解读</button>
+            <button type="button" data-type="method">方法指南</button>
+            <button type="button" data-type="qa">实务问答</button>
+          </div>
+        </div>
+      </div>
+      <div class="ins-grid" id="kb-list"></div>
+    </div>
+  </section>
+</main>
+<lumino-footer></lumino-footer>
+<script>
+(function () {
+  const items = [
+    { industry: "steel", type: "reg", href: "/apps/site/Lumino%20CBAM%20指南.dc.html",
+      zh: { type: "法规解读", ind: "钢铁", title: "CBAM 正式期：进口商需要供应商提供哪些数据", lead: "申报主体、数据字段与核查要求的变化。" },
+      en: { type: "Regulations", ind: "Steel", title: "CBAM definitive period: what importers need from suppliers", lead: "Who declares, what data is needed, and what verification changes." } },
+    { industry: "textile", type: "method", href: "#",
+      zh: { type: "方法指南", ind: "纺织服装", title: "ISO 14067：产品碳足迹的系统边界怎么定", lead: "从摇篮到大门与全生命周期的选择。" },
+      en: { type: "Methods", ind: "Textiles", title: "ISO 14067: setting the system boundary for a footprint", lead: "Choosing between cradle-to-gate and full life cycle." } },
+    { industry: "packaging", type: "reg", href: "#",
+      zh: { type: "法规解读", ind: "包装", title: "欧盟包装法规（PPWR）对出口企业意味着什么", lead: "适用范围、时间表与材料数据要求。" },
+      en: { type: "Regulations", ind: "Packaging", title: "What the EU PPWR means for exporters", lead: "Scope, timeline and material data requirements." } },
+    { industry: "aluminium", type: "method", href: "#",
+      zh: { type: "方法指南", ind: "铝", title: "哪些绿电与绿证可以用于碳足迹声明", lead: "电力排放因子的选择规则。" },
+      en: { type: "Methods", ind: "Aluminium", title: "Which renewable electricity claims count in a footprint", lead: "Rules for choosing electricity emission factors." } },
+    { industry: "elec", type: "qa", href: "#",
+      zh: { type: "实务问答", ind: "电子电器", title: "客户发来范围三问卷，供应商该如何回应", lead: "常见问题与数据准备顺序。" },
+      en: { type: "Q&A", ind: "Electronics", title: "A customer sent a Scope 3 questionnaire. Now what?", lead: "Common questions and what to prepare first." } },
+    { industry: "chem", type: "reg", href: "#",
+      zh: { type: "法规解读", ind: "化工", title: "化肥与氢产品的 CBAM 核算要点", lead: "前体材料与工艺排放的处理。" },
+      en: { type: "Regulations", ind: "Chemicals", title: "CBAM essentials for fertilisers and hydrogen", lead: "How precursors and process emissions are handled." } },
+  ];
+  let industry = new URLSearchParams(location.search).get("industry") || "all";
+  let type = "all";
+  function render() {
+    const i18n = window.LuminoI18n;
+    const L = i18n && i18n.detectLang() === "en" ? "en" : "zh";
+    const filtered = items.filter((it) => (industry === "all" || it.industry === industry) && (type === "all" || it.type === type));
+    const host = document.getElementById("kb-list");
+    host.innerHTML = filtered.map((it) => {
+      const c = it[L];
+      return `<a class="ins-card" href="${it.href}"><span class="meta">${c.type} · ${c.ind}</span><h3>${c.title}</h3><p>${c.lead}</p></a>`;
+    }).join("") || `<p style="color:var(--muted)">${L === "en" ? "Nothing here yet." : "该筛选下暂无内容。"}</p>`;
+    document.querySelectorAll("#kb-ind [data-industry]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.industry === industry)));
+    document.querySelectorAll("#kb-type [data-type]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.type === type)));
+  }
+  document.getElementById("kb-filters").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    if (b.dataset.industry) industry = b.dataset.industry;
+    if (b.dataset.type) type = b.dataset.type;
+    render();
+    if (window.LuminoEnhanceChrome) window.LuminoEnhanceChrome(document.getElementById("kb-list"));
+  });
+  document.addEventListener("DOMContentLoaded", () => { render(); if (window.LuminoI18n) window.LuminoI18n.applyDataI18n(document); if (window.LuminoEnhanceChrome) window.LuminoEnhanceChrome(document.getElementById("kb-list")); });
+})();
+</script>
+</body>
+</html>

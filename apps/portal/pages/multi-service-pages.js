@@ -24,67 +24,64 @@
 
   function serviceProgressLine(service) {
     if (service.id === "cbam") {
-      if (state.role === "customer_contrib") return { title: "2 项材料待补充", detail: "按你的分工筛选" };
-      if (state.role === "customer_approver") return { title: "2 项决定待审批", detail: "按你的授权筛选" };
-      return { title: "Q3 数据采集 · 68%", detail: "2026 年度进行中" };
+      if (state.role === "customer_contrib") return { title: "2 项材料待补充", detail: "按你的分工筛选", percent: 40 };
+      if (state.role === "customer_approver") return { title: "2 项决定待审批", detail: "按你的授权筛选", percent: 55 };
+      return { title: "Q3 数据采集", detail: "2026 年度进行中", percent: 68 };
     }
     if (service.id === "pcf") {
-      return { title: workflowStateLabel(workflowEngine.get("PCF-2026-001")?.status || "SCOPING"), detail: "热轧非合金钢卷 · 试点" };
+      const status = workflowEngine.get("PCF-2026-001")?.status || "SCOPING";
+      const idx = Math.max(0, pcfSteps.indexOf(status));
+      return {
+        title: workflowStateLabel(status),
+        detail: "热轧非合金钢卷",
+        percent: Math.round(((idx + 1) / pcfSteps.length) * 100),
+        pilot: true,
+      };
     }
     return null;
   }
 
   function renderServicesHub() {
-    const firstVisit = typeof hasSeenCustomerHub === "function" ? !hasSeenCustomerHub() : true;
     if (typeof markCustomerHubSeen === "function") markCustomerHubSeen();
 
     const services = Object.values(serviceRegistry);
     const open = services.filter((service) => service.roles.includes(state.role) && service.entryPage);
     const catalog = services.filter((service) => !(service.roles.includes(state.role) && service.entryPage));
 
-    const openRows = open.map((service, index) => {
+    const openTiles = open.map((service) => {
       const progress = serviceProgressLine(service);
-      return `<article class="service-row service-row--${service.status}">
-        <span class="service-row__index">${String(index + 1).padStart(2, "0")}</span>
-        <div class="service-row__identity">
-          <div class="service-row__title">
-            <span class="service-row__code">${safe(service.code)}</span>
-            <h2>${safe(service.name)}</h2>
-            ${statusChip(service.statusLabel, service.status === "active" ? "ok" : service.status === "pilot" ? "warn" : "")}
-          </div>
-          ${progress ? `<p class="service-row__progress"><strong>${safe(progress.title)}</strong><span>· ${safe(progress.detail)}</span></p>` : `<p class="service-row__progress">${safe(service.description)}</p>`}
+      const page = serviceEntryPage(service.id);
+      const chip = service.status === "pilot"
+        ? statusChip(service.statusLabel || "试点", "warn")
+        : statusChip(service.statusLabel || "已开通", "ok");
+      return `<article class="service-tile" data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}" role="button" tabindex="0">
+        <div class="service-tile__top"><span class="service-tile__code">${safe(service.code)}</span>${chip}</div>
+        <h2 class="service-tile__title">${safe(service.name)}</h2>
+        <div>
+          <div class="progress-bar" aria-hidden="true"><i style="width:${progress?.percent || 0}%"></i></div>
+          <span class="workbench-service-row__detail">${progress ? `${safe(progress.title)}${progress.percent && !progress.pilot ? ` ${progress.percent}%` : ""} · ${safe(progress.detail)}` : safe(service.description)}</span>
         </div>
-        <div class="service-row__action">${servicePrimaryAction(service, { compact: true })}</div>
+        <button class="button button--primary" type="button" data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}">进入服务</button>
       </article>`;
     }).join("");
 
-    const catalogRows = catalog.map((service) => `<li class="service-catalog__item">
-      <span class="service-catalog__code">${safe(service.code)}</span>
+    const catalogRows = catalog.map((service) => `<li>
+      <span class="mono">${safe(service.code)}</span>
       <div><strong>${safe(service.name)}</strong><small>${safe(service.description)}</small></div>
-      ${statusChip(service.statusLabel || "可咨询", "")}
-      ${servicePrimaryAction(service, { compact: true })}
+      <span class="service-catalog-list__status">${safe(service.statusLabel || "规划中")}</span>
+      <button class="text-button" type="button" data-drawer="service-consultation" data-service-id="${safe(service.id)}">预约咨询</button>
     </li>`).join("");
-
-    const lead = firstVisit
-      ? "首次进入：先看本企业开通了哪些服务频道。日常续办请用「工作台」；要处理的事项清单在「我的任务」。"
-      : "这里是服务目录：开通、切换或预约咨询。日常续办请回「工作台」，不要把这里当待办列表。";
 
     $("#main").innerHTML = `
       <div class="service-hub-shell">
-        <header class="page-head page-head--compact">
-          <div><p>SERVICE CATALOG</p><h1>服务目录</h1></div>
-          ${statusChip(`${open.length} 项已开通 · ${catalog.length} 项可咨询`)}
-        </header>
-        <p class="page-lead page-lead--aligned">${lead}</p>
-        <section class="service-hub" aria-label="企业服务">
-          <div class="service-hub__group">
-            <header class="service-hub__label"><span>已开通频道</span><small>进入后在频道内工作</small></header>
-            <div class="service-row-list" aria-label="已开通服务">${openRows || `<p class="service-hub__empty">当前角色还没有可进入的服务。</p>`}</div>
-          </div>
-          <div class="service-hub__group service-hub__group--catalog">
-            <header class="service-hub__label"><span>尚未开通</span><small>只接受咨询，不生成空工作区</small></header>
-            <ul class="service-catalog" aria-label="可咨询服务">${catalogRows}</ul>
-          </div>
+        ${pageHeader(`${open.length} 项已开通 · ${catalog.length} 项可咨询`, "服务目录")}
+        <section class="service-section" aria-label="已开通服务">
+          <div class="service-section__head"><h2>已开通</h2></div>
+          <div class="service-hub-grid">${openTiles || `<p class="workbench-quiet">当前角色还没有可进入的服务。</p>`}</div>
+        </section>
+        <section class="service-section" aria-label="尚未开通">
+          <div class="service-section__head"><h2>尚未开通</h2><small>可预约咨询，不生成空工作区</small></div>
+          <div class="ds-card"><ul class="service-catalog-list">${catalogRows}</ul></div>
         </section>
       </div>`;
   }
@@ -99,186 +96,229 @@
     const nextTasks = taskView.items.slice(1, 3);
     const attentionAssets = (assetView.items || []).slice(0, 2);
     const orgName = state.organization?.name || "当前企业";
+    const today = new Date();
+    const dateLabel = `${today.getMonth() + 1} 月 ${today.getDate()} 日`;
 
     const focusBlock = focus
-      ? `<section class="workbench-focus" aria-labelledby="workbenchFocusTitle">
-          <div class="workbench-focus__copy">
-            <span class="workbench-kicker">现在先做这一件</span>
+      ? `<section class="focus-card" aria-labelledby="workbenchFocusTitle">
+          <div class="focus-card__copy">
+            <div class="focus-card__label">
+              <span>优先处理</span>
+              <span class="status-chip ${focus.due.tone === "danger" ? "danger" : focus.due.tone === "warn" ? "warn" : ""}">${safe(focus.due.label)}</span>
+            </div>
             <h2 id="workbenchFocusTitle">${safe(focus.title)}</h2>
             <p>${safe(focus.object)} · ${safe(focus.nextStep)}</p>
-            <div class="workbench-focus__meta">
-              <span class="service-tag ${focus.serviceId === "pcf" ? "pilot" : ""}">${safe(focus.serviceCode)}</span>
-              <span class="due-state due-state--${safe(focus.due.tone)}">${safe(focus.due.label)}</span>
-              <span class="workbench-focus__owner">${safe(focus.owner)}</span>
+            <div class="focus-card__meta">
+              <span class="mono">${safe(focus.serviceCode)}${focus.sourceId ? ` · ${safe(focus.sourceId)}` : ""}</span>
+              <span>负责人 ${safe(focus.owner)}</span>
             </div>
           </div>
-          <div class="workbench-focus__actions">
+          <div class="focus-card__actions">
             <button class="button button--primary" type="button" data-service-enter="${safe(focus.serviceId)}" data-page-target="${safe(focus.page)}">继续处理</button>
-            <button class="button button--secondary" type="button" data-page="shared-tasks">打开任务清单</button>
+            <button class="button button--secondary" type="button" data-page="shared-tasks">全部任务</button>
           </div>
         </section>`
-      : `<section class="workbench-focus workbench-focus--empty" aria-labelledby="workbenchFocusTitle">
-          <div class="workbench-focus__copy">
-            <span class="workbench-kicker">暂无紧急事项</span>
-            <h2 id="workbenchFocusTitle">从已开通频道继续</h2>
+      : `<section class="focus-card" aria-labelledby="workbenchFocusTitle">
+          <div class="focus-card__copy">
+            <div class="focus-card__label"><span>优先处理</span></div>
+            <h2 id="workbenchFocusTitle">暂无紧急事项</h2>
+            <p>从已开通服务继续，或打开任务清单查看后续安排。</p>
           </div>
-          <div class="workbench-focus__actions">
+          <div class="focus-card__actions">
             <button class="button button--primary" type="button" data-page="services-hub">服务目录</button>
           </div>
         </section>`;
 
-    const servicePulse = openServices.map((service) => {
-      const progress = serviceProgressLine(service);
-      const page = serviceEntryPage(service.id);
-      return `<article class="workbench-channel workbench-channel--${service.status}">
-        <span class="workbench-channel__code">${safe(service.code)}</span>
-        <div class="workbench-channel__body">
-          <strong>${safe(service.name)}</strong>
-          <small>${progress ? `${safe(progress.title)} · ${safe(progress.detail)}` : safe(service.description)}</small>
-        </div>
-        <button class="text-button" type="button" data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}">进入频道 →</button>
-      </article>`;
-    }).join("");
-
     const queuePreview = nextTasks.length
-      ? `<ol class="workbench-queue">${nextTasks.map((task, index) => `<li>
-          <span class="workbench-queue__n">${String(index + 2).padStart(2, "0")}</span>
-          <div><strong>${safe(task.title)}</strong><small>${safe(task.serviceCode)} · ${safe(task.nextStep)}</small></div>
-          <span class="due-state due-state--${safe(task.due.tone)}">${safe(task.due.label)}</span>
-          <button class="text-button" type="button" data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}">打开 →</button>
-        </li>`).join("")}</ol>
-        <footer class="workbench-section__footer"><button class="text-button" type="button" data-page="shared-tasks">全部 ${safe(taskView.summary.total)} 项 →</button></footer>`
+      ? `<ul class="workbench-queue">${nextTasks.map((task) => `<li data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}" role="button" tabindex="0">
+          <span class="workbench-queue__code">${safe(task.serviceCode)}</span>
+          <div class="workbench-queue__body"><strong>${safe(task.title)}</strong><small>${safe(task.object)} · ${safe(task.nextStep)}</small></div>
+          <div class="workbench-queue__due"><span>${safe(task.due.label)}</span></div>
+        </li>`).join("")}</ul>`
       : `<p class="workbench-quiet">${taskView.summary.total ? "其余事项见「我的任务」。" : "暂无其他待办。"}</p>`;
 
     const assetPreview = attentionAssets.length
-      ? `<ul class="workbench-asset-preview">${attentionAssets.map(({ asset, primaryIssue }) => `<li>
-          <div><strong>${safe(asset.name)}</strong><small>${safe(primaryIssue || assetPlainSummary(asset))}</small></div>
-          <button class="text-button" type="button" data-drawer="asset-detail" data-asset-id="${safe(asset.id)}">详情 →</button>
-        </li>`).join("")}</ul>
-        <footer class="workbench-section__footer"><button class="text-button" type="button" data-page="shared-files">数据资产 →</button></footer>`
-      : `<p class="workbench-quiet">暂无待处理资产。<button class="text-button" type="button" data-page="shared-files">查看 →</button></p>`;
+      ? `<ul class="workbench-asset-preview">${attentionAssets.map(({ asset, primaryIssue }) => `<li data-drawer="asset-detail" data-asset-id="${safe(asset.id)}" role="button" tabindex="0">
+          <div class="workbench-asset-preview__body"><strong>${safe(asset.name)}</strong><small>${safe(primaryIssue || assetPlainSummary(asset))}</small></div>
+          ${statusChip(assetStatusLabels[asset.status] || asset.status, asset.status === "CONFIRMED" ? "ok" : "warn")}
+        </li>`).join("")}</ul>`
+      : `<p class="workbench-quiet">暂无待处理资产。</p>`;
+
+    const servicePulse = openServices.map((service) => {
+      const progress = serviceProgressLine(service);
+      const page = serviceEntryPage(service.id);
+      return `<article class="workbench-service-row" data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}" role="button" tabindex="0">
+        <div class="workbench-service-row__top">
+          <span><span class="mono">${safe(service.code)}</span><strong>${safe(service.name)}</strong></span>
+          ${progress?.pilot ? statusChip("试点", "warn") : `<span class="workbench-service-row__pct">${progress?.percent ?? 0}%</span>`}
+        </div>
+        ${progress && !progress.pilot ? `<div class="progress-bar" aria-hidden="true"><i style="width:${progress.percent}%"></i></div>` : ""}
+        <span class="workbench-service-row__detail">${progress ? `${safe(progress.title)} · ${safe(progress.detail)}` : safe(service.description)}</span>
+      </article>`;
+    }).join("");
+
+    const pipeline = [
+      ["受控交付", deliveryView.summary.total],
+      ["复核中", deliveryView.summary.inReview],
+      ["已锁定", deliveryView.summary.locked],
+      ["已发送", deliveryView.summary.delivered],
+    ].map(([label, n]) => `<div>
+      <div class="bar ${n ? "is-on" : ""}" aria-hidden="true"></div>
+      <div class="metric-strip__meta"><span>${label}</span><strong class="${n ? "" : "is-empty"}">${n}</strong></div>
+    </div>`).join("");
 
     $("#main").innerHTML = `
       <div class="workbench">
         <header class="workbench__head">
           <div>
-            <p class="workbench-kicker">WORKBENCH · ${safe(state.year)} ${safe(state.quarter)}</p>
+            <p class="workbench__meta">${safe(orgName)} · ${safe(state.year)} ${safe(state.quarter)}</p>
             <h1>工作台</h1>
-            <p class="workbench__lead">${safe(orgName)} · ${safe(roleConfig[state.role].title)}</p>
           </div>
-          ${statusChip(viewChipLabel(taskView), taskView.summary.urgent ? "warn" : "ok")}
+          <span class="workbench__date">${dateLabel}</span>
         </header>
 
         ${focusBlock}
 
-        <section class="workbench-channels" aria-labelledby="workbenchChannelsTitle">
-          <header class="workbench-section-label">
-            <h2 id="workbenchChannelsTitle">进行中的频道</h2>
-            <button class="text-button" type="button" data-page="services-hub">服务目录 →</button>
-          </header>
-          <div class="workbench-channel-list">${servicePulse || `<p class="workbench-quiet">暂无频道。<button class="text-button" type="button" data-page="services-hub">去开通 →</button></p>`}</div>
-        </section>
-
-        <div class="workbench-split">
-          <section class="workbench-stack" aria-labelledby="workbenchQueueTitle">
-            <header class="workbench-section-label">
-              <h2 id="workbenchQueueTitle">接下来</h2>
-            </header>
-            ${queuePreview}
-          </section>
-          <section class="workbench-stack" aria-labelledby="workbenchAssetsTitle">
-            <header class="workbench-section-label">
-              <h2 id="workbenchAssetsTitle">资产留意</h2>
-            </header>
-            ${assetPreview}
-          </section>
+        <div class="workbench-grid">
+          <div class="workbench-col">
+            <section class="ds-card" aria-labelledby="workbenchQueueTitle">
+              <header class="ds-card__head">
+                <h2 id="workbenchQueueTitle">接下来</h2>
+                <button class="text-button" type="button" data-page="shared-tasks">全部 ${safe(taskView.summary.total)} 项</button>
+              </header>
+              ${queuePreview}
+            </section>
+            <section class="ds-card" aria-labelledby="workbenchAssetsTitle">
+              <header class="ds-card__head">
+                <h2 id="workbenchAssetsTitle">资产留意</h2>
+                <button class="text-button" type="button" data-page="shared-files">数据资产</button>
+              </header>
+              ${assetPreview}
+            </section>
+          </div>
+          <div class="workbench-col">
+            <section class="ds-card" aria-labelledby="workbenchChannelsTitle">
+              <header class="ds-card__head">
+                <h2 id="workbenchChannelsTitle">进行中的服务</h2>
+                <button class="text-button" type="button" data-page="services-hub">服务目录</button>
+              </header>
+              ${servicePulse || `<p class="workbench-quiet">暂无开通服务。</p>`}
+            </section>
+            <section class="ds-card" aria-label="交付进度">
+              <header class="ds-card__head">
+                <h2>交付进度</h2>
+                <button class="text-button" type="button" data-page="shared-deliverables">交付中心</button>
+              </header>
+              <div class="workbench-delivery-grid">${pipeline}</div>
+            </section>
+          </div>
         </div>
-
-        <section class="workbench-delivery" aria-label="交付动态">
-          <span class="workbench-kicker">DELIVERABLES</span>
-          <dl>
-            <div><dt>受控交付</dt><dd>${safe(deliveryView.summary.total)}</dd></div>
-            <div><dt>复核中</dt><dd>${safe(deliveryView.summary.inReview)}</dd></div>
-            <div><dt>已锁定</dt><dd>${safe(deliveryView.summary.locked)}</dd></div>
-            <div><dt>已发送</dt><dd>${safe(deliveryView.summary.delivered)}</dd></div>
-          </dl>
-          <button class="text-button" type="button" data-page="shared-deliverables">交付中心 →</button>
-        </section>
       </div>`;
-  }
-
-  function viewChipLabel(taskView) {
-    if (taskView.summary.urgent) return `${taskView.summary.urgent} 项紧急`;
-    if (taskView.summary.total) return `${taskView.summary.total} 项待办`;
-    return "暂无紧急事项";
   }
 
   function renderSharedTasks() {
     const view = sharedCenterViews.tasks({ role: state.role, actor: roleConfig[state.role].name });
-    const rows = view.items.map((task) => `<tr>
-      <td data-label="服务"><span class="service-tag ${task.serviceId === "pcf" ? "pilot" : ""}">${safe(task.serviceCode)}</span></td>
-      <td data-label="任务 / 下一步"><strong>${safe(task.title)}</strong><small>${safe(task.object)} · ${safe(task.nextStep)}</small><span class="source-reference">${safe(task.sourceId)} · Rev ${safe(task.sourceRevision)}</span></td>
+    const tab = state.taskTab || "全部";
+    const overdue = view.items.filter((task) => task.due?.tone === "danger");
+    const byService = (code) => view.items.filter((task) => task.serviceCode === code || task.serviceId === code.toLowerCase());
+    const filtered = tab === "逾期" ? overdue
+      : tab === "CBAM" ? byService("CBAM")
+      : tab === "PCF" ? byService("PCF")
+      : view.items;
+    const tabs = [
+      ["全部", view.summary.total],
+      ["逾期", overdue.length],
+      ["CBAM", byService("CBAM").length],
+      ["PCF", byService("PCF").length],
+    ];
+    const meta = `${view.summary.total} 项待办${view.summary.urgent ? ` · ${view.summary.urgent} 项紧急` : ""} · 涉及 ${view.summary.services} 个服务`;
+    const rows = filtered.map((task) => `<tr data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}" tabindex="0">
+      <td data-label="服务"><span class="mono">${safe(task.serviceCode)}</span></td>
+      <td data-label="任务"><strong>${safe(task.title)}</strong><small>${safe(task.object)} · ${safe(task.nextStep)}</small></td>
+      <td data-label="编号"><span class="source-reference">${safe(task.sourceId)} · Rev ${safe(task.sourceRevision)}</span></td>
       <td data-label="负责人">${safe(task.owner)}</td>
-      <td data-label="截止状态"><span class="due-state due-state--${safe(task.due.tone)}">${safe(task.due.label)}</span></td>
-      <td data-label="操作"><button class="text-button" type="button" data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}">继续处理 →</button></td>
+      <td data-label="截止"><span class="due-state due-state--${safe(task.due.tone)}">${safe(task.due.label)}</span></td>
     </tr>`).join("");
-    const empty = `<tr class="shared-empty-row"><td colspan="5"><strong>暂时没有需要你处理的事项</strong><p>已完成的、或超出你授权范围的任务不会出现在这里。可回到工作台查看服务进度，或从「服务」进入频道。</p><button class="text-button" type="button" data-page="workbench">返回工作台 →</button></td></tr>`;
+    const empty = `<tr class="shared-empty-row"><td colspan="5"><strong>这一筛选下没有任务</strong><p>可切换页签，或返回工作台查看摘要。</p></td></tr>`;
     $("#main").innerHTML = `
       <div class="task-ledger-shell">
-        ${pageHeader("TASK LEDGER", "我的任务", statusChip(`${view.summary.total} 项待办`, view.summary.urgent ? "warn" : "ok"))}
-        <p class="page-lead page-lead--aligned">完整待办清单（动词：确认／上传／审批）。「服务目录」是频道清单，「工作台」只给焦点与摘要。</p>
-        <dl class="shared-center-summary" aria-label="任务摘要"><div><dt>当前待办</dt><dd>${view.summary.total}</dd></div><div><dt>今天或已逾期</dt><dd>${view.summary.urgent}</dd></div><div><dt>涉及服务</dt><dd>${view.summary.services}</dd></div><div><dt>授权范围</dt><dd>${safe(roleConfig[state.role].title)}</dd></div></dl>
-        <section class="panel shared-table shared-task-ledger" aria-label="已授权任务"><table><thead><tr><th>服务</th><th>任务 / 下一步</th><th>负责人</th><th>截止状态</th><th></th></tr></thead><tbody>${rows || empty}</tbody></table></section>
+        ${pageHeader(meta, "我的任务")}
+        <div class="ds-tabs" role="tablist" aria-label="任务筛选">${tabs.map(([label, n]) =>
+          `<button type="button" class="ds-tab ${tab === label ? "is-active" : ""}" data-task-tab="${label}" role="tab" aria-selected="${tab === label}">${label} <span>${n}</span></button>`
+        ).join("")}</div>
+        <section class="ds-table" aria-label="已授权任务"><table><thead><tr><th>服务</th><th>任务</th><th>编号</th><th>负责人</th><th>截止</th></tr></thead><tbody>${rows || empty}</tbody></table></section>
       </div>`;
   }
 
   function renderSharedFiles() {
     const facet = state.assetFacet || "attention";
     const assetView = assetViews.overview({ role: state.role, serviceId: state.currentService, facet });
-    const { assets, items: assetItems, bindings: visibleBindings, facets, summary } = assetView;
+    const { assets, items: assetItems, bindings: visibleBindings, facets } = assetView;
     const qualityText = (asset) => asset.quality?.status === "verified" ? "已验证" : asset.quality?.status === "usable" ? "可使用" : asset.quality?.status === "needs_review" ? "需复核" : "待评估";
     const rows = assetItems.map(({ asset, bindings, hasPendingBinding, primaryIssue }) => {
       const serviceTags = bindings.length
-        ? bindings.map((binding) => `<span class="service-tag ${binding.serviceId === "pcf" ? "pilot" : ""}" title="${safe(assetBindingLabels[binding.status] || binding.status)}">${safe(assetServiceName(binding.serviceId))}</span>`).join(" ")
-        : '<span class="asset-unused">尚未用于服务</span>';
-      return `<tr>
-        <td data-label="资产"><span class="asset-kind">${safe(assetTypeLabels[asset.type] || asset.type)}</span><strong>${safe(asset.name)}</strong><small>${safe(assetPlainSummary(asset))} · ${safe(asset.versionId)}</small></td>
+        ? bindings.map((binding) => `<span class="mono" title="${safe(assetBindingLabels[binding.status] || binding.status)}">${safe(assetServiceName(binding.serviceId))}</span>`).join(" ")
+        : '<span class="asset-unused">—</span>';
+      return `<tr data-drawer="asset-detail" data-asset-id="${safe(asset.id)}" tabindex="0">
+        <td data-label="资产"><span class="asset-kind">${safe(assetTypeLabels[asset.type] || asset.type)}</span><strong>${safe(asset.name)}</strong><small class="mono">${safe(asset.versionId)}</small></td>
         <td data-label="覆盖范围 / 责任人"><strong>${safe(assetCoverageText(asset))}</strong><small>${safe(assetSubjectText(asset))} · ${safe(asset.steward?.ownerName || "责任人待分配")}</small></td>
         <td data-label="服务使用">${serviceTags}</td>
-        <td data-label="状态 / 质量"><span class="record-state ${asset.status === "CONFIRMED" && !hasPendingBinding ? "ok" : "warn"}">${safe(assetStatusLabels[asset.status] || asset.status)}</span><small>${safe(qualityText(asset))} · ${safe(primaryIssue || "无开放质量问题")}</small></td>
-        <td data-label="操作"><button class="text-button" type="button" data-drawer="asset-detail" data-asset-id="${safe(asset.id)}">查看详情 →</button></td>
+        <td data-label="状态"><span class="status-chip ${asset.status === "CONFIRMED" && !hasPendingBinding ? "" : "warn"}">${safe(assetStatusLabels[asset.status] || asset.status)}</span><small>${safe(qualityText(asset))}${primaryIssue ? ` · ${safe(primaryIssue)}` : ""}</small></td>
       </tr>`;
     }).join("");
     const primaryAttention = assets.some((item) => item.id === "REC-HX-POWER-2026Q3") && visibleBindings.some((item) => item.assetId === "REC-HX-POWER-2026Q3" && item.serviceId === "pcf" && ["PROPOSED", "PENDING_CONFIRMATION"].includes(item.status));
-    const facetBar = `<div class="asset-facets" role="tablist" aria-label="数据资产分面">${facets.map(({ id, label, count }) => `<button type="button" class="asset-facet ${facet === id ? "active" : ""}" data-asset-facet="${id}" role="tab" aria-selected="${facet === id}">${label}<span>${count}</span></button>`).join("")}</div>`;
-    $("#main").innerHTML = `${pageHeader("ENTERPRISE DATA ASSETS · FRAMEWORK 0.2.0", "企业数据资产", statusChip(`${assets.length} 项当前资产`))}
-      <p class="page-lead">先处理当前一件事。详情侧栏说明来源、确认状态、服务使用与版本影响。</p>
-      ${primaryAttention ? `<section class="asset-attention" aria-labelledby="assetAttentionTitle"><div><span>当前需要处理</span><h2 id="assetAttentionTitle">确认购入电力是否用于 PCF 产品分配</h2><p>CBAM 已确认使用企业电力事实；PCF 仍需独立确认产品范围和分配方法，原始账单不会被复制。</p></div><div class="asset-attention__actions"><button class="button button--primary" type="button" data-service-enter="pcf" data-page-target="pcf-data">进入 PCF 确认</button><button class="button button--secondary" type="button" data-drawer="asset-detail" data-asset-id="REC-HX-POWER-2026Q3">查看电力资产</button></div></section>` : ""}
-      <dl class="asset-register-summary" aria-label="数据资产摘要"><div><dt>当前资产</dt><dd>${summary.total}</dd><span>按角色和对象范围过滤</span></div><div><dt>原始证据</dt><dd>${summary.evidence}</dd><span>原文件保持不可变</span></div><div><dt>跨服务复用</dt><dd>${summary.reusable}</dd><span>每项服务独立确认</span></div><div><dt>待处理</dt><dd>${summary.attention}</dd><span>事实提议与服务绑定</span></div></dl>
+    const facetBar = `<div class="ds-tabs" role="tablist" aria-label="数据资产分面">${facets.map(({ id, label, count }) => `<button type="button" class="ds-tab ${facet === id ? "is-active" : ""}" data-asset-facet="${id}" role="tab" aria-selected="${facet === id}">${label} <span>${count}</span></button>`).join("")}</div>`;
+    $("#main").innerHTML = `<div class="portal-shell">
+      ${pageHeader(`${assets.length} 项当前资产 · 框架 v0.2.0`, "数据资产", `<button class="button button--secondary" type="button" data-drawer="upload-evidence">登记新资料</button>`)}
+      ${primaryAttention ? `<section class="focus-card" aria-labelledby="assetAttentionTitle"><div class="focus-card__copy"><span class="focus-card__label">优先处理</span><h2 id="assetAttentionTitle">确认购入电力是否用于 PCF 产品分配</h2><p>CBAM 已确认使用企业电力事实；PCF 仍需独立确认产品范围和分配方法，原始账单不会被复制。</p></div><div class="focus-card__actions"><button class="button button--primary" type="button" data-service-enter="pcf" data-page-target="pcf-data">进入 PCF 确认</button><button class="button button--secondary" type="button" data-drawer="asset-detail" data-asset-id="REC-HX-POWER-2026Q3">查看电力资产</button></div></section>` : ""}
       ${facetBar}
-      <section class="asset-catalog" aria-labelledby="assetCatalogTitle"><header><div><span>ASSET REGISTER</span><h2 id="assetCatalogTitle">${facet === "attention" ? "需要你处理的资产" : "当前分面的数据资产"}</h2><p>点「查看详情」可核对接来源、绑定、版本与修订影响。</p></div><button class="button button--secondary" type="button" data-drawer="upload-evidence">登记新资料</button></header><div class="asset-table-wrap"><table><thead><tr><th>资产</th><th>覆盖范围 / 责任人</th><th>服务使用</th><th>状态 / 质量</th><th></th></tr></thead><tbody>${rows || `<tr class="shared-empty-row"><td colspan="5"><strong>这一分面暂时没有资产</strong><p>${facet === "attention" ? "没有待你确认的绑定或质量问题。可切换到「全部」查看企业资产池。" : "可切换分面，或登记新资料进入资产池。"}</p><button class="text-button" type="button" data-asset-facet="all">查看全部资产 →</button></td></tr>`}</tbody></table></div></section>
-      <section class="asset-governance" aria-label="数据资产处理原则"><article><span>AGENT STEWARDSHIP</span><h2>Agent 负责识别与建议，不负责越权确认</h2><ol><li>识别文件、期间、单位和业务对象</li><li>生成带来源引用的待确认记录</li><li>检测重复、冲突和跨服务复用机会</li><li>由授权人员确认后生成新资产版本</li></ol></article><article><span>CROSS-SERVICE CONTRACT</span><h2>复用资产，不复用结论</h2><p>服务必须通过绑定引用具体资产版本，并单独记录用途、转换、分配、确认和输入快照。一个服务的确认不会改变其他服务。</p><a class="text-button" href="../docs/enterprise-data-asset-framework.md" target="_blank" rel="noopener">查看标准框架 v0.2.0 →</a></article></section>`;
+      <section class="ds-table" aria-label="数据资产列表"><table><thead><tr><th>资产</th><th>覆盖期间 / 责任方</th><th>服务使用</th><th>状态</th></tr></thead><tbody>${rows || `<tr class="shared-empty-row"><td colspan="4"><strong>这一分面暂时没有资产</strong><p>${facet === "attention" ? "没有待你确认的绑定或质量问题。" : "可切换分面，或登记新资料。"}</p></td></tr>`}</tbody></table></section>
+      <section class="asset-governance" aria-label="数据资产处理原则"><article><h2>Agent 负责识别与建议，不负责越权确认</h2><ol><li>识别文件、期间、单位和业务对象</li><li>生成带来源引用的待确认记录</li><li>检测重复、冲突和跨服务复用机会</li><li>由授权人员确认后生成新资产版本</li></ol></article><article><h2>复用资产，不复用结论</h2><p>服务必须通过绑定引用具体资产版本，并单独记录用途、转换、分配、确认和输入快照。一个服务的确认不会改变其他服务。</p><a class="text-button" href="../docs/enterprise-data-asset-framework.md" target="_blank" rel="noopener">查看标准框架 v0.2.0</a></article></section>
+    </div>`;
   }
 
   function renderSharedDeliverables() {
     const view = sharedCenterViews.deliverables({ role: state.role, actor: roleConfig[state.role].name });
-    const rows = view.items.map((item) => `<article class="delivery-ledger-row">
-      <div class="delivery-ledger-row__identity"><span class="service-tag ${item.serviceId === "pcf" ? "pilot" : ""}">${safe(item.serviceCode)}</span><div><h2>${safe(item.name)}</h2><p>${safe(item.object)} · ${safe(item.version)} · ${safe(item.id)}</p></div></div>
-      <span class="record-state ${["已锁定", "已共享", "已交付", "已回执", "已封存", "核查完成"].includes(item.status) ? "ok" : ["内部复核", "待复核", "核查中", "整改中"].includes(item.status) ? "warn" : ""}">${safe(item.status)}</span>
-      <dl class="delivery-control-line" aria-label="${safe(item.name)}控制状态"><div><dt>审批</dt><dd>${safe(item.controls.approval)}</dd></div><div><dt>锁定</dt><dd>${safe(item.controls.lock)}</dd></div><div><dt>交付</dt><dd>${safe(item.controls.delivery)}</dd></div></dl>
-      <div class="delivery-ledger-row__action"><small>${item.snapshotId ? `输入快照 ${safe(item.snapshotId)}` : `工作流记录 Rev ${safe(item.workflowRevision)}`}</small><button class="text-button" type="button" data-service-enter="${safe(item.serviceId)}" data-page-target="${safe(item.page)}">进入服务处理 →</button></div>
-    </article>`).join("");
-    const empty = `<section class="shared-empty-state"><span>NO AUTHORIZED OUTPUTS</span><h2>还没有可查看的交付物</h2><p>报告或数据包在对应服务里生成、且你有权限后，会出现在这里。正式锁定与发送仍回服务频道完成。</p><button class="button button--secondary" type="button" data-page="services-hub">查看服务</button></section>`;
-    $("#main").innerHTML = `${pageHeader("CONTROLLED OUTPUTS", "交付中心", statusChip(`${view.summary.total} 项交付物`))}
-      <p class="page-lead">查看报告与数据包的版本、审批和交付状态；正式操作回到对应服务完成。</p>
-      <dl class="shared-center-summary" aria-label="交付物摘要"><div><dt>受控交付物</dt><dd>${view.summary.total}</dd></div><div><dt>复核处理中</dt><dd>${view.summary.inReview}</dd></div><div><dt>已锁定</dt><dd>${view.summary.locked}</dd></div><div><dt>已发送 / 回执</dt><dd>${view.summary.delivered}</dd></div></dl>
-      ${rows ? `<section class="delivery-ledger" aria-label="已授权交付物">${rows}</section>` : empty}`;
+    const pipeline = [
+      ["受控交付", view.summary.total],
+      ["复核中", view.summary.inReview],
+      ["已锁定", view.summary.locked],
+      ["已发送", view.summary.delivered],
+    ].map(([label, n]) => `<div>
+      <div class="metric-strip__bar ${n ? "is-active" : ""}" aria-hidden="true"></div>
+      <div class="metric-strip__meta"><span>${label}</span><strong class="${n ? "" : "is-empty"}">${n}</strong></div>
+    </div>`).join("");
+    const rows = view.items.map((item) => `<tr data-service-enter="${safe(item.serviceId)}" data-page-target="${safe(item.page)}" tabindex="0">
+      <td data-label="交付物"><div style="display:flex;gap:12px;min-width:0"><span class="mono" style="width:40px;flex:none">${safe(item.serviceCode)}</span><div><strong>${safe(item.name)}</strong><small>${safe(item.object)} · <span class="mono">${safe(item.id)}</span></small></div></div></td>
+      <td data-label="阶段"><span class="status-chip ${["已锁定", "已共享", "已交付", "已回执", "已封存", "核查完成"].includes(item.status) ? "ok" : ["内部复核", "待复核", "核查中", "整改中"].includes(item.status) ? "warn" : "locked"}">${safe(item.status)}</span></td>
+      <td data-label="审批">${safe(item.controls.approval)}</td>
+      <td data-label="锁定">${safe(item.controls.lock)}</td>
+      <td data-label="交付">${safe(item.controls.delivery)}</td>
+      <td data-label="版本" class="mono">${safe(item.version)}</td>
+    </tr>`).join("");
+    const empty = `<tr class="shared-empty-row"><td colspan="6"><strong>还没有可查看的交付物</strong><p>报告或数据包在对应服务里生成后会出现在这里。</p></td></tr>`;
+    $("#main").innerHTML = `<div class="portal-shell">
+      ${pageHeader("报告与数据包的版本、审批和交付状态；正式操作在对应服务中完成", "交付中心")}
+      <div class="metric-strip" aria-label="交付进度">${pipeline}</div>
+      <section class="ds-table" aria-label="已授权交付物"><table><thead><tr><th>交付物</th><th>阶段</th><th>审批</th><th>锁定</th><th>交付</th><th>版本</th></tr></thead><tbody>${rows || empty}</tbody></table></section>
+    </div>`;
   }
 
   function renderSharedOrganization() {
     if (canManageOrganization()) { renderOrganizationSettings(); return; }
     const scope = state.role === "customer_contrib" ? "仅分配给我的任务与材料" : state.role === "customer_approver" ? "待审批对象与受控交付物" : "当前企业已开通服务与项目对象";
-    $("#main").innerHTML = `${pageHeader("ENTERPRISE ACCESS", "企业与权限", statusChip("只读"))}<p class="page-lead">这里只显示你当前能看到的范围；无权访问的成员与服务数据不会出现。</p><section class="panel permission-self"><h2>我的有效权限</h2><dl><div><dt>企业</dt><dd>${safe(state.organization.name)}</dd></div><div><dt>当前角色</dt><dd>${safe(roleConfig[state.role].title)}</dd></div><div><dt>授权范围</dt><dd>${scope}</dd></div><div><dt>可进入服务</dt><dd>CBAM、产品碳足迹 PCF</dd></div></dl><button class="button button--secondary" data-drawer="permission-audit">查看权限来源</button></section>`;
+    $("#main").innerHTML = `<div class="portal-shell">
+      ${pageHeader("只显示你当前可见的范围", "企业与权限", statusChip("只读", "locked"))}
+      <section class="permission-self ds-card">
+        <header class="ds-card__head"><h2>我的有效权限</h2><button class="text-button" type="button" data-drawer="permission-audit">查看权限来源</button></header>
+        <dl>
+          <div><dt>企业</dt><dd>${safe(state.organization.name)}</dd></div>
+          <div><dt>当前角色</dt><dd>${safe(roleConfig[state.role].title)}</dd></div>
+          <div><dt>授权范围</dt><dd>${scope}</dd></div>
+          <div><dt>可进入服务</dt><dd>CBAM、产品碳足迹 PCF</dd></div>
+        </dl>
+      </section>
+    </div>`;
   }
 
   const pcfStepLabels = {
@@ -297,10 +337,10 @@
     const productName = declaration.productName || product?.name || "热轧非合金钢卷";
     const productCode = product?.payload?.internalCode || "HRC-01";
     const index = Math.max(0, pcfSteps.indexOf(item?.status));
-    return `${pageHeader("PRODUCT CARBON FOOTPRINT · PILOT", title, statusChip(workflowStateLabel(item?.status || "SCOPING"), workflowStateTone(item?.status)))}
+    return `${pageHeader(`PCF · ${safe(productCode)} · 试点`, title, statusChip(workflowStateLabel(item?.status || "SCOPING"), workflowStateTone(item?.status)))}
       <div class="pcf-shell">
         <section class="pcf-context" aria-label="当前 PCF 项目">
-          <div class="pcf-context__identity"><span>PCF · 试点项目</span><strong>${safe(productName)}</strong><small>${safe(productCode)} · 华星钢铁有限公司${declaration.confirmed ? ` · ${safe(declaration.functionalUnit || "")}` : ""}</small></div>
+          <div class="pcf-context__identity"><span>试点项目</span><strong>${safe(productName)}</strong><small>${safe(productCode)} · 华星钢铁有限公司${declaration.confirmed ? ` · ${safe(declaration.functionalUnit || "")}` : ""}</small></div>
           <p class="pcf-channel-lead">${description}</p>
           <button class="text-button" type="button" data-page="services-hub">返回服务</button>
         </section>

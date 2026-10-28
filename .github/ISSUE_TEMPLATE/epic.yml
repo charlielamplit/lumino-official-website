@@ -1,0 +1,67 @@
+name: Epic
+description: 一组围绕同一业务结果的可交付能力
+title: "[Epic] "
+labels:
+  - Roadmap
+  - type/epic
+  - status/backlog
+assignees: []
+body:
+  - type: textarea
+    id: background
+    attributes:
+      label: 背景与问题
+      description: 说明用户、业务或治理问题，以及为什么现在要解决。
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: 目标结果
+      description: 描述 Epic 完成后可观察、可验证的结果，不写空泛愿景。
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 范围
+      placeholder: |
+        - 包含：
+        - 不包含：
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收标准
+      description: 每条都应可由测试、审查截图或明确交付物独立验证。
+      placeholder: |
+        AC-1: ...
+        AC-2: ...
+    validations:
+      required: true
+  - type: dropdown
+    id: public_status
+    attributes:
+      label: 对外能力状态
+      options:
+        - 不涉及公开声明
+        - 已支持
+        - 试点
+        - 规划中
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: 依赖与风险
+      description: 列出依赖的 Epic、外部服务、权限、标准或尚未验证的假设。
+  - type: checkboxes
+    id: review_gate
+    attributes:
+      label: 审查门禁
+      options:
+        - label: 公开声明已通过真实性审查
+        - label: 数据与权限边界已定义
+        - label: 主要路径与恢复路径均有验收标准
+        - label: 桌面端、移动端与键盘路径均纳入审查

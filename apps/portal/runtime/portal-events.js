@@ -119,6 +119,13 @@
       render();
       return;
     }
+    const taskTab = event.target.closest("[data-task-tab]");
+    if (taskTab) {
+      state.taskTab = taskTab.dataset.taskTab;
+      persistPortalState();
+      render();
+      return;
+    }
     const serviceEntry = event.target.closest("[data-service-enter]");
     if (serviceEntry) {
       setCustomerDestination(serviceEntry.dataset.serviceEnter, serviceEntry.dataset.pageTarget);

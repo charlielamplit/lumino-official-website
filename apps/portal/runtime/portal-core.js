@@ -325,8 +325,9 @@
     return { expert: "制备专家", reviewer: "独立复核", ops: "运营视图", sales: "商务视图", importer: "外部接收方", verifier: "第三方核查", supplier: "供应商协同", support: "平台支持", platform_admin: "平台治理" }[role];
   }
 
-  function pageHeader(eyebrow, title, aside = "") {
-    return `<header class="page-head"><div><p>${eyebrow}</p><h1>${title}</h1></div>${aside}</header>`;
+  function pageHeader(meta, title, aside = "") {
+    const metaHtml = meta ? `<p class="page-head__meta">${meta}</p>` : "";
+    return `<header class="page-head"><div>${metaHtml}<h1>${title}</h1></div>${aside || ""}</header>`;
   }
 
   function actionButton(label, variant = "primary", attributes = "") {
