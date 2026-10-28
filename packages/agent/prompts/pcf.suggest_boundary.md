@@ -10,4 +10,20 @@
 
 ## Purpose
 
-Suggest system boundary and included processes. Human confirmation is mandatory.
+Suggest system boundary type, included processes, excluded items, and cut-off rules.
+Human confirmation is mandatory before the boundary becomes a formal study input.
+
+## Must not
+
+- Confirm system boundary
+- Confirm functional unit
+- Write formal workflow status as CONFIRMED
+
+## Expected proposal shape
+
+- `boundaryType`
+- `includedProcesses[]`
+- `excludedItems[]`
+- `cutOffRule` / `cutOffRationale`
+- `primaryInputs[]`
+- `status`: `PROPOSED`

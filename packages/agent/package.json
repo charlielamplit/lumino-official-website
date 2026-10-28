@@ -11,7 +11,8 @@
     "./capability-catalog": "./runtime/capability-catalog.js",
     "./agent-task-engine": "./runtime/agent-task-engine.js",
     "./proposal-bridge": "./runtime/proposal-bridge.js",
-    "./pcf-declaration": "./domain/pcf-declaration.js"
+    "./pcf-declaration": "./domain/pcf-declaration.js",
+    "./pcf-boundary": "./domain/pcf-boundary.js"
   },
   "scripts": {
     "test": "node --test tests/*.test.*"

@@ -654,9 +654,32 @@
           period: pastScope ? "2026-01-01 至 2026-09-30" : "",
           confirmed: Boolean(pastScope),
         };
+      const storedBoundary = pcfCase?.metadata?.boundary || {};
+      const boundaryFallbackConfirmed = Boolean(pastBoundary) || ["NEEDS_CONFIRMATION", "CALCULATING", "EXPERT_REVIEW", "DELIVERABLE_READY", "CLOSED"].includes(pcfCase?.status);
+      const boundary = window.LuminoPcfBoundary
+        ? window.LuminoPcfBoundary.toStageGate({
+          ...storedBoundary,
+          status: storedBoundary.status || (storedBoundary.confirmed || boundaryFallbackConfirmed ? "CONFIRMED" : "PROPOSED"),
+          confirmed: Boolean(storedBoundary.confirmed) || boundaryFallbackConfirmed,
+          boundaryType: storedBoundary.boundaryType || (boundaryFallbackConfirmed ? "从摇篮到大门" : ""),
+          includedProcesses: storedBoundary.includedProcesses?.length
+            ? storedBoundary.includedProcesses
+            : (boundaryFallbackConfirmed ? ["上游原料", "厂内生产"] : []),
+          excludedItems: storedBoundary.excludedItems?.length
+            ? storedBoundary.excludedItems
+            : (boundaryFallbackConfirmed ? ["销售运输", "使用与报废"] : []),
+          cutOffRule: storedBoundary.cutOffRule || (boundaryFallbackConfirmed ? "单项 <1% 且合计 ≤5% 可截断" : ""),
+        })
+        : {
+          status: boundaryFallbackConfirmed ? "CONFIRMED" : "PROPOSED",
+          boundaryType: boundaryFallbackConfirmed ? "从摇篮到大门" : "",
+          includedProcesses: boundaryFallbackConfirmed ? ["上游原料", "厂内生产"] : [],
+          excludedItems: boundaryFallbackConfirmed ? ["销售运输"] : [],
+          cutOffRule: boundaryFallbackConfirmed ? "单项 <1% 且合计 ≤5% 可截断" : "",
+        };
       return {
         declaration,
-        boundary: { status: pastBoundary || ["COLLECTING", "NEEDS_CONFIRMATION", "CALCULATING", "EXPERT_REVIEW", "DELIVERABLE_READY", "CLOSED"].includes(pcfCase?.status) ? "CONFIRMED" : "PROPOSED" },
+        boundary,
         template: { status: templateValidated || inventoryConfirmed ? "VALIDATED" : "UPLOADED" },
         inventoryBindings: inventoryConfirmed
           ? [{ id: pcfBinding?.id || "BIND-PCF-POWER", status: "CONFIRMED" }]

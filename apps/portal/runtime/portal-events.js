@@ -234,9 +234,74 @@
           toast(error.message || "核算声明不完整");
         }
       }
+      if (action === "pcf-apply-boundary-proposal") {
+        try {
+          const item = workflowEngine.get("PCF-2026-001");
+          if (!item?.metadata?.declaration?.confirmed && item?.status === "SCOPING") {
+            toast("请先确认核算声明，再采纳边界建议。");
+            return;
+          }
+          const suggestion = window.LuminoPcfBoundary.suggest(item?.metadata?.declaration || {});
+          const fields = document.querySelector("[data-pcf-boundary-fields]");
+          if (!fields) throw Object.assign(new Error("找不到系统边界表单"), { code: "PCF_BOUNDARY_FORM_MISSING" });
+          const proposal = suggestion.proposal;
+          const setValue = (name, value) => {
+            const el = fields.querySelector(`[name="${name}"]`);
+            if (el && !el.disabled) el.value = value;
+          };
+          setValue("boundaryType", proposal.boundaryType);
+          setValue("includedProcesses", (proposal.includedProcesses || []).join("、"));
+          setValue("excludedItems", (proposal.excludedItems || []).join("、"));
+          setValue("cutOffRule", proposal.cutOffRule || "");
+          setValue("cutOffRationale", proposal.cutOffRationale || "");
+          setValue("primaryInputs", (proposal.primaryInputs || []).join("、"));
+          workflowEngine.patch("PCF-2026-001", {
+            metadata: {
+              boundary: window.LuminoPcfBoundary.normalize({
+                ...proposal,
+                functionalUnitRef: item?.metadata?.declaration?.functionalUnit || proposal.functionalUnitRef,
+                status: "PROPOSED",
+                confirmed: false,
+                confirmedAt: null,
+                confirmedBy: null,
+              }),
+            },
+          }, { ...workflowActor(), reason: "采纳 Agent 边界建议到待确认草稿（proposal_only）" });
+          toast("已填入 Agent 边界建议。请人工核对后确认，不会自动生效。");
+        } catch (error) {
+          toast(error.message || "无法应用边界建议");
+        }
+      }
       if (action === "pcf-confirm-boundary") {
         if (!assertStageGate("pcf", "declaration").ok) return;
-        state.page = "pcf-data"; persistPortalState(); render(); toast("边界建议已记录。请上传活动数据和证明材料。");
+        try {
+          const fields = document.querySelector("[data-pcf-boundary-fields]");
+          if (!fields) throw Object.assign(new Error("找不到系统边界表单"), { code: "PCF_BOUNDARY_FORM_MISSING" });
+          const read = (name) => fields.querySelector(`[name="${name}"]`)?.value?.trim() || "";
+          const item = workflowEngine.get("PCF-2026-001");
+          const declaration = item?.metadata?.declaration || {};
+          const confirmed = window.LuminoPcfBoundary.confirm({
+            boundaryType: read("boundaryType"),
+            functionalUnitRef: declaration.functionalUnit || read("functionalUnitRef"),
+            includedProcesses: read("includedProcesses"),
+            excludedItems: read("excludedItems"),
+            cutOffRule: read("cutOffRule"),
+            cutOffRationale: read("cutOffRationale"),
+            primaryInputs: read("primaryInputs"),
+            proposalId: item?.metadata?.boundary?.proposalId || null,
+            promptId: item?.metadata?.boundary?.promptId || null,
+          }, workflowActor());
+          workflowEngine.patch("PCF-2026-001", {
+            scope: `${declaration.productName || item?.scope || "PCF"} · ${confirmed.boundaryType}`,
+            metadata: { boundary: confirmed },
+          }, { ...workflowActor(), reason: "客户确认 PCF 系统边界" });
+          state.page = "pcf-data";
+          persistPortalState();
+          render();
+          toast("系统边界已确认并写入工作流。请继续活动数据采集。");
+        } catch (error) {
+          toast(error.message || "系统边界不完整");
+        }
       }
       if (action === "pcf-confirm-proposal") {
         if (!assertStageGate("pcf", "boundary").ok) return;

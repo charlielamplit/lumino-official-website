@@ -6,7 +6,7 @@
 })(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  const GATES_VERSION = "0.1.1";
+  const GATES_VERSION = "0.1.2";
 
   function result(partial) {
     return {
@@ -153,8 +153,14 @@
       title: "系统边界",
       check: function (ctx) {
         const boundary = ctx.boundary || {};
-        if (boundary.status !== "CONFIRMED") {
-          return fail("PCF_BOUNDARY_UNCONFIRMED", "系统边界尚未确认", [boundary.status || "缺少边界状态"], "确认纳入／排除与截断规则");
+        const blockers = [];
+        if (boundary.status !== "CONFIRMED") blockers.push(boundary.status ? ("状态 " + boundary.status) : "边界未确认");
+        if (!boundary.boundaryType) blockers.push("系统边界类型");
+        if (!(boundary.includedProcesses && boundary.includedProcesses.length)) blockers.push("纳入过程");
+        if (!(boundary.excludedItems && boundary.excludedItems.length)) blockers.push("排除项");
+        if (!boundary.cutOffRule) blockers.push("截断规则");
+        if (blockers.length) {
+          return fail("PCF_BOUNDARY_UNCONFIRMED", "系统边界尚未确认完整", blockers, "确认边界类型、纳入／排除与截断规则");
         }
         return pass("进入模板与清单");
       }

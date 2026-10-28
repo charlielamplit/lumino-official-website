@@ -11,6 +11,7 @@
     "asset-revise-confirm": Object.freeze(["customer_admin", "customer_owner"]),
     "pcf-confirm-scope": Object.freeze(["customer_admin", "customer_owner"]),
     "pcf-confirm-boundary": Object.freeze(["customer_admin", "customer_owner"]),
+    "pcf-apply-boundary-proposal": Object.freeze(["customer_admin", "customer_owner", "customer_contrib"]),
     "pcf-confirm-proposal": Object.freeze(["customer_admin", "customer_owner"]),
     "pcf-run-calculation": Object.freeze(["customer_admin", "customer_owner"]),
     "pcf-complete-review": Object.freeze(["reviewer"]),

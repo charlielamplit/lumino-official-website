@@ -196,26 +196,63 @@
       </div>`;
   }
 
-  function renderPcfBoundary() {
+  function pcfBoundaryView() {
     const item = workflowEngine.get("PCF-2026-001");
-    const boundaryAction = item?.status === "SCOPING"
-      ? actionButton("先确认核算目标", "secondary", 'data-page="pcf-scope"')
-      : item?.status === "COLLECTING"
-        ? actionButton("确认边界，开始采集数据", "primary", 'data-action="pcf-confirm-boundary"')
-        : actionButton("查看活动数据", "secondary", 'data-page="pcf-data"');
-    $("#main").innerHTML = `${pcfChannelHeader("边界与产品", "明确哪些生命周期阶段被纳入，以及最终结果对应的功能单位。")}
+    const declaration = item?.metadata?.declaration || {};
+    const stored = item?.metadata?.boundary || {};
+    const defaults = window.LuminoPcfBoundary
+      ? window.LuminoPcfBoundary.defaultsFromDeclaration(declaration)
+      : {};
+    const boundary = window.LuminoPcfBoundary
+      ? window.LuminoPcfBoundary.normalize(stored, defaults)
+      : { ...defaults, ...stored };
+    const suggestion = window.LuminoPcfBoundary
+      ? window.LuminoPcfBoundary.suggest(declaration)
+      : null;
+    return {
+      item,
+      declaration,
+      boundary,
+      suggestion,
+      confirmed: Boolean(boundary.confirmed) || boundary.status === "CONFIRMED",
+      declarationReady: Boolean(declaration.confirmed) || (item && !["NOT_STARTED", "SCOPING"].includes(item.status)),
+    };
+  }
+
+  function renderPcfBoundary() {
+    const { item, declaration, boundary, suggestion, confirmed, declarationReady } = pcfBoundaryView();
+    const canEdit = declarationReady && !confirmed && ["COLLECTING", "SCOPING"].includes(item?.status);
+    const lockAttr = canEdit ? "" : "disabled";
+    const typeOptions = (window.LuminoPcfBoundary?.BOUNDARY_TYPES || ["从摇篮到大门", "从大门到大门", "从摇篮到坟墓"])
+      .map((type) => `<option value="${safe(type)}" ${boundary.boundaryType === type ? "selected" : ""}>${safe(type)}</option>`).join("");
+    const boundaryAction = !declarationReady
+      ? actionButton("先确认核算声明", "secondary", 'data-page="pcf-scope"')
+      : confirmed
+        ? actionButton("查看活动数据", "secondary", 'data-page="pcf-data"')
+        : actionButton("确认系统边界，开始采集数据", "primary", 'data-action="pcf-confirm-boundary"');
+    const proposal = suggestion?.proposal;
+    $("#main").innerHTML = `${pcfChannelHeader("边界与产品", "明确生命周期范围、纳入／排除、截断规则；功能单位继承核算声明，不可在此被 Agent 改写。")}
+      ${stageGatePanelHtml("pcf")}
       <div class="pcf-layout">
         <section class="pcf-card pcf-form" aria-labelledby="pcfBoundaryTitle">
-          <header class="pcf-card__header"><div><span class="pcf-kicker">STEP 02 · SYSTEM BOUNDARY</span><h2 id="pcfBoundaryTitle">核算边界</h2></div><small>当前状态：${workflowStateLabel(item?.status)}</small></header>
-          <div class="pcf-field-grid">
-            <label><span>系统边界</span><small>选择纳入核算的生命周期范围</small><select><option>从摇篮到大门</option><option>从大门到大门</option></select></label>
-            <label><span>功能单位</span><small>所有活动数据和结果的共同基准</small><input value="1 吨热轧非合金钢卷"></label>
-            <label class="pcf-field--wide"><span>纳入的生产过程</span><small>按产品实际生产路径确认</small><textarea rows="3">炼铁、炼钢、连铸、热轧及厂内运输</textarea></label>
-            <label class="pcf-field--wide"><span>主要输入</span><small>用于生成后续活动数据清单</small><textarea rows="3">铁矿石、焦炭、废钢、电力、天然气</textarea></label>
+          <header class="pcf-card__header"><div><span class="pcf-kicker">STEP 02 · SYSTEM BOUNDARY</span><h2 id="pcfBoundaryTitle">系统边界</h2></div><small>${confirmed ? "已确认 · 可追溯" : "待确认"} · ${workflowStateLabel(item?.status)}</small></header>
+          <div class="pcf-field-grid" data-pcf-boundary-fields>
+            <label><span>系统边界类型</span><small>决定纳入的生命周期阶段</small><select name="boundaryType" ${lockAttr}>${typeOptions}</select></label>
+            <label><span>功能单位（只读）</span><small>继承核算声明，确认边界时不得改写</small><input name="functionalUnitRef" value="${safe(declaration.functionalUnit || boundary.functionalUnitRef || "")}" disabled></label>
+            <label class="pcf-field--wide"><span>纳入的生产过程</span><small>按产品实际路径列出；可用顿号或换行分隔</small><textarea name="includedProcesses" rows="3" ${lockAttr}>${safe((boundary.includedProcesses || []).join("、") || boundary.includedProcessesText || "")}</textarea></label>
+            <label class="pcf-field--wide"><span>排除项</span><small>明确不纳入核算的阶段或活动</small><textarea name="excludedItems" rows="3" ${lockAttr}>${safe((boundary.excludedItems || []).join("、") || boundary.excludedItemsText || "")}</textarea></label>
+            <label class="pcf-field--wide"><span>截断规则</span><small>允许省略的小贡献项及上限</small><textarea name="cutOffRule" rows="2" ${lockAttr}>${safe(boundary.cutOffRule || "")}</textarea></label>
+            <label class="pcf-field--wide"><span>截断理由</span><small>说明为何可接受该截断</small><textarea name="cutOffRationale" rows="2" ${lockAttr}>${safe(boundary.cutOffRationale || "")}</textarea></label>
+            <label class="pcf-field--wide"><span>主要输入</span><small>用于生成后续活动数据清单</small><textarea name="primaryInputs" rows="2" ${lockAttr}>${safe((boundary.primaryInputs || []).join("、") || boundary.primaryInputsText || "")}</textarea></label>
           </div>
-          <footer class="pcf-card__actions"><p>确认后，系统将据此建立活动数据清单。</p>${boundaryAction}</footer>
+          <footer class="pcf-card__actions">
+            <p>${confirmed
+              ? `已由 ${safe(boundary.confirmedBy || "授权人员")} 确认；后续模板与清单将继承本边界。`
+              : "确认会写入工作流元数据。Agent 建议可以填入表单，但不能代替你确认。"}</p>
+            ${boundaryAction}
+          </footer>
         </section>
-        <aside class="pcf-agent-note pcf-agent-note--proposal" aria-labelledby="pcfAgentBoundary"><span class="pcf-agent-mark" aria-hidden="true">✦</span><div><span class="pcf-kicker">PCF AGENT · 边界建议</span><h2 id="pcfAgentBoundary">建议采用“从摇篮到大门”</h2><p>依据当前产品配置，建议纳入上游原料、能源和厂内生产，暂不包括销售运输。</p><dl><div><dt>纳入</dt><dd>上游原料、生产、厂内运输</dd></div><div><dt>排除</dt><dd>销售运输、使用与报废</dd></div></dl><small>这是待确认提议，不会自动写入正式核算。</small></div></aside>
+        <aside class="pcf-agent-note pcf-agent-note--proposal" aria-labelledby="pcfAgentBoundary"><span class="pcf-agent-mark" aria-hidden="true">✦</span><div><span class="pcf-kicker">PCF AGENT · proposal_only</span><h2 id="pcfAgentBoundary">${safe(proposal ? `建议采用“${proposal.boundaryType}”` : "边界建议待生成")}</h2><p>${safe(suggestion?.summary || "确认核算声明后，将基于产品生成边界建议。")}</p><dl><div><dt>纳入</dt><dd>${safe((proposal?.includedProcesses || []).slice(0, 4).join("、") || "—")}</dd></div><div><dt>排除</dt><dd>${safe((proposal?.excludedItems || []).slice(0, 3).join("、") || "—")}</dd></div><div><dt>截断</dt><dd>${safe(proposal?.cutOffRule || "—")}</dd></div></dl><small>prompt: ${safe(suggestion?.promptId || "pcf.suggest_boundary")} · 不会自动写入正式核算。</small>${canEdit && proposal ? `<div class="pcf-card__actions" style="margin-top:var(--space-sm)">${actionButton("将建议填入表单", "secondary", 'data-action="pcf-apply-boundary-proposal"')}</div>` : ""}</div></aside>
       </div>`;
   }
 

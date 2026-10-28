@@ -19,7 +19,13 @@ const pcfPassing = {
     period: "2026",
     confirmed: true,
   },
-  boundary: { status: "CONFIRMED" },
+  boundary: {
+    status: "CONFIRMED",
+    boundaryType: "从摇篮到大门",
+    includedProcesses: ["炼铁", "热轧"],
+    excludedItems: ["销售运输"],
+    cutOffRule: "单项 <1% 且合计 ≤5%",
+  },
   template: { status: "VALIDATED" },
   inventoryBindings: [{ id: "INV-1", status: "CONFIRMED" }],
   factors: [{ id: "EF-1", applicabilityConfirmed: true }],
@@ -28,7 +34,7 @@ const pcfPassing = {
 };
 
 test("stage-gates version and stage lists", () => {
-  assert.equal(GATES_VERSION, "0.1.1");
+  assert.equal(GATES_VERSION, "0.1.2");
   assert.equal(listStages("cbam").length, 6);
   assert.equal(listStages("pcf").length, 7);
   assert.throws(() => listStages("esg"), { code: "UNKNOWN_SERVICE" });
@@ -55,7 +61,7 @@ for (const [stageId, ctx, code] of cbamCases) {
 
 const pcfCases = [
   ["declaration", { declaration: { productId: "", goal: "", functionalUnit: "", period: "", confirmed: false } }, "PCF_DECL_MISSING"],
-  ["boundary", { ...pcfPassing, boundary: { status: "PROPOSED" } }, "PCF_BOUNDARY_UNCONFIRMED"],
+  ["boundary", { ...pcfPassing, boundary: { status: "PROPOSED", boundaryType: "", includedProcesses: [], excludedItems: [], cutOffRule: "" } }, "PCF_BOUNDARY_UNCONFIRMED"],
   ["template", { ...pcfPassing, template: { status: "UPLOADED" } }, "PCF_TEMPLATE_INVALID"],
   ["inventory", { ...pcfPassing, inventoryBindings: [{ id: "INV-1", status: "PENDING_CONFIRMATION" }] }, "PCF_INVENTORY_GAP"],
   ["factors", { ...pcfPassing, factors: [{ id: "EF-1", applicabilityConfirmed: false }] }, "PCF_FACTOR_UNCONFIRMED"],

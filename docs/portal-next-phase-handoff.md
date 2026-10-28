@@ -19,11 +19,13 @@
 - Agent Runtime 最小闭环：`capability-catalog`、`agent-task-engine`（serialNo／poll／proposal_only）、`proposal-bridge`、`prompts/` 分册；
 - Portal 上传／PCF 回传可见轮询态（SUBMITTING → PROCESSING → READY）；
 - 全局导航徽标改为共享中心／资产 ViewModel 实时计数；READY Agent 提议投影进「我的任务」；
-- 单元测试基线已超过 60 项；另有页面—视口、深链／注入与 PCF 复核链路浏览器检查。
+- 单元测试基线为 67 项；57 个页面—视口组合、深链／注入与 PCF 复核链路浏览器检查通过。
 
-已完成 Phase 4 第一刀：PCF 核算声明字段模型（`pcf-declaration.js`）、表单绑定、确认写入 workflow metadata、stage-gate 读取真实声明；并修复 stage-gates 中文文案。
+已完成 Phase 4 第一、二刀：
+- 核算声明字段模型与确认写入；
+- 系统边界字段模型（类型／纳入／排除／截断／主要输入）、确认写入、Agent `proposal_only` 建议可填入但不可自动确认；stage-gate 读取真实边界。
 
-当前优先任务是：Phase 4 第二刀 —— 系统边界可确认（纳入／排除／截断 + Agent `proposal_only` 建议）。不要重写资产语义，不要横向扩建未开放服务频道。
+当前优先任务是：Phase 4 第三刀 —— 模板回传结构／单位校验（接 `PCF_DATA_PACK_VALIDATE`）。不要重写资产语义，不要横向扩建未开放服务频道。
 
 ## 1. 你的任务
 
@@ -66,7 +68,7 @@
 - 同一企业资产可跨服务引用，但每个服务必须独立确认其正式事实。
 - 资产版本、服务绑定、血缘、Snapshot、Transformation、CalculationRun 和 STALE 传播已有实现与测试。
 - 真实认证、数据库、文件存储、核算、报告和 CRM 后端均不存在。
-- Portal 不是“已完成”：更新影响预览、负向权限、运行时 Schema 校验、完整 PCF 管道和共享中心真实聚合仍待完成。
+- Portal 仍是静态原型：共享中心授权投影已完成，但生产认证、服务端授权、运行时 Schema 校验和完整 PCF 核算／报告管道仍待完成。
 
 ## 4. 并行工作边界
 

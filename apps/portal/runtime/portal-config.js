@@ -260,6 +260,22 @@
         confirmed: false,
         confirmedAt: null,
         confirmedBy: null
+      },
+      boundary: {
+        schemaVersion: "0.1.0",
+        boundaryType: "从摇篮到大门",
+        functionalUnitRef: "1 吨热轧非合金钢卷",
+        includedProcesses: ["上游原料开采与加工", "炼铁", "炼钢", "连铸", "热轧", "厂内运输与能源使用"],
+        excludedItems: ["销售运输", "产品使用阶段", "报废与回收（除非客户另有要求）"],
+        cutOffRule: "单项贡献低于最终结果 1% 且合计不超过 5% 的辅料与耗材可截断",
+        cutOffRationale: "符合常见钢铁产品从摇篮到大门披露实践；截断项需在报告中列示",
+        primaryInputs: ["铁矿石", "焦炭", "废钢", "电力", "天然气"],
+        status: "PROPOSED",
+        proposalId: null,
+        promptId: null,
+        confirmed: false,
+        confirmedAt: null,
+        confirmedBy: null
       }
     } },
   ]);
