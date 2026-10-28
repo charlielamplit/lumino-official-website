@@ -17,22 +17,30 @@ const template = Template.validateUpload({
 });
 
 test("计算构建阶段结果与热点，总和可核对", () => {
+  const power = { id: "REC-HX-POWER-2026Q3", versionId: "REC-HX-POWER-2026Q3@1" };
+  const inventory = Calculation.buildDemoInventory({ factors, power });
   const result = Calculation.buildResult({
     declaration,
     boundary,
     factors,
-    power: { id: "REC-HX-POWER-2026Q3", versionId: "REC-HX-POWER-2026Q3@1" },
+    inventory,
+    inputMode: "demo_seed",
+    formalUseAllowed: false,
     actor: { actor: "周岚" },
   });
-  assert.equal(result.stages.length, 4);
-  assert.equal(result.hotspots[0].id, "materials");
-  assert.equal(result.total, 2.18);
+  assert.equal(result.stages.length, 6);
+  assert.equal(result.lineItems.length, 6);
+  assert.equal(result.hotspots[0].id, "LCI-MAT-001");
+  assert.equal(result.formalUseAllowed, false);
   assert.equal(result.unit, "tCO2e/t");
   assert.ok(result.limitations.length >= 1);
+  const stageTotal = result.stages.reduce((sum, stage) => sum + stage.value, 0);
+  assert.ok(Math.abs(stageTotal - result.total) < 0.002);
 });
 
 test("报告锁定清单覆盖声明、边界、模板、因子、快照、Run 与绑定", () => {
-  const calculation = Calculation.buildResult({ declaration, boundary, factors, actor: { actor: "周岚" } });
+  const inventory = Calculation.buildDemoInventory({ factors });
+  const calculation = Calculation.buildResult({ declaration, boundary, factors, inventory, inputMode: "demo_seed", actor: { actor: "周岚" } });
   const lock = ReportLock.buildLockInventory({
     declaration,
     boundary,
@@ -46,9 +54,10 @@ test("报告锁定清单覆盖声明、边界、模板、因子、快照、Run �
   });
   assert.equal(lock.status, "LOCKED");
   assert.equal(lock.lockedBy, "李娜");
+  assert.equal(lock.formalUseAllowed, false);
   const kinds = new Set(lock.items.map((item) => item.kind));
-  ["declaration", "boundary", "template", "factorSet", "snapshot", "calculationRun", "binding"].forEach((kind) => {
+  ["declaration", "boundary", "template", "factorSet", "inventory", "snapshot", "calculationRun", "binding"].forEach((kind) => {
     assert.ok(kinds.has(kind), `missing ${kind}`);
   });
-  assert.match(lock.statement, /锁定/);
+  assert.match(lock.statement, /不可正式披露/);
 });

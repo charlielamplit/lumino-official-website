@@ -516,7 +516,9 @@
           moveWorkflow("PCF-2026-001", ["DELIVERABLE_READY"], "独立复核完成且报告版本已锁定");
           persistPortalState();
           render();
-          toast(`独立复核已完成。报告 Rev 1 已锁定 ${reportLock.items.length} 项输入版本。`);
+          toast(reportLock.formalUseAllowed
+            ? `独立复核已完成。报告 Rev 1 已锁定 ${reportLock.items.length} 项输入版本。`
+            : `原型复核流程已完成。演示报告 Rev 1 已锁定 ${reportLock.items.length} 项输入，不可对外交付。`);
         } catch (error) { toast(error.message); }
       }
       if (action === "dismiss-onboarding") { state.onboardingDismissed = true; window.localStorage.setItem("lumino-portal-onboarding", "dismissed"); render(); toast("快速引导已收起；可随时从“操作指南”查看完整流程。"); }

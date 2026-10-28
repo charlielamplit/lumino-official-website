@@ -34,6 +34,13 @@
       entry("boundary", boundary.boundaryType || "boundary", boundary.schemaVersion || "0.1.0", boundary.status || (boundary.confirmed ? "CONFIRMED" : "PROPOSED"), (boundary.includedProcesses || []).slice(0, 3).join("、")),
       entry("template", template.packVersion || template.filename || "template", template.schemaVersion || "0.1.0", template.status || "NOT_UPLOADED", template.filename || ""),
       entry("factorSet", factors.setId || "CN-EF-2026.1", factors.schemaVersion || factors.setId || "0.1.0", factors.confirmed ? "CONFIRMED" : "PROPOSED", factors.setName || ""),
+      entry(
+        "inventory",
+        "LCI-" + reportId,
+        calculation.schemaVersion || "0.1.0",
+        calculation.formalUseAllowed ? "CONFIRMED_INPUTS" : "DEMO_INPUTS",
+        String((calculation.lineItems || []).length) + " 项清单 · " + (calculation.inputMode || "unspecified")
+      ),
       entry("snapshot", snapshot.id || calculation.snapshotId || "SNAP-PCF-HRC-01", (snapshot.inputAssetVersionIds || []).join(", ") || "asset versions", snapshot.status || "CURRENT", snapshot.locked ? "已锁定" : "运行时锁定"),
       entry("calculationRun", run.id || calculation.runId || "ARUN-PCF-001", calculation.ruleVersion || factors.setId || "CN-EF-2026.1", run.status || calculation.status || "SUCCEEDED", String(calculation.total || "") + " " + (calculation.unit || ""))
     ];
@@ -57,8 +64,11 @@
       runId: run.id || calculation.runId || null,
       total: calculation.total || null,
       unit: calculation.unit || "tCO2e/t",
+      formalUseAllowed: calculation.formalUseAllowed === true,
       items: items,
-      statement: "本报告锁定上表所列输入版本；后续更正将生成新修订版，不覆盖本版。"
+      statement: calculation.formalUseAllowed === true
+        ? "本报告锁定上表所列输入版本；后续更正将生成新修订版，不覆盖本版。"
+        : "本版锁定的清单包含演示输入，仅用于验证计算、复核和版本流程；不可正式披露或对外交付。"
     };
   }
 
@@ -75,6 +85,7 @@
       runId: lock.runId || null,
       total: lock.total || null,
       unit: lock.unit || "tCO2e/t",
+      formalUseAllowed: lock.formalUseAllowed === true,
       items: Array.isArray(lock.items) ? lock.items.slice() : [],
       statement: lock.statement || ""
     };
