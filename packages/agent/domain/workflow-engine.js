@@ -185,6 +185,35 @@
       return targets.map((to, index) => this.transition(id, to, { ...command, reason: Array.isArray(command.reasons) ? command.reasons[index] : command.reason }));
     }
 
+    patch(id, fields = {}, command = {}) {
+      const object = this.state.objects[id];
+      assert(object, `找不到对象 ${id}`, "NOT_FOUND");
+      assert(command.actor, "字段更新必须记录操作者", "MISSING_ACTOR");
+      assert(command.reason && String(command.reason).trim(), "字段更新必须说明原因", "MISSING_REASON");
+      if (command.expectedRevision != null) assert(Number(command.expectedRevision) === object.revision, `对象已由其他操作更新：期望 Rev ${command.expectedRevision}，当前 Rev ${object.revision}`, "REVISION_CONFLICT");
+      if (fields.scope !== undefined) object.scope = fields.scope;
+      if (fields.owner !== undefined) object.owner = fields.owner;
+      if (fields.year !== undefined) object.year = fields.year;
+      if (fields.quarter !== undefined) object.quarter = fields.quarter;
+      if (fields.metadata && typeof fields.metadata === "object") object.metadata = { ...object.metadata, ...clone(fields.metadata) };
+      object.revision += 1;
+      object.updatedAt = nowIso(this.clock);
+      this.recordEvent({
+        objectId: object.id,
+        type: object.type,
+        from: object.status,
+        to: object.status,
+        actor: command.actor,
+        role: command.role || "unknown",
+        reason: String(command.reason).trim(),
+        objectRevision: object.revision,
+        correlationId: command.correlationId || null,
+        metadata: { patch: true, keys: Object.keys(fields) },
+      });
+      this.persist();
+      return clone(object);
+    }
+
     invalidateDependents(sourceId, command = {}) {
       const changed = [];
       Object.values(this.state.objects).forEach((object) => {

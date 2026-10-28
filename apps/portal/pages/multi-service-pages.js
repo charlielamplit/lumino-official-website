@@ -101,11 +101,15 @@
 
   function pcfChannelHeader(title, description) {
     const item = workflowEngine.get("PCF-2026-001");
+    const declaration = item?.metadata?.declaration || {};
+    const product = assetRegistry.get(declaration.productId || item?.metadata?.productId || "PRD-HRC-01");
+    const productName = declaration.productName || product?.name || "热轧非合金钢卷";
+    const productCode = product?.payload?.internalCode || "HRC-01";
     const index = Math.max(0, pcfSteps.indexOf(item?.status));
     return `${pageHeader("PRODUCT CARBON FOOTPRINT · PILOT", title, statusChip(workflowStateLabel(item?.status || "SCOPING"), workflowStateTone(item?.status)))}
       <div class="pcf-shell">
         <section class="pcf-context" aria-label="当前 PCF 项目">
-          <div class="pcf-context__identity"><span>PCF · 试点项目</span><strong>热轧非合金钢卷</strong><small>HRC-01 · 华星钢铁有限公司</small></div>
+          <div class="pcf-context__identity"><span>PCF · 试点项目</span><strong>${safe(productName)}</strong><small>${safe(productCode)} · 华星钢铁有限公司${declaration.confirmed ? ` · ${safe(declaration.functionalUnit || "")}` : ""}</small></div>
           <p>${description}</p>
           <button class="text-button" type="button" data-page="services-hub">返回服务总览 <span aria-hidden="true">↗</span></button>
         </section>
@@ -117,13 +121,26 @@
     return `<section class="pcf-recovery" role="status"><div><span class="pcf-kicker">需要处理</span><h2>${message}</h2><p>${detail}</p></div>${actionButton(action, "secondary", attributes)}</section>`;
   }
 
-  function pcfProductOptions() {
+  function pcfProductOptions(selectedId = "PRD-HRC-01") {
     const products = assetRegistry.catalog({ tenantId: "TNT-0018", role: state.role, type: "product" });
-    if (!products.length) return "<option>暂无产品主档</option>";
+    if (!products.length) return "<option value=\"\">暂无产品主档</option>";
     return products.map((product) => {
       const code = product.payload?.internalCode || product.id;
-      return `<option value="${safe(product.id)}" ${product.id === "PRD-HRC-01" ? "selected" : ""}>${safe(product.name)} · ${safe(code)}</option>`;
+      return `<option value="${safe(product.id)}" ${product.id === selectedId ? "selected" : ""}>${safe(product.name)} · ${safe(code)}</option>`;
     }).join("");
+  }
+
+  function pcfDeclarationView() {
+    const item = workflowEngine.get("PCF-2026-001");
+    const stored = item?.metadata?.declaration || {};
+    const product = assetRegistry.get(stored.productId || item?.metadata?.productId || "PRD-HRC-01");
+    const defaults = window.LuminoPcfDeclaration
+      ? window.LuminoPcfDeclaration.defaultsForProduct(product)
+      : {};
+    const declaration = window.LuminoPcfDeclaration
+      ? window.LuminoPcfDeclaration.normalize(stored, defaults)
+      : { ...defaults, ...stored };
+    return { item, product, declaration, confirmed: Boolean(declaration.confirmed) };
   }
 
   function pcfPowerContext() {
@@ -143,21 +160,39 @@
   }
 
   function renderPcfScope() {
-    const status = workflowEngine.get("PCF-2026-001")?.status;
+    const { item, product, declaration, confirmed } = pcfDeclarationView();
+    const status = item?.status;
     const org = assetRegistry.get("ORG-HX-001");
-    $("#main").innerHTML = `${pcfChannelHeader("确定核算目标", "先把产品、用途和期间说清楚，后续边界、数据与报告都将继承这里的定义。")}
+    const goals = (window.LuminoPcfDeclaration?.GOAL_OPTIONS || ["客户披露与供应链响应", "内部减排分析", "产品比较与设计改进"])
+      .map((goal) => `<option value="${safe(goal)}" ${declaration.goal === goal ? "selected" : ""}>${safe(goal)}</option>`).join("");
+    const readOnly = confirmed || status !== "SCOPING";
+    const lockAttr = readOnly ? "disabled" : "";
+    $("#main").innerHTML = `${pcfChannelHeader("确定核算目标", "先把产品、用途、受众、功能单位和期间说清楚；确认后将成为后续边界、清单与报告的正式声明。")}
       ${stageGatePanelHtml("pcf")}
       <div class="pcf-layout">
         <section class="pcf-card pcf-form" aria-labelledby="pcfScopeTitle">
-          <header class="pcf-card__header"><div><span class="pcf-kicker">STEP 01 · PROJECT BRIEF</span><h2 id="pcfScopeTitle">项目范围</h2></div><small>3 项必填 · ${safe(org?.name || "企业主档")}</small></header>
-          <div class="pcf-field-grid">
-            <label><span>核算产品</span><small>来自企业数据资产产品主档</small><select name="pcfProductId">${pcfProductOptions()}</select></label>
-            <label><span>核算目标</span><small>决定报告用途与需要披露的说明</small><select><option>客户披露与供应链响应</option><option>内部减排分析</option></select></label>
-            <label class="pcf-field--wide"><span>核算期间</span><small>活动数据应覆盖同一生产期间</small><input value="2026-01-01 至 2026-09-30"></label>
+          <header class="pcf-card__header"><div><span class="pcf-kicker">STEP 01 · STUDY DECLARATION</span><h2 id="pcfScopeTitle">核算声明</h2></div><small>${confirmed ? "已确认 · 可追溯" : "8 项必填"} · ${safe(org?.name || "企业主档")}</small></header>
+          <div class="pcf-field-grid" data-pcf-declaration-fields>
+            <label><span>核算产品</span><small>来自企业数据资产产品主档</small><select name="productId" ${lockAttr}>${pcfProductOptions(declaration.productId || "PRD-HRC-01")}</select></label>
+            <label><span>核算目标</span><small>决定报告深度与披露说明</small><select name="goal" ${lockAttr}>${goals}</select></label>
+            <label class="pcf-field--wide"><span>预期用途</span><small>说明结果将如何被使用</small><input name="intendedUse" ${lockAttr} value="${safe(declaration.intendedUse || "")}" placeholder="例如：向下游客户提供可追溯的产品碳足迹"></label>
+            <label class="pcf-field--wide"><span>报告受众</span><small>谁会阅读并依赖本声明</small><input name="audience" ${lockAttr} value="${safe(declaration.audience || "")}" placeholder="例如：客户、供应链伙伴与内部管理"></label>
+            <label><span>功能单位</span><small>所有活动数据与结果的共同基准</small><input name="functionalUnit" ${lockAttr} value="${safe(declaration.functionalUnit || "")}" required></label>
+            <label><span>参考流</span><small>与功能单位对应的产品数量描述</small><input name="referenceFlow" ${lockAttr} value="${safe(declaration.referenceFlow || "")}" required></label>
+            <label><span>期间开始</span><small>活动数据覆盖起点</small><input name="periodStart" type="date" ${lockAttr} value="${safe(declaration.periodStart || "")}" required></label>
+            <label><span>期间结束</span><small>活动数据覆盖终点</small><input name="periodEnd" type="date" ${lockAttr} value="${safe(declaration.periodEnd || "")}" required></label>
+            <label class="pcf-field--wide"><span>地理与技术适用性</span><small>结果适用的地点与生产技术</small><input name="geography" ${lockAttr} value="${safe([declaration.geography, declaration.technology].filter(Boolean).join(" · "))}" placeholder="中国 · 高炉—转炉、连铸与热轧"></label>
           </div>
-          <footer class="pcf-card__actions"><p>确认后仍可在专家复核前提出修订。</p>${status === "SCOPING" ? actionButton("确认目标，继续定义边界", "primary", 'data-action="pcf-confirm-scope"') : actionButton("查看边界定义", "secondary", 'data-page="pcf-boundary"')}</footer>
+          <footer class="pcf-card__actions">
+            <p>${confirmed
+              ? `已由 ${safe(declaration.confirmedBy || "授权人员")} 确认；后续步骤继承本声明，修订需在专家复核前提出。`
+              : "确认会写入工作流元数据，并成为分步校验的正式输入；Agent 不能代替你确认。"}</p>
+            ${status === "SCOPING" && !confirmed
+              ? actionButton("确认核算声明，继续定义边界", "primary", 'data-action="pcf-confirm-scope"')
+              : actionButton("查看边界定义", "secondary", 'data-page="pcf-boundary"')}
+          </footer>
         </section>
-        <aside class="pcf-agent-note" aria-labelledby="pcfAgentScope"><span class="pcf-agent-mark" aria-hidden="true">✦</span><div><span class="pcf-kicker">PCF AGENT · 准备提示</span><h2 id="pcfAgentScope">下一步会确认三件事</h2><ol><li>系统边界到哪里</li><li>哪些生产过程属于本产品</li><li>电力、燃料和主要原材料来自哪里</li></ol><p>Agent 的建议不会自动成为正式事实，仍需由你确认。</p></div></aside>
+        <aside class="pcf-agent-note" aria-labelledby="pcfAgentScope"><span class="pcf-agent-mark" aria-hidden="true">✦</span><div><span class="pcf-kicker">PCF AGENT · 准备提示</span><h2 id="pcfAgentScope">声明确认后将据此准备</h2><ol><li>系统边界与截断建议</li><li>与 ${safe(product?.name || declaration.productName || "所选产品")} 对应的过程清单</li><li>能源、原料与运输的模板字段</li></ol><dl><div><dt>当前产品</dt><dd>${safe(declaration.productName || product?.name || "未选择")}</dd></div><div><dt>功能单位</dt><dd>${safe(declaration.functionalUnit || "待填写")}</dd></div><div><dt>期间</dt><dd>${safe(declaration.period || "待填写")}</dd></div></dl><p>Agent 的建议不会自动成为正式事实，仍需由你确认。</p></div></aside>
       </div>`;
   }
 

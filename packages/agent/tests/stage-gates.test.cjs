@@ -12,7 +12,13 @@ const cbamPassing = {
 };
 
 const pcfPassing = {
-  declaration: { functionalUnit: "1 t product", period: "2026", confirmed: true },
+  declaration: {
+    productId: "PRD-HRC-01",
+    goal: "客户披露与供应链响应",
+    functionalUnit: "1 t product",
+    period: "2026",
+    confirmed: true,
+  },
   boundary: { status: "CONFIRMED" },
   template: { status: "VALIDATED" },
   inventoryBindings: [{ id: "INV-1", status: "CONFIRMED" }],
@@ -22,7 +28,7 @@ const pcfPassing = {
 };
 
 test("stage-gates version and stage lists", () => {
-  assert.equal(GATES_VERSION, "0.1.0");
+  assert.equal(GATES_VERSION, "0.1.1");
   assert.equal(listStages("cbam").length, 6);
   assert.equal(listStages("pcf").length, 7);
   assert.throws(() => listStages("esg"), { code: "UNKNOWN_SERVICE" });
@@ -48,7 +54,7 @@ for (const [stageId, ctx, code] of cbamCases) {
 }
 
 const pcfCases = [
-  ["declaration", { declaration: { functionalUnit: "", period: "", confirmed: false } }, "PCF_DECL_MISSING"],
+  ["declaration", { declaration: { productId: "", goal: "", functionalUnit: "", period: "", confirmed: false } }, "PCF_DECL_MISSING"],
   ["boundary", { ...pcfPassing, boundary: { status: "PROPOSED" } }, "PCF_BOUNDARY_UNCONFIRMED"],
   ["template", { ...pcfPassing, template: { status: "UPLOADED" } }, "PCF_TEMPLATE_INVALID"],
   ["inventory", { ...pcfPassing, inventoryBindings: [{ id: "INV-1", status: "PENDING_CONFIRMATION" }] }, "PCF_INVENTORY_GAP"],

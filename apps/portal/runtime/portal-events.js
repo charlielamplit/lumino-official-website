@@ -194,7 +194,46 @@
           toast("已创建新修订版；未锁定快照已标为过期，服务绑定未自动切换。");
         } catch (error) { toast(error.message); }
       }
-      if (action === "pcf-confirm-scope") { moveWorkflow("PCF-2026-001", ["COLLECTING"], "客户确认 PCF 核算目标和期间"); state.page = "pcf-boundary"; persistPortalState(); render(); toast("核算目标已确认。下一步确认系统边界和主要输入。"); }
+      if (action === "pcf-confirm-scope") {
+        try {
+          const fields = document.querySelector("[data-pcf-declaration-fields]");
+          if (!fields) throw Object.assign(new Error("找不到核算声明表单"), { code: "PCF_DECL_FORM_MISSING" });
+          const read = (name) => fields.querySelector(`[name="${name}"]`)?.value?.trim() || "";
+          const productId = read("productId");
+          const product = assetRegistry.get(productId);
+          const geoRaw = read("geography");
+          const [geography, ...techParts] = geoRaw.split("·").map((part) => part.trim()).filter(Boolean);
+          const draft = window.LuminoPcfDeclaration.normalize({
+            productId,
+            productName: product?.name || productId,
+            goal: read("goal"),
+            intendedUse: read("intendedUse"),
+            audience: read("audience"),
+            functionalUnit: read("functionalUnit"),
+            referenceFlow: read("referenceFlow"),
+            periodStart: read("periodStart"),
+            periodEnd: read("periodEnd"),
+            geography: geography || geoRaw,
+            technology: techParts.join(" · "),
+          });
+          const confirmed = window.LuminoPcfDeclaration.confirm(draft, workflowActor());
+          const scopeLabel = `${confirmed.productName} · ${confirmed.functionalUnit}`;
+          moveWorkflow("PCF-2026-001", ["COLLECTING"], "客户确认 PCF 核算声明", {
+            productId: confirmed.productId,
+            declaration: confirmed,
+          });
+          workflowEngine.patch("PCF-2026-001", {
+            scope: scopeLabel,
+            metadata: { productId: confirmed.productId, declaration: confirmed },
+          }, { ...workflowActor(), reason: "同步核算声明到服务案例范围字段" });
+          state.page = "pcf-boundary";
+          persistPortalState();
+          render();
+          toast("核算声明已确认并写入工作流。下一步确认系统边界。");
+        } catch (error) {
+          toast(error.message || "核算声明不完整");
+        }
+      }
       if (action === "pcf-confirm-boundary") {
         if (!assertStageGate("pcf", "declaration").ok) return;
         state.page = "pcf-data"; persistPortalState(); render(); toast("边界建议已记录。请上传活动数据和证明材料。");

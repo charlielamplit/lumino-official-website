@@ -240,7 +240,28 @@
     { id: "AP-2026-014", type: "approval", status: "IN_REVIEW", owner: "赵海峰", year: "2026", scope: "默认值并行路径" },
   ].map((object) => ({ ...object, metadata: { serviceId: "cbam", ...(object.metadata || {}) } })));
   workflowEngine.seed([
-    { id: "PCF-2026-001", type: "serviceCase", status: "SCOPING", owner: "周岚", year: "2026", scope: "热轧非合金钢卷 · 从摇篮到大门", metadata: { serviceId: "pcf", productId: "PRD-HRC-01" } },
+    { id: "PCF-2026-001", type: "serviceCase", status: "SCOPING", owner: "周岚", year: "2026", scope: "热轧非合金钢卷 · 从摇篮到大门", metadata: {
+      serviceId: "pcf",
+      productId: "PRD-HRC-01",
+      declaration: {
+        schemaVersion: "0.1.0",
+        productId: "PRD-HRC-01",
+        productName: "热轧非合金钢卷",
+        goal: "客户披露与供应链响应",
+        intendedUse: "向下游客户与进口商提供可追溯的产品碳足迹信息",
+        audience: "客户、供应链伙伴与内部管理",
+        functionalUnit: "1 吨热轧非合金钢卷",
+        referenceFlow: "1 吨出厂热轧非合金钢卷",
+        periodStart: "2026-01-01",
+        periodEnd: "2026-09-30",
+        period: "2026-01-01 至 2026-09-30",
+        geography: "中国 · 生产设施所在地",
+        technology: "高炉—转炉、连铸与热轧",
+        confirmed: false,
+        confirmedAt: null,
+        confirmedBy: null
+      }
+    } },
   ]);
 
   const assetRegistry = new window.LuminoAssets.AssetRegistry({ storage: window.localStorage });

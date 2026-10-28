@@ -17,7 +17,7 @@
     agentTasks: agentTaskEngine,
     capabilities: window.LuminoAgentCapabilities,
     services: serviceRegistry,
-  }, { tenantId: "TNT-0018", referenceDate: "2026-10-27" });
+  }, { tenantId: "TNT-0018", referenceDate: "2026-10-28" });
   const annualProfile = () => annualProfiles[state.year] || { mode: "planned", defaultQuarter: "Q1", step: 1, progress: years[state.year]?.progress || 0, position: "年度准备", foundation: "等待确认年度范围", quarters: { Q1: ["待计划", 0, ""], Q2: ["待计划", 0, ""], Q3: ["待计划", 0, ""], Q4: ["待计划", 0, ""] }, monitoring: ["待生成", ""], emissions: ["未开始", ""], verification: ["未开始", ""] };
 
   function customerNavWithLiveBadges() {
@@ -635,12 +635,27 @@
         || ["NEEDS_CONFIRMATION", "CALCULATING", "EXPERT_REVIEW", "DELIVERABLE_READY", "CLOSED"].includes(pcfCase?.status);
       const templateValidated = Boolean(workflowEngine?.get("EVD-PCF-DATAPACK-001"));
       const inventoryConfirmed = pcfBinding?.status === "CONFIRMED" || ["CALCULATING", "EXPERT_REVIEW", "DELIVERABLE_READY", "CLOSED"].includes(pcfCase?.status);
-      return {
-        declaration: {
+      const storedDeclaration = pcfCase?.metadata?.declaration || {};
+      const declaration = window.LuminoPcfDeclaration
+        ? window.LuminoPcfDeclaration.toStageGate({
+          ...storedDeclaration,
+          confirmed: Boolean(storedDeclaration.confirmed) || (pastScope && Boolean(storedDeclaration.functionalUnit || storedDeclaration.period || storedDeclaration.periodStart)),
+          productId: storedDeclaration.productId || pcfCase?.metadata?.productId || (pastScope ? "PRD-HRC-01" : ""),
+          goal: storedDeclaration.goal || (pastScope ? "客户披露与供应链响应" : ""),
+          functionalUnit: storedDeclaration.functionalUnit || (pastScope ? "1 吨热轧非合金钢卷" : ""),
+          period: storedDeclaration.period || (pastScope ? "2026-01-01 至 2026-09-30" : ""),
+          periodStart: storedDeclaration.periodStart || (pastScope ? "2026-01-01" : ""),
+          periodEnd: storedDeclaration.periodEnd || (pastScope ? "2026-09-30" : ""),
+        })
+        : {
+          productId: pastScope ? "PRD-HRC-01" : "",
+          goal: pastScope ? "客户披露与供应链响应" : "",
           functionalUnit: pastScope ? "1 吨热轧非合金钢卷" : "",
           period: pastScope ? "2026-01-01 至 2026-09-30" : "",
-          confirmed: Boolean(pastScope)
-        },
+          confirmed: Boolean(pastScope),
+        };
+      return {
+        declaration,
         boundary: { status: pastBoundary || ["COLLECTING", "NEEDS_CONFIRMATION", "CALCULATING", "EXPERT_REVIEW", "DELIVERABLE_READY", "CLOSED"].includes(pcfCase?.status) ? "CONFIRMED" : "PROPOSED" },
         template: { status: templateValidated || inventoryConfirmed ? "VALIDATED" : "UPLOADED" },
         inventoryBindings: inventoryConfirmed
