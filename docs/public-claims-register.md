@@ -31,6 +31,6 @@
 | CLM-015 | CBAM／PCF 每一步均有对应校验门禁 | SUPPORTED / PILOT | 规则在 packages/agent stage-gates；Portal 展示并拦截；公开页仅说明门槛 | CBAM/PCF 服务页、Portal |
 | CLM-016 | Agent 内核与 Portal／公开站分目录部署就绪 | SUPPORTED | 物理分包 packages/agent、apps/portal、apps/site；非生产后端拆分 | README、架构说明 |
 
-| CLM-017 | 排放因子来自外部数据集，非平台内置库 | PILOT | 见 docs/emission-factors-status.md；Portal 演示为 demo_stub | PCF 服务页、Portal 因子面板 |
+| CLM-017 | 排放因子来自外部／本机因子库引用，非 Lumino 内置生产库 | PILOT | 见 docs/emission-factors-status.md；当前演示对齐 DatabaseofEmissionFactor 种子，未联机 | PCF 服务页、Portal 因子面板 |
 | CLM-018 | 公开站与 Portal 共用同一套 PCF 阶段名称 | SUPPORTED / PILOT | 以 stage-gates 与 service-registry.stages 为准：核算声明、系统边界、模板与结构校验、活动数据与服务绑定、排放因子适用性、计算与热点、复核与受控报告 | 官网、平台、PCF、Portal |
 

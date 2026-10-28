@@ -60,11 +60,13 @@ test("因子确认为演示桩，确认后 stage gate 通过", () => {
   const draft = Factors.defaultSet(declaration);
   assert.equal(draft.sourceKind, "demo_stub");
   assert.equal(draft.provenance.localDatabase, false);
-  assert.ok(draft.provenance.intendedSources.includes("CPCD"));
+  assert.equal(draft.provenance.localCatalogAvailable, true);
+  assert.ok(draft.provenance.intendedSources.includes("DatabaseofEmissionFactor"));
+  assert.ok(draft.items.every((item) => item.sourceKind === "local_catalog_sample"));
   assert.equal(evaluateGate("pcf", "factors", { factors: Factors.toStageGate(draft) }).ok, false);
   const confirmed = Factors.confirm(draft, { actor: "周岚" });
   assert.equal(confirmed.confirmed, true);
   assert.equal(confirmed.sourceKind, "demo_stub");
-  assert.equal(confirmed.provenance.localDatabase, false);
+  assert.equal(confirmed.provenance.localCatalogAvailable, true);
   assert.equal(evaluateGate("pcf", "factors", { factors: Factors.toStageGate(confirmed) }).ok, true);
 });

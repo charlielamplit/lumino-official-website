@@ -18,40 +18,47 @@
       sourceKind: "demo_stub",
       provenance: {
         localDatabase: false,
+        localCatalogAvailable: true,
         skillReference: "pcf-calculation/reference.md#8-排放因子数据库指南",
-        intendedSources: ["CPCD", "IPE", "天工", "Ecoinvent", "GaBi"],
-        note: "当前为原型演示因子，不代表已接入真实排放因子库或官方发布值。"
+        statusDoc: "docs/emission-factors-status.md",
+        intendedSources: ["DatabaseofEmissionFactor", "天工ILCD", "CPCD", "IPE", "Ecoinvent", "GaBi"],
+        localPaths: [
+          "/Users/qikunmac01/Documents/01Charlie/03_Autocoding/DatabaseEmissionFactor/DatabaseofEmissionFactor",
+          "/Users/qikunmac01/Documents/01Charlie/01_工作文档/01_碳中和/1_项目工作/13_排放因子库"
+        ],
+        apiHint: "GET /api/v1/emission-factors/search（DatabaseofEmissionFactor backend）",
+        note: "当前为原型演示集；形态对齐本机因子库种子／样例，尚未联机调用 DatabaseofEmissionFactor 或加载天工 ILCD。"
       },
       items: [
         {
-          id: "EF-PCF-GRID-SH",
-          datasetId: "CN-GRID-EAST-2026",
-          name: "华东区域电网电力",
-          library: "CN-EF-DEMO",
-          version: "2026.1",
-          geography: "CN-East",
-          year: "2026",
+          id: "EF-PCF-GRID-CN",
+          datasetId: "CN-GRID-NATIONAL-2024",
+          name: "全国电网平均电力",
+          library: "DatabaseofEmissionFactor-seed",
+          version: "2024",
+          geography: "CN-National",
+          year: "2024",
           numeratorUnit: "kgCO2e",
           denominatorUnit: "kWh",
-          value: "0.5810",
-          applicability: "适用于购入电力间接排放；与核算声明期间重叠",
+          value: "0.5703",
+          applicability: "适用于购入电力间接排放；数值取自本机因子库 init.sql 种子，需确认与核算期间／区域电网是否匹配",
           applicabilityConfirmed: false,
-          sourceKind: "demo_stub"
+          sourceKind: "local_catalog_sample"
         },
         {
-          id: "EF-PCF-COKE",
-          datasetId: "CN-PROCESS-COKE-2024",
-          name: "焦炭过程排放",
-          library: "CN-EF-DEMO",
-          version: "2024.2",
-          geography: "CN",
+          id: "EF-PCF-GRID-N",
+          datasetId: "CN-GRID-NORTH-COAL-2024",
+          name: "华北电网燃煤发电",
+          library: "DatabaseofEmissionFactor-seed",
+          version: "2024",
+          geography: "CN-North_China_Grid",
           year: "2024",
-          numeratorUnit: "tCO2e",
-          denominatorUnit: "t",
-          value: "0.302",
-          applicability: "用于焦炭投入；需确认与产品工艺匹配",
+          numeratorUnit: "kgCO2e",
+          denominatorUnit: "kWh",
+          value: "0.8241",
+          applicability: "过程／区域电力参考；取自本机因子库种子与 02_排放因子样例.md，需确认工艺与地域适用性",
           applicabilityConfirmed: false,
-          sourceKind: "demo_stub"
+          sourceKind: "local_catalog_sample"
         }
       ],
       confirmed: false,

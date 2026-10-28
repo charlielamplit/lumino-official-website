@@ -329,7 +329,7 @@
     </tr>`).join("");
     const factorPanel = `<section class="pcf-card" aria-labelledby="pcfFactorTitle"><header class="pcf-card__header"><div><span class="pcf-kicker">EMISSION FACTORS</span><h2 id="pcfFactorTitle">${safe(factors?.setName || "排放因子集")}</h2></div><small>${safe(factors?.setId || "CN-EF-2026.1")} · ${factorsConfirmed ? "适用性已确认" : "待确认适用性"}</small></header>
       <div class="pcf-stage-table"><table><thead><tr><th>因子</th><th>数据集 / 版本</th><th>地域 / 年份</th><th>数值与单位</th><th>适用性</th></tr></thead><tbody>${factorRows || "<tr><td colspan='5'>尚未登记因子</td></tr>"}</tbody></table></div>
-      <footer class="pcf-card__actions"><p>确认适用性不会改写活动数据；未确认前不能运行正式计算。</p><p class="pcf-factor-disclaimer"><small>演示因子 · sourceKind=${safe(factors?.sourceKind || "demo_stub")}。本地未接入真实排放因子库；正式项目应引用 CPCD／IPE／天工或 Ecoinvent／GaBi 等外部数据集（见 pcf-calculation skill 指南）。</small></p>${factorsConfirmed ? statusChip("因子已确认", "ok") : actionButton("确认因子适用性", "primary", 'data-action="pcf-confirm-factors"')}</footer>
+      <footer class="pcf-card__actions"><p>确认适用性不会改写活动数据；未确认前不能运行正式计算。</p><p class="pcf-factor-disclaimer"><small>演示集 · sourceKind=${safe(factors?.sourceKind || "demo_stub")}。数值形态对齐本机 DatabaseofEmissionFactor 种子／样例，尚未联机 API；正式项目经因子库检索后确认适用性（亦可引用 CPCD／IPE／天工／Ecoinvent／GaBi）。见 docs/emission-factors-status.md。</small></p>${factorsConfirmed ? statusChip("因子已确认", "ok") : actionButton("确认因子适用性", "primary", 'data-action="pcf-confirm-factors"')}</footer>
     </section>`;
     const stages = calculation?.stages || [];
     const hotspots = calculation?.hotspots || [];
