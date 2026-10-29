@@ -12,8 +12,29 @@
     { "source": "/knowledge", "destination": "/apps/site/knowledge/index.html" },
     { "source": "/knowledge/", "destination": "/apps/site/knowledge/index.html" },
     { "source": "/knowledge/:path*", "destination": "/apps/site/knowledge/:path*" },
+    { "source": "/industries", "destination": "/apps/site/industries/index.html" },
+    { "source": "/industries/", "destination": "/apps/site/industries/index.html" },
+    { "source": "/industries/:path*", "destination": "/apps/site/industries/:path*" },
+    { "source": "/tools", "destination": "/apps/site/tools/index.html" },
+    { "source": "/tools/", "destination": "/apps/site/tools/index.html" },
+    { "source": "/tools/:path*", "destination": "/apps/site/tools/:path*" },
+    { "source": "/cases", "destination": "/apps/site/cases/index.html" },
+    { "source": "/cases/", "destination": "/apps/site/cases/index.html" },
+    { "source": "/cases/:path*", "destination": "/apps/site/cases/:path*" },
     { "source": "/services/:slug", "destination": "/apps/site/services/:slug/index.html" },
     { "source": "/services/:slug/", "destination": "/apps/site/services/:slug/index.html" },
+    { "source": "/apps/site/site-v3.css", "destination": "/apps/site/site/site-v3.css" },
+    { "source": "/apps/site/i18n.js", "destination": "/apps/site/site/i18n.js" },
+    { "source": "/apps/site/site-shell.js", "destination": "/apps/site/site/site-shell.js" },
+    { "source": "/apps/site/float-tools.js", "destination": "/apps/site/site/float-tools.js" },
+    { "source": "/apps/site/contact.js", "destination": "/apps/site/site/contact.js" },
+    { "source": "/apps/site/industries.js", "destination": "/apps/site/site/industries.js" },
+    { "source": "/apps/site/cases.js", "destination": "/apps/site/site/cases.js" },
+    { "source": "/apps/site/services-catalog.js", "destination": "/apps/site/site/services-catalog.js" },
+    { "source": "/apps/site/service-page.js", "destination": "/apps/site/site/service-page.js" },
+    { "source": "/apps/site/industry-page.js", "destination": "/apps/site/site/industry-page.js" },
+    { "source": "/apps/site/tokens.css", "destination": "/apps/site/site/tokens.css" },
+    { "source": "/apps/site/marketing.css", "destination": "/apps/site/site/marketing.css" },
     { "source": "/site/marketing.css", "destination": "/apps/site/site/marketing.css" },
     { "source": "/site/:path*", "destination": "/apps/site/site/:path*" },
     { "source": "/packages/agent/:path*", "destination": "/packages/agent/:path*" },
@@ -27,6 +48,20 @@
     { "source": "/Lumino 指南文章.dc.html", "destination": "/apps/site/Lumino 指南文章.dc.html" }
   ],
   "headers": [
+    {
+      "source": "/(.*)\\.css",
+      "headers": [
+        { "key": "Content-Type", "value": "text/css; charset=utf-8" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.js",
+      "headers": [
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [

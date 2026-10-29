@@ -6,16 +6,16 @@
   <title>解决方案 · Lumino</title>
   <meta name="description" content="按行业看清法规压力、关键卡点与可落地路径；钢铁、铝材、纺织、包装等，我们熟悉并交付。">
   <link rel="icon" href="/favicon.svg">
-  <link rel="stylesheet" href="../site/site-v3.css">
-  <script defer src="../site/i18n.js"></script>
-  <script defer src="../site/site-shell.js"></script>
-  <script defer src="../site/industries.js"></script>
-  <script defer src="../site/float-tools.js"></script>
+  <link rel="stylesheet" href="/apps/site/site/site-v3.css">
+  <script defer src="/apps/site/site/i18n.js"></script>
+  <script defer src="/apps/site/site/site-shell.js"></script>
+  <script defer src="/apps/site/site/industries.js"></script>
+  <script defer src="/apps/site/site/float-tools.js"></script>
 </head>
 <body>
 <lumino-header current="industries"></lumino-header>
 <main id="main">
-  <section class="m-page-hero">
+  <section class="m-page-hero m-page-hero--compact">
     <div class="wrap">
       <p class="crumb"><a href="../Lumino%20官网.dc.html" data-i18n-zh="首页" data-i18n-en="Home"></a> / <span data-i18n-zh="解决方案" data-i18n-en="Industries"></span></p>
       <h1 data-i18n-zh="按行业看清，下一步该做什么" data-i18n-en="See what to do next—by industry"></h1>
@@ -71,8 +71,9 @@ document.addEventListener("DOMContentLoaded", function () {
       ? "Customer templates, surveys and disclosure portals—we deliver those on the same foundation as the services above."
       : "客户指定模板、供应链问卷、披露平台对接等，我们与上述服务在同一底座上交付。";
 
+    const helpIcon = `<span class="m-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>`;
     const helps = (item.helps || []).map(([a, b]) =>
-      `<article class="ind-help"><strong>${t(a)}</strong><span>${t(b)}</span></article>`
+      `<article class="ind-help">${helpIcon}<div><strong>${t(a)}</strong><span>${t(b)}</span></div></article>`
     ).join("");
     const chain = (item.chain || []).map((step, i) =>
       `<li><span class="mono">${String(i + 1).padStart(2, "0")}</span><span>${t(step)}</span></li>`
@@ -90,10 +91,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }).join("");
     const prep = (item.prepare || []).map((x) => `<li>${t(x)}</li>`).join("");
 
+    const mediaLabel = lang === "en" ? "Industry visual placeholder" : "行业场景占位图";
     detail.innerHTML = `
-      <div class="ind-hero-block">
-        <h2>${t(item.name)}</h2>
-        <p class="ind-tagline">${t(item.tagline || item.challenge)}</p>
+      <div class="ind-visual">
+        <div class="ind-visual__copy ind-hero-block" style="margin:0;border:0;padding:0">
+          <h2>${t(item.name)}</h2>
+          <p class="ind-tagline">${t(item.tagline || item.challenge)}</p>
+        </div>
+        <div class="ind-visual__media" role="img" aria-label="${mediaLabel}"><span>${mediaLabel}</span></div>
       </div>
       <div class="ind-bg">
         <strong class="ind-label">${bgLabel}</strong>
