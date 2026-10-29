@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>工具 · Lumino</title>
-  <meta name="description" content="免费测算：CBAM 成本计算器与其他量级估算工具。">
+  <meta name="description" content="CBAM 在线成本试算，以及其他碳与 ESG 量级估算申请入口。">
   <link rel="icon" href="/favicon.svg">
   <link rel="stylesheet" href="/apps/site/site/site-v3.css">
   <script defer src="/apps/site/site/i18n.js"></script>
@@ -17,8 +17,8 @@
   <section class="m-page-hero m-page-hero--compact">
     <div class="wrap">
       <p class="crumb"><a href="../Lumino%20官网.dc.html" data-i18n-zh="首页" data-i18n-en="Home"></a> / <span data-i18n-zh="工具" data-i18n-en="Tools"></span></p>
-      <h1 data-i18n-zh="免费测算工具" data-i18n-en="Free calculators"></h1>
-      <p data-i18n-zh="几分钟得到量级判断，用于商务沟通。正式核算与核查仍按项目交付。" data-i18n-en="Get an order-of-magnitude view in minutes for planning talks. Formal calculation and verification still run as a project."></p>
+      <h1 data-i18n-zh="测算与估算工具" data-i18n-en="Estimates and calculators"></h1>
+      <p data-i18n-zh="CBAM 可在线试算；其他项可申请初步估算。结果用于商务判断，正式核算与核查仍按项目交付。" data-i18n-en="Run CBAM online, or request a first-pass estimate for other topics. For planning only—formal work still runs as a project."></p>
     </div>
   </section>
   <section class="m-section">
@@ -30,35 +30,56 @@
             CBAM CALCULATOR
           </span>
           <h2 data-i18n-zh="CBAM 成本计算器" data-i18n-en="CBAM cost calculator"></h2>
-          <p data-i18n-zh="按 CN Code、出口量与核算年份估算证书数量与成本区间。完整计算器已独立设计，在新标签中打开，可调整参数并查看结果明细。" data-i18n-en="Estimate certificate volumes and cost ranges by CN code, export volume and year. The full calculator opens in a new tab—adjust inputs and review the breakdown."></p>
+          <p data-i18n-zh="按 CN Code、出口量与核算年份估算证书数量与成本区间。从这里进入完整试算页，可调整参数并查看结果明细。" data-i18n-en="Estimate certificate volumes and cost ranges by CN code, export volume and year. Open the full calculator here to adjust inputs and review the breakdown."></p>
           <div class="tool-feature__actions">
-            <a class="button button--primary" href="../calculator/" target="_blank" rel="noopener" data-i18n-zh="打开完整计算器" data-i18n-en="Open full calculator"></a>
+            <a class="button button--primary" href="../calculator/" data-i18n-zh="进入 CBAM 试算" data-i18n-en="Open CBAM calculator"></a>
             <a class="button button--ghost" href="../Lumino%20联系.dc.html?serviceId=cbam&source=tools" data-i18n-zh="预约正式核算" data-i18n-en="Book a formal calculation"></a>
           </div>
           <p class="svc-more-note" style="margin:8px 0 0" data-i18n-zh="测算不含免费配额与原产国碳价抵扣的全部情形，结果仅供内部判断，不构成法定申报依据。" data-i18n-en="Estimates do not cover every free-allocation or origin-carbon-price case. For internal judgement only—not a legal filing basis."></p>
         </div>
-        <div class="tool-feature__shot" aria-hidden="true">
-          <div class="tool-feature__shot-row"></div>
-          <div class="tool-feature__shot-row"></div>
-          <div class="tool-feature__shot-row"></div>
-          <div class="tool-feature__shot-caption">CBAM · dashboard preview</div>
-        </div>
+        <a class="tool-feature__shot" href="../calculator/" aria-label="进入 CBAM 试算">
+          <div class="tool-preview">
+            <div class="tool-preview__head">
+              <span>7208 · 热轧卷</span>
+              <span>2026</span>
+            </div>
+            <div class="tool-preview__total">
+              <span data-i18n-zh="预计 CBAM 成本" data-i18n-en="Est. CBAM cost"></span>
+              <strong>¥ 1.28M</strong>
+              <small data-i18n-zh="示意 · 正式页可调参数" data-i18n-en="Sample · adjust on full page"></small>
+            </div>
+            <div class="tool-preview__metrics">
+              <div><span data-i18n-zh="证书" data-i18n-en="Certificates"></span><strong>1,842</strong></div>
+              <div><span data-i18n-zh="免费配额" data-i18n-en="Free alloc."></span><strong>−612</strong></div>
+              <div><span data-i18n-zh="单位成本" data-i18n-en="Unit cost"></span><strong>¥128</strong></div>
+            </div>
+            <div class="tool-preview__bars" aria-hidden="true">
+              <i style="--h:72%"></i>
+              <i style="--h:38%"></i>
+              <i style="--h:54%"></i>
+              <i style="--h:46%"></i>
+              <i style="--h:61%"></i>
+              <i style="--h:88%"></i>
+            </div>
+            <span class="tool-preview__cta" data-i18n-zh="打开完整试算 →" data-i18n-en="Open full calculator →"></span>
+          </div>
+        </a>
       </article>
 
       <div class="tools-secondary">
         <a href="../Lumino%20联系.dc.html?serviceId=pcf&source=tools">
           <span class="m-icon m-icon--ghost" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
-          <strong data-i18n-zh="产品碳足迹快速估算" data-i18n-en="Quick footprint estimate"></strong>
+          <strong data-i18n-zh="申请产品碳足迹初步估算" data-i18n-en="Request a first-pass footprint estimate"></strong>
           <span data-i18n-zh="说明产品与工艺后，我们给出量级判断与正式核算路径。" data-i18n-en="Tell us the product and process—we’ll size the order of magnitude and the formal path."></span>
         </a>
         <a href="../Lumino%20联系.dc.html?serviceId=inventory&source=tools">
           <span class="m-icon m-icon--ghost" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg></span>
-          <strong data-i18n-zh="企业排放量估算" data-i18n-en="Company emissions estimate"></strong>
+          <strong data-i18n-zh="申请企业排放初步估算" data-i18n-en="Request a company emissions estimate"></strong>
           <span data-i18n-zh="按能源用量粗看范围一、二量级，便于立项前沟通。" data-i18n-en="Indicative Scope 1–2 from energy use, for pre-project talks."></span>
         </a>
         <a href="../Lumino%20联系.dc.html?serviceId=assets&source=tools">
           <span class="m-icon m-icon--ghost" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
-          <strong data-i18n-zh="绿电需求测算" data-i18n-en="Renewable power needs"></strong>
+          <strong data-i18n-zh="申请绿电需求测算" data-i18n-en="Request a renewable-power needs estimate"></strong>
           <span data-i18n-zh="按用电量与目标占比，粗看绿证需求量级。" data-i18n-en="Indicative certificates for a renewable share target."></span>
         </a>
       </div>

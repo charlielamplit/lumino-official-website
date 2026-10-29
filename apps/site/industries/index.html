@@ -15,27 +15,34 @@
 <body>
 <lumino-header current="industries"></lumino-header>
 <main id="main">
-  <section class="m-page-hero m-page-hero--compact">
-    <div class="wrap">
-      <p class="crumb"><a href="../Lumino%20官网.dc.html" data-i18n-zh="首页" data-i18n-en="Home"></a> / <span data-i18n-zh="解决方案" data-i18n-en="Industries"></span></p>
+  <section class="ind-page-hero">
+    <div class="ind-page-hero__media" aria-hidden="true">
+      <img src="/apps/site/site/assets/hero.png" alt="" width="2400" height="1400" decoding="async">
+    </div>
+    <div class="ind-page-hero__mask" aria-hidden="true"></div>
+    <div class="wrap ind-page-hero__copy">
+      <p class="crumb"><a href="/apps/site/Lumino%20官网.dc.html" data-i18n-zh="首页" data-i18n-en="Home"></a> / <span data-i18n-zh="解决方案" data-i18n-en="Industries"></span></p>
       <h1 data-i18n-zh="按行业看清，下一步该做什么" data-i18n-en="See what to do next—by industry"></h1>
       <p data-i18n-zh="不同行业的法规、客户要求和常见卡点并不一样。选择你的行业，查看关键挑战、我们能帮你做到什么，以及建议优先推进的事项。" data-i18n-en="Rules, customer asks and blockers differ by industry. Pick yours to see the key challenges, what we can help you deliver, and what to advance first."></p>
     </div>
   </section>
-  <section class="m-section">
+
+  <div class="ind-pills-bar ind-pills-bar--dock" id="ind-pills-bar">
     <div class="wrap">
-      <div class="ind-pills-bar"><div class="ind-pills" id="ind-pills" role="tablist"></div></div>
-      <div id="ind-detail"></div>
+      <div class="ind-pills" id="ind-pills" role="tablist" aria-label="行业"></div>
     </div>
-  </section>
-  <section class="m-section m-section--dark">
+  </div>
+
+  <div id="ind-detail"></div>
+
+  <section class="m-section ind-cta-band">
     <div class="wrap m-closing">
       <div>
         <h2 data-i18n-zh="说清产品和时间，我们给出优先顺序" data-i18n-en="Tell us the products and deadline—we set the order of work"></h2>
         <p data-i18n-zh="按你的行业与客户要求，我们给出优先顺序、资料清单与交付范围。" data-i18n-en="Based on your industry and buyer asks, we set priorities, the document list and the delivery scope."></p>
       </div>
       <div class="m-closing__actions">
-        <a class="button button--on-dark button--sm" id="ind-cta" href="../Lumino%20联系.dc.html" data-i18n-zh="预约咨询" data-i18n-en="Book a consultation"></a>
+        <a class="button button--on-dark button--sm" id="ind-cta" href="/apps/site/Lumino%20联系.dc.html" data-i18n-zh="预约咨询" data-i18n-en="Book a consultation"></a>
       </div>
     </div>
   </section>
@@ -52,82 +59,164 @@ document.addEventListener("DOMContentLoaded", function () {
   const pills = document.getElementById("ind-pills");
   const detail = document.getElementById("ind-detail");
   const cta = document.getElementById("ind-cta");
+  const imgById = {
+    steel: "/apps/site/site/assets/industries/steel.png",
+    aluminium: "/apps/site/site/assets/industries/aluminium.png",
+    textile: "/apps/site/site/assets/industries/textile.png",
+    packaging: "/apps/site/site/assets/industries/packaging.png",
+    chem: "/apps/site/site/assets/industries/chemicals.png",
+    elec: "/apps/site/site/assets/industries/electronics.png",
+  };
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
 
   function render() {
     const item = list.find((x) => x.id === current) || list[0];
     if (!item) return;
     pills.innerHTML = list.map((i) => {
       const on = i.id === item.id;
-      return `<button type="button" role="tab" aria-selected="${on}" data-id="${i.id}" class="ind-pill${on ? " is-on" : ""}">${t(i.name)}</button>`;
+      return `<button type="button" role="tab" aria-selected="${on}" data-id="${i.id}" class="ind-pill${on ? " is-on" : ""}">${esc(t(i.name))}</button>`;
     }).join("");
 
-    const bgLabel = lang === "en" ? "Industry background" : "行业背景";
-    const helpLabel = lang === "en" ? "How we help" : "我们能为你做的";
-    const chainLabel = lang === "en" ? "Typical path" : "典型落地路径";
-    const reqsLabel = lang === "en" ? "What typically applies" : "常见适用要求";
-    const pkgLabel = lang === "en" ? "Priority work packages" : "优先推进的工作包";
-    const prepLabel = lang === "en" ? "What you should have ready" : "建议提前准备的资料";
-    const moreLabel = lang === "en"
-      ? "Customer templates, surveys and disclosure portals—we deliver those on the same foundation as the services above."
-      : "客户指定模板、供应链问卷、披露平台对接等，我们与上述服务在同一底座上交付。";
+    const L = {
+      help: lang === "en" ? "How we help" : "我们能为你做的",
+      chain: lang === "en" ? "Typical path" : "典型落地路径",
+      pkg: lang === "en" ? "Priority work packages" : "优先推进的工作包",
+      reqs: lang === "en" ? "What typically applies" : "常见适用要求",
+      prep: lang === "en" ? "What you should have ready" : "建议提前准备的资料",
+      deliv: lang === "en" ? "Deliverables" : "交付物",
+      more: lang === "en"
+        ? "Customer templates, surveys and disclosure portals—we deliver those on the same foundation as the services above."
+        : "客户指定模板、供应链问卷、披露平台对接等，我们与上述服务在同一底座上交付。",
+    };
 
-    const helpIcon = `<span class="m-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>`;
+    const tags = [...new Set((item.packages || []).map((p) => p.tag).filter(Boolean))];
+    const tagHtml = tags.map((tag, i) =>
+      `<span class="ind-chip${i === 0 ? " ind-chip--accent" : ""}">${esc(tag)}</span>`
+    ).join("");
+
     const helps = (item.helps || []).map(([a, b]) =>
-      `<article class="ind-help">${helpIcon}<div><strong>${t(a)}</strong><span>${t(b)}</span></div></article>`
+      `<article class="ind-help-card">
+        <span class="m-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <strong>${esc(t(a))}</strong>
+        <span>${esc(t(b))}</span>
+      </article>`
     ).join("");
-    const chain = (item.chain || []).map((step, i) =>
-      `<li><span class="mono">${String(i + 1).padStart(2, "0")}</span><span>${t(step)}</span></li>`
-    ).join("");
-    const reqs = (item.reqs || []).map(([a, b]) =>
-      `<div class="ind-req"><strong>${t(a)}</strong><span>${t(b)}</span></div>`
-    ).join("");
-    const pkgs = (item.packages || []).map((p) => {
-      const bullets = (p.bullets || []).map((b) => `<li>${t(b)}</li>`).join("");
-      return `<article class="ind-pkg">
-        <div class="ind-pkg__top"><strong>${t(p.title)}</strong><span class="mono">${p.tag || ""}</span></div>
-        <p>${t(p.body)}</p>
-        <ul>${bullets}</ul>
+
+    const chain = (item.chain || []).map((step, i) => {
+      const last = i === (item.chain.length - 1);
+      return `<li class="ind-step${i === 0 ? " is-first" : ""}">
+        <div class="ind-step__rail">
+          <span class="ind-step__n">${String(i + 1).padStart(2, "0")}</span>
+          ${last ? "" : '<span class="ind-step__line" aria-hidden="true"></span>'}
+        </div>
+        <span class="ind-step__t">${esc(t(step))}</span>
+      </li>`;
+    }).join("");
+
+    const pkgs = (item.packages || []).map((p, i) => {
+      const bullets = (p.bullets || []).map((b) =>
+        `<li><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg><span>${esc(t(b))}</span></li>`
+      ).join("");
+      return `<article class="ind-pkg-card">
+        <div class="ind-pkg-card__body">
+          <div class="ind-pkg-card__meta"><span class="mono">${String(i + 1).padStart(2, "0")}</span><span class="ind-chip ind-chip--accent">${esc(p.tag || "")}</span></div>
+          <h4>${esc(t(p.title))}</h4>
+          <p>${esc(t(p.body))}</p>
+        </div>
+        <div class="ind-pkg-card__foot">
+          <span class="ind-pkg-card__foot-label">${L.deliv}</span>
+          <ul>${bullets}</ul>
+        </div>
       </article>`;
     }).join("");
-    const prep = (item.prepare || []).map((x) => `<li>${t(x)}</li>`).join("");
 
-    const mediaLabel = lang === "en" ? "Industry visual placeholder" : "行业场景占位图";
+    const reqs = (item.reqs || []).map(([a, b]) =>
+      `<div class="ind-req-row"><strong>${esc(t(a))}</strong><span>${esc(t(b))}</span></div>`
+    ).join("");
+
+    const prep = (item.prepare || []).map((x) =>
+      `<li><span class="ind-check" aria-hidden="true"></span><span>${esc(t(x))}</span></li>`
+    ).join("");
+
+    const img = imgById[item.id] || imgById.steel;
+    const imgAlt = esc(t(item.name));
+
     detail.innerHTML = `
-      <div class="ind-visual">
-        <div class="ind-visual__copy ind-hero-block" style="margin:0;border:0;padding:0">
-          <h2>${t(item.name)}</h2>
-          <p class="ind-tagline">${t(item.tagline || item.challenge)}</p>
+      <section class="ind-band ind-band--intro">
+        <div class="wrap ind-intro">
+          <div class="ind-intro__copy">
+            <div class="ind-chips">${tagHtml}</div>
+            <h2>${esc(t(item.name))}</h2>
+            <p class="ind-intro__tagline">${esc(t(item.tagline || item.challenge))}</p>
+            <p class="ind-intro__bg">${esc(t(item.background || item.challenge))}</p>
+          </div>
+          <figure class="ind-intro__media">
+            <img src="${img}" alt="${imgAlt}" width="1200" height="900" loading="lazy" decoding="async">
+          </figure>
         </div>
-        <div class="ind-visual__media" role="img" aria-label="${mediaLabel}"><span>${mediaLabel}</span></div>
-      </div>
-      <div class="ind-bg">
-        <strong class="ind-label">${bgLabel}</strong>
-        <p>${t(item.background || item.challenge)}</p>
-      </div>
-      <div class="ind-helps-wrap">
-        <strong class="ind-label">${helpLabel}</strong>
-        <div class="ind-helps">${helps}</div>
-      </div>
-      <div class="ind-chain-wrap">
-        <strong class="ind-label">${chainLabel}</strong>
-        <ol class="ind-chain">${chain}</ol>
-      </div>
-      <div class="ind-layout">
-        <div class="ind-main">
-          <p class="ind-challenge">${t(item.challenge)}</p>
-          <div><strong class="ind-label">${reqsLabel}</strong><div class="ind-req-list">${reqs}</div></div>
-          <div class="ind-prepare"><strong>${prepLabel}</strong><ul>${prep}</ul></div>
+      </section>
+
+      <section class="ind-band ind-band--wash">
+        <div class="wrap">
+          <header class="ind-sec-head">
+            <span class="ind-sec-num">01</span>
+            <h3>${L.help}</h3>
+          </header>
+          <div class="ind-help-grid">${helps}</div>
         </div>
-        <div class="ind-side">
-          <strong class="ind-label">${pkgLabel}</strong>
-          ${pkgs}
-          <p class="svc-more-note">${moreLabel}</p>
+      </section>
+
+      <section class="ind-band">
+        <div class="wrap">
+          <header class="ind-sec-head ind-sec-head--split">
+            <div>
+              <span class="ind-sec-num">02</span>
+              <h3>${L.chain}</h3>
+            </div>
+            <p class="ind-sec-aside">${esc(t(item.challenge))}</p>
+          </header>
+          <ol class="ind-steps">${chain}</ol>
         </div>
-      </div>`;
-    cta.href = `../Lumino%20联系.dc.html?industry=${encodeURIComponent(item.id)}`;
+      </section>
+
+      <section class="ind-band ind-band--soft">
+        <div class="wrap">
+          <header class="ind-sec-head">
+            <span class="ind-sec-num">03</span>
+            <h3>${L.pkg}</h3>
+          </header>
+          <div class="ind-pkg-grid">${pkgs}</div>
+          <p class="ind-more">${L.more}</p>
+        </div>
+      </section>
+
+      <section class="ind-band">
+        <div class="wrap ind-split">
+          <div>
+            <header class="ind-sec-head">
+              <span class="ind-sec-num">04</span>
+              <h3>${L.reqs}</h3>
+            </header>
+            <div class="ind-req-block">${reqs}</div>
+          </div>
+          <aside class="ind-prep">
+            <header class="ind-sec-head ind-sec-head--on-dark">
+              <span class="ind-sec-num">05</span>
+              <h3>${L.prep}</h3>
+            </header>
+            <ul>${prep}</ul>
+          </aside>
+        </div>
+      </section>`;
+
+    cta.href = `/apps/site/Lumino%20联系.dc.html?industry=${encodeURIComponent(item.id)}`;
     if (i18n) i18n.applyDataI18n(document);
     if (window.LuminoEnhanceChrome) window.LuminoEnhanceChrome(detail);
   }
+
   pills.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-id]");
     if (!btn) return;
@@ -136,6 +225,7 @@ document.addEventListener("DOMContentLoaded", function () {
     url.searchParams.set("industry", current);
     history.replaceState(null, "", url);
     render();
+    detail.scrollIntoView({ behavior: "smooth", block: "start" });
   });
   render();
 });

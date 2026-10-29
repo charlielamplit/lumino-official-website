@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Lumino · 出口与制造企业的碳与 ESG 合规服务</title>
-  <meta name="description" content="应对全球绿色要求，一个平台就够。从碳边境调节、产品碳足迹到 ESG 报告，资料只需准备一次。">
+  <meta name="description" content="应对全球绿色要求，我们全程陪伴。从碳边境调节、产品碳足迹到 ESG 报告，Lumino 帮你备齐数据、完成核算、通过复核。">
   <link rel="icon" href="/favicon.svg">
   <link rel="stylesheet" href="/apps/site/site/site-v3.css">
   <script defer src="/apps/site/site/i18n.js"></script>
@@ -16,16 +16,16 @@
 <main id="main">
 
   <section class="m-hero" aria-label="首屏">
-    <div class="m-hero__media" data-empty="true" id="hero-media">
-      <img src="/apps/site/site/assets/hero.jpg" alt="" width="2400" height="1400" decoding="async">
+    <div class="m-hero__media" data-empty="false" id="hero-media">
+      <img src="/apps/site/site/assets/hero.png" alt="" width="2400" height="1400" decoding="async">
     </div>
     <div class="m-hero__mask" aria-hidden="true"></div>
     <div class="m-hero__grid-tex" aria-hidden="true"></div>
-    <span class="m-hero__ph" id="hero-ph" data-i18n-zh="首屏背景图占位：港口集装箱 / 工厂 / 产线航拍（待替换无水印图）" data-i18n-en="Hero photo placeholder: port, factory or production aerial"></span>
+    <span class="m-hero__ph" id="hero-ph" hidden data-i18n-zh="首屏背景图" data-i18n-en="Hero photo"></span>
     <div class="m-hero__grid">
       <div class="m-hero__copy">
-        <span class="m-hero__kicker" data-i18n-zh="面向出口与制造企业" data-i18n-en="For exporters and manufacturers"></span>
-        <h1 data-i18n-zh="应对全球绿色要求，一个平台就够" data-i18n-en="One platform for every green requirement"></h1>
+        <span class="m-hero__kicker" data-i18n-zh="碳与 ESG 合规服务" data-i18n-en="Carbon and ESG compliance"></span>
+        <h1 data-i18n-zh="应对全球绿色要求，我们全程陪伴。" data-i18n-en="Meeting global green requirements—we're with you all the way."></h1>
         <p class="m-hero__lead" data-i18n-zh="从碳边境调节、产品碳足迹到 ESG 报告，Lumino 帮你备齐数据、完成核算、通过复核。资料只需准备一次。" data-i18n-en="From CBAM and product carbon footprints to ESG reporting, Lumino gets your data ready, runs the numbers and sees them through review. You only prepare your records once."></p>
         <div class="m-hero__actions">
           <a class="button button--primary" href="Lumino%20联系.dc.html" data-i18n-zh="预约咨询" data-i18n-en="Book a consultation"></a>
@@ -141,7 +141,9 @@
         </ol>
         <a class="m-link" href="Lumino%20平台.dc.html" data-i18n-zh="了解平台如何工作 →" data-i18n-en="How the platform works →"></a>
       </div>
-      <div class="m-shot" aria-hidden="true"><span data-i18n-zh="产品截图：客户门户工作台" data-i18n-en="Product shot: client portal"></span></div>
+      <div class="m-shot m-shot--photo" aria-hidden="true">
+        <img src="/apps/site/site/assets/cases/steel-mill.png" alt="" width="1200" height="900" loading="lazy" decoding="async">
+      </div>
     </div>
   </section>
 
@@ -155,27 +157,27 @@
         <a class="m-link" href="industries/" data-i18n-zh="全部行业 →" data-i18n-en="All industries →"></a>
       </header>
       <div class="m-ind-grid">
-        <a class="m-ind-cell" href="industries/?industry=steel">
+        <a class="m-ind-cell" href="industries/?industry=steel" style="--ind-img:url('/apps/site/site/assets/industries/steel.png')">
           <div class="m-ind-cell__top"><h3 data-i18n-zh="钢铁" data-i18n-en="Steel"></h3><span>→</span></div>
           <p data-i18n-zh="计量按车间、申报要按产品；前体声明与季度窗口是常见卡点。" data-i18n-en="Meters at shop level, filings at product level—precursors and quarterly windows are the usual blockers."></p>
         </a>
-        <a class="m-ind-cell" href="industries/?industry=aluminium">
+        <a class="m-ind-cell" href="industries/?industry=aluminium" style="--ind-img:url('/apps/site/site/assets/industries/aluminium.png')">
           <div class="m-ind-cell__top"><h3 data-i18n-zh="铝及铝制品" data-i18n-en="Aluminium"></h3><span>→</span></div>
           <p data-i18n-zh="电解电耗与绿电声明同时影响进口商申报和下游低碳采购门槛。" data-i18n-en="Smelting power and renewable claims shape both importer filings and low-carbon buyer thresholds."></p>
         </a>
-        <a class="m-ind-cell" href="industries/?industry=textile">
+        <a class="m-ind-cell" href="industries/?industry=textile" style="--ind-img:url('/apps/site/site/assets/industries/textile.png')">
           <div class="m-ind-cell__top"><h3 data-i18n-zh="纺织服装" data-i18n-en="Textiles & apparel"></h3><span>→</span></div>
           <p data-i18n-zh="品牌要面料 / 成衣级结果；染整与外发数据分散，边界一变结果就变。" data-i18n-en="Brands want fabric or garment results; dyeing and subcontract data scatter, and boundaries move the number."></p>
         </a>
-        <a class="m-ind-cell" href="industries/?industry=packaging">
+        <a class="m-ind-cell" href="industries/?industry=packaging" style="--ind-img:url('/apps/site/site/assets/industries/packaging.png')">
           <div class="m-ind-cell__top"><h3 data-i18n-zh="包装" data-i18n-en="Packaging"></h3><span>→</span></div>
           <p data-i18n-zh="材料声明、工厂排放与产品碳数据常被一起要；多厂区口径更难对齐。" data-i18n-en="Material claims, plant emissions and product carbon are often requested together—harder across sites."></p>
         </a>
-        <a class="m-ind-cell" href="industries/?industry=chem">
+        <a class="m-ind-cell" href="industries/?industry=chem" style="--ind-img:url('/apps/site/site/assets/industries/chemicals.png')">
           <div class="m-ind-cell__top"><h3 data-i18n-zh="化工" data-i18n-en="Chemicals"></h3><span>→</span></div>
           <p data-i18n-zh="工艺排放与燃烧排放缠在一起；路线不同，证明要求就不同。" data-i18n-en="Process and combustion emissions tangle; different routes mean different evidence."></p>
         </a>
-        <a class="m-ind-cell" href="industries/?industry=elec">
+        <a class="m-ind-cell" href="industries/?industry=elec" style="--ind-img:url('/apps/site/site/assets/industries/electronics.png')">
           <div class="m-ind-cell__top"><h3 data-i18n-zh="电子电器" data-i18n-en="Electronics"></h3><span>→</span></div>
           <p data-i18n-zh="零部件碳足迹、厂区绿电占比与 ESG 审核表，往往同一季压下来。" data-i18n-en="Part footprints, site renewable share and ESG audits often land in the same season."></p>
         </a>
@@ -187,53 +189,36 @@
     <div class="wrap">
       <header class="m-section__head">
         <div class="m-section__copy">
-          <h2 data-i18n-zh="我们做过的项目" data-i18n-en="Recent work"></h2>
-          <p data-i18n-zh="客户名称已匿名，项目内容经客户同意后公开。" data-i18n-en="Client names are withheld. Details are shared with permission."></p>
+          <h2 data-i18n-zh="项目案例" data-i18n-en="Project cases"></h2>
         </div>
         <a class="m-link" href="cases/" data-i18n-zh="全部案例 →" data-i18n-en="All case studies →"></a>
       </header>
       <div class="m-card-grid">
         <article class="m-card">
-          <div class="m-card__media"><span class="m-shot-label" data-i18n-zh="项目图片：热轧产线" data-i18n-en="Project photo: rolling mill"></span></div>
+          <div class="m-card__media"><img src="/apps/site/site/assets/cases/steel-mill.png" alt="热轧产线工业场景" width="1200" height="675" loading="lazy" decoding="async"></div>
           <div class="m-card__body">
             <div class="m-card__meta"><span data-i18n-zh="钢铁 · 华东" data-i18n-en="Steel · East China"></span><span class="status-chip">CBAM</span></div>
-            <h3 data-i18n-zh="热轧钢材出口企业，[X] 周完成首次 CBAM 季度数据交付" data-i18n-en="A hot-rolled steel exporter delivers its first CBAM quarterly data in [X] weeks"></h3>
-            <p data-i18n-zh="欧盟进口商临时要求设施级排放数据，企业此前没有系统台账。" data-i18n-en="An EU importer asked for installation-level data at short notice, with no existing records in place."></p>
-            <div class="m-card__kpis">
-              <div><strong>[X]</strong><span data-i18n-zh="CN 编码" data-i18n-en="CN codes"></span></div>
-              <div><strong>[X]%</strong><span data-i18n-zh="实测数据占比" data-i18n-en="Measured data"></span></div>
-              <div><strong>[X] 周</strong><span data-i18n-zh="交付周期" data-i18n-en="Timeline"></span></div>
-            </div>
+            <h3 data-i18n-zh="热轧钢材出口企业完成首次 CBAM 季度数据交付" data-i18n-en="A hot-rolled steel exporter delivers its first CBAM quarterly data pack"></h3>
+            <p data-i18n-zh="欧盟进口商临时要求设施级排放数据；我们锁定产品—产线—编码关系，并交付可复用的季度模板。" data-i18n-en="An EU importer asked for installation-level data at short notice. We locked product–line–code links and delivered a reusable quarterly template."></p>
           </div>
         </article>
         <article class="m-card">
-          <div class="m-card__media"><span class="m-shot-label" data-i18n-zh="项目图片：面料车间" data-i18n-en="Project photo: fabric mill"></span></div>
+          <div class="m-card__media"><img src="/apps/site/site/assets/cases/textile-mill.png" alt="纺织染整车间场景" width="1200" height="675" loading="lazy" decoding="async"></div>
           <div class="m-card__body">
             <div class="m-card__meta"><span data-i18n-zh="纺织服装 · 华南" data-i18n-en="Textiles · South China"></span><span class="status-chip">PCF</span></div>
-            <h3 data-i18n-zh="面料供应商按品牌要求完成 [X] 款产品碳足迹" data-i18n-en="A fabric supplier completes [X] product footprints for a global brand"></h3>
-            <p data-i18n-zh="品牌客户要求供应商按 ISO 14067 提供碳足迹，并标出排放热点。" data-i18n-en="A brand required ISO 14067 footprints with hotspots identified."></p>
-            <div class="m-card__kpis">
-              <div><strong>[X]</strong><span data-i18n-zh="产品" data-i18n-en="Products"></span></div>
-              <div><strong>[X]</strong><span data-i18n-zh="上游供应商" data-i18n-en="Suppliers"></span></div>
-              <div><strong>[X] 周</strong><span data-i18n-zh="交付周期" data-i18n-en="Timeline"></span></div>
-            </div>
+            <h3 data-i18n-zh="面料供应商按品牌要求完成产品碳足迹核算" data-i18n-en="A fabric supplier completes product footprints for a global brand"></h3>
+            <p data-i18n-zh="品牌要求按 ISO 14067 提供结果并标出热点；我们统一边界与蒸汽分摊，输出可复用的采集模板。" data-i18n-en="A brand required ISO 14067 results with hotspots. We locked the boundary and steam allocation, then delivered reusable collection sheets."></p>
           </div>
         </article>
         <article class="m-card">
-          <div class="m-card__media"><span class="m-shot-label" data-i18n-zh="项目图片：包装工厂" data-i18n-en="Project photo: packaging plant"></span></div>
+          <div class="m-card__media"><img src="/apps/site/site/assets/cases/packaging-plant.png" alt="包装产线场景" width="1200" height="675" loading="lazy" decoding="async"></div>
           <div class="m-card__body">
             <div class="m-card__meta"><span data-i18n-zh="包装 · 华北" data-i18n-en="Packaging · North China"></span><span class="status-chip">GHG</span><span class="status-chip">ESG</span></div>
             <h3 data-i18n-zh="包装企业完成首次碳盘查，并编制 ESG 报告" data-i18n-en="A packaging manufacturer completes its first GHG inventory and ESG report"></h3>
-            <p data-i18n-zh="客户要求提供范围一、二排放与 ESG 指标，企业此前没有盘查基础。" data-i18n-en="Customers asked for Scope 1 and 2 data and ESG metrics, with no prior inventory."></p>
-            <div class="m-card__kpis">
-              <div><strong>[X]</strong><span data-i18n-zh="厂区" data-i18n-en="Sites"></span></div>
-              <div><strong>[X]</strong><span data-i18n-zh="披露指标" data-i18n-en="Metrics"></span></div>
-              <div><strong>[X] 周</strong><span data-i18n-zh="交付周期" data-i18n-en="Timeline"></span></div>
-            </div>
+            <p data-i18n-zh="多厂区口径不一；我们统一边界与燃料分类，把盘查结果挂进 ESG 指标与证据目录。" data-i18n-en="Sites used different definitions. We aligned boundaries and fuel classes, then linked the inventory into ESG metrics and an evidence index."></p>
           </div>
         </article>
       </div>
-      <p class="m-note" data-i18n-zh="原型说明：方括号内为待填写的真实项目数据，请勿使用示例数值上线。" data-i18n-en="Prototype note: bracketed values are placeholders for real project data."></p>
     </div>
   </section>
 
@@ -241,14 +226,14 @@
     <div class="wrap m-dual">
       <div class="m-dual__col" id="tools">
         <div class="m-section__copy">
-          <h2 data-i18n-zh="免费测算，先心里有数" data-i18n-en="Free calculators for a quick estimate"></h2>
-          <p data-i18n-zh="几分钟得到初步结果，用于商务判断，不替代正式核算。" data-i18n-en="Get an indicative figure in minutes. Useful for planning, not a substitute for a formal calculation."></p>
+          <h2 data-i18n-zh="先测算，再决定投入" data-i18n-en="Estimate first, then decide"></h2>
+          <p data-i18n-zh="CBAM 可在线试算；其他项可申请初步估算，用于商务判断，不替代正式核算。" data-i18n-en="Run a CBAM estimate online, or request a first-pass sizing for other topics—for planning, not a formal calculation."></p>
         </div>
         <div class="m-row-list">
-          <a href="calculator/" target="_blank" rel="noopener"><div class="grow"><strong data-i18n-zh="CBAM 成本计算器" data-i18n-en="CBAM cost calculator"></strong><small data-i18n-zh="新标签打开完整计算器" data-i18n-en="Opens the full calculator in a new tab"></small></div></a>
-          <a href="Lumino%20联系.dc.html?serviceId=pcf&source=tools"><div class="grow"><strong data-i18n-zh="产品碳足迹快速估算" data-i18n-en="Quick footprint estimate"></strong><small data-i18n-zh="按材料与工艺估算单位产品排放" data-i18n-en="Per-unit emissions from materials and process"></small></div></a>
-          <a href="Lumino%20联系.dc.html?serviceId=inventory&source=tools"><div class="grow"><strong data-i18n-zh="企业排放量估算" data-i18n-en="Company emissions estimate"></strong><small data-i18n-zh="按能源用量估算范围一、二排放" data-i18n-en="Scope 1 and 2 from energy use"></small></div></a>
-          <a href="Lumino%20联系.dc.html?serviceId=assets&source=tools"><div class="grow"><strong data-i18n-zh="绿电需求测算" data-i18n-en="Renewable power needs"></strong><small data-i18n-zh="按用电量与目标测算绿证需求" data-i18n-en="Certificates needed for your target"></small></div></a>
+          <a href="calculator/"><div class="grow"><strong data-i18n-zh="CBAM 成本计算器" data-i18n-en="CBAM cost calculator"></strong><small data-i18n-zh="按 CN Code 与出口量在线试算" data-i18n-en="Online estimate by CN code and volume"></small></div></a>
+          <a href="Lumino%20联系.dc.html?serviceId=pcf&source=tools"><div class="grow"><strong data-i18n-zh="申请产品碳足迹初步估算" data-i18n-en="Request a first-pass footprint estimate"></strong><small data-i18n-zh="说明材料与工艺后，我们给出量级判断" data-i18n-en="Share materials and process—we size the order of magnitude"></small></div></a>
+          <a href="Lumino%20联系.dc.html?serviceId=inventory&source=tools"><div class="grow"><strong data-i18n-zh="申请企业排放初步估算" data-i18n-en="Request a company emissions estimate"></strong><small data-i18n-zh="按能源用量粗看范围一、二量级" data-i18n-en="Indicative Scope 1–2 from energy use"></small></div></a>
+          <a href="Lumino%20联系.dc.html?serviceId=assets&source=tools"><div class="grow"><strong data-i18n-zh="申请绿电需求测算" data-i18n-en="Request a renewable-power needs estimate"></strong><small data-i18n-zh="按用电量与目标粗看绿证需求" data-i18n-en="Indicative certificates for your target"></small></div></a>
         </div>
       </div>
       <div class="m-dual__col" id="insights">

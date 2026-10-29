@@ -49,7 +49,7 @@
         new Date().toISOString().slice(0, 10).replaceAll("-", "") +
         "-" +
         Math.floor(1000 + Math.random() * 9000);
-      show(`需求已在本地原型中登记，编号 ${ticket}。本地演示不会向外部系统发送数据。`, "success");
+      show(`表单已在本机确认（编号 ${ticket}）。当前演示环境不会向服务团队发送数据；正式上线后将接入真实接收通道。`, "success");
       button.disabled = false;
       button.textContent = "提交";
     }, 500);

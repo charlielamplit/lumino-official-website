@@ -140,7 +140,7 @@ function renderResult(comparison) {
     quantity: String(result.quantity),
     estimatedCostCny: String(Math.round(result.totalCostLocal)),
   });
-  $("#projectCta").href = `/portal/?${projectParams.toString()}`;
+  $("#projectCta").href = `/apps/portal/?${projectParams.toString()}`;
 
   renderCharts(comparison);
   $("#exemptNotice").hidden = !result.exempt;

@@ -55,7 +55,9 @@
               </div>
               <a class="portal-entry" href="/apps/portal/"><span>${portal}</span><b aria-hidden="true">↗</b></a>
               <a class="header-cta" href="${withLang("/apps/site/Lumino%20联系.dc.html")}">${consult}</a>
-              <button class="menu-button" type="button" data-label="${menu}" aria-label="${menu}" aria-expanded="false" aria-controls="site-mobile-nav"></button>
+              <button class="menu-button" type="button" aria-label="${menu}" aria-expanded="false" aria-controls="site-mobile-nav">
+                <span class="menu-button__icon" aria-hidden="true"><i></i><i></i><i></i></span>
+              </button>
             </div>
           </div>
           <div class="mobile-nav-shell" data-open="false">
@@ -96,7 +98,7 @@
       const resource = [
         { zh: "我们的平台", en: "Platform", href: "/apps/site/Lumino%20平台.dc.html" },
         { zh: "解决方案", en: "Industries", href: "/apps/site/industries/" },
-        { zh: "服务案例", en: "Case studies", href: "/apps/site/cases/" },
+        { zh: "项目案例", en: "Project cases", href: "/apps/site/cases/" },
         { zh: "工具", en: "Tools", href: "/apps/site/tools/" },
         { zh: "行业知识库", en: "Insights", href: "/apps/site/knowledge/" },
       ];
@@ -120,7 +122,6 @@
         </nav>
         <div class="copyright">
           <span>© 2026 Lumino</span>
-          <span data-i18n-zh="原型 · 页面中的企业与项目数据为示例" data-i18n-en="Prototype · company and project data are examples"></span>
         </div>
       </div></footer>`;
       i18n.applyDataI18n(this);
@@ -134,9 +135,14 @@
   function enhanceChrome(root) {
     const scope = root || document;
     const header = document.querySelector(".site-header");
+    const headerHost = document.querySelector("lumino-header");
     if (header && !header.dataset.scrollBound) {
       header.dataset.scrollBound = "1";
-      const onScroll = () => header.classList.toggle("is-scrolled", window.scrollY > 8);
+      const onScroll = () => {
+        const on = window.scrollY > 8;
+        header.classList.toggle("is-scrolled", on);
+        if (headerHost) headerHost.classList.toggle("is-scrolled", on);
+      };
       onScroll();
       window.addEventListener("scroll", onScroll, { passive: true });
     }

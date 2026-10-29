@@ -28,10 +28,16 @@
   const cta = L === "en" ? "Book a consultation" : "预约咨询";
   const home = "/apps/site/Lumino%20官网.dc.html";
   const contact = `/apps/site/Lumino%20联系.dc.html?serviceId=${encodeURIComponent(svc.id)}`;
-  const heroTitle = L === "en" ? "Six core services—clear process, expert delivery" : "六项核心服务，流程清晰、专家交付";
-  const heroLead = L === "en"
-    ? "Each service has its own process, method and deliverables. Tell us the requirement—we know the path and we deliver."
-    : "每项服务有独立的流程、核算方法与交付物。说明你的要求，我们知道怎么做，也负责做到。";
+  const heroTitle = t(svc.name);
+  const heroLead = t(svc.desc);
+  document.title = `${t(svc.name)} · Lumino`;
+  let meta = document.querySelector('meta[name="description"]');
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.setAttribute("name", "description");
+    document.head.appendChild(meta);
+  }
+  meta.setAttribute("content", t(svc.desc));
 
   const nav = catalog.map((s) => {
     const on = s.id === svc.id;
@@ -69,7 +75,7 @@
       <article class="svc-detail">
         <header class="svc-detail__head">
           <span class="mono">${esc(svc.code)}</span>
-          <h2>${esc(t(svc.name))}</h2>
+          <h2>${esc(L === "en" ? "How this service works" : "这项服务如何开展")}</h2>
           <p>${esc(t(svc.desc))}</p>
         </header>
         <div class="svc-meta">
