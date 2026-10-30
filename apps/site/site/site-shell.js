@@ -105,6 +105,7 @@
       const company = [
         { zh: "关于我们", en: "About", href: "/apps/site/Lumino%20关于.dc.html" },
         { zh: "联系我们", en: "Contact", href: "/apps/site/Lumino%20联系.dc.html" },
+        { zh: "隐私与数据处理", en: "Privacy & data", href: "/apps/site/Lumino%20隐私与数据处理.dc.html" },
         { zh: "客户门户 ↗", en: "Client portal ↗", href: "/apps/portal/" },
       ];
       const col = (titleZh, titleEn, items) =>
@@ -150,21 +151,28 @@
       ".m-section__head", ".m-service-tile", ".m-ind-cell", ".m-card",
       ".m-dual > *", ".m-platform > *", ".ind-hero-block", ".ind-bg",
       ".ind-helps-wrap", ".ind-helps", ".ind-chain-wrap", ".ind-chain",
-      ".ind-layout", ".ind-help", ".ind-pkg", ".pf-map", ".pf-shots",
+      ".ind-layout", ".ind-help", ".ind-pkg",
+      ".ind-band", ".ind-help-card", ".ind-pkg-card", ".ind-intro__copy", ".ind-intro__media",
+      ".ind-steps", ".ind-req-block", ".ind-prep",
+      ".pf-map", ".pf-shots", ".pf-diagram",
       ".about-team", ".about-mission", ".about-principles",
       ".tools-layout", ".contact-layout", ".svc-layout", ".svc-detail > *",
       ".ins-grid", ".ins-card", ".case-stack > *", ".case-row"
     ].join(", ");
     const targets = [...scope.querySelectorAll(selector)].filter((el) => !el.closest(".m-hero"));
+    /* Dynamic subtrees (e.g. industries detail) must not stay opacity:0 if IO misses. */
+    const dynamic = !!(root && root !== document);
     targets.forEach((el, i) => {
       if (el.classList.contains("m-reveal") && el.classList.contains("is-in")) return;
       el.classList.add("m-reveal");
       el.style.setProperty("--d", `${Math.min(i % 6, 5) * 60}ms`);
+      if (dynamic) el.classList.add("is-in");
     });
     if (!("IntersectionObserver" in window)) {
       targets.forEach((el) => el.classList.add("is-in"));
       return;
     }
+    if (dynamic) return;
     if (!revealIo) {
       revealIo = new IntersectionObserver((entries) => {
         entries.forEach((e) => {
@@ -181,7 +189,30 @@
   }
   window.LuminoEnhanceChrome = enhanceChrome;
 
+  function scrollPageToTop() {
+    const el = document.scrollingElement || document.documentElement;
+    el.scrollTop = 0;
+    document.body.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
+
+  /** Full page navigations start at top; keep in-page #anchors working. */
+  function preferTopOnNavigation() {
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    if (!location.hash) scrollPageToTop();
+  }
+
+  preferTopOnNavigation();
+  window.addEventListener("pageshow", (event) => {
+    if (!location.hash) scrollPageToTop();
+    // bfcache restores often keep old scroll; force top after restore
+    if (event.persisted && !location.hash) {
+      requestAnimationFrame(scrollPageToTop);
+    }
+  });
+
   document.addEventListener("DOMContentLoaded", () => {
+    if (!location.hash) scrollPageToTop();
     i18n.applyDataI18n(document);
     enhanceChrome();
   });

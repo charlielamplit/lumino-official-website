@@ -7,6 +7,14 @@ node_modules/
 *.zip
 .firecrawl/
 
+# Knowledge-library source binaries (INDEX.md / README stay tracked)
+docs/knowledge-library/sources/**/*.pdf
+docs/knowledge-library/sources/**/*.docx
+docs/knowledge-library/sources/**/*.doc
+docs/knowledge-library/sources/**/*.xlsx
+apps/knowledgebase/**/*.pdf
+apps/knowledgebase/**/*.docx
+
 # Local credentials and machine-specific configuration
 .env
 .env.local

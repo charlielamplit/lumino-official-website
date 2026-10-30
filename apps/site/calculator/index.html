@@ -6,24 +6,14 @@
   <title>Lumino · CBAM 成本试算</title>
   <meta name="description" content="输入 CN Code 和年出口量，免费试算 CBAM 证书数量与出口成本。">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/apps/site/site/site-v3.css">
   <link rel="stylesheet" href="./styles.css">
+  <script defer src="/apps/site/site/i18n.js"></script>
+  <script defer src="/apps/site/site/site-shell.js"></script>
 </head>
-<body>
+<body class="calc-page">
   <a class="skip" href="#calculator">跳到试算器</a>
-  <header class="site-header">
-    <a class="brand" href="../Lumino%20官网.dc.html" aria-label="Lumino 首页">
-      <span class="brand-word">LUMINO</span><span class="brand-line"></span>
-    </a>
-    <nav aria-label="主导航">
-      <a href="../Lumino%20官网.dc.html">首页</a>
-      <a href="../tools/">工具</a>
-      <a href="../Lumino%20联系.dc.html">联系</a>
-      <a class="nav-cta" href="../Lumino%20联系.dc.html?serviceId=cbam&source=calculator">预约核算</a>
-    </nav>
-  </header>
+  <lumino-header current="tools"></lumino-header>
 
   <main class="dashboard-shell" id="calculator">
       <aside class="tool-sidebar">
@@ -124,6 +114,7 @@
   </div>
 
   <button id="retry" type="button" hidden>重试</button>
+  <lumino-footer></lumino-footer>
   <script type="module" src="./app.js"></script>
 </body>
 </html>

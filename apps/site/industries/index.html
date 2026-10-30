@@ -74,7 +74,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function render() {
     const item = list.find((x) => x.id === current) || list[0];
-    if (!item) return;
+    if (!item) {
+      if (detail) {
+        detail.innerHTML = `<section class="m-section"><div class="wrap"><p>${lang === "en" ? "Industry data failed to load. Please refresh." : "行业数据未能加载，请刷新页面。"}</p></div></section>`;
+      }
+      return;
+    }
+    if (!pills || !detail) return;
     pills.innerHTML = list.map((i) => {
       const on = i.id === item.id;
       return `<button type="button" role="tab" aria-selected="${on}" data-id="${i.id}" class="ind-pill${on ? " is-on" : ""}">${esc(t(i.name))}</button>`;
@@ -212,21 +218,23 @@ document.addEventListener("DOMContentLoaded", function () {
         </div>
       </section>`;
 
-    cta.href = `/apps/site/Lumino%20联系.dc.html?industry=${encodeURIComponent(item.id)}`;
+    if (cta) cta.href = `/apps/site/Lumino%20联系.dc.html?industry=${encodeURIComponent(item.id)}`;
     if (i18n) i18n.applyDataI18n(document);
     if (window.LuminoEnhanceChrome) window.LuminoEnhanceChrome(detail);
   }
 
-  pills.addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-id]");
-    if (!btn) return;
-    current = btn.getAttribute("data-id");
-    const url = new URL(location.href);
-    url.searchParams.set("industry", current);
-    history.replaceState(null, "", url);
-    render();
-    detail.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
+  if (pills) {
+    pills.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-id]");
+      if (!btn) return;
+      current = btn.getAttribute("data-id");
+      const url = new URL(location.href);
+      url.searchParams.set("industry", current);
+      history.replaceState(null, "", url);
+      render();
+      if (detail) detail.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
   render();
 });
 </script>
