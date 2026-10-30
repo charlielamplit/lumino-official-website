@@ -55,8 +55,12 @@
     const chips = item.svcs.map((s) => `<span class="status-chip">${s}</span>`).join("");
     const rows = item.rows.map(([k, v]) => `<div class="case-fact"><dt>${tt(k)}</dt><dd>${tt(v)}</dd></div>`).join("");
     const alt = tt(item.imgAlt || item.shot);
+    const webp = item.img && item.img.endsWith(".png") ? item.img.replace(/\.png$/, ".webp") : "";
+    const media = item.img
+      ? `<picture>${webp ? `<source type="image/webp" srcset="${webp}">` : ""}<img src="${item.img}" alt="${alt}" width="1200" height="900" loading="lazy" decoding="async"></picture>`
+      : `<span class="m-shot-label">${tt(item.shot)}</span>`;
     return `<article class="case-row">
-      <div class="case-row__media">${item.img ? `<img src="${item.img}" alt="${alt}" width="1200" height="900" loading="lazy" decoding="async">` : `<span class="m-shot-label">${tt(item.shot)}</span>`}</div>
+      <div class="case-row__media">${media}</div>
       <div class="case-row__body">
         <div class="m-card__meta"><span>${tt(item.ind)}</span>${chips}</div>
         <h2>${tt(item.title)}</h2>

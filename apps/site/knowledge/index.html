@@ -10,6 +10,7 @@
   <script defer src="/apps/site/site/i18n.js"></script>
   <script defer src="/apps/site/site/site-shell.js"></script>
   <script defer src="/apps/site/site/float-tools.js"></script>
+  <script defer src="/packages/shared/knowledge-client.js"></script>
 </head>
 <body>
 <lumino-header current="knowledge"></lumino-header>
@@ -53,40 +54,55 @@
 <lumino-footer></lumino-footer>
 <script>
 (function () {
-  const items = [
-    { industry: "steel", type: "reg", href: "/apps/site/Lumino%20CBAM%20指南.dc.html",
-      zh: { type: "法规解读", ind: "钢铁", title: "CBAM 正式期：进口商需要供应商提供哪些数据", lead: "申报主体、数据字段与核查要求的变化。" },
-      en: { type: "Regulations", ind: "Steel", title: "CBAM definitive period: what importers need from suppliers", lead: "Who declares, what data is needed, and what verification changes." } },
-    { industry: "textile", type: "method", href: "#",
-      zh: { type: "方法指南", ind: "纺织服装", title: "ISO 14067：产品碳足迹的系统边界怎么定", lead: "从摇篮到大门与全生命周期的选择。" },
-      en: { type: "Methods", ind: "Textiles", title: "ISO 14067: setting the system boundary for a footprint", lead: "Choosing between cradle-to-gate and full life cycle." } },
-    { industry: "packaging", type: "reg", href: "#",
-      zh: { type: "法规解读", ind: "包装", title: "欧盟包装法规（PPWR）对出口企业意味着什么", lead: "适用范围、时间表与材料数据要求。" },
-      en: { type: "Regulations", ind: "Packaging", title: "What the EU PPWR means for exporters", lead: "Scope, timeline and material data requirements." } },
-    { industry: "aluminium", type: "method", href: "#",
-      zh: { type: "方法指南", ind: "铝", title: "哪些绿电与绿证可以用于碳足迹声明", lead: "电力排放因子的选择规则。" },
-      en: { type: "Methods", ind: "Aluminium", title: "Which renewable electricity claims count in a footprint", lead: "Rules for choosing electricity emission factors." } },
-    { industry: "elec", type: "qa", href: "#",
-      zh: { type: "实务问答", ind: "电子电器", title: "客户发来范围三问卷，供应商该如何回应", lead: "常见问题与数据准备顺序。" },
-      en: { type: "Q&A", ind: "Electronics", title: "A customer sent a Scope 3 questionnaire. Now what?", lead: "Common questions and what to prepare first." } },
-    { industry: "chem", type: "reg", href: "#",
-      zh: { type: "法规解读", ind: "化工", title: "化肥与氢产品的 CBAM 核算要点", lead: "前体材料与工艺排放的处理。" },
-      en: { type: "Regulations", ind: "Chemicals", title: "CBAM essentials for fertilisers and hydrogen", lead: "How precursors and process emissions are handled." } },
-  ];
+  let articles = [];
   let industry = new URLSearchParams(location.search).get("industry") || "all";
   let type = "all";
+
+  function lang() {
+    return window.LuminoI18n && window.LuminoI18n.detectLang() === "en" ? "en" : "zh";
+  }
+
+  function pick(obj, L) {
+    if (!obj) return "";
+    if (typeof obj === "string") return obj;
+    return obj[L] || obj.zh || obj.en || "";
+  }
+
   function render() {
-    const i18n = window.LuminoI18n;
-    const L = i18n && i18n.detectLang() === "en" ? "en" : "zh";
-    const filtered = items.filter((it) => (industry === "all" || it.industry === industry) && (type === "all" || it.type === type));
+    const L = lang();
+    const filtered = articles.filter((a) => a.status === "published")
+      .filter((a) => (industry === "all" || (a.industries || []).includes(industry)) && (type === "all" || a.type === type));
     const host = document.getElementById("kb-list");
-    host.innerHTML = filtered.map((it) => {
-      const c = it[L];
-      return `<a class="ins-card" href="${it.href}"><span class="meta">${c.type} · ${c.ind}</span><h3>${c.title}</h3><p>${c.lead}</p></a>`;
-    }).join("") || `<p style="color:var(--muted)">${L === "en" ? "Nothing here yet." : "该筛选下暂无内容。"}</p>`;
+    const empty = L === "en"
+      ? "Nothing published for this filter yet. Browse CBAM guide or contact us."
+      : "该筛选下暂无已发布内容。可查看 CBAM 指南，或提交咨询。";
+    host.innerHTML = filtered.map((a) => {
+      const href = `/apps/site/knowledge/article.html?id=${encodeURIComponent(a.id)}`;
+      return `<a class="ins-card" href="${href}"><span class="meta">${pick(a.typeLabel, L)} · ${pick(a.industryLabel, L)}</span><h3>${pick(a.title, L)}</h3><p>${pick(a.lead, L)}</p></a>`;
+    }).join("") || `<p style="color:var(--muted)">${empty} <a class="m-link" href="cbam-guide.html">${L === "en" ? "CBAM guide →" : "CBAM 指南 →"}</a></p>`;
     document.querySelectorAll("#kb-ind [data-industry]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.industry === industry)));
     document.querySelectorAll("#kb-type [data-type]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.type === type)));
   }
+
+  async function boot() {
+    try {
+      const client = window.LuminoKnowledgeClient;
+      if (client) {
+        const data = await client.fetchArticles({ publicOnly: true });
+        articles = data.articles || [];
+      } else {
+        const res = await fetch("/apps/site/knowledge/catalog.json", { cache: "no-store" });
+        const data = await res.json();
+        articles = (data.articles || []).filter((a) => a.status === "published");
+      }
+    } catch (_) {
+      articles = [];
+    }
+    render();
+    if (window.LuminoI18n) window.LuminoI18n.applyDataI18n(document);
+    if (window.LuminoEnhanceChrome) window.LuminoEnhanceChrome(document.getElementById("kb-list"));
+  }
+
   document.getElementById("kb-filters").addEventListener("click", (e) => {
     const b = e.target.closest("button");
     if (!b) return;
@@ -95,7 +111,8 @@
     render();
     if (window.LuminoEnhanceChrome) window.LuminoEnhanceChrome(document.getElementById("kb-list"));
   });
-  document.addEventListener("DOMContentLoaded", () => { render(); if (window.LuminoI18n) window.LuminoI18n.applyDataI18n(document); if (window.LuminoEnhanceChrome) window.LuminoEnhanceChrome(document.getElementById("kb-list")); });
+  document.addEventListener("DOMContentLoaded", boot);
+  window.addEventListener("lumino:langchange", render);
 })();
 </script>
 </body>

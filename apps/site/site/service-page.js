@@ -26,7 +26,7 @@
     deliv: L === "en" ? "What you receive" : "你会收到",
     boundaries: L === "en" ? "Scope notes" : "范围说明",
     consult: L === "en" ? "What to tell us in a consultation" : "咨询时请说明",
-    sample: L === "en" ? "Deliverable" : "交付物",
+    sample: L === "en" ? "Structure preview" : "结构预览",
     ctaTitle: L === "en" ? "Start with a consultation" : "从一次咨询开始",
     ctaSub: L === "en"
       ? "Share products and deadlines—we’ll come back with scope, timing and a quote."
@@ -79,10 +79,36 @@
     `<span class="svc-standard">${esc(typeof s === "string" ? s : t(s))}</span>`
   ).join("");
 
-  const delivers = (svc.deliv || []).map((d) => `<div class="svc-deliv">
-      <div class="svc-deliv__shot"><span class="mono">${esc(labels.sample)}</span></div>
+  const defaultOutline = (index) => {
+    const sets = L === "en"
+      ? [
+          ["Cover & version", "Scope / objects", "Tables or results", "Evidence index"],
+          ["Purpose & audience", "Field map", "Worked example", "Assumptions"],
+          ["Checklist", "Owners & due dates", "Open gaps", "Next window"],
+          ["Template header", "Input blocks", "Validation notes", "Reuse rules"],
+        ]
+      : [
+          ["封面与版本", "范围与对象", "数据表 / 结果", "证据索引"],
+          ["用途与读者", "字段对照", "示例摘录", "假设说明"],
+          ["清单条目", "责任人与时限", "开放缺口", "下期复用"],
+          ["模板抬头", "填报区块", "校验说明", "口径固化"],
+        ];
+    return sets[index % sets.length];
+  };
+
+  const delivers = (svc.deliv || []).map((d, index) => {
+    const outline = (Array.isArray(svc.delivStructure) && svc.delivStructure[index]) || defaultOutline(index);
+    const lines = outline.map((line) => `<li><span></span>${esc(t(line))}</li>`).join("");
+    return `<div class="svc-deliv">
+      <div class="svc-deliv__shot" aria-hidden="true">
+        <div class="svc-deliv__doc">
+          <header><span class="mono">${esc(labels.sample)}</span></header>
+          <ul>${lines}</ul>
+        </div>
+      </div>
       <strong>${esc(t(d))}</strong>
-    </div>`).join("");
+    </div>`;
+  }).join("");
 
   const boundaries = (svc.boundaries || []).map((b) => `<li>${esc(t(b))}</li>`).join("");
   const consultAsk = (svc.consultAsk || []).map((b) => `<li>${esc(t(b))}</li>`).join("");

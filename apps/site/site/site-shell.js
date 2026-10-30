@@ -1,5 +1,12 @@
 (function () {
   "use strict";
+  if (!document.getElementById("lumino-brand-fonts")) {
+    const link = document.createElement("link");
+    link.id = "lumino-brand-fonts";
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&display=swap";
+    document.head.appendChild(link);
+  }
   const i18n = window.LuminoI18n || {
     detectLang: () => "zh",
     setLang: () => {},
@@ -44,8 +51,14 @@
       this.innerHTML = `<a class="skip" href="#main" style="position:absolute;left:-9999px">${L === "en" ? "Skip to content" : "跳到主要内容"}</a>
         <header class="site-header">
           <div class="site-header__row">
-            <a class="brand-lockup" href="${withLang("/apps/site/Lumino%20官网.dc.html")}" aria-label="Lumino">
-              <span class="logo">LUMINO</span>
+            <a class="brand-lockup" href="${withLang("/apps/site/Lumino%20官网.dc.html")}" aria-label="铄垣 Lumino">
+              <picture>
+                <source type="image/webp" srcset="/apps/site/site/assets/brand/mark-128.webp">
+                <img class="brand-mark" src="/apps/site/site/assets/brand/mark-128.png" width="88" height="64" alt="">
+              </picture>
+              <span class="brand-text" aria-hidden="false">
+                <span class="brand-shuoyuan">铄垣</span><span class="brand-sep" aria-hidden="true">|</span><span class="brand-lumino">LUMINO</span>
+              </span>
             </a>
             <nav class="site-nav" aria-label="${L === "en" ? "Primary" : "主导航"}">${links}</nav>
             <div class="header-actions">
@@ -106,6 +119,8 @@
         { zh: "关于我们", en: "About", href: "/apps/site/Lumino%20关于.dc.html" },
         { zh: "联系我们", en: "Contact", href: "/apps/site/Lumino%20联系.dc.html" },
         { zh: "隐私与数据处理", en: "Privacy & data", href: "/apps/site/Lumino%20隐私与数据处理.dc.html" },
+        { zh: "Cookie 与本地存储", en: "Cookies & storage", href: "/apps/site/Lumino%20Cookie%20与本地存储.dc.html" },
+        { zh: "用户内容与数据许可", en: "Content & data licence", href: "/apps/site/Lumino%20用户内容与数据许可.dc.html" },
         { zh: "客户门户 ↗", en: "Client portal ↗", href: "/apps/portal/" },
       ];
       const col = (titleZh, titleEn, items) =>
@@ -113,7 +128,12 @@
 
       this.innerHTML = `<footer class="site-footer"><div class="site-footer__inner">
         <div class="footer-brand">
-          <a class="logo" href="${withLang("/apps/site/Lumino%20官网.dc.html")}">LUMINO</a>
+          <a class="footer-brand__link" href="${withLang("/apps/site/Lumino%20官网.dc.html")}" aria-label="Lumino">
+            <picture>
+              <source type="image/webp" srcset="/apps/site/site/assets/brand/lockup-1200.webp">
+              <img class="brand-lockup-img" src="/apps/site/site/assets/brand/lockup-1200.png" width="280" height="70" alt="上海铄垣环保科技 · Lumino Environmental Technology" loading="lazy" decoding="async">
+            </picture>
+          </a>
           <p data-i18n-zh="出口与制造企业的碳与 ESG 合规服务" data-i18n-en="Carbon and ESG compliance for exporters and manufacturers"></p>
         </div>
         <nav class="footer-links" aria-label="${L === "en" ? "Footer" : "页脚导航"}">

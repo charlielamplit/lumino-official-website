@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>知识库文章 · Lumino</title>
+  <meta name="description" content="铄垣｜LUMINO 行业知识库文章。">
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/apps/site/site/site-v3.css">
+  <script defer src="/apps/site/site/i18n.js"></script>
+  <script defer src="/apps/site/site/site-shell.js"></script>
+  <script defer src="/apps/site/site/float-tools.js"></script>
+  <script defer src="/packages/shared/markdown.js"></script>
+  <script defer src="/packages/shared/knowledge-client.js"></script>
+</head>
+<body>
+<lumino-header current="knowledge"></lumino-header>
+<main id="main">
+  <section class="m-page-hero m-page-hero--compact">
+    <div class="wrap">
+      <p class="crumb">
+        <a href="../Lumino%20官网.dc.html" data-i18n-zh="首页" data-i18n-en="Home"></a> /
+        <a href="./" data-i18n-zh="行业知识库" data-i18n-en="Insights"></a> /
+        <span id="kb-crumb">…</span>
+      </p>
+      <p class="legal-doc__meta" id="kb-meta"></p>
+      <h1 id="kb-title">加载中…</h1>
+      <p id="kb-lead"></p>
+    </div>
+  </section>
+  <section class="m-section">
+    <div class="wrap legal-doc kb-article">
+      <div id="kb-body" aria-live="polite"><p style="color:var(--muted)">正在加载正文…</p></div>
+      <p class="kb-cta-row" id="kb-cta" hidden>
+        <a class="button button--primary" id="kb-cta-link" href="/apps/site/contact.html">提交咨询</a>
+        <a class="m-link" href="./">返回知识库 →</a>
+      </p>
+    </div>
+  </section>
+</main>
+<lumino-footer></lumino-footer>
+<script>
+(function () {
+  const params = new URLSearchParams(location.search);
+  const id = params.get("id") || "";
+
+  function lang() {
+    return window.LuminoI18n && window.LuminoI18n.detectLang() === "en" ? "en" : "zh";
+  }
+
+  function pick(obj, L) {
+    if (!obj) return "";
+    if (typeof obj === "string") return obj;
+    return obj[L] || obj.zh || obj.en || "";
+  }
+
+  async function load() {
+    const titleEl = document.getElementById("kb-title");
+    const leadEl = document.getElementById("kb-lead");
+    const metaEl = document.getElementById("kb-meta");
+    const crumbEl = document.getElementById("kb-crumb");
+    const bodyEl = document.getElementById("kb-body");
+    const ctaEl = document.getElementById("kb-cta");
+    const ctaLink = document.getElementById("kb-cta-link");
+
+    if (!id) {
+      titleEl.textContent = lang() === "en" ? "Article not found" : "未指定文章";
+      bodyEl.innerHTML = '<p><a class="m-link" href="./">' + (lang() === "en" ? "Back to insights →" : "返回知识库 →") + "</a></p>";
+      return;
+    }
+
+    try {
+      const client = window.LuminoKnowledgeClient;
+      const md = window.LuminoMarkdown;
+      if (!client || !md) throw new Error("client missing");
+
+      const L = lang();
+      const data = await client.fetchArticle(id, L);
+      const article = data.article;
+      if (!article || (article.status && article.status !== "published" && data.source !== "api")) {
+        throw new Error("unpublished");
+      }
+
+      const title = pick(article.title, L);
+      const lead = pick(article.lead, L);
+      const typeLabel = pick(article.typeLabel, L);
+      const industryLabel = pick(article.industryLabel, L);
+      const updated = article.updatedAt || "";
+
+      document.title = title + " · Lumino";
+      titleEl.textContent = title;
+      leadEl.textContent = lead;
+      crumbEl.textContent = title.length > 24 ? title.slice(0, 24) + "…" : title;
+      metaEl.textContent = L === "en"
+        ? typeLabel + " · Updated " + updated + " · " + industryLabel
+        : typeLabel + " · 更新 " + updated + " · " + industryLabel;
+
+      bodyEl.innerHTML = md.renderMarkdown(data.markdown || "");
+
+      ctaEl.hidden = false;
+      const sid = article.cta && article.cta.serviceId || article.serviceId;
+      ctaLink.href = "/apps/site/contact.html?service=" + encodeURIComponent(sid || "") + "&source=" + encodeURIComponent((article.cta && article.cta.source) || id);
+      ctaLink.textContent = L === "en" ? "Talk to us" : "提交咨询";
+      if (window.LuminoI18n) window.LuminoI18n.applyDataI18n(document);
+      if (window.LuminoEnhanceChrome) window.LuminoEnhanceChrome(document.getElementById("main"));
+    } catch (err) {
+      const L = lang();
+      titleEl.textContent = L === "en" ? "Article unavailable" : "文章暂不可用";
+      leadEl.textContent = "";
+      metaEl.textContent = "";
+      bodyEl.innerHTML = '<p style="color:var(--muted)">' + (L === "en"
+        ? "This article is draft, archived, or missing."
+        : "文章可能为草稿、已下架或不存在。") + '</p><p><a class="m-link" href="./">' + (L === "en" ? "Back →" : "返回知识库 →") + "</a></p>";
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", load);
+  window.addEventListener("lumino:langchange", load);
+})();
+</script>
+</body>
+</html>

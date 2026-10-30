@@ -12,9 +12,9 @@
 
 | 优先级 | 选题 | 关联服务 / 行业 | 状态 |
 |---:|---|---|---|
-| P0 | CBAM：进口商要什么数据包，工厂先准备什么 | CBAM · 钢铁 / 铝 | 待写 |
-| P0 | ISO 14067：产品碳足迹的系统边界怎么定 | PCF · 纺织 / 包装 | 待写 |
-| P0 | 组织层面 Scope 1/2 与常见 Scope 3 怎么切 | GHG | 待写 |
+| P0 | CBAM：进口商要什么数据包，工厂先准备什么 | CBAM · 钢铁 / 铝 | 样例已上线（中英）· `knowledge/articles/cbam-importer-data.html` · MD 见 `docs/knowledge-articles/` |
+| P0 | ISO 14067：产品碳足迹的系统边界怎么定 | PCF · 纺织 / 包装 | 样例已上线（中英）· `knowledge/articles/pcf-system-boundary.html` |
+| P0 | 组织层面 Scope 1/2 与常见 Scope 3 怎么切 | GHG | 样例已上线（中英）· `knowledge/articles/ghg-scope-cut.html` |
 | P1 | ESG 报告：先定框架还是先凑指标 | ESG | 待写 |
 | P1 | 包装企业如何同时面对 PPWR 与客户碳问卷 | 出口合规 · 包装 | 待写 |
 | P1 | 绿证 / 绿电声明时段如何对齐生产期间 | EAC · 铝 / 电子 | 待写 |

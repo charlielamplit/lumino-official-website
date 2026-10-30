@@ -17,7 +17,10 @@
 <main id="main">
   <section class="ind-page-hero">
     <div class="ind-page-hero__media" aria-hidden="true">
-      <img src="/apps/site/site/assets/hero.png" alt="" width="2400" height="1400" decoding="async">
+      <picture>
+        <source type="image/webp" srcset="/apps/site/site/assets/hero-960.webp 960w, /apps/site/site/assets/hero-1600.webp 1600w, /apps/site/site/assets/hero.webp 2400w" sizes="100vw">
+        <img src="/apps/site/site/assets/hero-960.png" alt="" width="2400" height="1400" decoding="async" fetchpriority="high">
+      </picture>
     </div>
     <div class="ind-page-hero__mask" aria-hidden="true"></div>
     <div class="wrap ind-page-hero__copy">

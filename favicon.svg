@@ -1,5 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-<rect width="32" height="32" rx="4" fill="#0B1011"/>
-<rect y="17" width="32" height="15" fill="#0E7C5A"/>
-<rect y="15" width="32" height="2.5" fill="#0E7C5A"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 48" role="img" aria-label="Lumino">
+  <rect width="64" height="48" rx="10" fill="#063C29"/>
+  <!-- simplified mark: S-wave + Y pedestal + sun -->
+  <g fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round">
+    <path d="M18 34c-6-2-8-10-4-16 3-5 10-7 14-3"/>
+    <path d="M16 32c-5-2-7-8-3-13 3-4 8-6 12-3"/>
+    <path d="M14 30c-4-1-5-7-2-11 2-3 6-5 10-2"/>
+  </g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round">
+    <path d="M36 28v8M39 28v8M42 28v8M45 28v8"/>
+    <path d="M34 26c4-8 14-8 18 0"/>
+    <path d="M36 26c3-6 11-6 14 0"/>
+    <path d="M38 26c2-4 8-4 10 0"/>
+  </g>
+  <path d="M40 18c3.2 0 6 1.6 6 1.6S43.2 22 40 22s-6-2.4-6-2.4S36.8 18 40 18z" fill="#FDC82F"/>
 </svg>
