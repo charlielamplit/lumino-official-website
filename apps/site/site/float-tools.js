@@ -30,11 +30,12 @@
   function ensureAdvisor() {
     if (window.LuminoAdvisorWidget) return Promise.resolve(window.LuminoAdvisorWidget);
     if (!advisorPromise) {
-      loadStyle("/apps/site/site/advisor-widget.css");
-      advisorPromise = loadScript("/packages/advisor/catalog.js")
-        .then(() => loadScript("/packages/advisor/schema.js"))
-        .then(() => loadScript("/packages/advisor/router.js"))
-        .then(() => loadScript("/apps/site/site/advisor-widget.js"))
+      const v = "20261102-copy1";
+      loadStyle(`/apps/site/site/advisor-widget.css?v=${v}`);
+      advisorPromise = loadScript(`/packages/advisor/catalog.js?v=${v}`)
+        .then(() => loadScript(`/packages/advisor/schema.js?v=${v}`))
+        .then(() => loadScript(`/packages/advisor/router.js?v=${v}`))
+        .then(() => loadScript(`/apps/site/site/advisor-widget.js?v=${v}`))
         .then(() => window.LuminoAdvisorWidget);
     }
     return advisorPromise;
@@ -45,7 +46,7 @@
     const label = L === "en" ? "Tools" : "工具";
     const title = L === "en" ? "Choose a tool" : "选择工具";
     const advisorLabel = L === "en" ? "Ask Lumino" : "问 Lumino";
-    const advisorHint = L === "en" ? "Service triage and published guidance" : "服务分诊与已发布资料";
+    const advisorHint = L === "en" ? "Find the right service and next step" : "帮你找到合适的服务与下一步";
     const root = document.createElement("div");
     root.className = "tool-float";
     root.innerHTML = `

@@ -45,9 +45,9 @@
   function initialMarkup() {
     const topics = root.LuminoAdvisor.getTopics(lang());
     return `<section class="advisor-welcome">
-      <span class="advisor-welcome__label">${label("已发布资料 · 初步分诊", "PUBLISHED GUIDANCE · INITIAL TRIAGE")}</span>
+      <span class="advisor-welcome__label">${label("服务引导", "Service guide")}</span>
       <h2>${label("先说明你正在解决的问题。", "Start with the problem you need to solve.")}</h2>
-      <p>${label("可以直接选择话题，也可以输入问题。固定答案和已有工具优先；当前版本不收集联系方式或生产资料。", "Choose a topic or type a question. Reviewed fixed answers and existing tools come first; this version does not collect contact details or production data.")}</p>
+      <p>${label("可以直接选择话题，也可以输入问题。我们会先给出可执行的说明，并在合适时推荐试算器、知识文章或联系入口。当前版本不收集联系方式或生产资料。", "Choose a topic or type a question. We start with practical guidance and, when useful, suggest a calculator, knowledge article or contact path. This version does not collect contact details or production data.")}</p>
     </section>
     <div class="advisor-topics" aria-label="${label("预选话题", "Suggested topics")}">
       ${topics.map((topic) => `<button class="advisor-topic" type="button" data-topic-id="${escapeHtml(topic.id)}">${escapeHtml(topic.label)}</button>`).join("")}
@@ -56,10 +56,10 @@
 
   function answerMarkup(response) {
     const mode = response.answer_mode === "tool_route"
-      ? label("已匹配现有工具", "Existing tool matched")
+      ? label("推荐工具", "Suggested tool")
       : response.answer_mode === "fixed"
-        ? label("已审核固定答案", "Reviewed fixed answer")
-        : label("当前无法确认", "Unable to confirm");
+        ? label("服务说明", "Guidance")
+        : label("暂无法确认", "Unable to confirm");
     const replies = (response.suggested_replies || []).map((item) =>
       `<button class="advisor-reply" type="button" data-topic-id="${escapeHtml(response.topic_id || "")}" data-reply-id="${escapeHtml(item.id)}">${escapeHtml(item.label)}</button>`
     ).join("");
@@ -76,7 +76,7 @@
         ${response.next_question ? `<p class="advisor-answer__question">${escapeHtml(response.next_question)}</p>` : ""}
         ${replies ? `<div class="advisor-replies">${replies}</div>` : ""}
         ${links ? `<div class="advisor-links">${links}</div>` : ""}
-        ${sources ? `<div class="advisor-sources"><span>${label("来源", "Sources")}</span>${sources}</div>` : ""}
+        ${sources ? `<div class="advisor-sources"><span>${label("相关资料", "Related reading")}</span>${sources}</div>` : ""}
       </div>
     </article>`;
   }
@@ -142,7 +142,7 @@
     panel.setAttribute("aria-modal", "false");
     panel.setAttribute("aria-labelledby", "advisor-title");
     panel.innerHTML = `<header class="advisor-widget__head">
-      <div><strong id="advisor-title">${label("Lumino 服务顾问", "Lumino Service Guide")}</strong><p>${label("初步判断，不替代正式合规结论", "Initial guidance, not a formal compliance conclusion")}</p></div>
+      <div><strong id="advisor-title">${label("Lumino 服务顾问", "Lumino Service Guide")}</strong><p>${label("帮助你快速定向，不替代正式合规结论", "Helps you get oriented — not a formal compliance conclusion")}</p></div>
       <div class="advisor-widget__head-actions">
         <button class="advisor-widget__reset" type="button">${label("重新开始", "Start over")}</button>
         <button class="advisor-widget__close" type="button" aria-label="${label("关闭服务顾问", "Close service guide")}">×</button>
