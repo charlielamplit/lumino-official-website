@@ -375,7 +375,7 @@
       "parentId": "E08",
       "title": "[Feature] 建立确定性分诊、固定答案与工具路由",
       "state": "open",
-      "labels": ["Roadmap", "type/feature", "status/ready", "priority/P0", "area/advisor", "area/public-site", "area/quality", "sprint/advisor-01", "scope/production"],
+      "labels": ["Roadmap", "type/feature", "status/review", "priority/P0", "area/advisor", "area/public-site", "area/quality", "sprint/advisor-01", "scope/production"],
       "summary": "建立不依赖模型的意图路由、版本化固定答案和工具链接登记，覆盖首批高频问题与 CN Code 场景。",
       "scope": ["packages/advisor 的意图、固定答案、工具路由和输出 Schema", "六项服务预选分诊与高频 FAQ", "CN Code 意图路由至 /calculator、编码核对指南和人工复核入口", "固定答案的发布状态、审查日期、来源和版本规则"],
       "acceptance": ["预选话题和首批高频 FAQ 在不调用模型时返回稳定 Structured Output", "CN Code 场景只引导已支持工具、指南或人工复核，不生成正式归类结论", "只有 status=published 且在审查周期内的固定答案可被路由", "自动测试覆盖命中、未命中、过期答案、无效链接和中英文输出"],
