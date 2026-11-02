@@ -1066,11 +1066,11 @@
       "kind": "feature",
       "parentId": "E08",
       "title": "[Feature] 建立 Advisor API、流式协议与安全边界",
-      "state": "open",
+      "state": "closed",
       "labels": [
         "Roadmap",
         "type/feature",
-        "status/in-progress",
+        "status/done",
         "priority/P0",
         "area/advisor",
         "area/platform",
@@ -1108,7 +1108,7 @@
       "labels": [
         "Roadmap",
         "type/feature",
-        "status/backlog",
+        "status/in-progress",
         "priority/P1",
         "area/advisor",
         "area/public-site",
