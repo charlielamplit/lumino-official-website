@@ -3566,3 +3566,8 @@ lumino-header.is-scrolled .site-header,
   padding-top: 24px;
   border-top: 1px solid color-mix(in srgb, var(--line, #d8e0dc) 80%, transparent);
 }
+
+
+[data-open-advisor][hidden] {
+  display: none !important;
+}

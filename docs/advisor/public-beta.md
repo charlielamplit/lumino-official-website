@@ -4,11 +4,13 @@
 
 | 变量 | 作用 |
 |---|---|
-| `ADVISOR_PUBLIC_BETA=0` | 隐藏「问 Lumino」入口；计算器等工具仍可用 |
+| `ADVISOR_PUBLIC_BETA=0` | 隐藏「问 Lumino」入口；`/api/advisor` 返回降级说明；计算器等工具仍可用 |
 | `ADVISOR_MODEL_ENABLED=0` | 立即停用模型，仅保留固定答案、工具路由与已发布检索 grounded fallback |
 | 去掉 `ADVISOR_OPENAI_API_KEY` / `OPENAI_API_KEY` | 同等模型停用效果 |
 
 紧急越界 / 错误法规来源 / 隐私事件：先设 `ADVISOR_MODEL_ENABLED=0`；必要时再设 `ADVISOR_PUBLIC_BETA=0`。
+
+配置接口 `Cache-Control: max-age=30`，前端入口变更最多约 30 秒生效；API 侧 `ADVISOR_PUBLIC_BETA` 为实时读取。
 
 ## 公开边界（不可破）
 
@@ -39,9 +41,12 @@
 
 ## 每周复核
 
-1. 导出无结果 / 高频问题（日志或员工 metrics）。
-2. 需要补知识或固定答案时，走知识发布 + `advisor-eval` 回归。
-3. 变更合入 `dev`，Preview 复核后再决定是否进 `main`。
+指标与日志默认**不含问题原文**（隐私约束）。可执行路径：
+
+1. 查看员工 metrics：无结果率、工具路由率、超时、模型失败、CTA。
+2. 无结果/错误推荐的具体问题，用内部试用反馈表（`feedback-template.md`）或评测集新增用例补齐，不回灌聊天原文到生产库。
+3. 需要补知识或固定答案时，走知识发布 + `advisor-eval` 回归。
+4. 变更合入 `dev`，Preview 复核后再决定是否进 `main`。
 
 ## 相关文件
 

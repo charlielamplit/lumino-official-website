@@ -125,7 +125,11 @@
         const data = await upstream.json();
         if (data && data.answer_mode && data.answer) return data;
       }
-    } catch (_) {
+    } catch (error) {
+      const timedOut = error && (error.name === "TimeoutError" || error.name === "AbortError");
+      if (timedOut) {
+        trackMetric({ type: "client", timeout: true, ok: false, answer_mode: "fallback", source: "error" });
+      }
       /* local deterministic router remains the offline fallback */
     }
     return root.LuminoAdvisor.route(payload);
@@ -192,7 +196,7 @@
     panel.setAttribute("aria-labelledby", "advisor-title");
     panel.innerHTML = `<header class="advisor-widget__head">
       <div>
-        <span class="advisor-widget__beta">${label("公开试用", "Public beta")}</span>
+        ${runtimeFlags.public_beta === false ? "" : `<span class="advisor-widget__beta">${label("公开试用", "Public beta")}</span>`}
         <strong id="advisor-title">${label("Lumino 服务顾问", "Lumino Service Guide")}</strong>
         <p>${label("初步判断，帮助你快速定向；不替代正式合规结论，也不在此收集联系方式或客户文件。", "Preliminary guidance to get oriented — not a formal compliance conclusion, and no contact details or client files are collected here.")}</p>
       </div>
@@ -206,7 +210,7 @@
       <textarea name="question" rows="1" maxlength="2000" placeholder="${label("输入你的问题……", "Type your question…")}" aria-label="${label("输入你的问题", "Type your question")}"></textarea>
       <button class="advisor-widget__send" type="submit">${label("发送", "Send")}</button>
     </form>
-    <footer class="advisor-widget__foot">${label("不保存对话到线索库；需要正式咨询请走联系页。", "Chats are not saved to a lead database. Use the contact page for a formal consultation.")}</footer>
+    <footer class="advisor-widget__foot">${label("对话不会提交给 Lumino，也不会进入线索库；仅保存在本次浏览器标签页。正式咨询请走联系页。", "Chats are not submitted to Lumino or a lead database; they stay in this browser tab only. Use the contact page for a formal consultation.")}</footer>
     <div class="advisor-widget__status" aria-live="polite" aria-atomic="true"></div>`;
     document.body.appendChild(panel);
 

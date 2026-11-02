@@ -1,11 +1,19 @@
+import { timingSafeEqual } from "node:crypto";
 import { checkRateLimit, clientKey } from "./_lib/advisor-policy.js";
 import { getAdvisorMetricsSummary, recordAdvisorMetric } from "./_lib/advisor-metrics-store.js";
 
+function safeEqual(a, b) {
+  const left = Buffer.from(String(a || ""));
+  const right = Buffer.from(String(b || ""));
+  if (left.length !== right.length) return false;
+  return timingSafeEqual(left, right);
+}
+
 function staffAuthorized(request) {
-  const expected = process.env.LEADS_STAFF_KEY || process.env.ADVISOR_STAFF_KEY || "";
+  const expected = process.env.ADVISOR_STAFF_KEY || process.env.LEADS_STAFF_KEY || "";
   if (!expected) return false;
   const provided = request.headers?.["x-lumino-staff-key"] || request.headers?.["x-advisor-staff-key"] || "";
-  return provided && provided === expected;
+  return safeEqual(provided, expected);
 }
 
 function readBody(request) {
@@ -26,6 +34,11 @@ export default async function handler(request, response) {
   response.setHeader("Content-Type", "application/json; charset=utf-8");
 
   if (request.method === "GET") {
+    const rate = checkRateLimit(`metrics-get:${clientKey(request)}`);
+    if (!rate.ok) {
+      response.status(429).end(JSON.stringify({ error: "Too Many Requests" }));
+      return;
+    }
     if (!staffAuthorized(request)) {
       response.status(401).end(JSON.stringify({ error: "Unauthorized" }));
       return;
@@ -56,6 +69,7 @@ export default async function handler(request, response) {
     has_sources: Boolean(body.has_sources),
     cta_type: body.cta_type,
     latency_ms: body.latency_ms,
+    timeout: Boolean(body.timeout),
     ok: body.ok !== false,
   });
   response.status(202).end(JSON.stringify({ ok: true }));

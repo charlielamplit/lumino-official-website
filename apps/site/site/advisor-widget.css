@@ -352,3 +352,9 @@
 @media (prefers-reduced-motion: reduce) {
   .advisor-widget { animation: none; }
 }
+
+
+/* Soft homepage CTA can carry .button display rules; honor [hidden]. */
+[data-open-advisor][hidden] {
+  display: none !important;
+}

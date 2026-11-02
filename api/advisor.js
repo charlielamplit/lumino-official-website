@@ -8,7 +8,7 @@ import { checkRateLimit, clientKey, publicLogFields, sanitizeRequest } from "./_
 import { modelConfigured, routeDeterministic } from "./_lib/advisor-runtime.js";
 import { buildGroundedFallback, retrievePublishedKnowledge, stopWithoutSources } from "./_lib/advisor-retrieval.js";
 import { generateGroundedAnswer } from "./_lib/advisor-model.js";
-import { getPublicFlags } from "./_lib/advisor-flags.js";
+import { getPublicFlags, publicBetaEnabled } from "./_lib/advisor-flags.js";
 import { recordAdvisorMetric } from "./_lib/advisor-metrics-store.js";
 
 const CONTACT_URL = "/apps/site/Lumino%20联系.dc.html";
@@ -29,6 +29,16 @@ function writeSse(response, payload) {
   response.write(`event: advisor\ndata: ${JSON.stringify(payload)}\n\n`);
   response.write("event: done\ndata: {}\n\n");
   response.end();
+}
+
+function betaDisabledPayload(lang) {
+  const result = stopWithoutSources(lang);
+  result.intent = "beta_disabled";
+  result.answer = lang === "en"
+    ? "Ask Lumino is temporarily unavailable. Use the tools menu or the contact page for a scoped review."
+    : "「问 Lumino」暂时不可用。请使用工具菜单，或通过联系页申请有范围的复核。";
+  result.handoff = "contact";
+  return result;
 }
 
 function sensitivePayload(lang) {
@@ -58,7 +68,9 @@ async function resolveOpenQuestion(request) {
     asOf: request.asOf,
     limit: 3,
   });
-  if (!hits.length) return { result: stopWithoutSources(request.lang), source: "no_sources" };
+  if (!hits.length) {
+    return { result: stopWithoutSources(request.lang), source: "no_sources", modelAttempted: false, modelFailed: false };
+  }
 
   if (modelConfigured()) {
     try {
@@ -73,14 +85,33 @@ async function resolveOpenQuestion(request) {
           result: rest,
           source: "retrieval_model",
           model: runtimeModel,
+          modelAttempted: true,
+          modelFailed: false,
         };
       }
+      return {
+        result: buildGroundedFallback(hits, request.lang),
+        source: "retrieval_grounded",
+        modelAttempted: true,
+        modelFailed: true,
+      };
     } catch (error) {
       console.error("[lumino-advisor] model failed", error?.message || error);
+      return {
+        result: buildGroundedFallback(hits, request.lang),
+        source: "retrieval_grounded",
+        modelAttempted: true,
+        modelFailed: true,
+      };
     }
   }
 
-  return { result: buildGroundedFallback(hits, request.lang), source: "retrieval_grounded" };
+  return {
+    result: buildGroundedFallback(hits, request.lang),
+    source: "retrieval_grounded",
+    modelAttempted: false,
+    modelFailed: false,
+  };
 }
 
 export default async function handler(request, response) {
@@ -121,8 +152,14 @@ export default async function handler(request, response) {
     let result;
     let source = "deterministic";
     let model = null;
+    let modelAttempted = false;
+    let modelFailed = false;
+    const flags = getPublicFlags();
 
-    if (sanitized.sensitive) {
+    if (!publicBetaEnabled()) {
+      result = betaDisabledPayload(sanitized.request.lang);
+      source = "beta_disabled";
+    } else if (sanitized.sensitive) {
       result = sensitivePayload(sanitized.request.lang);
       source = "privacy_guard";
     } else {
@@ -132,11 +169,12 @@ export default async function handler(request, response) {
         result = open.result;
         source = open.source;
         model = open.model || null;
+        modelAttempted = Boolean(open.modelAttempted);
+        modelFailed = Boolean(open.modelFailed);
       }
     }
 
     const latencyMs = Date.now() - started;
-    const flags = getPublicFlags();
     const payload = {
       ok: true,
       ...result,
@@ -159,6 +197,9 @@ export default async function handler(request, response) {
       handoff: result.handoff,
       has_sources: Boolean(result.sources?.length),
       latency_ms: latencyMs,
+      model_tier: model?.tier || null,
+      model_attempted: modelAttempted,
+      model_failed: modelFailed,
       ok: true,
     });
     console.info("[lumino-advisor]", publicLogFields({
