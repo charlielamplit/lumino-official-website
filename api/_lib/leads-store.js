@@ -98,7 +98,7 @@ export function updateLead(id, patch, actor = "staff") {
 
   if (patch.status) {
     const status = String(patch.status);
-    if (!STATUS.has(status)) throw new Error("????");
+    if (!STATUS.has(status)) throw new Error("不支持的线索状态");
     next.status = status;
     if (status === "claimed" && !next.claimedBy) {
       next.claimedBy = String(patch.claimedBy || actor);

@@ -90,11 +90,13 @@
 
     sessionStorage.setItem("lumino-contact-last", fingerprint);
     if (result.channel === "api") {
-      const notifyHint = result.notified ? "对接人已收到通知。" : "已写入线索库；通知通道若未配置，商务可在 Portal 线索箱查看。";
-      show(`已提交（编号 ${result.leadId}）。${notifyHint}`, "success");
+      const notifyHint = result.notified
+        ? "已向对接人发送通知；该编号不代表正式数据库回执。"
+        : "当前未确认进入正式数据库或商务处理流程。正式咨询请发送邮件至 contact@lumino.tech。";
+      show(`已生成演示记录（编号 ${result.leadId}）。${notifyHint}`, "success");
     } else {
       show(
-        `已登记（编号 ${result.leadId}）。${result.warning || "当前环境写入本机 Portal 线索箱"}。正式环境将送达服务端线索库。`,
+        `已生成本机演示记录（编号 ${result.leadId}），未向正式数据库或商务处理流程发送。正式咨询请发送邮件至 contact@lumino.tech。`,
         "success"
       );
     }

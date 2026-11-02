@@ -284,9 +284,11 @@ async function submitLead(event) {
     });
     const payload = await response.json().catch(() => ({}));
     if (response.ok) {
-      const leadHint = payload.leadId ? `回执 ${payload.leadId}。` : "";
-      const notifyHint = payload.notified ? "对接人已收到通知。" : "已写入线索库；商务可在 Portal 线索箱查看。";
-      status.textContent = `已记录本次试算上下文。${leadHint}${notifyHint}`;
+      const leadHint = payload.leadId ? `演示编号 ${payload.leadId}。` : "";
+      const notifyHint = payload.notified
+        ? "已向对接人发送通知；该编号不代表正式数据库回执。"
+        : "未确认进入正式数据库或商务处理流程；正式咨询请使用联系页。";
+      status.textContent = `已记录本次试算演示上下文。${leadHint}${notifyHint}`;
       status.classList.add("success");
       unlockComparison();
       return;

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-30T16:00:00.000Z",
+  "updatedAt": "2026-11-02T02:41:47.000Z",
   "articles": [
     {
       "id": "cbam-importer-data",
@@ -141,6 +141,363 @@
       "cta": {
         "serviceId": "cbam",
         "source": "kb-hs-cn"
+      }
+    },
+    {
+      "id": "cbam-default-vs-actual",
+      "status": "published",
+      "type": "qa",
+      "serviceId": "cbam",
+      "industries": [
+        "steel",
+        "aluminium"
+      ],
+      "updatedAt": "2026-10-30",
+      "title": {
+        "zh": "CBAM：默认值还是实际值？怎么选、怎么说清",
+        "en": "CBAM: default values or actuals?"
+      },
+      "lead": {
+        "zh": "两种路径怎么选，缺口与切换怎么写。",
+        "en": "When to use defaults, when actuals, how to document gaps."
+      },
+      "typeLabel": {
+        "zh": "实务问答",
+        "en": "Q&A"
+      },
+      "industryLabel": {
+        "zh": "钢铁 / 铝",
+        "en": "Steel / aluminium"
+      },
+      "cta": {
+        "serviceId": "cbam",
+        "source": "kb-default-vs-actual"
+      },
+      "paths": {
+        "zh": "/apps/site/knowledge/content/cbam-default-vs-actual.zh.md",
+        "en": "/apps/site/knowledge/content/cbam-default-vs-actual.en.md"
+      }
+    },
+    {
+      "id": "cbam-precursors",
+      "status": "published",
+      "type": "method",
+      "serviceId": "cbam",
+      "industries": [
+        "steel",
+        "aluminium"
+      ],
+      "updatedAt": "2026-10-30",
+      "title": {
+        "zh": "CBAM 前体材料：哪些要拆、供应商怎么问",
+        "en": "CBAM precursors: what to split and how to ask"
+      },
+      "lead": {
+        "zh": "前体拆分思路与供应商五问。",
+        "en": "How to split precursors and five supplier questions."
+      },
+      "typeLabel": {
+        "zh": "方法指南",
+        "en": "Methods"
+      },
+      "industryLabel": {
+        "zh": "钢铁 / 铝",
+        "en": "Steel / aluminium"
+      },
+      "cta": {
+        "serviceId": "cbam",
+        "source": "kb-precursors"
+      },
+      "paths": {
+        "zh": "/apps/site/knowledge/content/cbam-precursors.zh.md",
+        "en": "/apps/site/knowledge/content/cbam-precursors.en.md"
+      }
+    },
+    {
+      "id": "cbam-reporting-cadence",
+      "status": "published",
+      "type": "reg",
+      "serviceId": "cbam",
+      "industries": [
+        "steel",
+        "aluminium"
+      ],
+      "updatedAt": "2026-10-30",
+      "title": {
+        "zh": "CBAM 申报节奏：季度数据包和年度事项怎么排",
+        "en": "CBAM cadence: quarterly packs vs annual work"
+      },
+      "lead": {
+        "zh": "季度沟通包与年度事项分开排期。",
+        "en": "Separate quarterly packs from annual compliance work."
+      },
+      "typeLabel": {
+        "zh": "法规解读",
+        "en": "Regulations"
+      },
+      "industryLabel": {
+        "zh": "钢铁 / 铝",
+        "en": "Steel / aluminium"
+      },
+      "cta": {
+        "serviceId": "cbam",
+        "source": "kb-reporting-cadence"
+      },
+      "paths": {
+        "zh": "/apps/site/knowledge/content/cbam-reporting-cadence.zh.md",
+        "en": "/apps/site/knowledge/content/cbam-reporting-cadence.en.md"
+      }
+    },
+    {
+      "id": "cbam-vs-pcf",
+      "status": "published",
+      "type": "qa",
+      "serviceId": "cbam",
+      "industries": [
+        "steel",
+        "aluminium",
+        "chem"
+      ],
+      "updatedAt": "2026-10-30",
+      "title": {
+        "zh": "CBAM 和产品碳足迹（PCF）别混用同一张表",
+        "en": "Don’t reuse one spreadsheet for CBAM and PCF"
+      },
+      "lead": {
+        "zh": "规则、边界、接收方不同，底层台账可复用。",
+        "en": "Different rules and recipients; reuse ledgers, not conclusions."
+      },
+      "typeLabel": {
+        "zh": "实务问答",
+        "en": "Q&A"
+      },
+      "industryLabel": {
+        "zh": "钢铁 / 铝 / 制造",
+        "en": "Steel / aluminium / manufacturing"
+      },
+      "cta": {
+        "serviceId": "cbam",
+        "source": "kb-cbam-vs-pcf"
+      },
+      "paths": {
+        "zh": "/apps/site/knowledge/content/cbam-vs-pcf.zh.md",
+        "en": "/apps/site/knowledge/content/cbam-vs-pcf.en.md"
+      }
+    },
+    {
+      "id": "esg-framework-first",
+      "status": "published",
+      "type": "method",
+      "serviceId": "esg",
+      "industries": [
+        "chem",
+        "elec",
+        "textile"
+      ],
+      "updatedAt": "2026-10-30",
+      "title": {
+        "zh": "ESG 报告：先定框架，还是先凑指标？",
+        "en": "ESG reporting: framework first, or metrics first?"
+      },
+      "lead": {
+        "zh": "先锁受众、框架与边界，再采指标。",
+        "en": "Lock audience, framework and boundary before KPIs."
+      },
+      "typeLabel": {
+        "zh": "方法指南",
+        "en": "Methods"
+      },
+      "industryLabel": {
+        "zh": "通用制造",
+        "en": "Manufacturing"
+      },
+      "cta": {
+        "serviceId": "esg",
+        "source": "kb-esg-framework"
+      },
+      "paths": {
+        "zh": "/apps/site/knowledge/content/esg-framework-first.zh.md",
+        "en": "/apps/site/knowledge/content/esg-framework-first.en.md"
+      }
+    },
+    {
+      "id": "packaging-ppwr-carbon",
+      "status": "published",
+      "type": "qa",
+      "serviceId": "export",
+      "industries": [
+        "packaging"
+      ],
+      "updatedAt": "2026-10-30",
+      "title": {
+        "zh": "包装企业：PPWR 和客户碳问卷怎么一起应付",
+        "en": "Packaging: PPWR and customer carbon questionnaires"
+      },
+      "lead": {
+        "zh": "材料账共享，合规结论与碳答复分开写。",
+        "en": "Share the materials ledger; keep compliance and carbon replies apart."
+      },
+      "typeLabel": {
+        "zh": "实务问答",
+        "en": "Q&A"
+      },
+      "industryLabel": {
+        "zh": "包装",
+        "en": "Packaging"
+      },
+      "cta": {
+        "serviceId": "export",
+        "source": "kb-ppwr-carbon"
+      },
+      "paths": {
+        "zh": "/apps/site/knowledge/content/packaging-ppwr-carbon.zh.md",
+        "en": "/apps/site/knowledge/content/packaging-ppwr-carbon.en.md"
+      }
+    },
+    {
+      "id": "pcf-data-collection",
+      "status": "published",
+      "type": "method",
+      "serviceId": "pcf",
+      "industries": [
+        "textile",
+        "packaging",
+        "elec"
+      ],
+      "updatedAt": "2026-11-02",
+      "title": {
+        "zh": "产品碳足迹：活动数据怎么采、证据怎么留",
+        "en": "PCF: collecting activity data and keeping evidence"
+      },
+      "lead": {
+        "zh": "四类数据、两周采集顺序与质量三问。",
+        "en": "Four data groups, a two-week order, three quality checks."
+      },
+      "typeLabel": {
+        "zh": "方法指南",
+        "en": "Methods"
+      },
+      "industryLabel": {
+        "zh": "纺织 / 包装 / 电子",
+        "en": "Textiles / packaging / electronics"
+      },
+      "cta": {
+        "serviceId": "pcf",
+        "source": "kb-pcf-data"
+      },
+      "paths": {
+        "zh": "/apps/site/knowledge/content/pcf-data-collection.zh.md",
+        "en": "/apps/site/knowledge/content/pcf-data-collection.en.md"
+      }
+    },
+    {
+      "id": "pcf-hotspots-reduction",
+      "status": "published",
+      "type": "qa",
+      "serviceId": "pcf",
+      "industries": [
+        "textile",
+        "packaging",
+        "elec",
+        "chem"
+      ],
+      "updatedAt": "2026-11-02",
+      "title": {
+        "zh": "产品碳足迹算完之后：热点在哪、怎么讲减排",
+        "en": "After the PCF: hotspots and a credible reduction story"
+      },
+      "lead": {
+        "zh": "读结构、对外话术、减排动作怎么排序。",
+        "en": "Read the structure, message buyers, rank reductions."
+      },
+      "typeLabel": {
+        "zh": "实务问答",
+        "en": "Q&A"
+      },
+      "industryLabel": {
+        "zh": "制造",
+        "en": "Manufacturing"
+      },
+      "cta": {
+        "serviceId": "pcf",
+        "source": "kb-pcf-hotspots"
+      },
+      "paths": {
+        "zh": "/apps/site/knowledge/content/pcf-hotspots-reduction.zh.md",
+        "en": "/apps/site/knowledge/content/pcf-hotspots-reduction.en.md"
+      }
+    },
+    {
+      "id": "ghg-inventory-first-year",
+      "status": "published",
+      "type": "method",
+      "serviceId": "inventory",
+      "industries": [
+        "chem",
+        "elec",
+        "steel",
+        "textile"
+      ],
+      "updatedAt": "2026-11-02",
+      "title": {
+        "zh": "组织温室气体盘查：首年从哪里起步",
+        "en": "Organisational GHG inventory: where to start in year one"
+      },
+      "lead": {
+        "zh": "边界、Scope 1/2 与优先 Scope 3 的最小路径。",
+        "en": "Boundary, solid Scope 1/2, prioritised Scope 3."
+      },
+      "typeLabel": {
+        "zh": "方法指南",
+        "en": "Methods"
+      },
+      "industryLabel": {
+        "zh": "通用制造",
+        "en": "Manufacturing"
+      },
+      "cta": {
+        "serviceId": "inventory",
+        "source": "kb-ghg-first-year"
+      },
+      "paths": {
+        "zh": "/apps/site/knowledge/content/ghg-inventory-first-year.zh.md",
+        "en": "/apps/site/knowledge/content/ghg-inventory-first-year.en.md"
+      }
+    },
+    {
+      "id": "eudr-csddd-exporter-prep",
+      "status": "published",
+      "type": "reg",
+      "serviceId": "export",
+      "industries": [
+        "packaging",
+        "textile",
+        "chem"
+      ],
+      "updatedAt": "2026-11-02",
+      "title": {
+        "zh": "出口相关新规速览：EUDR 与 CSDDD 工厂先备什么",
+        "en": "EUDR vs CSDDD: what exporters prepare first"
+      },
+      "lead": {
+        "zh": "两制差异、证据包与四周行动清单。",
+        "en": "How they differ, evidence packs, four-week starter list."
+      },
+      "typeLabel": {
+        "zh": "法规解读",
+        "en": "Regulations"
+      },
+      "industryLabel": {
+        "zh": "出口供应链",
+        "en": "Export supply chains"
+      },
+      "cta": {
+        "serviceId": "export",
+        "source": "kb-eudr-csddd"
+      },
+      "paths": {
+        "zh": "/apps/site/knowledge/content/eudr-csddd-exporter-prep.zh.md",
+        "en": "/apps/site/knowledge/content/eudr-csddd-exporter-prep.en.md"
       }
     }
   ]

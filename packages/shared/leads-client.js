@@ -3,11 +3,11 @@
 
   const STORAGE_KEY = "lumino.public.leads.v1";
   const STATUS_LABELS = {
-    new: "??",
-    claimed: "???",
-    qualified: "?????",
-    disqualified: "???",
-    converted: "???",
+    new: "新线索",
+    claimed: "已认领",
+    qualified: "有效线索",
+    disqualified: "不适用",
+    converted: "已转化",
   };
 
   function readLocal() {
@@ -56,7 +56,7 @@
       services: Array.isArray(payload.services)
         ? payload.services
         : String(payload.serviceId || "")
-            .split(/[,?\s]+/)
+            .split(/[,，\s]+/)
             .map((s) => s.trim())
             .filter(Boolean),
       note: payload.note || "",
@@ -98,9 +98,9 @@
         return { ok: true, leadId: data.leadId, lead, channel: "api", notified: Boolean(data.notified) };
       }
       if (response.status >= 400 && response.status < 500) {
-        return { ok: false, error: data.error || "???????", retryable: false };
+        return { ok: false, error: data.error || "提交信息未通过校验", retryable: false };
       }
-      // 5xx / missing API ? local inbox bridge for Portal demo
+      // 5xx / missing API: local-only bridge for the Portal demo.
       const lead = buildLead({ ...body, localOnly: true });
       upsertLocal(lead);
       return {
@@ -109,7 +109,7 @@
         lead,
         channel: "local",
         notified: false,
-        warning: data.error || "????????????? Portal ???",
+        warning: data.error || "服务端不可用，记录仅保存在当前浏览器",
       };
     } catch (_) {
       const lead = buildLead({ ...body, localOnly: true });
@@ -120,7 +120,7 @@
         lead,
         channel: "local",
         notified: false,
-        warning: "?????????? Portal ?????????????????",
+        warning: "网络不可用，记录仅保存在当前浏览器，不代表已送达服务团队",
       };
     }
   }
@@ -190,7 +190,7 @@
     }
 
     if (updated) return { ok: true, lead: updated, localOnly: true };
-    return { ok: false, error: "?????" };
+    return { ok: false, error: "线索不存在" };
   }
 
   root.LuminoLeadsClient = {

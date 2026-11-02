@@ -14,7 +14,7 @@ function json(response, status, body) {
 
 function staffAuthorized(request) {
   const expected = process.env.LEADS_STAFF_KEY || process.env.KNOWLEDGE_STAFF_KEY;
-  if (!expected) return true;
+  if (!expected) return false;
   const header = request.headers["x-lumino-staff-key"] || "";
   const query = request.query?.key || "";
   return header === expected || query === expected;

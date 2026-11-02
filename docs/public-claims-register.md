@@ -1,7 +1,7 @@
 # Lumino 公开声明登记表
 
-- 版本：1.0.0
-- 审查日期：2026-10-27
+- 版本：1.1.0
+- 审查日期：2026-11-02
 - 适用范围：官网首页、六项服务页、平台页、关于、联系与知识库
 - 状态定义：`SUPPORTED` 已有原型或正式工作机制支持；`PILOT` 仅试点；`PLANNED` 尚未开放；`UNVERIFIED` 禁止公开。
 
@@ -17,20 +17,19 @@
 | CLM-008 | Agent 提议与正式事实分离 | SUPPORTED | 数据资产内核限制 Agent 仅创建带来源的待确认提议；公开文案统一称「提议」，不得自动成为正式事实 | 首页、平台、服务页 |
 | CLM-009 | 确定性计算可复现 | SUPPORTED / PILOT | 表示工作机制与原型能力；正式计算仍取决于锁定输入、规则和生产后端 | 首页、平台、CBAM/PCF 页 |
 | CLM-010 | 专家复核正式交付 | SUPPORTED / PILOT | 仅在相应服务范围和项目约定中适用，不泛化为第三方认证 | 首页、平台、服务页 |
-| CLM-011 | 公开联系表单／试算线索会写入线索库，并由商务／运营在 Portal 线索收件箱承接；可配置邮件或 Webhook 通知 | SUPPORTED | `POST /api/leads` 先落库再通知；通知失败仍返回回执号。未配置 `LEAD_WEBHOOK_URL`／Resend 时不宣称「邮件已达对接人」，但可写「已进入线索收件箱」。静态预览环境可回退本机线索箱，文案须标明。 | 联系页、试算页、Portal 商务／运营 |
+| CLM-011 | 公开联系表单和试算线索当前仅提供演示记录；正式咨询使用公开邮箱，已配置通知通道时可发送通知 | PILOT | 尚未接入正式数据库。API、本机存储、进程内存、仓库文件或 Serverless `/tmp` 均不构成正式落库或受控送达证明；页面不得宣称已进入正式线索库或商务处理流程。 | 联系页、试算页、Portal 商务／运营 |
 | CLM-012 | CBAM 公开页按「适用判断→范围编码→数据准备→计算→核查支持→进口商交付」说明工作路径 | SUPPORTED | 表达现有频道与交付机制；不宣称监管认定或生产后端已接入 | CBAM 服务页、平台页 |
 | CLM-013 | PCF 公开页按「核算声明与功能单位→系统边界→模板与结构校验→活动数据与服务绑定→排放因子适用性→计算与热点→复核与受控报告」说明试点路径 | PILOT | 与 stage-gates／service-registry.stages 全称一致；明确不接真实计算与报告后端 | PCF 服务页、平台页 |
 | CLM-014 | 平台页说明「资产→绑定→正式事实→快照／计算→受控交付」 | SUPPORTED | 对应数据资产内核与 Portal 工作机制原型；非 Portal 截图证明 | 平台页 |
+| CLM-015 | CBAM／PCF 每一步均有对应校验门禁 | SUPPORTED / PILOT | 规则在 `packages/agent` stage-gates；Portal 展示并拦截；公开页仅说明门槛 | CBAM/PCF 服务页、Portal |
+| CLM-016 | Agent 内核与 Portal／公开站分目录部署就绪 | SUPPORTED | 物理分包 `packages/agent`、`apps/portal`、`apps/site`；非生产后端拆分 | README、架构说明 |
+| CLM-017 | 排放因子来自外部／本机因子库引用，非 Lumino 内置生产库 | PILOT | 见 `docs/emission-factors-status.md`；当前演示对齐 DatabaseofEmissionFactor 种子，未联机 | PCF 服务页、Portal 因子面板 |
+| CLM-018 | 公开站与 Portal 共用同一套 PCF 阶段名称 | SUPPORTED / PILOT | 以 stage-gates 与 `service-registry.stages` 为准：核算声明、系统边界、模板与结构校验、活动数据与服务绑定、排放因子适用性、计算与热点、复核与受控报告 | 官网、平台、PCF、Portal |
 
 ## 发布规则
 
-1. `UNVERIFIED` 声明不得出现在公开页面；状态变更须先更新本表再改页面文案（CLM-011 已升为 SUPPORTED）。
+1. `UNVERIFIED` 声明不得出现在公开页面；状态变更须先更新本表再改页面文案。CLM-011 在正式数据库和受控送达链路启用前保持 `PILOT`。
 2. 法规数字、标准适用性、编码、资质、客户案例和效果数字必须在发布前增加来源、适用日期和责任人。
 3. `PLANNED` 一律使用未来时态，且主要操作只能是咨询或查看计划。
 4. 声明变化必须先更新本登记表和公共服务注册表，再更新页面文案。
-| CLM-015 | CBAM／PCF 每一步均有对应校验门禁 | SUPPORTED / PILOT | 规则在 packages/agent stage-gates；Portal 展示并拦截；公开页仅说明门槛 | CBAM/PCF 服务页、Portal |
-| CLM-016 | Agent 内核与 Portal／公开站分目录部署就绪 | SUPPORTED | 物理分包 packages/agent、apps/portal、apps/site；非生产后端拆分 | README、架构说明 |
-
-| CLM-017 | 排放因子来自外部／本机因子库引用，非 Lumino 内置生产库 | PILOT | 见 docs/emission-factors-status.md；当前演示对齐 DatabaseofEmissionFactor 种子，未联机 | PCF 服务页、Portal 因子面板 |
-| CLM-018 | 公开站与 Portal 共用同一套 PCF 阶段名称 | SUPPORTED / PILOT | 以 stage-gates 与 service-registry.stages 为准：核算声明、系统边界、模板与结构校验、活动数据与服务绑定、排放因子适用性、计算与热点、复核与受控报告 | 官网、平台、PCF、Portal |
 
