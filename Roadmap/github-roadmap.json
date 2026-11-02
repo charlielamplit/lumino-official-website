@@ -387,7 +387,7 @@
       "parentId": "E08",
       "title": "[Feature] 交付无模型顾问浮窗与统一工具入口",
       "state": "open",
-      "labels": ["Roadmap", "type/feature", "status/ready", "priority/P0", "area/advisor", "area/public-site", "area/quality", "sprint/advisor-01", "scope/prototype"],
+      "labels": ["Roadmap", "type/feature", "status/review", "priority/P0", "area/advisor", "area/public-site", "area/quality", "sprint/advisor-01", "scope/prototype"],
       "summary": "在不接入模型的前提下完成顾问浮窗、预选对话、固定答案展示和工具跳转，验证完整交互与可访问性。",
       "scope": ["将现有右下角工具入口升级为单一统一入口", "桌面浮窗与移动底部面板", "预选项、自由输入的确定性匹配、固定答案、来源与 CTA", "网络/模型不可用状态、重新开始、当前标签页恢复和减少动态效果"],
       "acceptance": ["390px、768px 和 1440px 无横向溢出且不遮挡现有关键 CTA", "键盘可完成打开、选择、输入、跳转和关闭，焦点返回入口正确", "断开模型与网络依赖时，预选分诊、固定答案和工具路由仍可用", "桌面端、390px、200% 缩放与键盘路径保留审查证据"],

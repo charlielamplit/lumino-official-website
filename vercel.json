@@ -46,6 +46,7 @@
     { "source": "/site/marketing.css", "destination": "/apps/site/site/marketing.css" },
     { "source": "/site/:path*", "destination": "/apps/site/site/:path*" },
     { "source": "/packages/agent/:path*", "destination": "/packages/agent/:path*" },
+    { "source": "/packages/advisor/:path*", "destination": "/packages/advisor/:path*" },
     { "source": "/packages/shared/:path*", "destination": "/packages/shared/:path*" },
     { "source": "/quote", "destination": "/Lumino 报价器.dc.html" },
     { "source": "/site", "destination": "/apps/site/Lumino 官网.dc.html" },
