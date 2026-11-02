@@ -92,10 +92,29 @@
     requestAnimationFrame(() => { status.textContent = message; });
   }
 
-  function appendExchange(userLabel, request, options) {
+  async function resolveResponse(request) {
+    const payload = { ...request, lang: lang() };
+    try {
+      const upstream = await fetch("/api/advisor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (upstream.ok) {
+        const data = await upstream.json();
+        if (data && data.answer_mode && data.answer) return data;
+      }
+    } catch (_) {
+      /* local deterministic router remains the offline fallback */
+    }
+    return root.LuminoAdvisor.route(payload);
+  }
+
+  async function appendExchange(userLabel, request, options) {
     const thread = panel.querySelector(".advisor-thread");
     if (userLabel) thread.insertAdjacentHTML("beforeend", `<article class="advisor-turn advisor-turn--user"><p>${escapeHtml(userLabel)}</p></article>`);
-    const response = root.LuminoAdvisor.route({ ...request, lang: lang() });
+    const response = await resolveResponse(request);
     thread.insertAdjacentHTML("beforeend", answerMarkup(response));
     history.push({ topicId: options?.topicId || request.topicId || "", userLabel, response });
     saveState();
