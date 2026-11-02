@@ -185,7 +185,7 @@
       reviewedAt: "2026-11-02",
       reviewer: "Lumino CBAM 服务负责人",
       topicIds: ["cn_code_lookup"],
-      keywords: ["cn code", "cn-code", "hs code", "taric", "海关编码", "商品编码", "查cn", "查 cn", "查hs", "查 hs"],
+      keywords: ["cn code", "cn-code", "hs code", "hs 编码", "taric", "海关编码", "商品编码", "查cn", "查 cn", "查hs", "查 hs", "正式归类", "归类决定", "customs classification", "classify my goods", "正式 cn", "编码是多少", "认定我的", "告诉我编码"],
       answer: L("可以先使用现有工具。CBAM 试算器可从已支持的 CN Code 列表选择产品并进行成本试算；编码指南用于理解 HS、CN 和 TARIC 的关系与核对顺序。这些入口不替代正式海关归类或专家复核。", "Use the existing tools first. The CBAM calculator lets you select from supported CN codes and estimate cost; the code guide explains HS, CN and TARIC and the checking order. These tools do not replace formal customs classification or expert review."),
       links: [
         { type: "tool", label: L("进入 CBAM 试算器", "Open the CBAM calculator"), url: "/calculator" },

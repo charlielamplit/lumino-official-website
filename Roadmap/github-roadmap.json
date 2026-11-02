@@ -1104,11 +1104,11 @@
       "kind": "feature",
       "parentId": "E08",
       "title": "[Feature] 接入已发布知识检索与分级模型回答",
-      "state": "open",
+      "state": "closed",
       "labels": [
         "Roadmap",
         "type/feature",
-        "status/in-progress",
+        "status/done",
         "priority/P1",
         "area/advisor",
         "area/public-site",
@@ -1146,7 +1146,7 @@
       "labels": [
         "Roadmap",
         "type/feature",
-        "status/backlog",
+        "status/in-progress",
         "priority/P0",
         "area/advisor",
         "area/quality",

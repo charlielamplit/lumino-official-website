@@ -7,8 +7,10 @@ const buckets = new Map();
 
 const SENSITIVE_RE = [
   /\b1[3-9]\d{9}\b/,
+  /\+\d{1,3}[-.\s]?\d{1,4}[-.\s]?\d{3,4}[-.\s]?\d{3,4}\b/,
   /[\w.+-]+@[\w.-]+\.[a-z]{2,}/i,
   /\b\d{15,18}[0-9xX]\b/,
+  /\b[A-Z]{1,2}\d{7,9}\b/, // passport-like
 ];
 
 export function detectSensitive(value) {

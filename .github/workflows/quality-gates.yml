@@ -60,7 +60,7 @@ jobs:
       - name: Run deterministic tests
         run: |
           shopt -s nullglob
-          test_files=(tests/*.test.* packages/agent/tests/*.test.*)
+          test_files=(tests/*.test.* packages/agent/tests/*.test.* packages/advisor/tests/*.test.*)
           if [ "${#test_files[@]}" -eq 0 ]; then
             echo "No deterministic tests found"
             exit 1

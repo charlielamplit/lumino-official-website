@@ -13,12 +13,12 @@
   const topicKeywords = Object.freeze({
     cbam_vs_pcf: ["cbam和pcf", "cbam 和 pcf", "cbam vs pcf", "产品碳足迹有什么区别", "difference between cbam"],
     cbam_data_start: ["进口商", "碳数据", "importer data", "communication template", "准备什么数据"],
-    pcf_data_start: ["产品碳足迹", "活动数据", "pcf data", "carbon footprint data", "功能单位", "系统边界怎么采"],
+    pcf_data_start: ["产品碳足迹", "活动数据", "pcf data", "carbon footprint data", "功能单位", "系统边界怎么采", "collecting pcf", "pcf activity data", "activity data"],
     inventory_first_year: ["组织碳盘查", "首年盘查", "第一次盘查", "year one inventory", "first year ghg", "组织温室气体"],
     eudr_csddd: ["eudr", "csddd", "零毁林", "尽职管理", "毁林", "due diligence directive"],
     esg_ghg: ["scope 1", "scope1", "scope 2", "scope2", "scope 3", "scope3", "碳盘查", "ghg inventory", "esg报告", "esg 报告"],
     renewable_power: ["绿电", "绿证", "i-rec", "irec", "renewable power", "renewable certificate"],
-    cbam_scope: ["是否涉及cbam", "是否属于cbam", "cbam范围", "cbam scope", "covered by cbam"],
+    cbam_scope: ["是否涉及cbam", "是否属于cbam", "cbam范围", "cbam scope", "covered by cbam", "可能涉及 cbam", "涉及 cbam"],
     service_triage: ["不确定需要", "哪项服务", "which service", "not sure which service"]
   });
 
