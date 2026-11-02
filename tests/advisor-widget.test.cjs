@@ -6,12 +6,13 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 
-test("public tool menu loads the deterministic advisor without a model endpoint", () => {
+test("public tool menu loads the deterministic advisor without embedding model secrets", () => {
   const source = read("apps/site/site/float-tools.js");
   assert.match(source, /data-open-advisor/);
   assert.match(source, /\/packages\/advisor\/catalog\.js/);
   assert.match(source, /\/packages\/advisor\/router\.js/);
-  assert.doesNotMatch(source, /fetch\(|\/api\/advisor|OPENAI|API_KEY/);
+  assert.match(source, /\/api\/advisor-config/);
+  assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
 });
 
 test("advisor widget preserves keyboard, privacy and current-tab recovery controls", () => {

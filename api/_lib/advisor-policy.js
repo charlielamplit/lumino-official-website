@@ -79,13 +79,16 @@ export function sanitizeRequest(body = {}) {
   };
 }
 
-export function publicLogFields({ intent, answer_mode, confidence, handoff, source }) {
+export function publicLogFields({ intent, answer_mode, confidence, handoff, source, latency_ms, has_sources, model_tier }) {
   return {
     intent: intent || "unknown",
     answer_mode: answer_mode || "fallback",
     confidence: confidence || "low",
     handoff: handoff || "contact",
     source: source || "deterministic",
+    latency_ms: Number.isFinite(latency_ms) ? Math.round(latency_ms) : null,
+    has_sources: Boolean(has_sources),
+    model_tier: model_tier || null,
   };
 }
 

@@ -8,6 +8,8 @@ import { checkRateLimit, clientKey, publicLogFields, sanitizeRequest } from "./_
 import { modelConfigured, routeDeterministic } from "./_lib/advisor-runtime.js";
 import { buildGroundedFallback, retrievePublishedKnowledge, stopWithoutSources } from "./_lib/advisor-retrieval.js";
 import { generateGroundedAnswer } from "./_lib/advisor-model.js";
+import { getPublicFlags } from "./_lib/advisor-flags.js";
+import { recordAdvisorMetric } from "./_lib/advisor-metrics-store.js";
 
 const CONTACT_URL = "/apps/site/Lumino%20联系.dc.html";
 
@@ -114,6 +116,7 @@ export default async function handler(request, response) {
   const wantsStream = request.query?.stream === "1"
     || String(request.headers?.accept || "").includes("text/event-stream");
 
+  const started = Date.now();
   try {
     let result;
     let source = "deterministic";
@@ -132,6 +135,8 @@ export default async function handler(request, response) {
       }
     }
 
+    const latencyMs = Date.now() - started;
+    const flags = getPublicFlags();
     const payload = {
       ok: true,
       ...result,
@@ -140,18 +145,42 @@ export default async function handler(request, response) {
         model_configured: modelConfigured(),
         model_tier: model?.tier || null,
         store: false,
+        public_beta: flags.public_beta,
+        model_enabled: flags.model_enabled,
+        lead_capture: false,
+        latency_ms: latencyMs,
       },
     };
 
+    recordAdvisorMetric({
+      type: "request",
+      answer_mode: result.answer_mode,
+      source,
+      handoff: result.handoff,
+      has_sources: Boolean(result.sources?.length),
+      latency_ms: latencyMs,
+      ok: true,
+    });
     console.info("[lumino-advisor]", publicLogFields({
       ...result,
       source,
+      latency_ms: latencyMs,
+      has_sources: Boolean(result.sources?.length),
+      model_tier: model?.tier || null,
     }));
 
     if (wantsStream) return writeSse(response, payload);
     return json(response, 200, payload, rateHeaders);
   } catch (error) {
     console.error("[lumino-advisor] failed", error?.message || error);
+    const latencyMs = Date.now() - started;
+    recordAdvisorMetric({
+      type: "request",
+      answer_mode: "fallback",
+      source: "error",
+      latency_ms: latencyMs,
+      ok: false,
+    });
     const fallback = stopWithoutSources(sanitized.request.lang);
     fallback.answer = sanitized.request.lang === "en"
       ? "The advisor service is temporarily unavailable. Choose a topic below, or use the contact page."
