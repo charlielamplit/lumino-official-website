@@ -15,14 +15,23 @@
     cbamCodes: source("cbam-hs-cn-codes", "HS / CN / TARIC 编码核对指南", "HS / CN / TARIC code guide", "/knowledge/article?id=cbam-hs-cn-codes"),
     cbamData: source("cbam-importer-data", "CBAM 进口商数据准备", "Preparing CBAM importer data", "/knowledge/article?id=cbam-importer-data"),
     cbamPcf: source("cbam-vs-pcf", "CBAM 与产品碳足迹的区别", "CBAM vs product carbon footprint", "/knowledge/article?id=cbam-vs-pcf"),
-    ghg: source("ghg-scope-cut", "Scope 1 / 2 / 3 初步划分", "Introducing Scope 1 / 2 / 3", "/knowledge/article?id=ghg-scope-cut")
+    cbamPrecursors: source("cbam-precursors", "CBAM 前体材料准备", "CBAM precursor preparation", "/knowledge/article?id=cbam-precursors"),
+    cbamDefaults: source("cbam-default-vs-actual", "CBAM 默认值与实际值", "CBAM defaults vs actuals", "/knowledge/article?id=cbam-default-vs-actual"),
+    ghg: source("ghg-scope-cut", "Scope 1 / 2 / 3 初步划分", "Introducing Scope 1 / 2 / 3", "/knowledge/article?id=ghg-scope-cut"),
+    ghgFirstYear: source("ghg-inventory-first-year", "组织温室气体盘查首年起步", "GHG inventory year-one start", "/knowledge/article?id=ghg-inventory-first-year"),
+    pcfData: source("pcf-data-collection", "产品碳足迹活动数据采集", "PCF activity-data collection", "/knowledge/article?id=pcf-data-collection"),
+    pcfHotspots: source("pcf-hotspots-reduction", "产品碳足迹热点与减排叙事", "PCF hotspots and reduction story", "/knowledge/article?id=pcf-hotspots-reduction"),
+    eudrCsddd: source("eudr-csddd-exporter-prep", "EUDR 与 CSDDD 出口准备", "EUDR and CSDDD exporter prep", "/knowledge/article?id=eudr-csddd-exporter-prep")
   });
 
   const topics = Object.freeze([
     { id: "cbam_scope", label: L("我的产品是否可能涉及 CBAM？", "Could my product be covered by CBAM?") },
     { id: "cbam_data_start", label: L("进口商让我准备碳数据，从哪里开始？", "An importer wants carbon data. Where do I start?") },
     { id: "cbam_vs_pcf", label: L("CBAM 和产品碳足迹有什么区别？", "What is the difference between CBAM and PCF?") },
+    { id: "pcf_data_start", label: L("产品碳足迹要从哪里采数据？", "Where should we start collecting PCF data?") },
     { id: "esg_ghg", label: L("客户要求 ESG、碳盘查或 Scope 1/2/3", "A customer asks for ESG, a GHG inventory or Scope 1/2/3") },
+    { id: "inventory_first_year", label: L("组织碳盘查第一年怎么起步？", "How should a first-year GHG inventory start?") },
+    { id: "eudr_csddd", label: L("EUDR 或 CSDDD，出口工厂先备什么？", "EUDR or CSDDD — what should exporters prepare first?") },
     { id: "renewable_power", label: L("想规划绿电、绿证或可再生能源证明", "Plan renewable power, certificates or proof") },
     { id: "service_triage", label: L("不确定需要哪项服务", "I am not sure which service I need") }
   ]);
@@ -55,7 +64,7 @@
       nextQuestion: L("进口商是否已给你模板或提交时限？", "Has the importer provided a template or deadline?"),
       suggestedReplies: [reply("template", "有模板", "I have a template"), reply("deadline", "只有时限", "Only a deadline"), reply("request-only", "只是口头要求", "Only an informal request"), reply("unknown", "不确定", "I am not sure")],
       serviceId: "cbam",
-      sourceIds: ["cbam-importer-data"],
+      sourceIds: ["cbam-importer-data", "cbam-precursors", "cbam-default-vs-actual"],
       cta: { type: "knowledge", label: L("查看资料准备清单", "View the preparation checklist"), url: "/knowledge/article?id=cbam-importer-data" }
     },
     {
@@ -87,8 +96,53 @@
       suggestedReplies: [reply("report", "ESG 报告", "ESG report"), reply("questionnaire", "客户或评级问卷", "Customer or rating questionnaire"), reply("inventory", "组织碳盘查", "GHG inventory"), reply("scope-data", "Scope 1/2/3 数据", "Scope 1/2/3 data")],
       serviceId: "inventory",
       secondaryServiceId: "esg",
-      sourceIds: ["ghg-scope-cut"],
+      sourceIds: ["ghg-scope-cut", "ghg-inventory-first-year"],
       cta: { type: "knowledge", label: L("查看 Scope 划分", "View the Scope guide"), url: "/knowledge/article?id=ghg-scope-cut" }
+    },
+    {
+      id: "answer-pcf-data-start",
+      topicId: "pcf_data_start",
+      intent: "pcf_data_start",
+      status: "published",
+      version: "1.0.0",
+      reviewedAt: "2026-11-02",
+      reviewer: "Lumino 服务内容负责人",
+      answer: L("先锁定代表产品和功能单位，再按材料、能源、运输（若在边界内）、废弃四类建最小采集清单，并给每个过程指定数据主人与证据位置。边界没定清楚前，不要全品类铺开采数。", "First lock representative products and the functional unit. Then build a minimum collection list across materials, energy, in-boundary transport and waste, with a data owner and evidence location for each process. Do not expand to every SKU before the boundary is clear."),
+      nextQuestion: L("你现在更卡在哪一步？", "Where are you stuck right now?"),
+      suggestedReplies: [reply("boundary", "系统边界还没定", "Boundary not locked"), reply("collect", "不知道采哪些数", "Unsure what to collect"), reply("hotspot", "算完了但不会讲热点", "Have a result, unclear hotspots"), reply("unknown", "不确定", "Not sure")],
+      serviceId: "pcf",
+      sourceIds: ["pcf-data-collection", "pcf-hotspots-reduction"],
+      cta: { type: "knowledge", label: L("查看采集清单", "View the collection guide"), url: "/knowledge/article?id=pcf-data-collection" }
+    },
+    {
+      id: "answer-inventory-first-year",
+      topicId: "inventory_first_year",
+      intent: "inventory_first_year",
+      status: "published",
+      version: "1.0.0",
+      reviewedAt: "2026-11-02",
+      reviewer: "Lumino 服务内容负责人",
+      answer: L("首年目标不是一次完美，而是组织边界写清楚、Scope 1/2 站得住，Scope 3 只先做 2–4 个高相关类别。底层能源台账可以以后复用到产品足迹，但结论页不要混用。", "Year one is not perfection: write down the organisational boundary, make Scope 1/2 reliable, and limit Scope 3 to two to four relevant categories. Energy ledgers can later support product footprints, but keep the conclusion pages separate."),
+      nextQuestion: L("你现在有哪些现成资料？", "What evidence do you already have?"),
+      suggestedReplies: [reply("bills", "有电费/燃料账单", "Energy bills available"), reply("sites", "有多厂清单", "Multi-site list ready"), reply("scope3", "客户点名要 Scope 3", "Customer asked for Scope 3"), reply("unknown", "还很少", "Very little so far")],
+      serviceId: "inventory",
+      sourceIds: ["ghg-inventory-first-year", "ghg-scope-cut"],
+      cta: { type: "knowledge", label: L("查看首年起步指南", "View the year-one guide"), url: "/knowledge/article?id=ghg-inventory-first-year" }
+    },
+    {
+      id: "answer-eudr-csddd",
+      topicId: "eudr_csddd",
+      intent: "eudr_csddd",
+      status: "published",
+      version: "1.0.0",
+      reviewedAt: "2026-11-02",
+      reviewer: "Lumino 服务内容负责人",
+      answer: L("EUDR 关注特定商品是否可追溯、是否与毁林无关；CSDDD 关注公司层面的尽职管理与价值链责任。两者都可能传到出口工厂，但证据包不同：前者常要地块与批次追溯，后者更要政策、风险评估和申诉渠道。", "EUDR focuses on commodity traceability and deforestation-free evidence; CSDDD focuses on company due diligence across the value chain. Both can cascade to exporters, with different packs: plot and lot evidence versus policies, risk assessments and grievance channels."),
+      nextQuestion: L("客户主要按哪一类来催？", "Which ask is the customer pushing?"),
+      suggestedReplies: [reply("eudr", "商品追溯 / EUDR", "Commodity traceability / EUDR"), reply("csddd", "尽职管理 / CSDDD", "Due diligence / CSDDD"), reply("both", "两者都提到", "Both mentioned"), reply("unknown", "说不清", "Not clear")],
+      serviceId: "export",
+      sourceIds: ["eudr-csddd-exporter-prep"],
+      cta: { type: "knowledge", label: L("查看出口准备说明", "View the exporter briefing"), url: "/knowledge/article?id=eudr-csddd-exporter-prep" }
     },
     {
       id: "answer-renewable-power",
@@ -113,7 +167,7 @@
       version: "1.0.0",
       reviewedAt: "2026-11-02",
       reviewer: "Lumino 服务内容负责人",
-      answer: L("可以先不选服务。最有效的分诊方法是确认“谁提出要求、要什么交付物、什么时候要”。我们会据此推荐一项主服务，必要时附一项关联服务。", "You do not need to choose a service first. The most useful triage is: who made the request, what deliverable they expect, and when it is due. We can then recommend one primary service and, only if needed, one related service."),
+      answer: L("可以先不选服务。最有效的做法是确认「谁提出要求、要什么交付物、什么时候要」。我们会据此推荐一项主服务，必要时附一项关联服务。", "You do not need to choose a service first. The most useful approach is: who made the request, what deliverable they expect, and when it is due. We can then recommend one primary service and, only if needed, one related service."),
       nextQuestion: L("是谁向你提出了要求？", "Who made the request?"),
       suggestedReplies: [reply("eu-importer", "欧盟进口商", "EU importer"), reply("customer", "客户或品牌", "Customer or brand"), reply("regulator", "监管或市场准入", "Regulator or market access"), reply("internal", "公司内部", "Internal team"), reply("unknown", "不确定", "Not sure")],
       serviceId: null,
@@ -144,7 +198,7 @@
 
   return Object.freeze({
     schemaVersion: "1.0.0",
-    contentVersion: "2026-11-02.1",
+    contentVersion: "2026-11-02.2",
     reviewCycleDays: 120,
     topics,
     sources,

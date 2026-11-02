@@ -5,8 +5,8 @@ const schema = require("../schema.js");
 const advisor = require("../router.js");
 const AS_OF = "2026-11-02";
 
-test("catalog publishes six initial topics and reviewed deterministic content", () => {
-  assert.equal(catalog.topics.length, 6);
+test("catalog publishes initial topics and reviewed deterministic content", () => {
+  assert.ok(catalog.topics.length >= 6);
   for (const record of [...catalog.fixedAnswers, ...catalog.toolRoutes]) {
     assert.equal(record.status, "published");
     assert.match(record.reviewedAt, /^\d{4}-\d{2}-\d{2}$/);
@@ -53,6 +53,9 @@ test("free text maps common questions to reviewed fixed answers", () => {
   assert.equal(advisor.route({ text: "进口商让我准备碳数据", asOf: AS_OF }).intent, "cbam_data_start");
   assert.equal(advisor.route({ text: "客户要 Scope 1 2 3 数据", asOf: AS_OF }).intent, "esg_ghg_triage");
   assert.equal(advisor.route({ text: "想做绿电和绿证规划", asOf: AS_OF }).intent, "renewable_power");
+  assert.equal(advisor.route({ text: "产品碳足迹活动数据怎么采", asOf: AS_OF }).intent, "pcf_data_start");
+  assert.equal(advisor.route({ text: "组织碳盘查第一年怎么做", asOf: AS_OF }).intent, "inventory_first_year");
+  assert.equal(advisor.route({ text: "EUDR 和 CSDDD 出口要准备什么", asOf: AS_OF }).intent, "eudr_csddd");
 });
 
 test("a suggested reply advances the deterministic flow instead of falling back", () => {
@@ -82,4 +85,21 @@ test("expired fixed content is not routed as a published answer", () => {
 test("public deterministic content does not expose internal maturity labels", () => {
   const blob = JSON.stringify(catalog);
   assert.doesNotMatch(blob, /PILOT|PLANNED|UNVERIFIED|claimState/);
+});
+
+test("user-facing answers do not expose review or fixed-answer process wording", () => {
+  const forbidden = /已审核|固定答案|已发布资料|published fixed|Reviewed fixed|fixed guidance|reviewer|PILOT|PLANNED/;
+  for (const topic of catalog.topics) {
+    const response = advisor.route({ topicId: topic.id, lang: "zh", asOf: AS_OF });
+    assert.doesNotMatch(response.answer, forbidden);
+    assert.doesNotMatch(response.next_question || "", forbidden);
+    for (const link of response.links || []) assert.doesNotMatch(link.label, forbidden);
+    for (const source of response.sources || []) assert.doesNotMatch(source.title, forbidden);
+  }
+  const reply = advisor.route({ topicId: "cbam_scope", replyId: "steel", text: "钢铁", lang: "zh", asOf: AS_OF });
+  assert.doesNotMatch(reply.answer, forbidden);
+  const fallback = advisor.route({ text: "一个完全未覆盖的奇怪问题", lang: "zh", asOf: AS_OF });
+  assert.doesNotMatch(fallback.answer, forbidden);
+  const enFallback = advisor.route({ text: "a completely uncovered odd question", lang: "en", asOf: AS_OF });
+  assert.doesNotMatch(enFallback.answer, forbidden);
 });

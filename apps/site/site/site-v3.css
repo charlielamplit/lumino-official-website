@@ -1066,7 +1066,8 @@ lumino-header {
   overflow: hidden;
 }
 .tool-float__panel[hidden] { display: none !important; }
-.tool-float__panel a {
+.tool-float__panel a,
+.tool-float__panel button {
   display: grid;
   gap: 2px;
   width: 100%;
@@ -1077,9 +1078,12 @@ lumino-header {
   background: transparent;
   color: var(--ink);
   font-size: var(--type-ui);
+  font-family: var(--font-sans);
 }
 .tool-float__panel a:last-child { border-bottom: 0; }
-.tool-float__panel a:hover { background: #F8FAF9; }
+.tool-float__panel a:hover,
+.tool-float__panel button:hover { background: #F8FAF9; }
+.tool-float__panel button:disabled { color: var(--muted); cursor: wait; }
 .tool-float__panel small { color: var(--muted); font-size: var(--type-meta); }
 
 @media (max-width: 1160px) {

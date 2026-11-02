@@ -13,6 +13,9 @@
   const topicKeywords = Object.freeze({
     cbam_vs_pcf: ["cbam和pcf", "cbam 和 pcf", "cbam vs pcf", "产品碳足迹有什么区别", "difference between cbam"],
     cbam_data_start: ["进口商", "碳数据", "importer data", "communication template", "准备什么数据"],
+    pcf_data_start: ["产品碳足迹", "活动数据", "pcf data", "carbon footprint data", "功能单位", "系统边界怎么采"],
+    inventory_first_year: ["组织碳盘查", "首年盘查", "第一次盘查", "year one inventory", "first year ghg", "组织温室气体"],
+    eudr_csddd: ["eudr", "csddd", "零毁林", "尽职管理", "毁林", "due diligence directive"],
     esg_ghg: ["scope 1", "scope1", "scope 2", "scope2", "scope 3", "scope3", "碳盘查", "ghg inventory", "esg报告", "esg 报告"],
     renewable_power: ["绿电", "绿证", "i-rec", "irec", "renewable power", "renewable certificate"],
     cbam_scope: ["是否涉及cbam", "是否属于cbam", "cbam范围", "cbam scope", "covered by cbam"],
@@ -88,8 +91,8 @@
     if (!allowed) return response;
     const selected = replyLabel || text(allowed.label, lang);
     response.answer = lang === "en"
-      ? `Recorded: ${selected}. The next step is to use the reviewed material or service entry below. A formal conclusion still requires the relevant business facts and, where applicable, expert review.`
-      : `已记录：${selected}。下一步可先使用下方已审核资料或服务入口。正式结论仍需结合相关业务事实，必要时由专业人员复核。`;
+      ? `Recorded: ${selected}. Next, use the reading or service entry below. A formal conclusion still needs the relevant business facts and, where applicable, specialist review.`
+      : `已记录：${selected}。接下来可先查看下方资料或服务入口。正式结论仍需结合相关业务事实，必要时由专业人员复核。`;
     response.next_question = null;
     response.suggested_replies = [];
     assertValid(response);
@@ -124,8 +127,8 @@
       intent: "unresolved",
       answer_mode: "fallback",
       answer: lang === "en"
-        ? "I cannot confirm that from the published fixed guidance yet. Choose a topic below, or use the contact page for a scoped review."
-        : "当前已发布的固定资料还不足以确认这个问题。你可以选择下方话题，或通过联系页申请有范围的人工复核。",
+        ? "I cannot confirm that from the guidance available here yet. Choose a topic below, or use the contact page for a scoped review."
+        : "目前这里的说明还不足以确认这个问题。你可以选择下方话题，或通过联系页申请有范围的人工复核。",
       confidence: "low",
       service_matches: [],
       next_question: lang === "en" ? "Which topic is closest to your question?" : "以下哪个话题最接近你的问题？",
