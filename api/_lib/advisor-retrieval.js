@@ -16,24 +16,41 @@ function pick(value, lang) {
   return value[lang] || value.zh || value.en || "";
 }
 
+const STOPWORDS = new Set([
+  "the", "and", "for", "with", "from", "that", "this", "are", "was", "were", "have", "has",
+  "how", "what", "when", "where", "which", "should", "could", "would", "about", "into", "your",
+  "our", "their", "please", "help", "need", "want",
+  "怎么", "如何", "什么", "哪些", "哪个", "是否", "可以", "需要", "我们", "你们", "他们",
+  "一个", "一些", "相关", "问题", "完全", "可能", "应该", "怎么问", "么问", "先备", "准备",
+  "告诉", "直接", "给我", "帮我", "一下", "还有", "或者", "以及", "进行", "通过", "如果",
+]);
+
 function tokenize(text) {
   const normalized = String(text || "").toLowerCase();
   const tokens = new Set();
   for (const part of normalized
     .replace(/[^\p{L}\p{N}\s/+.-]/gu, " ")
     .split(/[\s/+.-]+/)) {
-    if (part.length >= 2) tokens.add(part);
+    if (part.length >= 2 && !STOPWORDS.has(part)) tokens.add(part);
   }
   // Character n-grams for continuous CJK so Chinese queries match without spaces.
   const hans = normalized.match(/\p{Script=Han}+/gu) || [];
   for (const run of hans) {
     for (let i = 0; i < run.length; i += 1) {
-      if (i + 2 <= run.length) tokens.add(run.slice(i, i + 2));
-      if (i + 3 <= run.length) tokens.add(run.slice(i, i + 3));
+      if (i + 2 <= run.length) {
+        const bi = run.slice(i, i + 2);
+        if (!STOPWORDS.has(bi)) tokens.add(bi);
+      }
+      if (i + 3 <= run.length) {
+        const tri = run.slice(i, i + 3);
+        if (!STOPWORDS.has(tri)) tokens.add(tri);
+      }
     }
   }
   return [...tokens];
 }
+
+const MIN_RETRIEVAL_SCORE = 12;
 
 function isFresh(article, asOf) {
   if (!article || article.status !== "published") return false;
@@ -109,7 +126,7 @@ export function retrievePublishedKnowledge({ text = "", lang = "zh", asOf = "", 
       if (doc.title.toLowerCase().includes(token)) score += 3;
       if (doc.lead.toLowerCase().includes(token)) score += 1;
     }
-    if (score <= 0) continue;
+    if (score < MIN_RETRIEVAL_SCORE) continue;
     scored.push({
       score,
       id: doc.articleId,
@@ -120,11 +137,17 @@ export function retrievePublishedKnowledge({ text = "", lang = "zh", asOf = "", 
       serviceId: doc.serviceId,
     });
   }
-  return scored
-    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title))
+  const ranked = scored.sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
+  if (!ranked.length) return [];
+  const top = ranked[0].score;
+  // Keep near-top hits only so weak secondary matches do not pollute service recommendations.
+  return ranked
+    .filter((item) => item.score >= Math.max(MIN_RETRIEVAL_SCORE, top * 0.55))
     .slice(0, limit)
     .map(({ score, ...rest }) => rest);
 }
+
+
 
 export function buildGroundedFallback(hits, lang) {
   if (!hits.length) return null;
