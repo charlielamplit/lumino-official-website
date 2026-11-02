@@ -1,0 +1,16 @@
+{
+  "name": "@lumino/advisor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Deterministic public-site advisor routing, fixed answers and tool links.",
+  "main": "router.js",
+  "exports": {
+    ".": "./router.js",
+    "./catalog": "./catalog.js",
+    "./schema": "./schema.js"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.*"
+  },
+  "files": ["catalog.js", "router.js", "schema.js", "README.md"]
+}
