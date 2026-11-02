@@ -40,5 +40,7 @@ test("publicLogFields never includes raw question text", async () => {
     handoff: "none",
     source: "deterministic",
   });
-  assert.deepEqual(Object.keys(fields).sort(), ["answer_mode", "confidence", "handoff", "intent", "source"]);
+  assert.deepEqual(Object.keys(fields).sort(), ["answer_mode", "confidence", "handoff", "has_sources", "intent", "latency_ms", "model_tier", "source"]);
+  assert.equal("text" in fields, false);
+  assert.equal("answer" in fields, false);
 });

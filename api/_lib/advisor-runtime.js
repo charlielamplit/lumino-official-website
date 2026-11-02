@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { modelEnabled } from "./advisor-flags.js";
 
 const require = createRequire(import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -21,5 +22,6 @@ export function routeDeterministic(input) {
 }
 
 export function modelConfigured() {
+  if (!modelEnabled()) return false;
   return Boolean(process.env.OPENAI_API_KEY || process.env.ADVISOR_OPENAI_API_KEY);
 }

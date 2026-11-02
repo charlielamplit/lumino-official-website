@@ -6,7 +6,7 @@
   width: min(420px, calc(100vw - 48px));
   height: min(640px, calc(100dvh - 112px));
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
   overflow: hidden;
   color: var(--ink);
   background: var(--paper);
@@ -30,11 +30,33 @@
   background: color-mix(in srgb, var(--wash) 76%, var(--paper));
 }
 
+.advisor-widget__beta {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--green-dark);
+  background: var(--green-soft);
+  font-size: var(--type-meta);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .advisor-widget__head strong {
   display: block;
   font-size: var(--type-body);
   line-height: var(--type-body-lh);
   font-weight: 600;
+}
+
+.advisor-widget__foot {
+  padding: 8px var(--space-md) 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: var(--type-meta);
+  line-height: var(--type-meta-lh);
+  background: color-mix(in srgb, var(--wash) 70%, var(--paper));
 }
 
 .advisor-widget__head p {
@@ -329,4 +351,10 @@
 
 @media (prefers-reduced-motion: reduce) {
   .advisor-widget { animation: none; }
+}
+
+
+/* Soft homepage CTA can carry .button display rules; honor [hidden]. */
+[data-open-advisor][hidden] {
+  display: none !important;
 }
