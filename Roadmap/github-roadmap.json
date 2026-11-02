@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-28",
+  "updatedAt": "2026-11-02",
   "labels": [
     { "name": "Roadmap", "color": "0B7A5A", "description": "纳入 Lumino 产品路线图统一管理" },
     { "name": "type/roadmap", "color": "111827", "description": "路线图总览" },
@@ -24,6 +24,8 @@
     { "name": "area/cbam", "color": "0369A1", "description": "CBAM 服务" },
     { "name": "area/platform", "color": "334155", "description": "生产平台、权限和基础设施" },
     { "name": "area/quality", "color": "475569", "description": "测试、审查、发布与工程治理" },
+    { "name": "area/advisor", "color": "0D9488", "description": "官网服务顾问、固定答案、工具路由与检索问答" },
+    { "name": "sprint/advisor-01", "color": "7C3AED", "description": "官网顾问首个 Sprint：无模型分诊、固定答案与工具路由" },
     { "name": "scope/prototype", "color": "A855F7", "description": "当前静态可验证原型范围" },
     { "name": "scope/production", "color": "1D4ED8", "description": "生产化能力范围" }
   ],
@@ -355,6 +357,94 @@
       "scope": ["Node 测试与语法检查", "Roadmap 清单校验", "浏览器审查和发布前清单"],
       "acceptance": ["Actions 在普通 runner 上不依赖私有本机路径", "失败输出能定位具体门禁", "UI 变更保留桌面与移动端证据"],
       "references": ["scripts/review-site.mjs", "docs/site-review-checklist.md"]
+    },
+    {
+      "id": "E08",
+      "kind": "epic",
+      "title": "[Epic] 官网 Lumino 服务顾问",
+      "state": "open",
+      "labels": ["Roadmap", "type/epic", "status/ready", "priority/P0", "area/public-site", "area/advisor", "scope/production"],
+      "summary": "在官网提供可审核的服务分诊与常见问题顾问，优先使用固定答案和现有工具，仅在必要时使用检索与模型。",
+      "scope": ["首页统一右下角入口与可复用顾问浮窗", "确定性分诊、固定答案、CN Code 工具路由与服务推荐", "已发布知识检索、模型解释、安全边界、评测和分阶段发布"],
+      "acceptance": ["模型 API 不可用时仍能完成预选分诊、固定回答和工具跳转", "法规性或方法性回答只使用已审核发布资料并显示来源", "公开 Beta 前通过功能、边界、隐私、提示注入、可访问性和响应式回归"],
+      "references": ["docs/0002_homepage-advisor-plan.md", "docs/public-claims-register.md", "apps/site/knowledge/catalog.json"]
+    },
+    {
+      "id": "F08-01",
+      "kind": "feature",
+      "parentId": "E08",
+      "title": "[Feature] 建立确定性分诊、固定答案与工具路由",
+      "state": "open",
+      "labels": ["Roadmap", "type/feature", "status/ready", "priority/P0", "area/advisor", "area/public-site", "area/quality", "sprint/advisor-01", "scope/production"],
+      "summary": "建立不依赖模型的意图路由、版本化固定答案和工具链接登记，覆盖首批高频问题与 CN Code 场景。",
+      "scope": ["packages/advisor 的意图、固定答案、工具路由和输出 Schema", "六项服务预选分诊与高频 FAQ", "CN Code 意图路由至 /calculator、编码核对指南和人工复核入口", "固定答案的发布状态、审查日期、来源和版本规则"],
+      "acceptance": ["预选话题和首批高频 FAQ 在不调用模型时返回稳定 Structured Output", "CN Code 场景只引导已支持工具、指南或人工复核，不生成正式归类结论", "只有 status=published 且在审查周期内的固定答案可被路由", "自动测试覆盖命中、未命中、过期答案、无效链接和中英文输出"],
+      "references": ["docs/0002_homepage-advisor-plan.md", "apps/site/site/services-catalog.js", "apps/site/knowledge/catalog.json", "docs/public-claims-register.md"]
+    },
+    {
+      "id": "F08-02",
+      "kind": "feature",
+      "parentId": "E08",
+      "title": "[Feature] 交付无模型顾问浮窗与统一工具入口",
+      "state": "open",
+      "labels": ["Roadmap", "type/feature", "status/ready", "priority/P0", "area/advisor", "area/public-site", "area/quality", "sprint/advisor-01", "scope/prototype"],
+      "summary": "在不接入模型的前提下完成顾问浮窗、预选对话、固定答案展示和工具跳转，验证完整交互与可访问性。",
+      "scope": ["将现有右下角工具入口升级为单一统一入口", "桌面浮窗与移动底部面板", "预选项、自由输入的确定性匹配、固定答案、来源与 CTA", "网络/模型不可用状态、重新开始、当前标签页恢复和减少动态效果"],
+      "acceptance": ["390px、768px 和 1440px 无横向溢出且不遮挡现有关键 CTA", "键盘可完成打开、选择、输入、跳转和关闭，焦点返回入口正确", "断开模型与网络依赖时，预选分诊、固定答案和工具路由仍可用", "桌面端、390px、200% 缩放与键盘路径保留审查证据"],
+      "dependencies": ["F08-01"],
+      "references": ["docs/0002_homepage-advisor-plan.md", "apps/site/site/float-tools.js", "docs/site-review-checklist.md"]
+    },
+    {
+      "id": "F08-03",
+      "kind": "feature",
+      "parentId": "E08",
+      "title": "[Feature] 建立 Advisor API、流式协议与安全边界",
+      "state": "open",
+      "labels": ["Roadmap", "type/feature", "status/backlog", "priority/P0", "area/advisor", "area/platform", "area/quality", "scope/production"],
+      "summary": "建立无状态 /api/advisor，统一固定回答与模型回答的输出协议，并实施输入校验、限流、超时、隐私和故障回退。",
+      "scope": ["/api/advisor 与服务端 API Key", "answer_mode、意图、答案、来源、建议回复和 CTA 协议", "输入长度、会话轮次、频率、超时、停止、重试和熔断", "敏感信息不复述、store:false、最小日志与不可用回退"],
+      "acceptance": ["固定答案与模型回答通过同一 Schema 校验且前端无需解析自由文本", "未配置 API Key、模型超时或返回无效结构时安全回到固定能力或联系入口", "服务端日志不保留不必要的完整问题、联系方式或生产资料", "限流、超时、断流、重复提交和敏感输入路径有自动化测试"],
+      "dependencies": ["F08-01", "F08-02"],
+      "references": ["docs/0002_homepage-advisor-plan.md", "docs/legal/privacy-data-fact-register.md"]
+    },
+    {
+      "id": "F08-04",
+      "kind": "feature",
+      "parentId": "E08",
+      "title": "[Feature] 接入已发布知识检索与分级模型回答",
+      "state": "open",
+      "labels": ["Roadmap", "type/feature", "status/backlog", "priority/P1", "area/advisor", "area/public-site", "area/quality", "scope/production"],
+      "summary": "对确定性能力未命中的问题检索已发布服务事实和知识，使用 Luna 生成有来源的简短解释，必要时条件升级 Sol。",
+      "scope": ["结构化服务事实与 status=published 知识包", "Vector Store、元数据过滤、版本切换与删除等待窗口", "gpt-6-luna 默认回答与 gpt-6.1-sol 条件升级", "Structured Outputs、来源展示、无结果停止和提示注入隔离"],
+      "acceptance": ["未发布、过期、撤回或内部成熟度内容不得进入检索结果", "法规性回答必须包含已审核来源，无来源时停止而不依赖模型记忆", "一次回答最多推荐一个主服务和一个关联服务", "模型分级的触发条件、延迟、成本和回退结果可评测"],
+      "dependencies": ["F08-03"],
+      "references": ["docs/0002_homepage-advisor-plan.md", "apps/site/knowledge/catalog.json", "docs/public-claims-register.md"]
+    },
+    {
+      "id": "F08-05",
+      "kind": "feature",
+      "parentId": "E08",
+      "title": "[Feature] 建立顾问回归评测与受控内部试用",
+      "state": "open",
+      "labels": ["Roadmap", "type/feature", "status/backlog", "priority/P0", "area/advisor", "area/quality", "scope/production"],
+      "summary": "以至少 120 条问题验证固定答案、工具路由、服务分诊、检索、模型边界和隐私安全，再进入受保护的内部试用。",
+      "scope": ["六项服务、多服务、模糊、越界、法规、虚假承诺、提示注入和隐私评测", "固定答案与工具路由评测", "Luna 与 Sol 的质量、首段延迟、完整时间和成本比较", "受保护 Preview 的内部反馈、无结果问题和错误推荐收集"],
+      "acceptance": ["至少 120 条评测均定义预期意图、允许服务、禁止声明、来源类别和转人工要求", "无模型解决率、工具路由率、服务推荐准确率和无依据停止率可报告", "严重越界、虚构来源、敏感信息复述或将试算表述为正式归类的用例为零", "内部试用有明确准入、反馈记录、修复回归和退回上一知识版本的路径"],
+      "dependencies": ["F08-03", "F08-04"],
+      "references": ["docs/0002_homepage-advisor-plan.md", "docs/site-review-checklist.md"]
+    },
+    {
+      "id": "F08-06",
+      "kind": "feature",
+      "parentId": "E08",
+      "title": "[Feature] 发布官网顾问公开 Beta 并建立运行复核",
+      "state": "open",
+      "labels": ["Roadmap", "type/feature", "status/backlog", "priority/P1", "area/advisor", "area/public-site", "area/quality", "scope/production"],
+      "summary": "在内部试用达标后将顾问开放到官网首页，保留初步判断边界，并持续复核错误、无结果、延迟、成本和 CTA。",
+      "scope": ["首页公开 Beta 开关、发布门禁与回滚", "初步判断、不替代正式结论和不直接留资的固定边界", "错误、超时、无结果、路由、来源、成本和 CTA 指标", "每周无结果与高频问题复核，变更经过知识发布与回归"],
+      "acceptance": ["dev Preview 的功能、内容、390px、1440px、键盘和 200% 缩放证据齐全后才能合并 main", "公开页不收集联系方式、不接收客户文件、不长期保存对话且不制造正式送达假象", "发布后可查看无模型解决率、工具路由率、无结果率、错误率、延迟和单次有效分诊成本", "出现严重越界、错误法规来源或隐私事件时可立即停用模型并回退到固定答案与工具路由"],
+      "dependencies": ["F08-05"],
+      "references": ["docs/0002_homepage-advisor-plan.md", "docs/0001_lumino-website-user-audit.md", "docs/legal/privacy-data-fact-register.md", "docs/public-claims-register.md"]
     }
   ]
 }
