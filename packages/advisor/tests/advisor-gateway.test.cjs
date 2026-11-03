@@ -123,6 +123,8 @@ test("public flags expose storage_policy instead of blanket store:false", async 
     assert.equal(pub.storage_policy, "provider_contract_required");
     assert.equal(pub.store_requested, false);
     assert.equal(pub.lumino_conversation_store, false);
+    assert.equal(pub.api_base_host, "aiberm.com");
+    assert.equal(pub.api_mode, "chat");
     assert.equal(Object.prototype.hasOwnProperty.call(pub, "store"), false);
 
     process.env.ADVISOR_OPENAI_BASE_URL = "https://api.openai.com/v1";
@@ -130,6 +132,8 @@ test("public flags expose storage_policy instead of blanket store:false", async 
     const official = (await loadFlags()).getPublicFlags();
     assert.equal(official.storage_policy, "api_no_store");
     assert.equal(official.store_requested, true);
+    assert.equal(official.api_base_host, "api.openai.com");
+    assert.equal(official.api_mode, "responses");
   } finally {
     if (prevBase == null) delete process.env.ADVISOR_OPENAI_BASE_URL; else process.env.ADVISOR_OPENAI_BASE_URL = prevBase;
     if (prevMode == null) delete process.env.ADVISOR_OPENAI_API_MODE; else process.env.ADVISOR_OPENAI_API_MODE = prevMode;

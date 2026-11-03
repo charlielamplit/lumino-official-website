@@ -24,16 +24,24 @@ export function modelEnabled() {
   return envFlag("ADVISOR_MODEL_ENABLED", true);
 }
 
-function currentStoragePolicy() {
-  const baseUrl = normalizeApiBaseUrl(
+function currentApiBaseUrl() {
+  return normalizeApiBaseUrl(
     process.env.ADVISOR_OPENAI_BASE_URL
       || process.env.OPENAI_BASE_URL
       || "https://api.openai.com/v1",
   );
-  const apiMode = resolveApiMode({
+}
+
+function currentApiMode(baseUrl = currentApiBaseUrl()) {
+  return resolveApiMode({
     forced: process.env.ADVISOR_OPENAI_API_MODE,
     baseUrl,
   });
+}
+
+function currentStoragePolicy() {
+  const baseUrl = currentApiBaseUrl();
+  const apiMode = currentApiMode(baseUrl);
   return resolveStoragePolicy({
     baseUrl,
     apiMode,
@@ -41,14 +49,31 @@ function currentStoragePolicy() {
   });
 }
 
+function apiBaseHost(baseUrl = currentApiBaseUrl()) {
+  try {
+    return new URL(baseUrl).host || null;
+  } catch {
+    return null;
+  }
+}
+
 export function getPublicFlags() {
-  const storage_policy = currentStoragePolicy();
+  const baseUrl = currentApiBaseUrl();
+  const api_mode = currentApiMode(baseUrl);
+  const storage_policy = resolveStoragePolicy({
+    baseUrl,
+    apiMode: api_mode,
+    override: process.env.ADVISOR_STORAGE_POLICY,
+  });
   return {
     public_beta: publicBetaEnabled(),
     model_enabled: modelEnabled(),
     // Lumino app does not persist chat transcripts or leads in phase 1.
     lumino_conversation_store: false,
     lead_capture: false,
+    // Safe diagnostics for Preview env verification (no secrets).
+    api_base_host: apiBaseHost(baseUrl),
+    api_mode,
     // Provider retention/training claims must follow capability, not wishful store:false.
     storage_policy,
     store_requested: shouldSendStoreFalse(storage_policy),
