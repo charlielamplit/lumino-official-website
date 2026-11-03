@@ -1179,11 +1179,11 @@
       "kind": "feature",
       "parentId": "E08",
       "title": "[Feature] 发布官网顾问公开 Beta 并建立运行复核",
-      "state": "open",
+      "state": "closed",
       "labels": [
         "Roadmap",
         "type/feature",
-        "status/in-progress",
+        "status/done",
         "priority/P1",
         "area/advisor",
         "area/public-site",
