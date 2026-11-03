@@ -55,7 +55,9 @@ test("advisor flags honor public beta and model kill-switch", async () => {
     assert.equal(mod.modelEnabled(), true);
     const flags = mod.getPublicFlags();
     assert.equal(flags.lead_capture, false);
-    assert.equal(flags.store, false);
+    assert.equal(flags.lumino_conversation_store, false);
+    assert.ok(["api_no_store", "provider_contract_required", "unknown"].includes(flags.storage_policy));
+    assert.equal(Object.prototype.hasOwnProperty.call(flags, "store"), false);
   } finally {
     if (prevBeta == null) delete process.env.ADVISOR_PUBLIC_BETA; else process.env.ADVISOR_PUBLIC_BETA = prevBeta;
     if (prevModel == null) delete process.env.ADVISOR_MODEL_ENABLED; else process.env.ADVISOR_MODEL_ENABLED = prevModel;

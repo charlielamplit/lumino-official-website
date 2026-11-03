@@ -524,10 +524,14 @@ topic=cbam-scope
 ```
 
 - 用户主动输入个人信息时，不重复展示，并提醒使用联系页或公开邮箱；
-- API 请求使用 `store:false`，不建立长期 Conversation；
-- 浏览器仅保留当前标签页所需的临时状态，关闭或重置后清除。
+- Lumino 侧不建立长期 Conversation、不落库聊天原文；浏览器仅保留当前标签页临时状态，关闭或重置后清除；
+- **不得**在第三方网关场景笼统宣称 `store:false`。运行时按 Provider 能力返回 `storage_policy`：
+  - `api_no_store`：仅官方 OpenAI Responses，且请求显式带 `store:false`；
+  - `provider_contract_required`：第三方兼容网关（如 aiberm）或官方 Chat Completions——日志、训练、摘录保留须合同确认；
+  - `unknown`：能力未判定。
+- 公开 Beta 前须书面确认：网关是否保存用户输入与来源摘录、是否用于训练、日志保留时间、数据处理地区、子处理商、是否存在真正的不存储参数/合同保证。
 
-OpenAI 官方说明中，Response 默认存在保存行为，可通过 `store:false` 关闭该响应存储；长期 Conversation 不适合当前无正式留资和保留规则的第一阶段：
+OpenAI 官方 Responses 可通过 `store:false` 关闭该响应存储；长期 Conversation 不适合当前无正式留资和保留规则的第一阶段：
 <https://developers.openai.com/api/docs/guides/conversation-state>
 
 ### 14.2 第二阶段
@@ -724,7 +728,7 @@ API Key 只能存在服务端环境变量中，禁止在浏览器端直接调用
 - 接入结构化服务事实和 File Search；
 - 实现 Structured Outputs；
 - 实现流式输出、停止、重试和来源展示；
-- 配置 `store:false`、限流和安全审核。
+- 按 `storage_policy` 配置请求参数与限流、安全审核；第三方网关不得假装已 `store:false`。
 
 **完成标志**：100 条评测达到上线阈值，无严重越界回答。
 
