@@ -1,4 +1,6 @@
 import { modelConfigured } from "./advisor-runtime.js";
+import { modelTimeoutMs } from "./advisor-timing.js";
+import { sanitizeServiceId, sanitizeServiceMatches } from "./advisor-services.js";
 
 const LUNA = process.env.ADVISOR_MODEL_LUNA || "gpt-4.1-mini";
 const SOL = process.env.ADVISOR_MODEL_SOL || "gpt-4.1";
@@ -79,7 +81,7 @@ export async function generateGroundedAnswer({ text, lang, hits, signal }) {
       Authorization: `Bearer ${key}`,
       "Content-Type": "application/json",
     },
-    signal: signal || AbortSignal.timeout(20000),
+    signal: signal || AbortSignal.timeout(modelTimeoutMs()),
     body: JSON.stringify({
       model: model.id,
       store: false,
@@ -117,28 +119,23 @@ export async function generateGroundedAnswer({ text, lang, hits, signal }) {
   const sources = hits.slice(0, 3).map((hit) => ({ title: hit.title, url: hit.url }));
   if (!sources.length) return null;
 
-  const services = [];
-  if (parsed.primary_service_id) {
-    services.push({
-      service_id: String(parsed.primary_service_id),
+  const services = sanitizeServiceMatches([
+    parsed.primary_service_id ? {
+      service_id: sanitizeServiceId(parsed.primary_service_id),
       reason: lang === "en" ? "Primary match from published sources." : "来自已发布来源的主要匹配。",
-      priority: 1,
-    });
-  }
-  if (parsed.secondary_service_id && parsed.secondary_service_id !== parsed.primary_service_id) {
-    services.push({
-      service_id: String(parsed.secondary_service_id),
+    } : null,
+    parsed.secondary_service_id ? {
+      service_id: sanitizeServiceId(parsed.secondary_service_id),
       reason: lang === "en" ? "Related service from published sources." : "来自已发布来源的相关服务。",
-      priority: 2,
-    });
-  }
+    } : null,
+  ].filter(Boolean), lang);
 
   return {
     intent: String(parsed.intent || "knowledge_retrieval"),
     answer_mode: "retrieval_model",
     answer: String(parsed.answer || "").trim(),
     confidence: ["high", "medium", "low"].includes(parsed.confidence) ? parsed.confidence : "medium",
-    service_matches: services.slice(0, 2),
+    service_matches: services,
     next_question: parsed.next_question ? String(parsed.next_question) : null,
     suggested_replies: [],
     sources,

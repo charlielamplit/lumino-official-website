@@ -2,6 +2,7 @@
  * Public homepage advisor API (stateless)
  * - Deterministic fixed answers / tool routes first
  * - Else retrieve published knowledge; model only with grounded sources
+ * - Phrase-chunk SSE for print-style UI; Abort cancels upstream model
  * - No conversation persistence / no sales leads
  */
 import { checkRateLimit, clientKey, publicLogFields, sanitizeRequest } from "./_lib/advisor-policy.js";
@@ -10,6 +11,7 @@ import { buildGroundedFallback, retrievePublishedKnowledge, stopWithoutSources }
 import { generateGroundedAnswer } from "./_lib/advisor-model.js";
 import { getPublicFlags, publicBetaEnabled } from "./_lib/advisor-flags.js";
 import { recordAdvisorMetric } from "./_lib/advisor-metrics-store.js";
+import { ADVISOR_SSE_CHUNK_CHARS, clientTimeoutMs, modelTimeoutMs } from "./_lib/advisor-timing.js";
 
 const CONTACT_URL = "/apps/site/Lumino%20联系.dc.html";
 
@@ -21,13 +23,47 @@ function json(response, status, body, extraHeaders = {}) {
   response.end(JSON.stringify(body));
 }
 
-function writeSse(response, payload) {
+function createRequestAbort(request, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(new Error("advisor_timeout")), timeoutMs);
+  const onClose = () => controller.abort(new Error("client_disconnected"));
+  try {
+    request?.socket?.once?.("close", onClose);
+    request?.once?.("aborted", onClose);
+  } catch (_) {}
+  return {
+    signal: controller.signal,
+    dispose() {
+      clearTimeout(timer);
+      try { request?.socket?.off?.("close", onClose); } catch (_) {}
+    },
+  };
+}
+
+function chunkText(text, size = ADVISOR_SSE_CHUNK_CHARS) {
+  const value = String(text || "");
+  if (!value) return [];
+  const chunks = [];
+  for (let i = 0; i < value.length; i += size) chunks.push(value.slice(i, i + size));
+  return chunks;
+}
+
+function writeSse(response, payload, { streamAnswer = false } = {}) {
   response.status(200);
   response.setHeader("Content-Type", "text/event-stream; charset=utf-8");
   response.setHeader("Cache-Control", "no-store");
   response.setHeader("Connection", "keep-alive");
+  response.setHeader("X-Accel-Buffering", "no");
+
+  if (streamAnswer && payload?.answer) {
+    response.write(`event: status\ndata: ${JSON.stringify({ phase: "printing" })}\n\n`);
+    for (const delta of chunkText(payload.answer)) {
+      response.write(`event: delta\ndata: ${JSON.stringify({ text: delta })}\n\n`);
+    }
+  }
+
   response.write(`event: advisor\ndata: ${JSON.stringify(payload)}\n\n`);
-  response.write("event: done\ndata: {}\n\n");
+  response.write(`event: done\ndata: {}\n\n`);
   response.end();
 }
 
@@ -38,6 +74,7 @@ function betaDisabledPayload(lang) {
     ? "Ask Lumino is temporarily unavailable. Use the tools menu or the contact page for a scoped review."
     : "「问 Lumino」暂时不可用。请使用工具菜单，或通过联系页申请有范围的复核。";
   result.handoff = "contact";
+  result.degradation_reason = "beta_disabled";
   return result;
 }
 
@@ -52,6 +89,7 @@ function sensitivePayload(lang) {
   result.confidence = "low";
   result.handoff = "contact";
   result.sources = [];
+  result.degradation_reason = "privacy_guard";
   result.links = [{
     type: "contact",
     label: lang === "en" ? "Contact Lumino" : "联系 Lumino",
@@ -61,7 +99,18 @@ function sensitivePayload(lang) {
   return result;
 }
 
-async function resolveOpenQuestion(request) {
+function unavailablePayload(lang, reason = "server_error") {
+  const result = stopWithoutSources(lang);
+  result.intent = "service_unavailable";
+  result.degradation_reason = reason;
+  result.answer = lang === "en"
+    ? "The advisor service is temporarily unavailable. You can retry, choose a topic below, or use the contact page."
+    : "顾问服务暂时不可用。你可以重试、选择下方话题，或通过联系页继续。";
+  result.ui_state = "unavailable";
+  return result;
+}
+
+async function resolveOpenQuestion(request, signal) {
   const hits = retrievePublishedKnowledge({
     text: request.text,
     lang: request.lang,
@@ -69,7 +118,10 @@ async function resolveOpenQuestion(request) {
     limit: 3,
   });
   if (!hits.length) {
-    return { result: stopWithoutSources(request.lang), source: "no_sources", modelAttempted: false, modelFailed: false };
+    const result = stopWithoutSources(request.lang);
+    result.degradation_reason = "no_sources";
+    result.ui_state = "no_sources";
+    return { result, source: "no_sources", modelAttempted: false, modelFailed: false };
   }
 
   if (modelConfigured()) {
@@ -78,9 +130,12 @@ async function resolveOpenQuestion(request) {
         text: request.text,
         lang: request.lang,
         hits,
+        signal,
       });
       if (generated?.answer && generated.sources?.length) {
         const { runtime_model: runtimeModel, _allowedUrls, ...rest } = generated;
+        rest.degradation_reason = null;
+        rest.ui_state = "ok";
         return {
           result: rest,
           source: "retrieval_model",
@@ -89,16 +144,26 @@ async function resolveOpenQuestion(request) {
           modelFailed: false,
         };
       }
+      const grounded = buildGroundedFallback(hits, request.lang);
+      grounded.degradation_reason = "model_empty";
+      grounded.ui_state = "basic_mode";
       return {
-        result: buildGroundedFallback(hits, request.lang),
+        result: grounded,
         source: "retrieval_grounded",
         modelAttempted: true,
         modelFailed: true,
       };
     } catch (error) {
+      const aborted = signal?.aborted || /abort|timeout|advisor_timeout|client_disconnected/i.test(String(error?.message || error));
       console.error("[lumino-advisor] model failed", error?.message || error);
+      const grounded = buildGroundedFallback(hits, request.lang);
+      grounded.degradation_reason = aborted ? "model_timeout" : "model_error";
+      grounded.ui_state = "basic_mode";
+      if (aborted && !hits.length) {
+        return { result: unavailablePayload(request.lang, "model_timeout"), source: "error", modelAttempted: true, modelFailed: true };
+      }
       return {
-        result: buildGroundedFallback(hits, request.lang),
+        result: grounded,
         source: "retrieval_grounded",
         modelAttempted: true,
         modelFailed: true,
@@ -106,8 +171,11 @@ async function resolveOpenQuestion(request) {
     }
   }
 
+  const grounded = buildGroundedFallback(hits, request.lang);
+  grounded.degradation_reason = "no_model";
+  grounded.ui_state = "basic_mode";
   return {
-    result: buildGroundedFallback(hits, request.lang),
+    result: grounded,
     source: "retrieval_grounded",
     modelAttempted: false,
     modelFailed: false,
@@ -128,6 +196,8 @@ export default async function handler(request, response) {
   const rateHeaders = {
     "X-RateLimit-Remaining": String(rate.remaining),
     "X-RateLimit-Reset": String(Math.floor(rate.resetAt / 1000)),
+    "X-Advisor-Client-Timeout-Ms": String(clientTimeoutMs()),
+    "X-Advisor-Model-Timeout-Ms": String(modelTimeoutMs()),
   };
   if (!rate.ok) {
     return json(response, 429, { error: "Too Many Requests" }, rateHeaders);
@@ -147,6 +217,7 @@ export default async function handler(request, response) {
   const wantsStream = request.query?.stream === "1"
     || String(request.headers?.accept || "").includes("text/event-stream");
 
+  const abort = createRequestAbort(request, modelTimeoutMs());
   const started = Date.now();
   try {
     let result;
@@ -164,8 +235,10 @@ export default async function handler(request, response) {
       source = "privacy_guard";
     } else {
       result = routeDeterministic(sanitized.request);
+      result.ui_state = result.ui_state || "ok";
+      result.degradation_reason = result.degradation_reason || null;
       if (result.answer_mode === "fallback" && sanitized.request.text) {
-        const open = await resolveOpenQuestion(sanitized.request);
+        const open = await resolveOpenQuestion(sanitized.request, abort.signal);
         result = open.result;
         source = open.source;
         model = open.model || null;
@@ -187,6 +260,11 @@ export default async function handler(request, response) {
         model_enabled: flags.model_enabled,
         lead_capture: false,
         latency_ms: latencyMs,
+        degradation_reason: result.degradation_reason || null,
+        ui_state: result.ui_state || "ok",
+        client_timeout_ms: clientTimeoutMs(),
+        model_timeout_ms: modelTimeoutMs(),
+        cost_estimate_usd: null,
       },
     };
 
@@ -200,6 +278,7 @@ export default async function handler(request, response) {
       model_tier: model?.tier || null,
       model_attempted: modelAttempted,
       model_failed: modelFailed,
+      degradation_reason: result.degradation_reason || null,
       ok: true,
     });
     console.info("[lumino-advisor]", publicLogFields({
@@ -210,23 +289,24 @@ export default async function handler(request, response) {
       model_tier: model?.tier || null,
     }));
 
-    if (wantsStream) return writeSse(response, payload);
+    if (wantsStream) return writeSse(response, payload, { streamAnswer: true });
     return json(response, 200, payload, rateHeaders);
   } catch (error) {
     console.error("[lumino-advisor] failed", error?.message || error);
     const latencyMs = Date.now() - started;
+    const reason = /timeout|abort/i.test(String(error?.message || "")) ? "timeout" : "server_error";
     recordAdvisorMetric({
       type: "request",
       answer_mode: "fallback",
       source: "error",
       latency_ms: latencyMs,
+      degradation_reason: reason,
       ok: false,
     });
-    const fallback = stopWithoutSources(sanitized.request.lang);
-    fallback.answer = sanitized.request.lang === "en"
-      ? "The advisor service is temporarily unavailable. Choose a topic below, or use the contact page."
-      : "顾问服务暂时不可用。请选择下方话题，或通过联系页继续。";
-    if (wantsStream) return writeSse(response, { ok: false, ...fallback });
+    const fallback = unavailablePayload(sanitized.request.lang, reason);
+    if (wantsStream) return writeSse(response, { ok: false, ...fallback }, { streamAnswer: true });
     return json(response, 503, { ok: false, ...fallback }, rateHeaders);
+  } finally {
+    abort.dispose();
   }
 }

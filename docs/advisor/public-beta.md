@@ -35,9 +35,11 @@
 - 客户端 CTA / 时延通过 `/api/advisor-metrics` POST（禁止上传问题原文）。
 - 员工查看：`GET /api/advisor-metrics` + `X-Lumino-Staff-Key`。
 
-可观察：无模型解决率、工具路由率、无结果率、错误率、平均延迟、CTA 点击。
+可观察：无模型解决率、工具路由率、无结果率、错误率、超时、模型失败、平均延迟、CTA 点击、降级原因分布。
 
-> Serverless 内存计数按实例；生产耐久分析应接日志管道。
+成本：响应含 `runtime.cost_estimate_usd` 占位；实例计数含 `estimated_cost_usd_sum`。在接入账单/用量管道前，不得宣称已具备准确单次分诊成本。
+
+> Serverless 内存计数按实例、约 24h/500 条上限；生产耐久分析必须接日志管道（Vercel Log Drain 等）。F08-06 监控验收在管道落地前仅算部分完成。
 
 ## 每周复核
 

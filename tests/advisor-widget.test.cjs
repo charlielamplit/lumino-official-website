@@ -24,6 +24,12 @@ test("advisor widget preserves keyboard, privacy and current-tab recovery contro
   assert.match(source, /focus\(\{ preventScroll: true \}\)/);
   assert.match(source, /advisor-widget__reset/);
   assert.match(source, /已恢复当前标签页中的对话/);
+  assert.match(source, /stream=1/);
+  assert.match(source, /data-advisor-stop/);
+  assert.match(source, /data-advisor-expand/);
+  assert.match(source, /data-advisor-retry/);
+  assert.match(source, /服务暂时不可用|没有足够依据|基础问答/);
+  assert.match(source, /is-busy|setBusy/);
 });
 
 test("advisor presentation reuses site tokens and has mobile and reduced-motion rules", () => {
