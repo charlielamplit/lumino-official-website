@@ -1212,6 +1212,44 @@
         "docs/legal/privacy-data-fact-register.md",
         "docs/public-claims-register.md"
       ]
+    },
+    {
+      "id": "F08-07",
+      "kind": "feature",
+      "parentId": "E08",
+      "title": "[Feature] 顾问 Beta P1：打印式输出、超时对齐、错误区分与监控加固",
+      "state": "open",
+      "labels": [
+        "Roadmap",
+        "type/feature",
+        "status/in-progress",
+        "priority/P1",
+        "area/advisor",
+        "area/quality",
+        "scope/production"
+      ],
+      "summary": "补齐公开顾问相对 Plan 的 P1 缺口：打印式输出与停止/重试、前后端超时一致、错误态区分、监控成本占位与真实模型安全验证。",
+      "scope": [
+        "打印式/流式呈现、停止、展开全文、加载态、防重复、重试",
+        "客户端与模型超时对齐并 Abort 上游",
+        "区分无依据 / 不可用 / 基础问答",
+        "降级原因与成本占位；试用 Go/No-Go 证据清单",
+        "服务 ID 白名单与可选 live canary"
+      ],
+      "acceptance": [
+        "用户可见加载、可停止、可展开全文、失败可重试且无并行重复请求",
+        "客户端超时不小于模型超时预算差；断开会中止模型请求",
+        "无来源与 API/超时失败文案可区分",
+        "非法 service_id 被丢弃；Go/No-Go 模板就绪"
+      ],
+      "dependencies": [
+        "F08-06"
+      ],
+      "references": [
+        "docs/0002_homepage-advisor-plan.md",
+        "docs/advisor/public-beta.md",
+        "docs/advisor/internal-trial-go-nogo.md"
+      ]
     }
   ]
 }

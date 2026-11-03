@@ -35,6 +35,8 @@ function emptyCounters() {
     privacy_guard: 0,
     beta_disabled: 0,
     cta_clicks: 0,
+    degradation_reasons: {},
+    estimated_cost_usd_sum: 0,
     model_luna: 0,
     model_sol: 0,
     latency_sum_ms: 0,
@@ -67,6 +69,10 @@ function sanitizeEvent(event = {}) {
     model_attempted: Boolean(event.model_attempted),
     model_failed: Boolean(event.model_failed),
     timeout: Boolean(event.timeout),
+    degradation_reason: event.degradation_reason ? String(event.degradation_reason).slice(0, 64) : null,
+    estimated_cost_usd: Number.isFinite(Number(event.estimated_cost_usd))
+      ? Math.max(0, Number(event.estimated_cost_usd))
+      : null,
     latency_ms: Number.isFinite(latency) ? Math.max(0, Math.min(120000, Math.round(latency))) : null,
     ok: event.ok !== false,
   };
@@ -96,6 +102,12 @@ function accumulate(events) {
     if (item.source === "beta_disabled") counters.beta_disabled += 1;
     if (item.model_tier === "luna") counters.model_luna += 1;
     if (item.model_tier === "sol") counters.model_sol += 1;
+    if (item.degradation_reason) {
+      counters.degradation_reasons[item.degradation_reason] = (counters.degradation_reasons[item.degradation_reason] || 0) + 1;
+    }
+    if (Number.isFinite(item.estimated_cost_usd)) {
+      counters.estimated_cost_usd_sum += Number(item.estimated_cost_usd);
+    }
     if (item.latency_ms != null) {
       counters.latency_sum_ms += item.latency_ms;
       counters.latency_count += 1;

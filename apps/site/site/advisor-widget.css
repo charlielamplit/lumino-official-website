@@ -358,3 +358,45 @@
 [data-open-advisor][hidden] {
   display: none !important;
 }
+
+
+.advisor-widget.is-busy .advisor-topic,
+.advisor-widget.is-busy .advisor-reply {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.advisor-widget__stop,
+.advisor-stop,
+.advisor-expand,
+.advisor-retry {
+  min-height: 32px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--green-dark);
+  font-size: var(--type-meta);
+  font-weight: 600;
+}
+
+.advisor-widget__stop {
+  margin-right: var(--space-xs);
+}
+
+.advisor-answer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.advisor-answer__text:empty::before {
+  content: "";
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .advisor-turn--assistant[data-printing="1"] .advisor-answer__text {
+    transition: none;
+  }
+}
