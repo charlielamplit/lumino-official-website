@@ -255,7 +255,10 @@ export default async function handler(request, response) {
         source,
         model_configured: modelConfigured(),
         model_tier: model?.tier || null,
-        store: false,
+        // Provider retention: capability-based. Do not advertise store:false on third-party gateways.
+        storage_policy: model?.storage_policy || flags.storage_policy,
+        store_requested: Boolean(model?.store_requested ?? flags.store_requested),
+        lumino_conversation_store: false,
         public_beta: flags.public_beta,
         model_enabled: flags.model_enabled,
         lead_capture: false,
@@ -263,7 +266,7 @@ export default async function handler(request, response) {
         degradation_reason: result.degradation_reason || null,
         ui_state: result.ui_state || "ok",
         client_timeout_ms: clientTimeoutMs(),
-        model_timeout_ms: modelTimeoutMs(),
+        model_timeout_ms: modelTimeoutMs(model?.tier || "luna"),
         cost_estimate_usd: null,
       },
     };

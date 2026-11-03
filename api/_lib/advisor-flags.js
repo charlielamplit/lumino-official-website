@@ -1,3 +1,10 @@
+import {
+  normalizeApiBaseUrl,
+  resolveApiMode,
+  resolveStoragePolicy,
+  shouldSendStoreFalse,
+} from "./advisor-gateway.js";
+
 function envFlag(name, defaultValue = false) {
   const raw = process.env[name];
   if (raw == null || raw === "") return defaultValue;
@@ -17,19 +24,41 @@ export function modelEnabled() {
   return envFlag("ADVISOR_MODEL_ENABLED", true);
 }
 
+function currentStoragePolicy() {
+  const baseUrl = normalizeApiBaseUrl(
+    process.env.ADVISOR_OPENAI_BASE_URL
+      || process.env.OPENAI_BASE_URL
+      || "https://api.openai.com/v1",
+  );
+  const apiMode = resolveApiMode({
+    forced: process.env.ADVISOR_OPENAI_API_MODE,
+    baseUrl,
+  });
+  return resolveStoragePolicy({
+    baseUrl,
+    apiMode,
+    override: process.env.ADVISOR_STORAGE_POLICY,
+  });
+}
+
 export function getPublicFlags() {
+  const storage_policy = currentStoragePolicy();
   return {
     public_beta: publicBetaEnabled(),
     model_enabled: modelEnabled(),
-    store: false,
+    // Lumino app does not persist chat transcripts or leads in phase 1.
+    lumino_conversation_store: false,
     lead_capture: false,
+    // Provider retention/training claims must follow capability, not wishful store:false.
+    storage_policy,
+    store_requested: shouldSendStoreFalse(storage_policy),
     beta_label: {
       zh: "公开试用",
       en: "Public beta",
     },
     boundary: {
-      zh: "初步判断，不替代正式合规结论；不收集联系方式或客户文件。",
-      en: "Preliminary guidance only — not a formal compliance conclusion. No contact details or client files are collected.",
+      zh: "初步判断，不替代正式合规结论；不收集联系方式或客户文件。第三方模型网关的日志与训练策略以 Provider 合同为准，公开 Beta 前须书面确认。",
+      en: "Preliminary guidance only — not a formal compliance conclusion. No contact details or client files are collected by Lumino. Third-party gateway logging/training is governed by the Provider contract and must be confirmed before public Beta.",
     },
   };
 }
