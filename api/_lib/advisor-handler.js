@@ -5,13 +5,13 @@
  * - Phrase-chunk SSE for print-style UI; Abort cancels upstream model
  * - No conversation persistence / no sales leads
  */
-import { checkRateLimit, clientKey, publicLogFields, sanitizeRequest } from "./_lib/advisor-policy.js";
-import { modelConfigured, routeDeterministic } from "./_lib/advisor-runtime.js";
-import { buildGroundedFallback, retrievePublishedKnowledge, stopWithoutSources } from "./_lib/advisor-retrieval.js";
-import { generateGroundedAnswer } from "./_lib/advisor-model.js";
-import { getPublicFlags, publicBetaEnabled } from "./_lib/advisor-flags.js";
-import { recordAdvisorMetric } from "./_lib/advisor-metrics-store.js";
-import { ADVISOR_SSE_CHUNK_CHARS, clientTimeoutMs, modelTimeoutMs } from "./_lib/advisor-timing.js";
+import { checkRateLimit, clientKey, publicLogFields, sanitizeRequest } from "./advisor-policy.js";
+import { modelConfigured, routeDeterministic } from "./advisor-runtime.js";
+import { buildGroundedFallback, retrievePublishedKnowledge, stopWithoutSources } from "./advisor-retrieval.js";
+import { generateGroundedAnswer } from "./advisor-model.js";
+import { getPublicFlags, publicBetaEnabled } from "./advisor-flags.js";
+import { recordAdvisorMetric } from "./advisor-metrics-store.js";
+import { ADVISOR_SSE_CHUNK_CHARS, clientTimeoutMs, modelTimeoutMs } from "./advisor-timing.js";
 
 const CONTACT_URL = "/apps/site/Lumino%20联系.dc.html";
 
