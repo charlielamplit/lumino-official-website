@@ -1,9 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "../..");
+// Avoid import.meta.url — Vercel may compile these helpers as CJS.
+const ROOT = process.cwd();
 const CATALOG_PATH = path.join(ROOT, "apps/site/knowledge/catalog.json");
 const DATA_OVERRIDE = path.join(ROOT, "data/knowledge-catalog.json");
 const TMP_OVERRIDE = "/tmp/lumino-knowledge-catalog.json";

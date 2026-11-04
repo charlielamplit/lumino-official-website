@@ -1,11 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "../..");
-// Keep this join rooted at __dirname so Vercel file tracing can see the knowledge catalog.
-const CATALOG_PATH = path.join(__dirname, "../../apps/site/knowledge/catalog.json");
+// Vercel/@vercel/node may compile API modules as CJS, where import.meta.url throws.
+// process.cwd() is /var/task on Vercel and the repo root locally.
+const ROOT = process.cwd();
+const CATALOG_PATH = path.join(ROOT, "apps/site/knowledge/catalog.json");
 const REVIEW_CYCLE_DAYS = 180;
 const CONTACT_URL = "/apps/site/Lumino%20联系.dc.html";
 

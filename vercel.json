@@ -6,6 +6,9 @@
     "api/advisor.js": {
       "includeFiles": "apps/site/knowledge/**"
     },
+    "api/knowledge.js": {
+      "includeFiles": "apps/site/knowledge/**"
+    },
     "api/advisor-metrics.js": {
       "includeFiles": "api/_lib/advisor-data/**"
     }
