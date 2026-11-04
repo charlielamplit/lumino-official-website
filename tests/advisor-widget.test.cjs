@@ -23,18 +23,21 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /openAdvisorSafe|advisor_load_timeout/);
   assert.match(source, /warmAdvisor/);
   assert.match(source, /preloadScript|rel:\s*"preload"|rel = "preload"/);
-  assert.match(source, /ADVISOR_ASSET_V|20261104-fab14/);
+  assert.match(source, /ADVISOR_ASSET_V|20261104-fab15/);
+  assert.match(source, /loadStyle\(ADVISOR_ASSETS\.css\)/);
+  assert.match(source, /style_load_failed|Never open the dialog before CSS/);
   assert.doesNotMatch(source, /primary\.disabled\s*=\s*true/);
   assert.doesNotMatch(source, /await openAdvisorExpanded/);
   assert.doesNotMatch(source, /tool-float__glyph/);
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
 });
 
-test("homepage preloads advisor assets for instant Ask open", () => {
+test("homepage applies advisor CSS stylesheet before Ask opens", () => {
   const html = read("apps/site/Lumino 官网.dc.html");
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.css\?v=20261104-fab14/);
-  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261104-fab14/);
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261104-fab14/);
+  assert.match(html, /rel="stylesheet"[^>]+advisor-widget\.css\?v=20261104-fab15/);
+  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261104-fab15/);
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261104-fab15/);
+  assert.doesNotMatch(html, /rel="preload"[^>]+advisor-widget\.css/);
 });
 
 test("float dock stays viewport-fixed and clusters ask/tools/top", () => {

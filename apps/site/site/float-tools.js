@@ -2,8 +2,8 @@
   "use strict";
   const i18n = window.LuminoI18n || { detectLang: () => "zh" };
   const TOP_SHOW_Y = 480;
-  // Warm the advisor while the page paints so Ask opens without a click-time download.
-  const ADVISOR_ASSET_V = "20261104-fab14";
+  // Preload hints reduce download time; the runtime itself starts only after user intent.
+  const ADVISOR_ASSET_V = "20261104-fab15";
   const ADVISOR_OPEN_TIMEOUT_MS = 12000;
   const tools = [
     { zh: "CBAM 成本计算器", en: "CBAM cost calculator", href: "/apps/site/calculator/" },
@@ -25,11 +25,33 @@
   });
 
   function loadStyle(href) {
-    if (document.querySelector(`link[href="${href}"]`)) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector(`link[rel="stylesheet"][href="${href}"]`);
+      if (existing) {
+        if (existing.dataset.loaded === "true" || existing.sheet) {
+          existing.dataset.loaded = "true";
+          return resolve();
+        }
+        existing.addEventListener("load", () => {
+          existing.dataset.loaded = "true";
+          resolve();
+        }, { once: true });
+        existing.addEventListener("error", () => reject(new Error(`style_load_failed:${href}`)), { once: true });
+        return;
+      }
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+      link.addEventListener("load", () => {
+        link.dataset.loaded = "true";
+        resolve();
+      }, { once: true });
+      link.addEventListener("error", () => {
+        link.remove();
+        reject(new Error(`style_load_failed:${href}`));
+      }, { once: true });
+      document.head.appendChild(link);
+    });
   }
 
   function preloadScript(href) {
@@ -88,17 +110,20 @@
 
   let advisorPromise = null;
   function ensureAdvisor() {
-    if (window.LuminoAdvisorWidget) return Promise.resolve(window.LuminoAdvisorWidget);
+    // Never open the dialog before CSS is ready — otherwise customers see raw HTML.
+    if (window.LuminoAdvisorWidget) {
+      return loadStyle(ADVISOR_ASSETS.css).then(() => window.LuminoAdvisorWidget);
+    }
     if (!advisorPromise) {
-      loadStyle(ADVISOR_ASSETS.css);
       preloadScript(ADVISOR_ASSETS.catalog);
       preloadScript(ADVISOR_ASSETS.schema);
       preloadScript(ADVISOR_ASSETS.router);
       preloadScript(ADVISOR_ASSETS.widget);
-      advisorPromise = Promise.all([
-        loadScript(ADVISOR_ASSETS.catalog),
-        loadScript(ADVISOR_ASSETS.schema),
-      ])
+      advisorPromise = loadStyle(ADVISOR_ASSETS.css)
+        .then(() => Promise.all([
+          loadScript(ADVISOR_ASSETS.catalog),
+          loadScript(ADVISOR_ASSETS.schema),
+        ]))
         .then(() => loadScript(ADVISOR_ASSETS.router))
         .then(() => loadScript(ADVISOR_ASSETS.widget))
         .then(() => {
