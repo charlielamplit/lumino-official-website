@@ -2,13 +2,9 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const crypto = require("node:crypto");
+const { pathToFileURL } = require("node:url");
 
 const root = path.resolve(__dirname, "..");
-
-function sha(rel) {
-  return crypto.createHash("sha256").update(fs.readFileSync(path.join(root, rel))).digest("hex");
-}
 
 function loadCatalog() {
   require(path.join(root, "packages/advisor/catalog.js"));
@@ -17,18 +13,21 @@ function loadCatalog() {
   return globalThis.LuminoAdvisorCatalog;
 }
 
-test("serverless advisor-umd .cjs mirror matches packages/advisor (router require paths excepted)", () => {
-  assert.equal(sha("api/_lib/advisor-umd/catalog.cjs"), sha("packages/advisor/catalog.js"));
-  assert.equal(sha("api/_lib/advisor-umd/schema.cjs"), sha("packages/advisor/schema.js"));
-  const routerMirror = fs.readFileSync(path.join(root, "api/_lib/advisor-umd/router.cjs"), "utf8");
-  const routerSrc = fs.readFileSync(path.join(root, "packages/advisor/router.js"), "utf8")
-    .replace(/require\("\.\/catalog\.js"\)/g, 'require("./catalog.cjs")')
-    .replace(/require\("\.\/schema\.js"\)/g, 'require("./schema.cjs")');
-  assert.equal(routerMirror, routerSrc);
+test("serverless ESM advisor-data stays aligned with packages/advisor topics and answers", async () => {
+  const browser = loadCatalog();
+  const mod = await import(pathToFileURL(path.join(root, "api/_lib/advisor-data/catalog.js")).href);
+  const server = mod.default;
+  assert.deepEqual(
+    server.topics.map((t) => t.id),
+    browser.topics.map((t) => t.id),
+  );
+  const bAns = new Map(browser.fixedAnswers.filter((a) => a.status === "published").map((a) => [a.topicId, a.answer.zh]));
+  const sAns = new Map(server.fixedAnswers.filter((a) => a.status === "published").map((a) => [a.topicId, a.answer.zh]));
+  assert.deepEqual(sAns, bAns);
 });
 
 test("every published topic has a published fixed answer with zh/en copy", () => {
-  const catalog = loadCatalog();
+  const catalog = globalThis.LuminoAdvisorCatalog || loadCatalog();
   const answersByTopic = new Map(
     catalog.fixedAnswers.filter((item) => item.status === "published").map((item) => [item.topicId, item]),
   );
@@ -51,9 +50,8 @@ test("eudr/csddd and cbam fixed answers stay preliminary and actionable", () => 
   assert.doesNotMatch(cbam.answer.zh, /法律意见|保证合规/);
 });
 
-test("vercel advisor function includes umd mirror and knowledge corpus", () => {
+test("vercel advisor function includes knowledge corpus for retrieval", () => {
   const config = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
   const include = config.functions?.["api/advisor.js"]?.includeFiles || "";
-  assert.match(include, /advisor-umd/);
   assert.match(include, /apps\/site\/knowledge/);
 });

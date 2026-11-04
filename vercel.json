@@ -4,89 +4,272 @@
   "trailingSlash": false,
   "functions": {
     "api/advisor.js": {
-      "includeFiles": "{api/_lib/advisor-umd/**,apps/site/knowledge/**}"
+      "includeFiles": "apps/site/knowledge/**"
     },
     "api/advisor-metrics.js": {
-      "includeFiles": "api/_lib/advisor-umd/**"
+      "includeFiles": "api/_lib/advisor-data/**"
     }
   },
   "rewrites": [
-    { "source": "/portal", "destination": "/apps/portal/index.html" },
-    { "source": "/portal/", "destination": "/apps/portal/index.html" },
-    { "source": "/portal/:path*", "destination": "/apps/portal/:path*" },
-    { "source": "/calculator", "destination": "/apps/site/calculator/index.html" },
-    { "source": "/calculator/", "destination": "/apps/site/calculator/index.html" },
-    { "source": "/calculator/:path*", "destination": "/apps/site/calculator/:path*" },
-    { "source": "/knowledge", "destination": "/apps/site/knowledge/index.html" },
-    { "source": "/knowledge/", "destination": "/apps/site/knowledge/index.html" },
-    { "source": "/knowledge/cbam-guide", "destination": "/apps/site/knowledge/cbam-guide.html" },
-    { "source": "/knowledge/cbam-guide/", "destination": "/apps/site/knowledge/cbam-guide.html" },
-    { "source": "/knowledge/article", "destination": "/apps/site/knowledge/article.html" },
-    { "source": "/knowledge/article.html", "destination": "/apps/site/knowledge/article.html" },
-    { "source": "/knowledge/articles/:slug", "destination": "/apps/site/knowledge/articles/:slug.html" },
-    { "source": "/knowledge/articles/:slug/", "destination": "/apps/site/knowledge/articles/:slug.html" },
-    { "source": "/knowledge/:path*", "destination": "/apps/site/knowledge/:path*" },
-    { "source": "/Lumino CBAM 指南.dc.html", "destination": "/apps/site/knowledge/cbam-guide.html" },
-    { "source": "/Lumino 指南文章.dc.html", "destination": "/apps/site/knowledge/article.html?id=cbam-hs-cn-codes" },
-    { "source": "/industries", "destination": "/apps/site/industries/index.html" },
-    { "source": "/industries/", "destination": "/apps/site/industries/index.html" },
-    { "source": "/industries/:path*", "destination": "/apps/site/industries/:path*" },
-    { "source": "/tools", "destination": "/apps/site/tools/index.html" },
-    { "source": "/tools/", "destination": "/apps/site/tools/index.html" },
-    { "source": "/tools/:path*", "destination": "/apps/site/tools/:path*" },
-    { "source": "/cases", "destination": "/apps/site/cases/index.html" },
-    { "source": "/cases/", "destination": "/apps/site/cases/index.html" },
-    { "source": "/cases/:path*", "destination": "/apps/site/cases/:path*" },
-    { "source": "/services/:slug", "destination": "/apps/site/services/:slug/index.html" },
-    { "source": "/services/:slug/", "destination": "/apps/site/services/:slug/index.html" },
-    { "source": "/apps/site/site-v3.css", "destination": "/apps/site/site/site-v3.css" },
-    { "source": "/apps/site/i18n.js", "destination": "/apps/site/site/i18n.js" },
-    { "source": "/apps/site/site-shell.js", "destination": "/apps/site/site/site-shell.js" },
-    { "source": "/apps/site/float-tools.js", "destination": "/apps/site/site/float-tools.js" },
-    { "source": "/apps/site/contact.js", "destination": "/apps/site/site/contact.js" },
-    { "source": "/apps/site/industries.js", "destination": "/apps/site/site/industries.js" },
-    { "source": "/apps/site/cases.js", "destination": "/apps/site/site/cases.js" },
-    { "source": "/apps/site/services-catalog.js", "destination": "/apps/site/site/services-catalog.js" },
-    { "source": "/apps/site/service-page.js", "destination": "/apps/site/site/service-page.js" },
-    { "source": "/apps/site/industry-page.js", "destination": "/apps/site/site/industry-page.js" },
-    { "source": "/apps/site/tokens.css", "destination": "/apps/site/site/tokens.css" },
-    { "source": "/apps/site/marketing.css", "destination": "/apps/site/site/marketing.css" },
-    { "source": "/site/marketing.css", "destination": "/apps/site/site/marketing.css" },
-    { "source": "/site/:path*", "destination": "/apps/site/site/:path*" },
-    { "source": "/packages/agent/:path*", "destination": "/packages/agent/:path*" },
-    { "source": "/packages/advisor/:path*", "destination": "/packages/advisor/:path*" },
-    { "source": "/packages/shared/:path*", "destination": "/packages/shared/:path*" },
-    { "source": "/quote", "destination": "/Lumino 报价器.dc.html" },
-    { "source": "/site", "destination": "/apps/site/Lumino 官网.dc.html" },
-    { "source": "/Lumino 官网.dc.html", "destination": "/apps/site/Lumino 官网.dc.html" },
-    { "source": "/Lumino 平台.dc.html", "destination": "/apps/site/Lumino 平台.dc.html" },
-    { "source": "/Lumino 关于.dc.html", "destination": "/apps/site/Lumino 关于.dc.html" },
-    { "source": "/Lumino 联系.dc.html", "destination": "/apps/site/Lumino 联系.dc.html" },
-    { "source": "/Lumino Cookie 与本地存储.dc.html", "destination": "/apps/site/Lumino Cookie 与本地存储.dc.html" },
-    { "source": "/Lumino 用户内容与数据许可.dc.html", "destination": "/apps/site/Lumino 用户内容与数据许可.dc.html" },
-    { "source": "/Lumino CBAM 指南.dc.html", "destination": "/apps/site/Lumino CBAM 指南.dc.html" },
-    { "source": "/Lumino 指南文章.dc.html", "destination": "/apps/site/Lumino 指南文章.dc.html" }
+    {
+      "source": "/portal",
+      "destination": "/apps/portal/index.html"
+    },
+    {
+      "source": "/portal/",
+      "destination": "/apps/portal/index.html"
+    },
+    {
+      "source": "/portal/:path*",
+      "destination": "/apps/portal/:path*"
+    },
+    {
+      "source": "/calculator",
+      "destination": "/apps/site/calculator/index.html"
+    },
+    {
+      "source": "/calculator/",
+      "destination": "/apps/site/calculator/index.html"
+    },
+    {
+      "source": "/calculator/:path*",
+      "destination": "/apps/site/calculator/:path*"
+    },
+    {
+      "source": "/knowledge",
+      "destination": "/apps/site/knowledge/index.html"
+    },
+    {
+      "source": "/knowledge/",
+      "destination": "/apps/site/knowledge/index.html"
+    },
+    {
+      "source": "/knowledge/cbam-guide",
+      "destination": "/apps/site/knowledge/cbam-guide.html"
+    },
+    {
+      "source": "/knowledge/cbam-guide/",
+      "destination": "/apps/site/knowledge/cbam-guide.html"
+    },
+    {
+      "source": "/knowledge/article",
+      "destination": "/apps/site/knowledge/article.html"
+    },
+    {
+      "source": "/knowledge/article.html",
+      "destination": "/apps/site/knowledge/article.html"
+    },
+    {
+      "source": "/knowledge/articles/:slug",
+      "destination": "/apps/site/knowledge/articles/:slug.html"
+    },
+    {
+      "source": "/knowledge/articles/:slug/",
+      "destination": "/apps/site/knowledge/articles/:slug.html"
+    },
+    {
+      "source": "/knowledge/:path*",
+      "destination": "/apps/site/knowledge/:path*"
+    },
+    {
+      "source": "/Lumino CBAM 指南.dc.html",
+      "destination": "/apps/site/knowledge/cbam-guide.html"
+    },
+    {
+      "source": "/Lumino 指南文章.dc.html",
+      "destination": "/apps/site/knowledge/article.html?id=cbam-hs-cn-codes"
+    },
+    {
+      "source": "/industries",
+      "destination": "/apps/site/industries/index.html"
+    },
+    {
+      "source": "/industries/",
+      "destination": "/apps/site/industries/index.html"
+    },
+    {
+      "source": "/industries/:path*",
+      "destination": "/apps/site/industries/:path*"
+    },
+    {
+      "source": "/tools",
+      "destination": "/apps/site/tools/index.html"
+    },
+    {
+      "source": "/tools/",
+      "destination": "/apps/site/tools/index.html"
+    },
+    {
+      "source": "/tools/:path*",
+      "destination": "/apps/site/tools/:path*"
+    },
+    {
+      "source": "/cases",
+      "destination": "/apps/site/cases/index.html"
+    },
+    {
+      "source": "/cases/",
+      "destination": "/apps/site/cases/index.html"
+    },
+    {
+      "source": "/cases/:path*",
+      "destination": "/apps/site/cases/:path*"
+    },
+    {
+      "source": "/services/:slug",
+      "destination": "/apps/site/services/:slug/index.html"
+    },
+    {
+      "source": "/services/:slug/",
+      "destination": "/apps/site/services/:slug/index.html"
+    },
+    {
+      "source": "/apps/site/site-v3.css",
+      "destination": "/apps/site/site/site-v3.css"
+    },
+    {
+      "source": "/apps/site/i18n.js",
+      "destination": "/apps/site/site/i18n.js"
+    },
+    {
+      "source": "/apps/site/site-shell.js",
+      "destination": "/apps/site/site/site-shell.js"
+    },
+    {
+      "source": "/apps/site/float-tools.js",
+      "destination": "/apps/site/site/float-tools.js"
+    },
+    {
+      "source": "/apps/site/contact.js",
+      "destination": "/apps/site/site/contact.js"
+    },
+    {
+      "source": "/apps/site/industries.js",
+      "destination": "/apps/site/site/industries.js"
+    },
+    {
+      "source": "/apps/site/cases.js",
+      "destination": "/apps/site/site/cases.js"
+    },
+    {
+      "source": "/apps/site/services-catalog.js",
+      "destination": "/apps/site/site/services-catalog.js"
+    },
+    {
+      "source": "/apps/site/service-page.js",
+      "destination": "/apps/site/site/service-page.js"
+    },
+    {
+      "source": "/apps/site/industry-page.js",
+      "destination": "/apps/site/site/industry-page.js"
+    },
+    {
+      "source": "/apps/site/tokens.css",
+      "destination": "/apps/site/site/tokens.css"
+    },
+    {
+      "source": "/apps/site/marketing.css",
+      "destination": "/apps/site/site/marketing.css"
+    },
+    {
+      "source": "/site/marketing.css",
+      "destination": "/apps/site/site/marketing.css"
+    },
+    {
+      "source": "/site/:path*",
+      "destination": "/apps/site/site/:path*"
+    },
+    {
+      "source": "/packages/agent/:path*",
+      "destination": "/packages/agent/:path*"
+    },
+    {
+      "source": "/packages/advisor/:path*",
+      "destination": "/packages/advisor/:path*"
+    },
+    {
+      "source": "/packages/shared/:path*",
+      "destination": "/packages/shared/:path*"
+    },
+    {
+      "source": "/quote",
+      "destination": "/Lumino 报价器.dc.html"
+    },
+    {
+      "source": "/site",
+      "destination": "/apps/site/Lumino 官网.dc.html"
+    },
+    {
+      "source": "/Lumino 官网.dc.html",
+      "destination": "/apps/site/Lumino 官网.dc.html"
+    },
+    {
+      "source": "/Lumino 平台.dc.html",
+      "destination": "/apps/site/Lumino 平台.dc.html"
+    },
+    {
+      "source": "/Lumino 关于.dc.html",
+      "destination": "/apps/site/Lumino 关于.dc.html"
+    },
+    {
+      "source": "/Lumino 联系.dc.html",
+      "destination": "/apps/site/Lumino 联系.dc.html"
+    },
+    {
+      "source": "/Lumino Cookie 与本地存储.dc.html",
+      "destination": "/apps/site/Lumino Cookie 与本地存储.dc.html"
+    },
+    {
+      "source": "/Lumino 用户内容与数据许可.dc.html",
+      "destination": "/apps/site/Lumino 用户内容与数据许可.dc.html"
+    },
+    {
+      "source": "/Lumino CBAM 指南.dc.html",
+      "destination": "/apps/site/Lumino CBAM 指南.dc.html"
+    },
+    {
+      "source": "/Lumino 指南文章.dc.html",
+      "destination": "/apps/site/Lumino 指南文章.dc.html"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)\\.css",
       "headers": [
-        { "key": "Content-Type", "value": "text/css; charset=utf-8" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" }
+        {
+          "key": "Content-Type",
+          "value": "text/css; charset=utf-8"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
       ]
     },
     {
       "source": "/(.*)\\.js",
       "headers": [
-        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" },
-        { "key": "X-Content-Type-Options", "value": "nosniff" }
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
       ]
     },
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
       ]
     }
   ]

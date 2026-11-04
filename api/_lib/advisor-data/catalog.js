@@ -1,9 +1,6 @@
-(function (root, factory) {
-  "use strict";
-  const catalog = factory();
-  if (typeof module === "object" && module.exports) module.exports = catalog;
-  root.LuminoAdvisorCatalog = catalog;
-})(typeof window !== "undefined" ? window : globalThis, function () {
+/** Serverless ESM mirror of packages/advisor/catalog.js — keep in sync via tests. */
+const catalog = (() => {
+
   "use strict";
 
   const L = (zh, en) => Object.freeze({ zh, en });
@@ -205,4 +202,6 @@
     fixedAnswers,
     toolRoutes
   });
-});
+
+})();
+export default catalog;

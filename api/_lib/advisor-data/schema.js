@@ -1,9 +1,6 @@
-(function (root, factory) {
-  "use strict";
-  const schema = factory();
-  if (typeof module === "object" && module.exports) module.exports = schema;
-  root.LuminoAdvisorSchema = schema;
-})(typeof window !== "undefined" ? window : globalThis, function () {
+/** Serverless ESM mirror of packages/advisor/schema.js */
+const schema = (() => {
+
   "use strict";
 
   const ANSWER_MODES = Object.freeze(["fixed", "tool_route", "retrieval_model", "fallback"]);
@@ -26,4 +23,6 @@
   }
 
   return Object.freeze({ ANSWER_MODES, CONFIDENCE, HANDOFF, validateResponse });
-});
+
+})();
+export default schema;

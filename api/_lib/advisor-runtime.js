@@ -1,7 +1,6 @@
 import { modelEnabled } from "./advisor-flags.js";
-// Static import so Vercel/@vercel/node file tracing always ships the CJS catalog.
-// Browser continues to load /packages/advisor/*.js; this mirror is serverless-only.
-import advisorRouter from "./advisor-umd/router.cjs";
+// Pure ESM mirrors — statically imported so Vercel esbuild inlines the fixed catalog.
+import advisorRouter from "./advisor-data/router.js";
 
 let advisor;
 
