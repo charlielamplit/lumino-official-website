@@ -1036,7 +1036,7 @@ lumino-header {
   color: var(--muted);
 }
 
-/* Viewport-fixed dock: Ask Lumino + Tools + Back to top */
+/* Viewport-fixed icon dock: Ask / Tools / Top */
 .tool-float {
   position: fixed !important;
   right: max(16px, env(safe-area-inset-right));
@@ -1057,59 +1057,87 @@ lumino-header {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: 10px;
 }
 .tool-float__btn {
-  min-height: 40px;
-  padding: 0 16px;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border-radius: 999px;
-  border: 1px solid transparent;
-  background: var(--ink);
-  color: #fff;
-  font-size: var(--type-ui);
-  font-weight: 600;
-  font-family: var(--font-sans);
-  box-shadow: 0 8px 24px rgba(23, 33, 28, .18);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--shadow-float);
   cursor: pointer;
-  white-space: nowrap;
+  font-family: var(--font-sans);
 }
 .tool-float__btn:disabled {
   opacity: 0.7;
   cursor: wait;
 }
-.tool-float__btn--primary {
+.tool-float__btn--ask {
+  width: 56px;
+  height: 56px;
   background: var(--green);
   border-color: var(--green);
+  color: #fff;
+  box-shadow: 0 10px 28px rgba(14, 122, 82, .28);
 }
-.tool-float__btn--primary:hover {
+.tool-float__btn--ask:hover {
   background: var(--green-dark);
   border-color: var(--green-dark);
 }
-.tool-float__btn--secondary {
-  min-height: 36px;
-  padding: 0 12px;
-  background: var(--paper);
-  color: var(--ink);
-  border-color: var(--line);
-  box-shadow: var(--shadow-float);
-  font-weight: 500;
-}
-.tool-float__btn--secondary:hover,
-.tool-float__btn--secondary[aria-expanded="true"] {
+.tool-float__btn--tools:hover,
+.tool-float__btn--tools[aria-expanded="true"],
+.tool-float__btn--top:hover {
   border-color: var(--line-strong);
   background: #F8FAF9;
 }
-.tool-float__btn--top {
-  min-width: 36px;
-  min-height: 36px;
-  padding: 0 12px;
+.tool-float__btn--top[hidden],
+.tool-float__btn--tools[hidden] { display: none !important; }
+.tool-float__glyph {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.tool-float__icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+.tool-float__btn--ask .tool-float__glyph {
+  font-size: 26px;
+}
+.tool-float__tip {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) translateX(4px);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
   background: var(--paper);
   color: var(--ink);
-  border-color: var(--line);
+  font-size: var(--type-meta);
+  font-weight: 600;
+  white-space: nowrap;
   box-shadow: var(--shadow-float);
-  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
 }
-.tool-float__btn--top[hidden] { display: none !important; }
+.tool-float__btn:hover .tool-float__tip,
+.tool-float__btn:focus-visible .tool-float__tip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tool-float__tip { transition: none; }
+}
 .tool-float__panel {
   width: min(320px, calc(100vw - 40px));
   background: var(--paper);
