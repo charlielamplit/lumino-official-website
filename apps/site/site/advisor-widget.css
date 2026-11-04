@@ -4,7 +4,7 @@
   bottom: var(--space-lg);
   z-index: 65;
   width: min(440px, calc(100vw - 32px));
-  height: min(820px, calc(100dvh - 56px));
+  height: min(700px, calc(100dvh - 96px));
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto auto;
   overflow: hidden;
@@ -341,7 +341,7 @@
     right: 0;
     bottom: 0;
     width: 100%;
-    height: min(92dvh, 900px);
+    height: min(84dvh, 760px);
     border-right: 0;
     border-bottom: 0;
     border-left: 0;

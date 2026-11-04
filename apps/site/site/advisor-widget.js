@@ -87,8 +87,8 @@
     const topics = root.LuminoAdvisor.getTopics(lang());
     return `<section class="advisor-welcome">
       <span class="advisor-welcome__label">${label("服务引导", "Service guide")}</span>
-      <h2>${label("先说明你正在解决的问题。", "Start with the problem you need to solve.")}</h2>
-      <p>${label("可以选择话题，或直接输入问题。我们会给出可执行的说明，并在合适时推荐工具或联系入口。", "Choose a topic or type a question. We give practical guidance and, when useful, suggest a tool or contact path.")}</p>
+      <h2>${label("你在解决什么问题？", "What are you solving?")}</h2>
+      <p>${label("选话题，或直接提问。", "Pick a topic, or type a question.")}</p>
     </section>
     <div class="advisor-topics" aria-label="${label("预选话题", "Suggested topics")}">
       ${topics.map((topic) => `<button class="advisor-topic" type="button" data-topic-id="${escapeHtml(topic.id)}">${escapeHtml(topic.label)}</button>`).join("")}

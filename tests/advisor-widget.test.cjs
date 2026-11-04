@@ -63,7 +63,7 @@ test("advisor presentation reuses site tokens and has mobile and reduced-motion 
   assert.match(source, /var\(--paper\)/);
   assert.match(source, /var\(--radius-card\)/);
   assert.match(source, /\.advisor-widget__reset-icon/);
-  assert.match(source, /height:\s*min\(820px/);
+  assert.match(source, /height:\s*min\(700px/);
   assert.match(source, /\.advisor-widget__close\s*\{[\s\S]*?min-height:\s*44px/);
   assert.match(source, /\.advisor-reply,\s*\n\.advisor-link\s*\{[\s\S]*?min-height:\s*44px/);
   assert.match(source, /\.advisor-widget__stop,[\s\S]*?min-height:\s*44px/);
