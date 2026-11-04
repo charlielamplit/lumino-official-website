@@ -1063,8 +1063,8 @@ lumino-header {
   position: relative;
   display: inline-grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   padding: 0;
   border-radius: 999px;
   border: 1px solid var(--line);
@@ -1079,8 +1079,6 @@ lumino-header {
   cursor: wait;
 }
 .tool-float__btn--ask {
-  width: 56px;
-  height: 56px;
   background: var(--green);
   border-color: var(--green);
   color: #fff;
@@ -1098,19 +1096,10 @@ lumino-header {
 }
 .tool-float__btn--top[hidden],
 .tool-float__btn--tools[hidden] { display: none !important; }
-.tool-float__glyph {
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.04em;
-}
 .tool-float__icon {
   width: 20px;
   height: 20px;
   display: block;
-}
-.tool-float__btn--ask .tool-float__glyph {
-  font-size: 26px;
 }
 .tool-float__tip {
   position: absolute;

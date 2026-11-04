@@ -14,10 +14,12 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /\/api\/advisor-config/);
   assert.match(source, /tool-float__btn--ask/);
   assert.match(source, /tool-float__tip/);
+  assert.match(source, /tool-float__icon/);
   assert.match(source, /data-float-tools/);
   assert.match(source, /data-float-top/);
   assert.match(source, /scrollTo/);
-  assert.match(source, /tool-float__glyph[\s\S]*问/);
+  assert.match(source, /ask:\s*'<svg class="tool-float__icon"/);
+  assert.doesNotMatch(source, /tool-float__glyph/);
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
 });
 

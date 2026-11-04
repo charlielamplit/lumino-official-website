@@ -9,7 +9,8 @@
     { zh: "申请绿电需求测算", en: "Request a renewable-power estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=assets&source=tool-float" },
   ];
   const ICONS = {
-    ask: '<span class="tool-float__glyph" aria-hidden="true">问</span>',
+    // Same 24 viewBox + .tool-float__icon (20px) for ask / tools / top.
+    ask: '<svg class="tool-float__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h1v3.2a.8.8 0 0 0 1.3.62L11.1 17H20a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H4z"/></svg>',
     tools: '<svg class="tool-float__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
     top: '<svg class="tool-float__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 5.5 5.5 12H10v7h4v-7h4.5L12 5.5z"/></svg>',
   };
@@ -52,7 +53,7 @@
   function ensureAdvisor() {
     if (window.LuminoAdvisorWidget) return Promise.resolve(window.LuminoAdvisorWidget);
     if (!advisorPromise) {
-      const v = "20261104-fab3";
+      const v = "20261104-fab4";
       loadStyle(`/apps/site/site/advisor-widget.css?v=${v}`);
       advisorPromise = loadScript(`/packages/advisor/catalog.js?v=${v}`)
         .then(() => loadScript(`/packages/advisor/schema.js?v=${v}`))
