@@ -26,12 +26,28 @@
     return new Promise((resolve, reject) => {
       const existing = document.querySelector(`script[src="${src}"]`);
       if (existing?.dataset.loaded === "true") return resolve();
-      const script = existing || document.createElement("script");
+      // A previous failed/hung tag must be replaced; otherwise load never fires again.
+      if (existing && existing.dataset.loaded !== "true") {
+        existing.remove();
+      }
+      const script = document.createElement("script");
       script.src = src;
-      script.async = false;
+      script.async = true;
       script.addEventListener("load", () => { script.dataset.loaded = "true"; resolve(); }, { once: true });
-      script.addEventListener("error", reject, { once: true });
-      if (!existing) document.head.appendChild(script);
+      script.addEventListener("error", () => {
+        script.remove();
+        reject(new Error(`script_load_failed:${src}`));
+      }, { once: true });
+      document.head.appendChild(script);
+    });
+  }
+  function withTimeout(promise, ms, code) {
+    let timer = null;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(code || "timeout")), ms);
+    });
+    return Promise.race([promise, timeout]).finally(() => {
+      if (timer) clearTimeout(timer);
     });
   }
   function previewHost() {
@@ -54,15 +70,30 @@
   function ensureAdvisor() {
     if (window.LuminoAdvisorWidget) return Promise.resolve(window.LuminoAdvisorWidget);
     if (!advisorPromise) {
-      const v = "20261104-fab12";
+      const v = "20261104-fab13";
       loadStyle(`/apps/site/site/advisor-widget.css?v=${v}`);
-      advisorPromise = loadScript(`/packages/advisor/catalog.js?v=${v}`)
-        .then(() => loadScript(`/packages/advisor/schema.js?v=${v}`))
+      // catalog + schema are independent; router needs both; widget needs router.
+      advisorPromise = Promise.all([
+        loadScript(`/packages/advisor/catalog.js?v=${v}`),
+        loadScript(`/packages/advisor/schema.js?v=${v}`),
+      ])
         .then(() => loadScript(`/packages/advisor/router.js?v=${v}`))
         .then(() => loadScript(`/apps/site/site/advisor-widget.js?v=${v}`))
-        .then(() => window.LuminoAdvisorWidget);
+        .then(() => {
+          if (!window.LuminoAdvisorWidget) throw new Error("advisor_widget_missing");
+          return window.LuminoAdvisorWidget;
+        })
+        .catch((error) => {
+          advisorPromise = null;
+          throw error;
+        });
     }
     return advisorPromise;
+  }
+  async function openAdvisorSafe(trigger, flags, source) {
+    const widget = await withTimeout(ensureAdvisor(), 8000, "advisor_load_timeout");
+    widget.open({ trigger, flags, source });
+    return widget;
   }
   function hideSoftEntries() {
     document.querySelectorAll("[data-open-advisor]").forEach((node) => {
@@ -91,11 +122,16 @@
       node.dataset.advisorBound = "1";
       node.addEventListener("click", async (event) => {
         event.preventDefault();
+        if (node.dataset.advisorOpening === "1") return;
+        node.dataset.advisorOpening = "1";
+        node.setAttribute("aria-busy", "true");
         try {
-          const widget = await ensureAdvisor();
-          widget.open({ trigger: node, flags });
+          await openAdvisorSafe(node, flags, "soft-entry");
         } catch (_) {
           window.location.href = "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor-load-error";
+        } finally {
+          node.dataset.advisorOpening = "0";
+          node.removeAttribute("aria-busy");
         }
       });
     });
@@ -200,21 +236,25 @@
     panel.hidden = true;
     primary.onclick = async () => {
       closePanel();
-      primary.disabled = true;
+      if (primary.dataset.advisorOpening === "1") return;
+      primary.dataset.advisorOpening = "1";
+      primary.setAttribute("aria-busy", "true");
+      // Keep the control clickable-looking; hard disable made the dock feel stuck.
+      primary.classList.add("is-loading");
       try {
-        const widget = await ensureAdvisor();
-        widget.open({ trigger: primary, flags });
+        await openAdvisorSafe(primary, flags, "float-ask");
       } catch (_) {
         window.location.href = "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor-load-error";
       } finally {
-        primary.disabled = false;
+        primary.dataset.advisorOpening = "0";
+        primary.removeAttribute("aria-busy");
+        primary.classList.remove("is-loading");
       }
     };
   }
   async function openAdvisorExpanded(shell, flags) {
     try {
-      const widget = await ensureAdvisor();
-      widget.open({ trigger: shell.primary, flags, source: "auto-open" });
+      await openAdvisorSafe(shell.primary, flags, "auto-open");
     } catch (_) {
       /* Keep dock available if auto-open fails. */
     }
