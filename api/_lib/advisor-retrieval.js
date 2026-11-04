@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "../..");
-const CATALOG_PATH = path.join(ROOT, "apps/site/knowledge/catalog.json");
+// Keep this join rooted at __dirname so Vercel file tracing can see the knowledge catalog.
+const CATALOG_PATH = path.join(__dirname, "../../apps/site/knowledge/catalog.json");
 const REVIEW_CYCLE_DAYS = 180;
 const CONTACT_URL = "/apps/site/Lumino%20联系.dc.html";
 
