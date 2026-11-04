@@ -1,17 +1,38 @@
+import fs from "node:fs";
+import path from "node:path";
 import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
 import { modelEnabled } from "./advisor-flags.js";
 
-// Literal relative requires so Vercel NFT / the function bundle always ships the UMD catalog.
-// Source of truth for the browser remains packages/advisor/; api/_lib/advisor-umd is the serverless mirror.
-const require = createRequire(import.meta.url);
+// Use a real nearby file as the require root. package.json may be absent in this repo;
+// Vercel ESM ("type":"module") also cannot require bare .js UMD — mirrors are .cjs.
+const require = createRequire(fileURLToPath(import.meta.url));
+
+const UMD_CANDIDATES = [
+  path.join(path.dirname(fileURLToPath(import.meta.url)), "advisor-umd"),
+  path.join(process.cwd(), "api/_lib/advisor-umd"),
+  path.join(process.cwd(), "_lib/advisor-umd"),
+];
 
 let advisor;
 
+function resolveUmdDir() {
+  for (const dir of UMD_CANDIDATES) {
+    if (fs.existsSync(path.join(dir, "catalog.cjs"))
+      && fs.existsSync(path.join(dir, "schema.cjs"))
+      && fs.existsSync(path.join(dir, "router.cjs"))) {
+      return dir;
+    }
+  }
+  throw new Error(`advisor_umd_missing:cwd=${process.cwd()}`);
+}
+
 export function getAdvisor() {
   if (advisor) return advisor;
-  require("./advisor-umd/catalog.js");
-  require("./advisor-umd/schema.js");
-  advisor = require("./advisor-umd/router.js");
+  const dir = resolveUmdDir();
+  require(path.join(dir, "catalog.cjs"));
+  require(path.join(dir, "schema.cjs"));
+  advisor = require(path.join(dir, "router.cjs"));
   return advisor;
 }
 
