@@ -2,6 +2,9 @@
   "use strict";
   const i18n = window.LuminoI18n || { detectLang: () => "zh" };
   const TOP_SHOW_Y = 480;
+  // Warm the advisor while the page paints so Ask opens without a click-time download.
+  const ADVISOR_ASSET_V = "20261104-fab14";
+  const ADVISOR_OPEN_TIMEOUT_MS = 12000;
   const tools = [
     { zh: "CBAM 成本计算器", en: "CBAM cost calculator", href: "/apps/site/calculator/" },
     { zh: "申请产品碳足迹初步估算", en: "Request a footprint estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=pcf&source=tool-float" },
@@ -9,12 +12,18 @@
     { zh: "申请绿电需求测算", en: "Request a renewable-power estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=assets&source=tool-float" },
   ];
   const ICONS = {
-    // Same 24 viewBox + .tool-float__icon (20px) for ask / tools / top.
     ask: '<svg class="tool-float__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h1v3.2a.8.8 0 0 0 1.3.62L11.1 17H20a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H4z"/></svg>',
-    // Filled 2×2 tiles — same solid weight as ask bubble (not outline wrench).
     tools: '<svg class="tool-float__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3.5 3.5h7v7h-7v-7Zm10 0h7v7h-7v-7ZM3.5 13.5h7v7h-7v-7Zm10 0h7v7h-7v-7Z"/></svg>',
     top: '<svg class="tool-float__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 4.2 4.8 11.4h3.7V19.5h7V11.4h3.7L12 4.2z"/></svg>',
   };
+  const ADVISOR_ASSETS = Object.freeze({
+    css: `/apps/site/site/advisor-widget.css?v=${ADVISOR_ASSET_V}`,
+    catalog: `/packages/advisor/catalog.js?v=${ADVISOR_ASSET_V}`,
+    schema: `/packages/advisor/schema.js?v=${ADVISOR_ASSET_V}`,
+    router: `/packages/advisor/router.js?v=${ADVISOR_ASSET_V}`,
+    widget: `/apps/site/site/advisor-widget.js?v=${ADVISOR_ASSET_V}`,
+  });
+
   function loadStyle(href) {
     if (document.querySelector(`link[href="${href}"]`)) return;
     const link = document.createElement("link");
@@ -22,14 +31,21 @@
     link.href = href;
     document.head.appendChild(link);
   }
+
+  function preloadScript(href) {
+    if (document.querySelector(`link[rel="preload"][as="script"][href="${href}"]`)) return;
+    const link = document.createElement("link");
+    link.rel = "preload";
+    link.as = "script";
+    link.href = href;
+    document.head.appendChild(link);
+  }
+
   function loadScript(src) {
     return new Promise((resolve, reject) => {
       const existing = document.querySelector(`script[src="${src}"]`);
       if (existing?.dataset.loaded === "true") return resolve();
-      // A previous failed/hung tag must be replaced; otherwise load never fires again.
-      if (existing && existing.dataset.loaded !== "true") {
-        existing.remove();
-      }
+      if (existing && existing.dataset.loaded !== "true") existing.remove();
       const script = document.createElement("script");
       script.src = src;
       script.async = true;
@@ -41,6 +57,7 @@
       document.head.appendChild(script);
     });
   }
+
   function withTimeout(promise, ms, code) {
     let timer = null;
     const timeout = new Promise((_, reject) => {
@@ -50,10 +67,12 @@
       if (timer) clearTimeout(timer);
     });
   }
+
   function previewHost() {
     const host = String(location.hostname || "").toLowerCase();
     return host === "localhost" || host === "127.0.0.1" || /\.vercel\.app$/.test(host);
   }
+
   async function loadAdvisorFlags() {
     try {
       const response = await fetch("/api/advisor-config", {
@@ -66,19 +85,22 @@
       return { public_beta: previewHost(), model_enabled: true, lead_capture: false };
     }
   }
+
   let advisorPromise = null;
   function ensureAdvisor() {
     if (window.LuminoAdvisorWidget) return Promise.resolve(window.LuminoAdvisorWidget);
     if (!advisorPromise) {
-      const v = "20261104-fab13";
-      loadStyle(`/apps/site/site/advisor-widget.css?v=${v}`);
-      // catalog + schema are independent; router needs both; widget needs router.
+      loadStyle(ADVISOR_ASSETS.css);
+      preloadScript(ADVISOR_ASSETS.catalog);
+      preloadScript(ADVISOR_ASSETS.schema);
+      preloadScript(ADVISOR_ASSETS.router);
+      preloadScript(ADVISOR_ASSETS.widget);
       advisorPromise = Promise.all([
-        loadScript(`/packages/advisor/catalog.js?v=${v}`),
-        loadScript(`/packages/advisor/schema.js?v=${v}`),
+        loadScript(ADVISOR_ASSETS.catalog),
+        loadScript(ADVISOR_ASSETS.schema),
       ])
-        .then(() => loadScript(`/packages/advisor/router.js?v=${v}`))
-        .then(() => loadScript(`/apps/site/site/advisor-widget.js?v=${v}`))
+        .then(() => loadScript(ADVISOR_ASSETS.router))
+        .then(() => loadScript(ADVISOR_ASSETS.widget))
         .then(() => {
           if (!window.LuminoAdvisorWidget) throw new Error("advisor_widget_missing");
           return window.LuminoAdvisorWidget;
@@ -90,11 +112,18 @@
     }
     return advisorPromise;
   }
+
+  function warmAdvisor() {
+    // Fire-and-forget warm so the first open does not pay the download cost.
+    ensureAdvisor().catch(() => {});
+  }
+
   async function openAdvisorSafe(trigger, flags, source) {
-    const widget = await withTimeout(ensureAdvisor(), 8000, "advisor_load_timeout");
+    const widget = await withTimeout(ensureAdvisor(), ADVISOR_OPEN_TIMEOUT_MS, "advisor_load_timeout");
     widget.open({ trigger, flags, source });
     return widget;
   }
+
   function hideSoftEntries() {
     document.querySelectorAll("[data-open-advisor]").forEach((node) => {
       if (node.closest(".tool-float")) return;
@@ -104,6 +133,7 @@
       node.setAttribute("disabled", "true");
     });
   }
+
   function bindSoftEntries(flags) {
     document.querySelectorAll("[data-open-advisor]").forEach((node) => {
       if (node.closest(".tool-float")) return;
@@ -136,6 +166,7 @@
       });
     });
   }
+
   function labels(lang) {
     return lang === "en"
       ? {
@@ -153,6 +184,7 @@
           top: "回到顶部",
         };
   }
+
   function mountShell() {
     if (document.querySelector(".tool-float")) return null;
     hideSoftEntries();
@@ -207,6 +239,7 @@
     document.addEventListener("click", (e) => { if (!root.contains(e.target)) closePanel(); });
     return { root, panel, primary, toolsBtn, topBtn, closePanel, L, copy };
   }
+
   function setIconButton(btn, { kind, label, askMode }) {
     btn.className = `tool-float__btn tool-float__btn--${kind}`;
     btn.setAttribute("aria-label", label);
@@ -214,6 +247,7 @@
     if (askMode) btn.setAttribute("data-open-advisor", "");
     else btn.removeAttribute("data-open-advisor");
   }
+
   function wirePrimaryAsTools(shell) {
     const { primary, toolsBtn, panel, copy } = shell;
     setIconButton(primary, { kind: "tools", label: copy.tools, askMode: false });
@@ -226,6 +260,7 @@
       panel.hidden = !open;
     };
   }
+
   function wirePrimaryAsAdvisor(shell, flags) {
     const { primary, toolsBtn, panel, closePanel, copy } = shell;
     setIconButton(primary, { kind: "ask", label: copy.ask, askMode: true });
@@ -239,7 +274,6 @@
       if (primary.dataset.advisorOpening === "1") return;
       primary.dataset.advisorOpening = "1";
       primary.setAttribute("aria-busy", "true");
-      // Keep the control clickable-looking; hard disable made the dock feel stuck.
       primary.classList.add("is-loading");
       try {
         await openAdvisorSafe(primary, flags, "float-ask");
@@ -252,26 +286,35 @@
       }
     };
   }
-  async function openAdvisorExpanded(shell, flags) {
-    try {
-      await openAdvisorSafe(shell.primary, flags, "auto-open");
-    } catch (_) {
-      /* Keep dock available if auto-open fails. */
-    }
+
+  function scheduleAutoOpen(shell, flags) {
+    // Never block the dock on auto-open. Warm first, then open when ready.
+    ensureAdvisor()
+      .then((widget) => {
+        widget.open({ trigger: shell.primary, flags, source: "auto-open" });
+      })
+      .catch(() => {
+        /* Dock stays usable; click path can retry. */
+      });
   }
+
   async function mount() {
     const shell = mountShell();
     if (!shell) return;
+
+    // Start warming immediately so Ask is ready by the time the visitor clicks.
+    warmAdvisor();
+
     const flags = await loadAdvisorFlags();
     if (flags.public_beta) {
       wirePrimaryAsAdvisor(shell, flags);
-      /* Enter page with Ask already expanded for direct inquiry. */
-      await openAdvisorExpanded(shell, flags);
+      bindSoftEntries(flags);
+      scheduleAutoOpen(shell, flags);
     } else {
       wirePrimaryAsTools(shell);
     }
-    bindSoftEntries(flags);
   }
+
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { mount(); });
   else mount();
 })();
