@@ -30,6 +30,25 @@
   background: color-mix(in srgb, var(--wash) 76%, var(--paper));
 }
 
+.advisor-widget__identity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-sm);
+  align-items: start;
+  min-width: 0;
+}
+
+.advisor-widget__mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.advisor-widget__copy { min-width: 0; }
+
 .advisor-widget__beta {
   display: inline-block;
   margin-bottom: 4px;
@@ -111,8 +130,8 @@
 
 .advisor-welcome {
   display: grid;
-  gap: var(--space-sm);
-  padding-bottom: var(--space-md);
+  gap: var(--space-md);
+  padding: var(--space-sm) 0 var(--space-lg);
 }
 
 .advisor-welcome__label {

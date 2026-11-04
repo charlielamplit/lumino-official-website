@@ -469,10 +469,16 @@
     panel.setAttribute("aria-modal", "false");
     panel.setAttribute("aria-labelledby", "advisor-title");
     panel.innerHTML = `<header class="advisor-widget__head">
-      <div>
-        ${runtimeFlags.public_beta === false ? "" : `<span class="advisor-widget__beta">${label("公开试用", "Public beta")}</span>`}
-        <strong id="advisor-title">${label("Lumino 服务顾问", "Lumino Service Guide")}</strong>
-        <p>${label("初步判断，帮助你快速定向；不替代正式合规结论，也不在此收集联系方式或客户文件。", "Preliminary guidance to get oriented — not a formal compliance conclusion, and no contact details or client files are collected here.")}</p>
+      <div class="advisor-widget__identity">
+        <picture>
+          <source type="image/webp" srcset="/apps/site/site/assets/brand/mark-128.webp">
+          <img class="advisor-widget__mark" src="/apps/site/site/assets/brand/mark-128.png" width="40" height="40" alt="" decoding="async">
+        </picture>
+        <div class="advisor-widget__copy">
+          ${runtimeFlags.public_beta === false ? "" : `<span class="advisor-widget__beta">${label("公开试用", "Public beta")}</span>`}
+          <strong id="advisor-title">${label("Lumino 服务顾问", "Lumino Service Guide")}</strong>
+          <p>${label("初步判断，帮助你快速定向；不替代正式合规结论，也不在此收集联系方式或客户文件。", "Preliminary guidance to get oriented — not a formal compliance conclusion, and no contact details or client files are collected here.")}</p>
+        </div>
       </div>
       <div class="advisor-widget__head-actions">
         <button class="advisor-widget__reset" type="button">${label("重新开始", "Start over")}</button>

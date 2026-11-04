@@ -43,6 +43,9 @@ test("advisor widget preserves keyboard, privacy and current-tab recovery contro
   assert.match(source, /event\.key === "Escape"/);
   assert.match(source, /focus\(\{ preventScroll: true \}\)/);
   assert.match(source, /advisor-widget__reset/);
+  assert.match(source, /advisor-widget__identity/);
+  assert.match(source, /advisor-widget__mark/);
+  assert.match(source, /assets\/brand\/mark-128/);
   assert.match(source, /已恢复当前标签页中的对话/);
   assert.match(source, /stream=1/);
   assert.match(source, /data-advisor-stop/);
@@ -57,6 +60,8 @@ test("advisor presentation reuses site tokens and has mobile and reduced-motion 
   assert.match(source, /var\(--green\)/);
   assert.match(source, /var\(--paper\)/);
   assert.match(source, /var\(--radius-card\)/);
+  assert.match(source, /\.advisor-widget__mark/);
+  assert.match(source, /\.advisor-widget__identity/);
   assert.match(source, /@media \(max-width: 640px\)/);
   assert.match(source, /width: 100%/);
   assert.match(source, /@media \(prefers-reduced-motion: reduce\)/);
