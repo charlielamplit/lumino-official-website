@@ -117,11 +117,12 @@
   <section class="m-page-hero">
     <div class="wrap">
       <p class="crumb"><a href="${home}">${L === "en" ? "Home" : "首页"}</a> / <a href="${home}#services">${L === "en" ? "Services" : "我们的服务"}</a> / ${esc(t(svc.name))}</p>
+      <span class="m-page-hero__kicker">${esc(svc.code || String(svc.id || "").toUpperCase())}</span>
       <h1>${esc(t(svc.name))}</h1>
       <p>${esc(t(svc.desc))}</p>
     </div>
   </section>
-  <section class="m-section">
+  <section class="m-section m-section--wash svc-section">
     <div class="wrap svc-layout">
       <nav class="svc-nav" aria-label="${L === "en" ? "Services" : "服务列表"}">${nav}</nav>
       <article class="svc-detail">

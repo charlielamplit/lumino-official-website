@@ -169,15 +169,18 @@
     }
     const selector = [
       ".m-section__head", ".m-service-tile", ".m-ind-cell", ".m-card",
-      ".m-dual > *", ".m-platform > *", ".ind-hero-block", ".ind-bg",
+      ".m-dual > *", ".m-platform > *", ".m-standards", ".m-closing",
+      ".m-page-hero .wrap > *",
+      ".ind-hero-block", ".ind-bg",
       ".ind-helps-wrap", ".ind-helps", ".ind-chain-wrap", ".ind-chain",
       ".ind-layout", ".ind-help", ".ind-pkg",
       ".ind-band", ".ind-help-card", ".ind-pkg-card", ".ind-intro__copy", ".ind-intro__media",
       ".ind-steps", ".ind-req-block", ".ind-prep",
-      ".pf-map", ".pf-shots", ".pf-diagram",
-      ".about-team", ".about-mission", ".about-principles",
+      ".pf-map", ".pf-shots", ".pf-diagram", ".pf-stack > *",
+      ".about-team", ".about-mission", ".about-principles", ".about-partners",
       ".tools-layout", ".contact-layout", ".svc-layout", ".svc-detail > *",
-      ".ins-grid", ".ins-card", ".case-stack > *", ".case-row"
+      ".ins-grid", ".ins-card", ".case-stack > *", ".case-row",
+      ".tool-feature", ".m-row-list"
     ].join(", ");
     const targets = [...scope.querySelectorAll(selector)].filter((el) => !el.closest(".m-hero"));
     /* Dynamic subtrees (e.g. industries detail) must not stay opacity:0 if IO misses. */

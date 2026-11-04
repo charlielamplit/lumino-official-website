@@ -25,15 +25,32 @@
       })
       .join(" · ");
 
+    const home = "/apps/site/Lumino%20官网.dc.html";
+    const industries = "/apps/site/industries/";
+    const imgById = {
+      steel: "/apps/site/site/assets/industries/steel.png",
+      aluminium: "/apps/site/site/assets/industries/aluminium.png",
+      textile: "/apps/site/site/assets/industries/textile.png",
+      packaging: "/apps/site/site/assets/industries/packaging.png",
+      chem: "/apps/site/site/assets/industries/chemicals.png",
+      elec: "/apps/site/site/assets/industries/electronics.png",
+    };
+    const img = imgById[item.id] || imgById.steel;
     root.innerHTML = `
       <section class="m-page-hero">
         <div class="wrap">
-          <p class="mono" style="color:var(--muted);font-size:var(--type-meta)">${item.en}</p>
+          <p class="crumb"><a href="${home}">${L === "en" ? "Home" : "首页"}</a> / <a href="${industries}">${L === "en" ? "Industries" : "解决方案"}</a> / ${L === "en" ? item.en : item.zh}</p>
+          <span class="m-page-hero__kicker">${item.en}</span>
           <h1>${L === "en" ? item.en : item.zh}</h1>
           <p>${item.challenge[L]}</p>
         </div>
       </section>
-      <section class="m-section">
+      <section class="m-section m-section--wash">
+        <div class="wrap industry-page__media-wrap">
+          <figure class="industry-page__media">
+            <img src="${img}" alt="${L === "en" ? item.en : item.zh}" width="1200" height="800" loading="lazy" decoding="async">
+          </figure>
+        </div>
         <div class="wrap m-blocks">
           <article class="m-block">
             <h2>${L === "en" ? "Industry challenges" : "行业挑战"}</h2>
