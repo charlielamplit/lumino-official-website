@@ -86,9 +86,7 @@
   function initialMarkup() {
     const topics = root.LuminoAdvisor.getTopics(lang());
     return `<section class="advisor-welcome">
-      <span class="advisor-welcome__label">${label("服务引导", "Service guide")}</span>
-      <h2>${label("你在解决什么问题？", "What are you solving?")}</h2>
-      <p>${label("选话题，或直接提问。", "Pick a topic, or type a question.")}</p>
+      <p class="advisor-welcome__one">${label("用一句话提问，或点选话题", "Ask in one sentence, or pick a topic")}</p>
     </section>
     <div class="advisor-topics" aria-label="${label("预选话题", "Suggested topics")}">
       ${topics.map((topic) => `<button class="advisor-topic" type="button" data-topic-id="${escapeHtml(topic.id)}">${escapeHtml(topic.label)}</button>`).join("")}
@@ -482,7 +480,7 @@
     </header>
     <div class="advisor-widget__body"><div class="advisor-thread">${restoredMarkup()}</div></div>
     <form class="advisor-widget__composer">
-      <textarea name="question" rows="1" maxlength="2000" placeholder="${label("输入你的问题……", "Type your question…")}" aria-label="${label("输入你的问题", "Type your question")}"></textarea>
+      <textarea name="question" rows="1" maxlength="2000" placeholder="${label("用一句话描述你的问题……", "Describe your question in one sentence…")}" aria-label="${label("用一句话描述你的问题", "Describe your question in one sentence")}"></textarea>
       <button class="advisor-widget__stop" type="button" hidden>${label("停止", "Stop")}</button>
       <button class="advisor-widget__send" type="submit">${label("发送", "Send")}</button>
     </form>

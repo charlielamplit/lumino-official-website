@@ -114,27 +114,16 @@
 
 .advisor-welcome {
   display: grid;
-  gap: var(--space-sm);
-  padding: 0 0 var(--space-md);
+  gap: 0;
+  padding: 0 0 8px;
 }
 
-.advisor-welcome__label {
-  color: var(--green);
-  font-family: var(--font-mono);
-  font-size: var(--type-meta);
-  line-height: var(--type-meta-lh);
-}
-
-.advisor-welcome h2 {
-  max-width: 17ch;
-  font-size: var(--type-card);
-  line-height: var(--type-card-lh);
-}
-
-.advisor-welcome p {
+.advisor-welcome__one {
+  margin: 0;
   color: var(--ink-secondary);
   font-size: var(--type-ui);
   line-height: var(--type-ui-lh);
+  font-weight: 600;
 }
 
 .advisor-topics {
@@ -145,12 +134,12 @@
 .advisor-topic {
   position: relative;
   width: 100%;
-  min-height: 48px;
+  min-height: 40px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-sm);
-  padding: 11px 0;
+  padding: 8px 0;
   border: 0;
   border-bottom: 1px solid var(--line);
   text-align: left;
@@ -354,7 +343,7 @@
   .advisor-widget__head-actions { gap: 12px; }
   .advisor-widget__body { padding: var(--space-md); }
   .advisor-topics { gap: 0; }
-  .advisor-topic { min-height: 48px; padding: 14px 0; }
+  .advisor-topic { min-height: 44px; padding: 10px 0; }
   .advisor-replies,
   .advisor-links,
   .advisor-answer__actions { gap: 12px; }
