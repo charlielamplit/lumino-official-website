@@ -86,9 +86,9 @@
   function initialMarkup() {
     const topics = root.LuminoAdvisor.getTopics(lang());
     return `<section class="advisor-welcome">
-      <span class="advisor-welcome__label">${label("公开试用 · 服务引导", "Public beta · service guide")}</span>
+      <span class="advisor-welcome__label">${label("服务引导", "Service guide")}</span>
       <h2>${label("先说明你正在解决的问题。", "Start with the problem you need to solve.")}</h2>
-      <p>${label("可以直接选择话题，也可以输入问题。我们会先给出可执行的说明，并在合适时推荐试算器、知识文章或联系入口。当前版本不收集联系方式或生产资料。", "Choose a topic or type a question. We start with practical guidance and, when useful, suggest a calculator, knowledge article or contact path. This version does not collect contact details or production data.")}</p>
+      <p>${label("可以选择话题，或直接输入问题。我们会给出可执行的说明，并在合适时推荐工具或联系入口。", "Choose a topic or type a question. We give practical guidance and, when useful, suggest a tool or contact path.")}</p>
     </section>
     <div class="advisor-topics" aria-label="${label("预选话题", "Suggested topics")}">
       ${topics.map((topic) => `<button class="advisor-topic" type="button" data-topic-id="${escapeHtml(topic.id)}">${escapeHtml(topic.label)}</button>`).join("")}
@@ -469,19 +469,14 @@
     panel.setAttribute("aria-modal", "false");
     panel.setAttribute("aria-labelledby", "advisor-title");
     panel.innerHTML = `<header class="advisor-widget__head">
-      <div class="advisor-widget__identity">
-        <picture>
-          <source type="image/webp" srcset="/apps/site/site/assets/brand/mark-128.webp">
-          <img class="advisor-widget__mark" src="/apps/site/site/assets/brand/mark-128.png" width="40" height="40" alt="" decoding="async">
-        </picture>
-        <div class="advisor-widget__copy">
-          ${runtimeFlags.public_beta === false ? "" : `<span class="advisor-widget__beta">${label("公开试用", "Public beta")}</span>`}
-          <strong id="advisor-title">${label("Lumino 服务顾问", "Lumino Service Guide")}</strong>
-          <p>${label("初步判断，帮助你快速定向；不替代正式合规结论，也不在此收集联系方式或客户文件。", "Preliminary guidance to get oriented — not a formal compliance conclusion, and no contact details or client files are collected here.")}</p>
-        </div>
+      <div class="advisor-widget__copy">
+        <strong id="advisor-title">${label("Lumino 服务顾问", "Lumino Service Guide")}</strong>
+        <p>${label("初步判断，帮助你快速定向", "Preliminary guidance to get oriented")}</p>
       </div>
       <div class="advisor-widget__head-actions">
-        <button class="advisor-widget__reset" type="button">${label("重新开始", "Start over")}</button>
+        <button class="advisor-widget__reset" type="button" aria-label="${label("重新开始", "Start over")}" title="${label("重新开始", "Start over")}">
+          <svg class="advisor-widget__reset-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 6V3L8 7l4 4V8a4 4 0 1 1-4 4H6a6 6 0 1 0 6-6z"/></svg>
+        </button>
         <button class="advisor-widget__close" type="button" aria-label="${label("关闭服务顾问", "Close service guide")}">×</button>
       </div>
     </header>

@@ -54,7 +54,7 @@
   function ensureAdvisor() {
     if (window.LuminoAdvisorWidget) return Promise.resolve(window.LuminoAdvisorWidget);
     if (!advisorPromise) {
-      const v = "20261104-fab7";
+      const v = "20261104-fab8";
       loadStyle(`/apps/site/site/advisor-widget.css?v=${v}`);
       advisorPromise = loadScript(`/packages/advisor/catalog.js?v=${v}`)
         .then(() => loadScript(`/packages/advisor/schema.js?v=${v}`))
