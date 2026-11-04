@@ -74,5 +74,6 @@ test("eudr/csddd and cbam fixed answers stay preliminary and actionable", () => 
 test("vercel advisor function includes knowledge corpus for retrieval", () => {
   const config = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
   const include = config.functions?.["api/advisor.js"]?.includeFiles || "";
+  assert.match(include, /advisor-umd/);
   assert.match(include, /apps\/site\/knowledge/);
 });

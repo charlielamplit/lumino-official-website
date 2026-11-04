@@ -4,7 +4,7 @@
   "trailingSlash": false,
   "functions": {
     "api/advisor.js": {
-      "includeFiles": "apps/site/knowledge/**"
+      "includeFiles": "{api/_lib/advisor-umd/**,apps/site/knowledge/**}"
     },
     "api/advisor-metrics.js": {
       "includeFiles": "api/_lib/advisor-umd/**"
