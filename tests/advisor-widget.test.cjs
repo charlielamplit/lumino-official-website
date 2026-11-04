@@ -27,9 +27,12 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /root\.hidden\s*=\s*true/);
   assert.match(source, /shell\.root\.hidden\s*=\s*false/);
   assert.match(source, /preloadScript|rel:\s*"preload"|rel = "preload"/);
-  assert.match(source, /ADVISOR_ASSET_V|20261104-fab14/);
+  assert.match(source, /ADVISOR_ASSET_V|20261104-fab15/);
+  assert.match(source, /link\[rel="stylesheet"\]\[href=/);
+  assert.match(source, /style_load_timeout/);
+  assert.match(source, /openAdvisorSafe\(shell\.primary, flags, "auto-open"\)/);
   assert.doesNotMatch(source, /primary\.disabled\s*=\s*true/);
-  assert.doesNotMatch(source, /warmAdvisor|scheduleAutoOpen|source:\s*"auto-open"/);
+  assert.doesNotMatch(source, /warmAdvisor|scheduleAutoOpen/);
   assert.doesNotMatch(source, /window\.location\.href\s*=\s*"\/apps\/site\/Lumino%20联系/);
   assert.doesNotMatch(source, /tool-float__glyph/);
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
@@ -37,9 +40,9 @@ test("public tool menu loads the deterministic advisor without embedding model s
 
 test("homepage preloads advisor assets for instant Ask open", () => {
   const html = read("apps/site/Lumino 官网.dc.html");
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.css\?v=20261104-fab14/);
-  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261104-fab14/);
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261104-fab14/);
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.css\?v=20261104-fab15/);
+  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261104-fab15/);
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261104-fab15/);
 });
 
 test("float dock stays viewport-fixed and clusters ask/tools/top", () => {
@@ -73,8 +76,10 @@ test("advisor widget preserves keyboard, privacy and current-tab recovery contro
   assert.match(source, /data-advisor-retry/);
   assert.match(source, /服务暂时不可用|没有足够依据|基础问答/);
   assert.match(source, /is-busy|setBusy/);
-  assert.match(source, /THINK_MIN_FIXED_MS/);
-  assert.match(source, /minDeliberationMs|startThinking/);
+  assert.match(source, /startThinking/);
+  assert.match(source, /client_deterministic/);
+  assert.match(source, /data-advisor-show-more|data-advisor-more-topics/);
+  assert.doesNotMatch(source, /THINK_MIN_FIXED_MS|remainingThink|CHUNK_MS/);
   assert.match(source, /对照已发布说明|Checking published guidance/);
   assert.match(source, /Buffer stream text only|deliberation/);
 });

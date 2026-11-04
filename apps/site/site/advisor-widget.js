@@ -3,12 +3,6 @@
 
   const SESSION_KEY = "lumino.advisor.state.v1";
   const CLIENT_TIMEOUT_MS = 12000;
-  const CHUNK_MS = 28;
-  // Deterministic answers resolve in milliseconds; hold a short deliberation so
-  // the UI does not feel like a canned dump. Model paths already wait upstream.
-  const THINK_MIN_FIXED_MS = 1400;
-  const THINK_MIN_DEFAULT_MS = 700;
-  const THINK_MIN_REDUCED_MS = 320;
   const THINK_ROTATE_MS = 900;
   const i18n = root.LuminoI18n || { detectLang: () => "zh" };
   let panel = null;
@@ -62,13 +56,6 @@
       ];
   }
 
-  function minDeliberationMs(answerMode) {
-    if (prefersReducedMotion()) return THINK_MIN_REDUCED_MS;
-    if (answerMode === "fixed" || answerMode === "tool_route") return THINK_MIN_FIXED_MS;
-    if (answerMode === "retrieval_model") return THINK_MIN_REDUCED_MS;
-    return THINK_MIN_DEFAULT_MS;
-  }
-
   function clearThinkTimer() {
     if (thinkTimer) {
       clearInterval(thinkTimer);
@@ -95,24 +82,6 @@
       clearThinkTimer();
       textNode.dataset.thinking = "0";
     };
-  }
-
-  function waitMs(ms, signal) {
-    const duration = Math.max(0, Number(ms) || 0);
-    if (!duration) return Promise.resolve();
-    return new Promise((resolve) => {
-      const timer = setTimeout(() => resolve(), duration);
-      if (!signal) return;
-      const onAbort = () => {
-        clearTimeout(timer);
-        resolve();
-      };
-      if (signal.aborted) {
-        onAbort();
-        return;
-      }
-      signal.addEventListener("abort", onAbort, { once: true });
-    });
   }
 
   function safeUrl(value) {
@@ -159,12 +128,18 @@
 
   function initialMarkup() {
     const topics = root.LuminoAdvisor.getTopics(lang());
+    const primaryIds = new Set(["cbam_scope", "cbam_data_start", "pcf_data_start", "service_triage"]);
+    const primaryTopics = topics.filter((topic) => primaryIds.has(topic.id));
+    const moreTopics = topics.filter((topic) => !primaryIds.has(topic.id));
+    const topicButton = (topic) => `<button class="advisor-topic" type="button" data-topic-id="${escapeHtml(topic.id)}">${escapeHtml(topic.label)}</button>`;
     return `<section class="advisor-welcome">
       <p class="advisor-welcome__one">${label("用一句话提问，或点选话题", "Ask in one sentence, or pick a topic")}</p>
     </section>
     <div class="advisor-topics" aria-label="${label("预选话题", "Suggested topics")}">
-      ${topics.map((topic) => `<button class="advisor-topic" type="button" data-topic-id="${escapeHtml(topic.id)}">${escapeHtml(topic.label)}</button>`).join("")}
-    </div>`;
+      ${primaryTopics.map(topicButton).join("")}
+    </div>
+    ${moreTopics.length ? `<button class="advisor-topics__more" type="button" data-advisor-show-more aria-expanded="false">${label("更多问题", "More topics")}</button>
+      <div class="advisor-topics advisor-topics--more" data-advisor-more-topics hidden>${moreTopics.map(topicButton).join("")}</div>` : ""}`;
   }
 
   function extrasMarkup(response) {
@@ -314,34 +289,30 @@
   function printAnswer(article, fullText, onDone) {
     const textNode = article.querySelector(".advisor-answer__text");
     const actions = article.querySelector(".advisor-answer__actions");
-    if (prefersReducedMotion()) {
-      textNode.textContent = fullText;
-      article.dataset.printing = "0";
-      actions.innerHTML = "";
-      onDone(true);
-      return;
-    }
-    let index = 0;
-    const step = () => {
-      index = Math.min(fullText.length, index + 12);
-      textNode.textContent = fullText.slice(0, index);
-      scrollToLatest();
-      if (index >= fullText.length) {
-        article.dataset.printing = "0";
-        actions.innerHTML = "";
-        onDone(true);
-        return;
-      }
-      printTimer = setTimeout(step, CHUNK_MS);
-    };
-    actions.innerHTML = `<button type="button" class="advisor-stop" data-advisor-stop>${label("停止", "Stop")}</button>
-      <button type="button" class="advisor-expand" data-advisor-expand>${label("显示全文", "Show full answer")}</button>`;
+    textNode.textContent = fullText;
+    article.dataset.printing = "0";
+    actions.innerHTML = "";
     article.dataset.fullText = fullText;
-    step();
+    onDone(true);
   }
 
   async function resolveResponse(request, article) {
     const payload = { ...request, lang: lang() };
+    // Published fixed/tool answers are already in the browser bundle. Do not
+    // spend a network round-trip or model budget on deterministic choices.
+    if (payload.topicId && root.LuminoAdvisor?.route) {
+      const local = root.LuminoAdvisor.route(payload);
+      if (local?.answer && (local.answer_mode === "fixed" || local.answer_mode === "tool_route")) {
+        local.runtime = {
+          ...(local.runtime || {}),
+          source: "client_deterministic",
+          model_configured: runtimeFlags.model_enabled !== false,
+          ui_state: local.ui_state || "ok",
+          degradation_reason: null,
+        };
+        return local;
+      }
+    }
     const controller = new AbortController();
     activeAbort = controller;
     const timeout = setTimeout(() => controller.abort("timeout"), CLIENT_TIMEOUT_MS);
@@ -448,11 +419,6 @@
 
     try {
       const response = await resolveResponse(request, article);
-      const elapsed = performance.now() - started;
-      const remainingThink = minDeliberationMs(response.answer_mode) - elapsed;
-      if (remainingThink > 0 && !activeAbort?.signal?.aborted) {
-        await waitMs(remainingThink, activeAbort?.signal);
-      }
       stopThinking();
 
       const fullText = response.answer || "";
@@ -582,6 +548,15 @@
     panel.querySelector(".advisor-widget__reset").addEventListener("click", reset);
     panel.querySelector(".advisor-widget__stop").addEventListener("click", () => stopActive("user_stop"));
     panel.querySelector(".advisor-thread").addEventListener("click", (event) => {
+      const showMore = event.target.closest("[data-advisor-show-more]");
+      if (showMore) {
+        const moreTopics = panel.querySelector("[data-advisor-more-topics]");
+        const expanded = showMore.getAttribute("aria-expanded") === "true";
+        showMore.setAttribute("aria-expanded", String(!expanded));
+        showMore.textContent = expanded ? label("更多问题", "More topics") : label("收起问题", "Fewer topics");
+        moreTopics.hidden = expanded;
+        return;
+      }
       const stopBtn = event.target.closest("[data-advisor-stop]");
       if (stopBtn) {
         const article = stopBtn.closest(".advisor-turn--assistant");

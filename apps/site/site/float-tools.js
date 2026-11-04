@@ -3,7 +3,7 @@
   const i18n = window.LuminoI18n || { detectLang: () => "zh" };
   const TOP_SHOW_Y = 480;
   // Preload hints reduce download time; the runtime itself starts only after user intent.
-  const ADVISOR_ASSET_V = "20261104-fab14";
+  const ADVISOR_ASSET_V = "20261104-fab15";
   const ADVISOR_OPEN_TIMEOUT_MS = 12000;
   const ADVISOR_SCRIPT_TIMEOUT_MS = 6000;
   const pendingScriptCancels = new Set();
@@ -27,11 +27,33 @@
   });
 
   function loadStyle(href) {
-    if (document.querySelector(`link[href="${href}"]`)) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
+    return new Promise((resolve, reject) => {
+      // A preload link is not an applied stylesheet. Only reuse rel=stylesheet.
+      const existing = document.querySelector(`link[rel="stylesheet"][href="${href}"]`);
+      if (existing?.dataset.loaded === "true" || existing?.sheet) return resolve();
+      const link = existing || document.createElement("link");
+      let settled = false;
+      const finish = (error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (error) {
+          link.remove();
+          reject(error);
+          return;
+        }
+        link.dataset.loaded = "true";
+        resolve();
+      };
+      const timer = setTimeout(() => finish(new Error(`style_load_timeout:${href}`)), ADVISOR_SCRIPT_TIMEOUT_MS);
+      link.addEventListener("load", () => finish(), { once: true });
+      link.addEventListener("error", () => finish(new Error(`style_load_failed:${href}`)), { once: true });
+      if (!existing) {
+        link.rel = "stylesheet";
+        link.href = href;
+        document.head.appendChild(link);
+      }
+    });
   }
 
   function preloadScript(href) {
@@ -113,14 +135,16 @@
     document.querySelectorAll('script[data-advisor-loading="1"]').forEach((script) => script.remove());
   }
   function ensureAdvisor() {
-    if (window.LuminoAdvisorWidget) return Promise.resolve(window.LuminoAdvisorWidget);
+    if (window.LuminoAdvisorWidget) {
+      return loadStyle(ADVISOR_ASSETS.css).then(() => window.LuminoAdvisorWidget);
+    }
     if (!advisorPromise) {
-      loadStyle(ADVISOR_ASSETS.css);
       preloadScript(ADVISOR_ASSETS.catalog);
       preloadScript(ADVISOR_ASSETS.schema);
       preloadScript(ADVISOR_ASSETS.router);
       preloadScript(ADVISOR_ASSETS.widget);
       const loadAttempt = Promise.all([
+        loadStyle(ADVISOR_ASSETS.css),
         loadScript(ADVISOR_ASSETS.catalog),
         loadScript(ADVISOR_ASSETS.schema),
       ])
@@ -378,6 +402,8 @@
     if (flags.public_beta) {
       wirePrimaryAsAdvisor(shell, flags);
       bindSoftEntries(flags);
+      // Product requirement: enter the homepage with Ask already expanded.
+      openAdvisorSafe(shell.primary, flags, "auto-open");
     } else {
       wirePrimaryAsTools(shell);
     }
