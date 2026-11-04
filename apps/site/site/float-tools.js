@@ -54,7 +54,7 @@
   function ensureAdvisor() {
     if (window.LuminoAdvisorWidget) return Promise.resolve(window.LuminoAdvisorWidget);
     if (!advisorPromise) {
-      const v = "20261104-fab6";
+      const v = "20261104-fab12";
       loadStyle(`/apps/site/site/advisor-widget.css?v=${v}`);
       advisorPromise = loadScript(`/packages/advisor/catalog.js?v=${v}`)
         .then(() => loadScript(`/packages/advisor/schema.js?v=${v}`))
@@ -211,12 +211,25 @@
       }
     };
   }
+  async function openAdvisorExpanded(shell, flags) {
+    try {
+      const widget = await ensureAdvisor();
+      widget.open({ trigger: shell.primary, flags, source: "auto-open" });
+    } catch (_) {
+      /* Keep dock available if auto-open fails. */
+    }
+  }
   async function mount() {
     const shell = mountShell();
     if (!shell) return;
     const flags = await loadAdvisorFlags();
-    if (flags.public_beta) wirePrimaryAsAdvisor(shell, flags);
-    else wirePrimaryAsTools(shell);
+    if (flags.public_beta) {
+      wirePrimaryAsAdvisor(shell, flags);
+      /* Enter page with Ask already expanded for direct inquiry. */
+      await openAdvisorExpanded(shell, flags);
+    } else {
+      wirePrimaryAsTools(shell);
+    }
     bindSoftEntries(flags);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { mount(); });

@@ -25,13 +25,15 @@ test("float tools gates Ask Lumino behind public beta config", () => {
 
 test("advisor widget exposes public-beta boundary and preliminary labels", () => {
   const source = read("apps/site/site/advisor-widget.js");
-  assert.match(source, /公开试用/);
-  assert.match(source, /初步判断/);
+  assert.match(source, /初步判断，帮助你快速定向/);
   assert.match(source, /retrieval_model/);
   assert.match(source, /\/api\/advisor-metrics/);
-  assert.match(source, /不会提交给 Lumino/);
+  assert.match(source, /需要更有针对性的服务/);
+  assert.match(source, /联系我们/);
+  assert.match(source, /advisor-foot/);
   assert.match(source, /TimeoutError|AbortError/);
   assert.match(source, /data-advisor-cta/);
+  assert.doesNotMatch(source, /公开试用/);
 });
 
 test("homepage soft Ask Lumino entry starts hidden until beta confirmed", () => {
