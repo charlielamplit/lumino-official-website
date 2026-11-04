@@ -24,6 +24,8 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /resetAdvisorLoader/);
   assert.match(source, /showAdvisorBootstrap|showAdvisorLoadError/);
   assert.match(source, /data-advisor-load-retry/);
+  assert.match(source, /root\.hidden\s*=\s*true/);
+  assert.match(source, /shell\.root\.hidden\s*=\s*false/);
   assert.match(source, /preloadScript|rel:\s*"preload"|rel = "preload"/);
   assert.match(source, /ADVISOR_ASSET_V|20261104-fab14/);
   assert.doesNotMatch(source, /primary\.disabled\s*=\s*true/);

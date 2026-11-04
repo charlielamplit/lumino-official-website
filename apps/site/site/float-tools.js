@@ -276,6 +276,8 @@
     const root = document.createElement("div");
     root.className = "tool-float";
     root.setAttribute("data-float-dock", "1");
+    // Do not expose an inert Ask control while public flags are still loading.
+    root.hidden = true;
     root.innerHTML = `
       <div class="tool-float__panel" id="tool-float-panel" hidden role="menu" aria-label="${copy.toolsTitle}">
         ${tools.map((t) => `<a href="${t.href}" role="menuitem"><strong>${L === "en" ? t.en : t.zh}</strong></a>`).join("")}
@@ -379,6 +381,7 @@
     } else {
       wirePrimaryAsTools(shell);
     }
+    shell.root.hidden = false;
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { mount(); });
