@@ -2320,7 +2320,7 @@ lumino-header.is-scrolled .site-header,
 }
 .m-service-tile:hover {
   border-color: color-mix(in srgb, var(--green) 55%, var(--line));
-  transform: translateY(-4px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-lift);
   background: #fff;
 }
@@ -2353,7 +2353,7 @@ lumino-header.is-scrolled .site-header,
   box-shadow: var(--shadow-soft);
 }
 .m-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--green) 40%, var(--line));
   box-shadow: var(--shadow-lift);
 }
@@ -2471,20 +2471,22 @@ lumino-header.is-scrolled .site-header,
     var(--wash);
 }
 
-/* Scroll reveal */
+/* Scroll reveal — editorial, short travel */
 .m-reveal {
   opacity: 0;
-  transform: translateY(18px);
-  transition: opacity .7s var(--ease-out), transform .7s var(--ease-out);
+  transform: translateY(10px);
+  transition: opacity .55s var(--ease-out), transform .55s var(--ease-out);
   transition-delay: var(--d, 0ms);
+  will-change: opacity, transform;
 }
 .m-reveal.is-in {
   opacity: 1;
   transform: none;
+  will-change: auto;
 }
 
 @keyframes m-rise {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
 
@@ -2494,7 +2496,14 @@ lumino-header.is-scrolled .site-header,
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
-  .m-reveal { opacity: 1; transform: none; }
+  .m-reveal,
+  .m-reveal.is-in,
+  .m-hero__copy > *,
+  .m-panel {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
   body::before { display: none; }
 }
 
