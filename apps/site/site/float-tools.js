@@ -47,7 +47,7 @@
   function ensureAdvisor() {
     if (window.LuminoAdvisorWidget) return Promise.resolve(window.LuminoAdvisorWidget);
     if (!advisorPromise) {
-      const v = "20261103-ux1";
+      const v = "20261104-fab1";
       loadStyle(`/apps/site/site/advisor-widget.css?v=${v}`);
       advisorPromise = loadScript(`/packages/advisor/catalog.js?v=${v}`)
         .then(() => loadScript(`/packages/advisor/schema.js?v=${v}`))
@@ -93,62 +93,99 @@
       });
     });
   }
-  function insertAdvisorMenuItem(panel, flags, lang) {
-    if (!flags.public_beta || panel.querySelector("[data-open-advisor]")) return;
-    const advisorLabel = lang === "en" ? "Ask Lumino" : "问 Lumino";
-    const advisorHint = lang === "en" ? "Public beta · find the next step" : "公开试用 · 找到合适下一步";
-    const button = document.createElement("button");
-    button.type = "button";
-    button.setAttribute("role", "menuitem");
-    button.setAttribute("data-open-advisor", "");
-    button.innerHTML = `<strong>${advisorLabel}</strong><small>${advisorHint}</small>`;
-    panel.insertBefore(button, panel.firstChild);
-    button.addEventListener("click", async (event) => {
-      const target = event.currentTarget;
-      target.disabled = true;
-      try {
-        const widget = await ensureAdvisor();
-        const btn = document.querySelector(".tool-float__btn");
-        widget.open({ trigger: btn, flags });
-        target.disabled = false;
-      } catch (_) {
-        target.disabled = false;
-        window.location.href = "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor-load-error";
-      }
-    });
+  function labels(lang) {
+    return lang === "en"
+      ? {
+          ask: "Ask Lumino",
+          tools: "Tools",
+          toolsTitle: "Choose a tool",
+          toolsHint: "Calculators and estimates",
+        }
+      : {
+          ask: "问 Lumino",
+          tools: "工具",
+          toolsTitle: "选择工具",
+          toolsHint: "计算器与初步估算",
+        };
   }
   function mountShell() {
     if (document.querySelector(".tool-float")) return null;
     // Soft homepage CTAs stay hidden until config confirms beta is on.
     hideSoftEntries();
     const L = i18n.detectLang();
-    const label = L === "en" ? "Tools" : "工具";
-    const title = L === "en" ? "Choose a tool" : "选择工具";
+    const copy = labels(L);
     const root = document.createElement("div");
     root.className = "tool-float";
     root.innerHTML = `
-      <div class="tool-float__panel" id="tool-float-panel" hidden role="menu" aria-label="${title}">
+      <div class="tool-float__panel" id="tool-float-panel" hidden role="menu" aria-label="${copy.toolsTitle}">
         ${tools.map((t) => `<a href="${t.href}" role="menuitem"><strong>${L === "en" ? t.en : t.zh}</strong></a>`).join("")}
       </div>
-      <button type="button" class="tool-float__btn" aria-expanded="false" aria-controls="tool-float-panel">${label}</button>`;
+      <div class="tool-float__bar">
+        <button type="button" class="tool-float__btn tool-float__btn--primary" data-float-primary>${copy.tools}</button>
+        <button type="button" class="tool-float__btn tool-float__btn--tools" data-float-tools hidden aria-expanded="false" aria-controls="tool-float-panel" title="${copy.toolsHint}">${copy.tools}</button>
+      </div>`;
     document.body.appendChild(root);
-    const btn = root.querySelector(".tool-float__btn");
+    const primary = root.querySelector("[data-float-primary]");
+    const toolsBtn = root.querySelector("[data-float-tools]");
     const panel = root.querySelector(".tool-float__panel");
-    const close = () => { btn.setAttribute("aria-expanded", "false"); panel.hidden = true; };
-    btn.addEventListener("click", () => {
-      const open = btn.getAttribute("aria-expanded") !== "true";
-      btn.setAttribute("aria-expanded", String(open));
+    const closePanel = () => {
+      toolsBtn.setAttribute("aria-expanded", "false");
+      panel.hidden = true;
+    };
+    const togglePanel = () => {
+      const open = toolsBtn.getAttribute("aria-expanded") !== "true";
+      toolsBtn.setAttribute("aria-expanded", String(open));
       panel.hidden = !open;
+    };
+    toolsBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      togglePanel();
     });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") close(); });
-    document.addEventListener("click", (e) => { if (!root.contains(e.target)) close(); });
-    return { root, panel, L };
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanel(); });
+    document.addEventListener("click", (e) => { if (!root.contains(e.target)) closePanel(); });
+    return { root, panel, primary, toolsBtn, closePanel, L, copy };
+  }
+  function wirePrimaryAsTools(shell) {
+    const { primary, toolsBtn, panel, copy } = shell;
+    primary.textContent = copy.tools;
+    primary.removeAttribute("data-open-advisor");
+    primary.setAttribute("aria-expanded", "false");
+    primary.setAttribute("aria-controls", "tool-float-panel");
+    toolsBtn.hidden = true;
+    primary.onclick = () => {
+      const open = panel.hidden;
+      primary.setAttribute("aria-expanded", String(open));
+      panel.hidden = !open;
+    };
+  }
+  function wirePrimaryAsAdvisor(shell, flags) {
+    const { primary, toolsBtn, panel, closePanel, copy } = shell;
+    primary.textContent = copy.ask;
+    primary.setAttribute("data-open-advisor", "");
+    primary.removeAttribute("aria-controls");
+    primary.removeAttribute("aria-expanded");
+    toolsBtn.hidden = false;
+    toolsBtn.setAttribute("aria-expanded", "false");
+    panel.hidden = true;
+    primary.onclick = async () => {
+      closePanel();
+      primary.disabled = true;
+      try {
+        const widget = await ensureAdvisor();
+        widget.open({ trigger: primary, flags });
+      } catch (_) {
+        window.location.href = "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor-load-error";
+      } finally {
+        primary.disabled = false;
+      }
+    };
   }
   async function mount() {
     const shell = mountShell();
     if (!shell) return;
     const flags = await loadAdvisorFlags();
-    insertAdvisorMenuItem(shell.panel, flags, shell.L);
+    if (flags.public_beta) wirePrimaryAsAdvisor(shell, flags);
+    else wirePrimaryAsTools(shell);
     bindSoftEntries(flags);
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { mount(); });

@@ -14,7 +14,12 @@ test("float tools gates Ask Lumino behind public beta config", () => {
   assert.match(source, /AbortSignal\.timeout\(2500\)/);
   assert.match(source, /display = "none"/);
   assert.match(source, /data-open-advisor/);
+  assert.match(source, /wirePrimaryAsAdvisor/);
+  assert.match(source, /wirePrimaryAsTools/);
+  assert.match(source, /data-float-tools/);
+  assert.match(source, /问 Lumino|Ask Lumino/);
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
+  assert.doesNotMatch(source, /insertAdvisorMenuItem/);
 });
 
 test("advisor widget exposes public-beta boundary and preliminary labels", () => {
@@ -30,6 +35,7 @@ test("advisor widget exposes public-beta boundary and preliminary labels", () =>
 
 test("homepage soft Ask Lumino entry starts hidden until beta confirmed", () => {
   const source = read("apps/site/Lumino 官网.dc.html");
+  assert.match(source, /m-hero__actions[\s\S]*data-open-advisor[^>]*hidden/);
   assert.match(source, /data-open-advisor[^>]*hidden/);
   assert.match(source, /问 Lumino/);
 });

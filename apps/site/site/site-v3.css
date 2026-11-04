@@ -1036,12 +1036,21 @@ lumino-header {
   color: var(--muted);
 }
 
-/* Float */
+/* Float — primary Ask Lumino + secondary Tools (Plan B) */
 .tool-float {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
   z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.tool-float__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .tool-float__btn {
   height: 40px;
@@ -1052,12 +1061,33 @@ lumino-header {
   color: #fff;
   font-size: var(--type-ui);
   font-weight: 600;
+  font-family: var(--font-sans);
   box-shadow: 0 8px 24px rgba(23, 33, 28, .18);
+  cursor: pointer;
 }
+.tool-float__btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+.tool-float__btn--tools {
+  height: 36px;
+  padding: 0 12px;
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--line);
+  box-shadow: var(--shadow-float);
+  font-weight: 500;
+}
+.tool-float__btn--tools:hover,
+.tool-float__btn--tools[aria-expanded="true"] {
+  border-color: var(--line-strong);
+  background: #F8FAF9;
+}
+.tool-float__btn--tools[hidden] { display: none !important; }
 .tool-float__panel {
   position: absolute;
   right: 0;
-  bottom: 48px;
+  bottom: 52px;
   width: min(320px, calc(100vw - 40px));
   background: var(--paper);
   border: 1px solid var(--line);
