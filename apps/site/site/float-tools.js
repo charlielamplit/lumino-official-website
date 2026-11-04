@@ -2,9 +2,11 @@
   "use strict";
   const i18n = window.LuminoI18n || { detectLang: () => "zh" };
   const TOP_SHOW_Y = 480;
-  // Warm the advisor while the page paints so Ask opens without a click-time download.
+  // Preload hints reduce download time; the runtime itself starts only after user intent.
   const ADVISOR_ASSET_V = "20261104-fab14";
   const ADVISOR_OPEN_TIMEOUT_MS = 12000;
+  const ADVISOR_SCRIPT_TIMEOUT_MS = 6000;
+  const pendingScriptCancels = new Set();
   const tools = [
     { zh: "CBAM 成本计算器", en: "CBAM cost calculator", href: "/apps/site/calculator/" },
     { zh: "申请产品碳足迹初步估算", en: "Request a footprint estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=pcf&source=tool-float" },
@@ -49,11 +51,29 @@
       const script = document.createElement("script");
       script.src = src;
       script.async = true;
-      script.addEventListener("load", () => { script.dataset.loaded = "true"; resolve(); }, { once: true });
-      script.addEventListener("error", () => {
-        script.remove();
-        reject(new Error(`script_load_failed:${src}`));
-      }, { once: true });
+      script.dataset.advisorLoading = "1";
+      let settled = false;
+      const finish = (error) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        pendingScriptCancels.delete(cancel);
+        script.dataset.advisorLoading = "0";
+        if (error) {
+          script.remove();
+          reject(error);
+          return;
+        }
+        script.dataset.loaded = "true";
+        resolve();
+      };
+      const cancel = () => finish(new Error(`script_load_cancelled:${src}`));
+      pendingScriptCancels.add(cancel);
+      const timer = setTimeout(() => {
+        finish(new Error(`script_load_timeout:${src}`));
+      }, ADVISOR_SCRIPT_TIMEOUT_MS);
+      script.addEventListener("load", () => finish(), { once: true });
+      script.addEventListener("error", () => finish(new Error(`script_load_failed:${src}`)), { once: true });
       document.head.appendChild(script);
     });
   }
@@ -87,6 +107,11 @@
   }
 
   let advisorPromise = null;
+  function resetAdvisorLoader() {
+    advisorPromise = null;
+    [...pendingScriptCancels].forEach((cancel) => cancel());
+    document.querySelectorAll('script[data-advisor-loading="1"]').forEach((script) => script.remove());
+  }
   function ensureAdvisor() {
     if (window.LuminoAdvisorWidget) return Promise.resolve(window.LuminoAdvisorWidget);
     if (!advisorPromise) {
@@ -95,7 +120,7 @@
       preloadScript(ADVISOR_ASSETS.schema);
       preloadScript(ADVISOR_ASSETS.router);
       preloadScript(ADVISOR_ASSETS.widget);
-      advisorPromise = Promise.all([
+      const loadAttempt = Promise.all([
         loadScript(ADVISOR_ASSETS.catalog),
         loadScript(ADVISOR_ASSETS.schema),
       ])
@@ -104,24 +129,84 @@
         .then(() => {
           if (!window.LuminoAdvisorWidget) throw new Error("advisor_widget_missing");
           return window.LuminoAdvisorWidget;
-        })
+        });
+      advisorPromise = withTimeout(loadAttempt, ADVISOR_OPEN_TIMEOUT_MS, "advisor_load_timeout")
         .catch((error) => {
-          advisorPromise = null;
+          resetAdvisorLoader();
           throw error;
         });
     }
     return advisorPromise;
   }
 
-  function warmAdvisor() {
-    // Fire-and-forget warm so the first open does not pay the download cost.
-    ensureAdvisor().catch(() => {});
+  function bootstrapCopy() {
+    return i18n.detectLang() === "en"
+      ? {
+          title: "Lumino Service Guide",
+          loading: "Opening the advisor…",
+          failed: "The advisor took too long to load.",
+          hint: "Check your connection and try again, or contact us directly.",
+          retry: "Try again",
+          contact: "Contact us",
+          close: "Close",
+        }
+      : {
+          title: "Lumino 服务顾问",
+          loading: "正在打开顾问……",
+          failed: "顾问加载超时。",
+          hint: "请检查网络后重试，或直接联系我们。",
+          retry: "重试",
+          contact: "联系我们",
+          close: "关闭",
+        };
+  }
+
+  function showAdvisorBootstrap(trigger) {
+    document.querySelector(".advisor-bootstrap")?.remove();
+    const copy = bootstrapCopy();
+    const shell = document.createElement("section");
+    shell.className = "advisor-bootstrap";
+    shell.setAttribute("role", "dialog");
+    shell.setAttribute("aria-modal", "false");
+    shell.setAttribute("aria-labelledby", "advisor-bootstrap-title");
+    shell.innerHTML = `<header><strong id="advisor-bootstrap-title">${copy.title}</strong>
+      <button type="button" aria-label="${copy.close}" data-advisor-bootstrap-close>×</button></header>
+      <div class="advisor-bootstrap__body" aria-live="polite"><span class="advisor-bootstrap__spinner" aria-hidden="true"></span><p>${copy.loading}</p></div>`;
+    document.body.appendChild(shell);
+    shell.querySelector("[data-advisor-bootstrap-close]").addEventListener("click", () => {
+      shell.dataset.cancelled = "1";
+      resetAdvisorLoader();
+      shell.remove();
+      trigger?.focus?.({ preventScroll: true });
+    });
+    return shell;
+  }
+
+  function showAdvisorLoadError(shell, trigger) {
+    const copy = bootstrapCopy();
+    shell.classList.add("is-error");
+    shell.querySelector(".advisor-bootstrap__body").innerHTML = `<strong>${copy.failed}</strong><p>${copy.hint}</p>
+      <div class="advisor-bootstrap__actions"><button type="button" class="button button--sm" data-advisor-load-retry>${copy.retry}</button>
+      <a class="button button--outline button--sm" href="/apps/site/Lumino%20联系.dc.html?source=homepage-advisor-load-error">${copy.contact}</a></div>`;
+    shell.querySelector("[data-advisor-load-retry]").addEventListener("click", () => {
+      shell.remove();
+      trigger?.click?.();
+    });
+    shell.querySelector("[data-advisor-load-retry]").focus({ preventScroll: true });
   }
 
   async function openAdvisorSafe(trigger, flags, source) {
-    const widget = await withTimeout(ensureAdvisor(), ADVISOR_OPEN_TIMEOUT_MS, "advisor_load_timeout");
-    widget.open({ trigger, flags, source });
-    return widget;
+    const shell = showAdvisorBootstrap(trigger);
+    try {
+      const widget = await ensureAdvisor();
+      if (shell.dataset.cancelled === "1") return null;
+      shell.remove();
+      widget.open({ trigger, flags, source });
+      return widget;
+    } catch (_) {
+      if (shell.dataset.cancelled !== "1") showAdvisorLoadError(shell, trigger);
+      return null;
+    }
   }
 
   function hideSoftEntries() {
@@ -157,8 +242,6 @@
         node.setAttribute("aria-busy", "true");
         try {
           await openAdvisorSafe(node, flags, "soft-entry");
-        } catch (_) {
-          window.location.href = "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor-load-error";
         } finally {
           node.dataset.advisorOpening = "0";
           node.removeAttribute("aria-busy");
@@ -193,6 +276,8 @@
     const root = document.createElement("div");
     root.className = "tool-float";
     root.setAttribute("data-float-dock", "1");
+    // Do not expose an inert Ask control while public flags are still loading.
+    root.hidden = true;
     root.innerHTML = `
       <div class="tool-float__panel" id="tool-float-panel" hidden role="menu" aria-label="${copy.toolsTitle}">
         ${tools.map((t) => `<a href="${t.href}" role="menuitem"><strong>${L === "en" ? t.en : t.zh}</strong></a>`).join("")}
@@ -277,8 +362,6 @@
       primary.classList.add("is-loading");
       try {
         await openAdvisorSafe(primary, flags, "float-ask");
-      } catch (_) {
-        window.location.href = "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor-load-error";
       } finally {
         primary.dataset.advisorOpening = "0";
         primary.removeAttribute("aria-busy");
@@ -287,32 +370,18 @@
     };
   }
 
-  function scheduleAutoOpen(shell, flags) {
-    // Never block the dock on auto-open. Warm first, then open when ready.
-    ensureAdvisor()
-      .then((widget) => {
-        widget.open({ trigger: shell.primary, flags, source: "auto-open" });
-      })
-      .catch(() => {
-        /* Dock stays usable; click path can retry. */
-      });
-  }
-
   async function mount() {
     const shell = mountShell();
     if (!shell) return;
-
-    // Start warming immediately so Ask is ready by the time the visitor clicks.
-    warmAdvisor();
 
     const flags = await loadAdvisorFlags();
     if (flags.public_beta) {
       wirePrimaryAsAdvisor(shell, flags);
       bindSoftEntries(flags);
-      scheduleAutoOpen(shell, flags);
     } else {
       wirePrimaryAsTools(shell);
     }
+    shell.root.hidden = false;
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { mount(); });
