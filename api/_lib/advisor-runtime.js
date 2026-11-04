@@ -17,3 +17,4 @@ export function modelConfigured() {
   if (!modelEnabled()) return false;
   return Boolean(process.env.OPENAI_API_KEY || process.env.ADVISOR_OPENAI_API_KEY);
 }
+
