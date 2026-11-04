@@ -2,6 +2,14 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": false,
   "trailingSlash": false,
+  "functions": {
+    "api/advisor.js": {
+      "includeFiles": "{packages/advisor/**,apps/site/knowledge/**}"
+    },
+    "api/advisor-metrics.js": {
+      "includeFiles": "{packages/advisor/**}"
+    }
+  },
   "rewrites": [
     { "source": "/portal", "destination": "/apps/portal/index.html" },
     { "source": "/portal/", "destination": "/apps/portal/index.html" },
