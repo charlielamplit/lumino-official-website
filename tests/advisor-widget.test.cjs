@@ -19,13 +19,22 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /data-float-top/);
   assert.match(source, /scrollTo/);
   assert.match(source, /ask:\s*'<svg class="tool-float__icon"/);
-  assert.match(source, /openAdvisorExpanded|source:\s*"auto-open"/);
+  assert.match(source, /scheduleAutoOpen|source:\s*"auto-open"/);
   assert.match(source, /openAdvisorSafe|advisor_load_timeout/);
-  assert.match(source, /Promise\.all\(\[\s*loadScript\(`\/packages\/advisor\/catalog/);
-  assert.match(source, /20261104-fab13/);
+  assert.match(source, /warmAdvisor/);
+  assert.match(source, /preloadScript|rel:\s*"preload"|rel = "preload"/);
+  assert.match(source, /ADVISOR_ASSET_V|20261104-fab14/);
   assert.doesNotMatch(source, /primary\.disabled\s*=\s*true/);
+  assert.doesNotMatch(source, /await openAdvisorExpanded/);
   assert.doesNotMatch(source, /tool-float__glyph/);
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
+});
+
+test("homepage preloads advisor assets for instant Ask open", () => {
+  const html = read("apps/site/Lumino 官网.dc.html");
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.css\?v=20261104-fab14/);
+  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261104-fab14/);
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261104-fab14/);
 });
 
 test("float dock stays viewport-fixed and clusters ask/tools/top", () => {
