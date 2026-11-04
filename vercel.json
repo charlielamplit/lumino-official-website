@@ -4,10 +4,10 @@
   "trailingSlash": false,
   "functions": {
     "api/advisor.js": {
-      "includeFiles": "{packages/advisor/**,apps/site/knowledge/**}"
+      "includeFiles": "apps/site/knowledge/**"
     },
     "api/advisor-metrics.js": {
-      "includeFiles": "{packages/advisor/**}"
+      "includeFiles": "api/_lib/advisor-umd/**"
     }
   },
   "rewrites": [

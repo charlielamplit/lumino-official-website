@@ -2,8 +2,13 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const crypto = require("node:crypto");
 
 const root = path.resolve(__dirname, "..");
+
+function sha(rel) {
+  return crypto.createHash("sha256").update(fs.readFileSync(path.join(root, rel))).digest("hex");
+}
 
 function loadCatalog() {
   require(path.join(root, "packages/advisor/catalog.js"));
@@ -11,6 +16,16 @@ function loadCatalog() {
   require(path.join(root, "packages/advisor/router.js"));
   return globalThis.LuminoAdvisorCatalog;
 }
+
+test("serverless advisor-umd mirror matches packages/advisor", () => {
+  for (const name of ["catalog.js", "schema.js", "router.js"]) {
+    assert.equal(
+      sha(`api/_lib/advisor-umd/${name}`),
+      sha(`packages/advisor/${name}`),
+      `${name} drift between browser package and serverless mirror`,
+    );
+  }
+});
 
 test("every published topic has a published fixed answer with zh/en copy", () => {
   const catalog = loadCatalog();
@@ -53,11 +68,11 @@ test("eudr/csddd and cbam fixed answers stay preliminary and actionable", () => 
   assert.doesNotMatch(eudr.answer.zh, /正式认定|法律意见|保证合规/);
   assert.match(cbam.answer.zh, /CN Code|编码/);
   assert.match(cbam.answer.zh, /不会直接作出正式/);
+  assert.doesNotMatch(cbam.answer.zh, /法律意见|保证合规|正式归类决定/);
 });
 
-test("vercel advisor function includes advisor package and knowledge corpus", () => {
+test("vercel advisor function includes knowledge corpus for retrieval", () => {
   const config = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
   const include = config.functions?.["api/advisor.js"]?.includeFiles || "";
-  assert.match(include, /packages\/advisor/);
   assert.match(include, /apps\/site\/knowledge/);
 });

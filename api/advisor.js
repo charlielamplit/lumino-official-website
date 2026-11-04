@@ -298,17 +298,34 @@ export default async function handler(request, response) {
     console.error("[lumino-advisor] failed", error?.message || error);
     const latencyMs = Date.now() - started;
     const reason = /timeout|abort/i.test(String(error?.message || "")) ? "timeout" : "server_error";
-    recordAdvisorMetric({
-      type: "request",
-      answer_mode: "fallback",
-      source: "error",
-      latency_ms: latencyMs,
-      degradation_reason: reason,
-      ok: false,
-    });
-    const fallback = unavailablePayload(sanitized.request.lang, reason);
-    if (wantsStream) return writeSse(response, { ok: false, ...fallback }, { streamAnswer: true });
-    return json(response, 503, { ok: false, ...fallback }, rateHeaders);
+    try {
+      recordAdvisorMetric({
+        type: "request",
+        answer_mode: "fallback",
+        source: "error",
+        latency_ms: latencyMs,
+        degradation_reason: reason,
+        ok: false,
+      });
+    } catch (_) {}
+    try {
+      const fallback = unavailablePayload(sanitized.request.lang, reason);
+      if (wantsStream) return writeSse(response, { ok: false, ...fallback }, { streamAnswer: true });
+      return json(response, 503, { ok: false, ...fallback }, rateHeaders);
+    } catch (nested) {
+      console.error("[lumino-advisor] unavailable payload failed", nested?.message || nested);
+      return json(response, 503, {
+        ok: false,
+        answer_mode: "fallback",
+        ui_state: "unavailable",
+        degradation_reason: reason,
+        answer: sanitized.request.lang === "en"
+          ? "The advisor is temporarily unavailable. Please try again or contact Lumino."
+          : "顾问暂时不可用。请稍后重试，或通过联系页联络 Lumino。",
+        links: [{ type: "contact", label: sanitized.request.lang === "en" ? "Contact Lumino" : "联系 Lumino", url: `${CONTACT_URL}?source=homepage-advisor&topic=unavailable` }],
+        handoff: "contact",
+      }, rateHeaders);
+    }
   } finally {
     abort.dispose();
   }
