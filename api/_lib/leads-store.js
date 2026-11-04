@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-// Avoid import.meta.url — Vercel may compile these helpers as CJS.
+// Avoid import.meta in CJS-compiled Vercel helpers.
 const DATA_DIR = path.join(process.cwd(), "data");
 const FILE_PATH = path.join(DATA_DIR, "leads.json");
 const TMP_PATH = "/tmp/lumino-leads.json";

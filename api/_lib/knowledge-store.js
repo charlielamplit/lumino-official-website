@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-// Avoid import.meta.url — Vercel may compile these helpers as CJS.
+// Avoid import.meta in CJS-compiled Vercel helpers.
 const ROOT = process.cwd();
 const CATALOG_PATH = path.join(ROOT, "apps/site/knowledge/catalog.json");
 const DATA_OVERRIDE = path.join(ROOT, "data/knowledge-catalog.json");

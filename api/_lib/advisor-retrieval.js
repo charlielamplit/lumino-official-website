@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-// Vercel/@vercel/node may compile API modules as CJS, where import.meta.url throws.
+// Vercel/@vercel/node may compile API modules as CJS, where import.meta throws.
 // process.cwd() is /var/task on Vercel and the repo root locally.
 const ROOT = process.cwd();
 const CATALOG_PATH = path.join(ROOT, "apps/site/knowledge/catalog.json");
