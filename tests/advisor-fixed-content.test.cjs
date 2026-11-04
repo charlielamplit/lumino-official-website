@@ -50,6 +50,17 @@ test("eudr/csddd and cbam fixed answers stay preliminary and actionable", () => 
   assert.doesNotMatch(cbam.answer.zh, /法律意见|保证合规/);
 });
 
+test("api helpers avoid import.meta.url for Vercel CJS compatibility", () => {
+  for (const rel of [
+    "api/_lib/advisor-retrieval.js",
+    "api/_lib/knowledge-store.js",
+    "api/_lib/leads-store.js",
+  ]) {
+    const src = fs.readFileSync(path.join(root, rel), "utf8");
+    assert.doesNotMatch(src, /fileURLToPath\s*\(\s*import\.meta\.url\s*\)/);
+  }
+});
+
 test("vercel advisor function includes knowledge corpus for retrieval", () => {
   const config = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
   const include = config.functions?.["api/advisor.js"]?.includeFiles || "";
