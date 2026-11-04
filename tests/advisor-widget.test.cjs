@@ -55,6 +55,10 @@ test("advisor widget preserves keyboard, privacy and current-tab recovery contro
   assert.match(source, /data-advisor-retry/);
   assert.match(source, /服务暂时不可用|没有足够依据|基础问答/);
   assert.match(source, /is-busy|setBusy/);
+  assert.match(source, /THINK_MIN_FIXED_MS/);
+  assert.match(source, /minDeliberationMs|startThinking/);
+  assert.match(source, /对照已发布说明|Checking published guidance/);
+  assert.match(source, /Buffer stream text only|deliberation/);
 });
 
 test("advisor presentation reuses site tokens and has mobile and reduced-motion rules", () => {
@@ -70,6 +74,8 @@ test("advisor presentation reuses site tokens and has mobile and reduced-motion 
   assert.match(source, /@media \(max-width: 640px\)/);
   assert.match(source, /width: 100%/);
   assert.match(source, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(source, /data-thinking/);
+  assert.match(source, /advisor-think-pulse/);
   assert.doesNotMatch(source, /linear-gradient|radial-gradient/);
 });
 

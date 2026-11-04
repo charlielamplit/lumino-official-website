@@ -411,8 +411,29 @@
   content: "";
 }
 
+.advisor-answer__text[data-thinking="1"] {
+  color: var(--ink-muted, #5c6570);
+  font-style: italic;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .advisor-answer__text[data-thinking="1"] {
+    animation: advisor-think-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes advisor-think-pulse {
+  0%,
+  100% { opacity: 0.72; }
+  50% { opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .advisor-turn--assistant[data-printing="1"] .advisor-answer__text {
     transition: none;
+  }
+
+  .advisor-answer__text[data-thinking="1"] {
+    animation: none;
   }
 }
