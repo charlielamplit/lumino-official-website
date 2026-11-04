@@ -233,9 +233,11 @@
 }
 
 .advisor-replies,
-.advisor-links {
+.advisor-links,
+.advisor-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
 }
 

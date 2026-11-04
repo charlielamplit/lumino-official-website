@@ -109,9 +109,8 @@
     return `
       ${response.next_question ? `<p class="advisor-answer__question">${escapeHtml(response.next_question)}</p>` : ""}
       ${replies ? `<div class="advisor-replies">${replies}</div>` : ""}
-      ${links ? `<div class="advisor-links">${links}</div>` : ""}
-      ${sources ? `<div class="advisor-sources"><span>${label("相关资料", "Related reading")}</span>${sources}</div>` : ""}
-      ${retry}`;
+      ${(links || retry) ? `<div class="advisor-actions">${links}${retry}</div>` : ""}
+      ${sources ? `<div class="advisor-sources"><span>${label("相关资料", "Related reading")}</span>${sources}</div>` : ""}`;
   }
 
   function answerShell(response, options = {}) {
