@@ -4,6 +4,12 @@
   const SESSION_KEY = "lumino.advisor.state.v1";
   const CLIENT_TIMEOUT_MS = 12000;
   const CHUNK_MS = 28;
+  // Deterministic answers resolve in milliseconds; hold a short deliberation so
+  // the UI does not feel like a canned dump. Model paths already wait upstream.
+  const THINK_MIN_FIXED_MS = 1400;
+  const THINK_MIN_DEFAULT_MS = 700;
+  const THINK_MIN_REDUCED_MS = 320;
+  const THINK_ROTATE_MS = 900;
   const i18n = root.LuminoI18n || { detectLang: () => "zh" };
   let panel = null;
   let trigger = null;
@@ -12,6 +18,7 @@
   let busy = false;
   let activeAbort = null;
   let printTimer = null;
+  let thinkTimer = null;
   let lastRequest = null;
   let lastUserLabel = null;
 
@@ -39,6 +46,73 @@
   }
   function prefersReducedMotion() {
     return root.matchMedia && root.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  function thinkingPhrases() {
+    return lang() === "en"
+      ? [
+        "Checking published guidance…",
+        "Structuring the actionable points…",
+        "Checking wording boundaries…",
+      ]
+      : [
+        "对照已发布说明…",
+        "整理可执行要点…",
+        "核对表述边界…",
+      ];
+  }
+
+  function minDeliberationMs(answerMode) {
+    if (prefersReducedMotion()) return THINK_MIN_REDUCED_MS;
+    if (answerMode === "fixed" || answerMode === "tool_route") return THINK_MIN_FIXED_MS;
+    if (answerMode === "retrieval_model") return THINK_MIN_REDUCED_MS;
+    return THINK_MIN_DEFAULT_MS;
+  }
+
+  function clearThinkTimer() {
+    if (thinkTimer) {
+      clearInterval(thinkTimer);
+      thinkTimer = null;
+    }
+  }
+
+  function startThinking(article) {
+    const textNode = article?.querySelector(".advisor-answer__text");
+    if (!textNode) return () => {};
+    const phrases = thinkingPhrases();
+    let index = 0;
+    textNode.dataset.thinking = "1";
+    textNode.textContent = phrases[0];
+    announce(phrases[0]);
+    clearThinkTimer();
+    if (!prefersReducedMotion() && phrases.length > 1) {
+      thinkTimer = setInterval(() => {
+        index = (index + 1) % phrases.length;
+        textNode.textContent = phrases[index];
+      }, THINK_ROTATE_MS);
+    }
+    return () => {
+      clearThinkTimer();
+      textNode.dataset.thinking = "0";
+    };
+  }
+
+  function waitMs(ms, signal) {
+    const duration = Math.max(0, Number(ms) || 0);
+    if (!duration) return Promise.resolve();
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => resolve(), duration);
+      if (!signal) return;
+      const onAbort = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      if (signal.aborted) {
+        onAbort();
+        return;
+      }
+      signal.addEventListener("abort", onAbort, { once: true });
+    });
   }
 
   function safeUrl(value) {
@@ -164,6 +238,7 @@
 
   function stopActive(reason = "user_stop") {
     clearPrintTimer();
+    clearThinkTimer();
     if (activeAbort) {
       try { activeAbort.abort(reason); } catch (_) {}
       activeAbort = null;
@@ -289,23 +364,26 @@
       if (contentType.includes("text/event-stream") && upstream.body) {
         let finalPayload = null;
         let printed = "";
-        const textNode = article.querySelector(".advisor-answer__text");
+        // Buffer stream text only — deliberation + print are owned by appendExchange
+        // so fixed answers do not flash as an instant dump.
         await readSse(upstream, {
           delta(data) {
             if (controller.signal.aborted) return;
             printed += data.text || "";
-            textNode.textContent = printed;
-            scrollToLatest();
           },
           advisor(data) { finalPayload = data; },
           done() {},
         });
-        if (finalPayload && finalPayload.answer) {
-          if (!printed || printed.length < finalPayload.answer.length) {
-            // Ensure full text via local print if deltas were skipped.
-            return finalPayload;
-          }
-          return finalPayload;
+        if (finalPayload && finalPayload.answer) return finalPayload;
+        if (printed) {
+          return {
+            answer_mode: "fallback",
+            answer: printed,
+            ui_state: "ok",
+            suggested_replies: [],
+            links: [],
+            sources: [],
+          };
         }
         return unavailableLocal("stream_incomplete");
       }
@@ -339,7 +417,7 @@
       return unavailableLocal(timedOut ? "timeout" : "network");
     } finally {
       clearTimeout(timeout);
-      if (activeAbort === controller) activeAbort = null;
+      // Keep activeAbort until appendExchange finishes deliberation/print so Stop still works.
     }
   }
 
@@ -360,66 +438,79 @@
     };
     thread.insertAdjacentHTML("beforeend", answerShell(pending, {
       printing: true,
-      visibleText: label("正在生成说明…", "Preparing guidance…"),
+      visibleText: thinkingPhrases()[0],
       fullText: "",
     }));
     const article = thread.querySelector(".advisor-turn--assistant:last-child");
-    announce(label("正在生成说明", "Preparing guidance"));
+    const stopThinking = startThinking(article);
     scrollToLatest();
-
     const started = performance.now();
-    const response = await resolveResponse(request, article);
-    const fullText = response.answer || "";
-    article.querySelector(".advisor-answer__mode").textContent = modeLabel(response);
-    article.dataset.fullText = fullText;
 
-    await new Promise((resolve) => {
-      let settled = false;
-      const finish = (mode) => {
-        if (settled) return;
-        settled = true;
-        clearPrintTimer();
-        article.dataset.printing = "0";
-        article.querySelector(".advisor-answer__extras").innerHTML = extrasMarkup(response);
-        if (mode === "stopped") {
-          article.querySelector(".advisor-answer__actions").innerHTML =
-            `<button type="button" class="advisor-expand" data-advisor-expand>${label("显示全文", "Show full answer")}</button>
-             <button type="button" class="advisor-retry" data-advisor-retry>${label("重试", "Retry")}</button>`;
-        } else {
-          article.querySelector(".advisor-answer__actions").innerHTML = "";
+    try {
+      const response = await resolveResponse(request, article);
+      const elapsed = performance.now() - started;
+      const remainingThink = minDeliberationMs(response.answer_mode) - elapsed;
+      if (remainingThink > 0 && !activeAbort?.signal?.aborted) {
+        await waitMs(remainingThink, activeAbort?.signal);
+      }
+      stopThinking();
+
+      const fullText = response.answer || "";
+      article.querySelector(".advisor-answer__mode").textContent = modeLabel(response);
+      article.dataset.fullText = fullText;
+      const textNode = article.querySelector(".advisor-answer__text");
+      if (textNode) textNode.textContent = "";
+
+      await new Promise((resolve) => {
+        let settled = false;
+        const finish = (mode) => {
+          if (settled) return;
+          settled = true;
+          clearPrintTimer();
+          clearThinkTimer();
+          article.dataset.printing = "0";
+          article.querySelector(".advisor-answer__extras").innerHTML = extrasMarkup(response);
+          if (mode === "stopped") {
+            article.querySelector(".advisor-answer__actions").innerHTML =
+              `<button type="button" class="advisor-expand" data-advisor-expand>${label("显示全文", "Show full answer")}</button>
+               <button type="button" class="advisor-retry" data-advisor-retry>${label("重试", "Retry")}</button>`;
+          } else {
+            article.querySelector(".advisor-answer__actions").innerHTML = "";
+          }
+          resolve();
+        };
+        article.addEventListener("advisor:stop-print", () => finish("stopped"), { once: true });
+        if (!fullText) {
+          finish("done");
+          return;
         }
-        resolve();
-      };
-      article.addEventListener("advisor:stop-print", () => finish("stopped"), { once: true });
-      const existing = article.querySelector(".advisor-answer__text").textContent || "";
-      if (!fullText) {
-        article.querySelector(".advisor-answer__text").textContent = "";
-        finish("done");
-        return;
-      }
-      if (prefersReducedMotion() || existing === fullText) {
-        article.querySelector(".advisor-answer__text").textContent = fullText;
-        finish("done");
-        return;
-      }
-      printAnswer(article, fullText, () => finish("done"));
-    });
+        if (prefersReducedMotion()) {
+          textNode.textContent = fullText;
+          finish("done");
+          return;
+        }
+        printAnswer(article, fullText, () => finish("done"));
+      });
 
-    history.push({ topicId: options?.topicId || request.topicId || "", userLabel, response, freeText: options?.freeText });
-    saveState();
-    trackMetric({
-      type: "client",
-      answer_mode: response.answer_mode,
-      source: response.runtime?.source || "",
-      handoff: response.handoff,
-      has_sources: Boolean(response.sources?.length),
-      latency_ms: Math.round(performance.now() - started),
-      degradation_reason: response.degradation_reason || response.runtime?.degradation_reason || null,
-      ok: response.ui_state !== "unavailable",
-    });
-    announce(response.answer);
-    setBusy(false);
-    scrollToLatest();
+      history.push({ topicId: options?.topicId || request.topicId || "", userLabel, response, freeText: options?.freeText });
+      saveState();
+      trackMetric({
+        type: "client",
+        answer_mode: response.answer_mode,
+        source: response.runtime?.source || "",
+        handoff: response.handoff,
+        has_sources: Boolean(response.sources?.length),
+        latency_ms: Math.round(performance.now() - started),
+        degradation_reason: response.degradation_reason || response.runtime?.degradation_reason || null,
+        ok: response.ui_state !== "unavailable",
+      });
+      announce(response.answer);
+    } finally {
+      stopThinking();
+      activeAbort = null;
+      setBusy(false);
+      scrollToLatest();
+    }
   }
 
   function showSensitiveWarning() {

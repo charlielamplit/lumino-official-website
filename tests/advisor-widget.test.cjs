@@ -20,6 +20,10 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /scrollTo/);
   assert.match(source, /ask:\s*'<svg class="tool-float__icon"/);
   assert.match(source, /openAdvisorExpanded|source:\s*"auto-open"/);
+  assert.match(source, /openAdvisorSafe|advisor_load_timeout/);
+  assert.match(source, /Promise\.all\(\[\s*loadScript\(`\/packages\/advisor\/catalog/);
+  assert.match(source, /20261104-fab13/);
+  assert.doesNotMatch(source, /primary\.disabled\s*=\s*true/);
   assert.doesNotMatch(source, /tool-float__glyph/);
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
 });
@@ -55,6 +59,10 @@ test("advisor widget preserves keyboard, privacy and current-tab recovery contro
   assert.match(source, /data-advisor-retry/);
   assert.match(source, /服务暂时不可用|没有足够依据|基础问答/);
   assert.match(source, /is-busy|setBusy/);
+  assert.match(source, /THINK_MIN_FIXED_MS/);
+  assert.match(source, /minDeliberationMs|startThinking/);
+  assert.match(source, /对照已发布说明|Checking published guidance/);
+  assert.match(source, /Buffer stream text only|deliberation/);
 });
 
 test("advisor presentation reuses site tokens and has mobile and reduced-motion rules", () => {
@@ -70,6 +78,8 @@ test("advisor presentation reuses site tokens and has mobile and reduced-motion 
   assert.match(source, /@media \(max-width: 640px\)/);
   assert.match(source, /width: 100%/);
   assert.match(source, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(source, /data-thinking/);
+  assert.match(source, /advisor-think-pulse/);
   assert.doesNotMatch(source, /linear-gradient|radial-gradient/);
 });
 
