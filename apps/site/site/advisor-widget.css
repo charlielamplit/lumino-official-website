@@ -160,6 +160,20 @@
 .advisor-topic::after { content: "→"; color: var(--green); }
 .advisor-topic:hover { color: var(--green-dark); }
 
+.advisor-topics__more {
+  min-height: 44px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--green-dark);
+  font: inherit;
+  font-size: var(--type-meta);
+  cursor: pointer;
+}
+.advisor-topics__more::after { content: " ↓"; }
+.advisor-topics__more[aria-expanded="true"]::after { content: " ↑"; }
+.advisor-topics--more[hidden] { display: none; }
+
 .advisor-thread {
   display: grid;
   gap: var(--space-md);
