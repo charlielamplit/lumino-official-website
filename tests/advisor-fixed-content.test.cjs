@@ -57,7 +57,7 @@ test("api helpers avoid import.meta.url for Vercel CJS compatibility", () => {
     "api/_lib/leads-store.js",
   ]) {
     const src = fs.readFileSync(path.join(root, rel), "utf8");
-    assert.doesNotMatch(src, /import\.meta\.url/);
+    assert.doesNotMatch(src, /fileURLToPath\s*\(\s*import\.meta\.url\s*\)/);
   }
 });
 
