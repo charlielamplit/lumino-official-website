@@ -8,6 +8,11 @@
     { zh: "申请企业排放初步估算", en: "Request an emissions estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=inventory&source=tool-float" },
     { zh: "申请绿电需求测算", en: "Request a renewable-power estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=assets&source=tool-float" },
   ];
+  const ICONS = {
+    ask: '<span class="tool-float__glyph" aria-hidden="true">问</span>',
+    tools: '<svg class="tool-float__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+    top: '<svg class="tool-float__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 5.5 5.5 12H10v7h4v-7h4.5L12 5.5z"/></svg>',
+  };
   function loadStyle(href) {
     if (document.querySelector(`link[href="${href}"]`)) return;
     const link = document.createElement("link");
@@ -47,7 +52,7 @@
   function ensureAdvisor() {
     if (window.LuminoAdvisorWidget) return Promise.resolve(window.LuminoAdvisorWidget);
     if (!advisorPromise) {
-      const v = "20261104-fab2";
+      const v = "20261104-fab3";
       loadStyle(`/apps/site/site/advisor-widget.css?v=${v}`);
       advisorPromise = loadScript(`/packages/advisor/catalog.js?v=${v}`)
         .then(() => loadScript(`/packages/advisor/schema.js?v=${v}`))
@@ -100,16 +105,14 @@
           tools: "Tools",
           toolsTitle: "Choose a tool",
           toolsHint: "Calculators and estimates",
-          top: "Top",
-          topHint: "Back to top",
+          top: "Back to top",
         }
       : {
           ask: "问 Lumino",
           tools: "工具",
           toolsTitle: "选择工具",
           toolsHint: "计算器与初步估算",
-          top: "顶部",
-          topHint: "回到页面顶部",
+          top: "回到顶部",
         };
   }
   function mountShell() {
@@ -125,9 +128,18 @@
         ${tools.map((t) => `<a href="${t.href}" role="menuitem"><strong>${L === "en" ? t.en : t.zh}</strong></a>`).join("")}
       </div>
       <div class="tool-float__stack">
-        <button type="button" class="tool-float__btn tool-float__btn--secondary" data-float-top hidden title="${copy.topHint}" aria-label="${copy.topHint}">${copy.top}</button>
-        <button type="button" class="tool-float__btn tool-float__btn--secondary" data-float-tools aria-expanded="false" aria-controls="tool-float-panel" title="${copy.toolsHint}">${copy.tools}</button>
-        <button type="button" class="tool-float__btn tool-float__btn--primary" data-float-primary data-open-advisor>${copy.ask}</button>
+        <button type="button" class="tool-float__btn tool-float__btn--top" data-float-top hidden aria-label="${copy.top}">
+          <span class="tool-float__tip">${copy.top}</span>
+          ${ICONS.top}
+        </button>
+        <button type="button" class="tool-float__btn tool-float__btn--tools" data-float-tools aria-expanded="false" aria-controls="tool-float-panel" aria-label="${copy.tools}">
+          <span class="tool-float__tip">${copy.tools}</span>
+          ${ICONS.tools}
+        </button>
+        <button type="button" class="tool-float__btn tool-float__btn--ask" data-float-primary data-open-advisor aria-label="${copy.ask}">
+          <span class="tool-float__tip">${copy.ask}</span>
+          ${ICONS.ask}
+        </button>
       </div>`;
     document.body.appendChild(root);
     const primary = root.querySelector("[data-float-primary]");
@@ -149,8 +161,7 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
     const syncTop = () => {
-      const show = window.scrollY > TOP_SHOW_Y;
-      topBtn.hidden = !show;
+      topBtn.hidden = !(window.scrollY > TOP_SHOW_Y);
     };
     window.addEventListener("scroll", syncTop, { passive: true });
     syncTop();
@@ -158,12 +169,16 @@
     document.addEventListener("click", (e) => { if (!root.contains(e.target)) closePanel(); });
     return { root, panel, primary, toolsBtn, topBtn, closePanel, L, copy };
   }
+  function setIconButton(btn, { kind, label, askMode }) {
+    btn.className = `tool-float__btn tool-float__btn--${kind}`;
+    btn.setAttribute("aria-label", label);
+    btn.innerHTML = `<span class="tool-float__tip">${label}</span>${ICONS[kind] || ""}`;
+    if (askMode) btn.setAttribute("data-open-advisor", "");
+    else btn.removeAttribute("data-open-advisor");
+  }
   function wirePrimaryAsTools(shell) {
     const { primary, toolsBtn, panel, copy } = shell;
-    primary.textContent = copy.tools;
-    primary.classList.remove("tool-float__btn--primary");
-    primary.classList.add("tool-float__btn--secondary");
-    primary.removeAttribute("data-open-advisor");
+    setIconButton(primary, { kind: "tools", label: copy.tools, askMode: false });
     primary.setAttribute("aria-expanded", "false");
     primary.setAttribute("aria-controls", "tool-float-panel");
     toolsBtn.hidden = true;
@@ -175,10 +190,7 @@
   }
   function wirePrimaryAsAdvisor(shell, flags) {
     const { primary, toolsBtn, panel, closePanel, copy } = shell;
-    primary.textContent = copy.ask;
-    primary.classList.add("tool-float__btn--primary");
-    primary.classList.remove("tool-float__btn--secondary");
-    primary.setAttribute("data-open-advisor", "");
+    setIconButton(primary, { kind: "ask", label: copy.ask, askMode: true });
     primary.removeAttribute("aria-controls");
     primary.removeAttribute("aria-expanded");
     toolsBtn.hidden = false;

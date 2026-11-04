@@ -12,10 +12,12 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /\/packages\/advisor\/catalog\.js/);
   assert.match(source, /\/packages\/advisor\/router\.js/);
   assert.match(source, /\/api\/advisor-config/);
-  assert.match(source, /tool-float__btn--primary/);
+  assert.match(source, /tool-float__btn--ask/);
+  assert.match(source, /tool-float__tip/);
   assert.match(source, /data-float-tools/);
   assert.match(source, /data-float-top/);
   assert.match(source, /scrollTo/);
+  assert.match(source, /tool-float__glyph[\s\S]*问/);
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
 });
 
@@ -23,6 +25,8 @@ test("float dock stays viewport-fixed and clusters ask/tools/top", () => {
   const css = read("apps/site/site/site-v3.css");
   assert.match(css, /\.tool-float\s*\{[\s\S]*?position:\s*fixed\s*!important/);
   assert.match(css, /\.tool-float__stack/);
+  assert.match(css, /\.tool-float__btn--ask/);
+  assert.match(css, /\.tool-float__tip/);
   assert.match(css, /\.tool-float__btn--top/);
   assert.match(css, /safe-area-inset-bottom/);
   assert.doesNotMatch(css, /\.tool-float\s*,\s*main/);
