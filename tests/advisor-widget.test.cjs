@@ -20,6 +20,10 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /scrollTo/);
   assert.match(source, /ask:\s*'<svg class="tool-float__icon"/);
   assert.match(source, /openAdvisorExpanded|source:\s*"auto-open"/);
+  assert.match(source, /openAdvisorSafe|advisor_load_timeout/);
+  assert.match(source, /Promise\.all\(\[\s*loadScript\(`\/packages\/advisor\/catalog/);
+  assert.match(source, /20261104-fab13/);
+  assert.doesNotMatch(source, /primary\.disabled\s*=\s*true/);
   assert.doesNotMatch(source, /tool-float__glyph/);
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
 });
