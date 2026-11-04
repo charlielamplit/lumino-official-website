@@ -1,11 +1,8 @@
-(function (root, factory) {
-  "use strict";
-  const catalog = typeof module === "object" && module.exports ? require("./catalog.cjs") : root.LuminoAdvisorCatalog;
-  const schema = typeof module === "object" && module.exports ? require("./schema.cjs") : root.LuminoAdvisorSchema;
-  const router = factory(catalog, schema);
-  if (typeof module === "object" && module.exports) module.exports = router;
-  root.LuminoAdvisor = router;
-})(typeof window !== "undefined" ? window : globalThis, function (catalog, schema) {
+/** Serverless ESM mirror of packages/advisor/router.js */
+import catalog from './catalog.js';
+import schema from './schema.js';
+const router = ((catalog, schema) => {
+
   "use strict";
 
   if (!catalog || !schema) throw new Error("Lumino advisor dependencies are missing");
@@ -180,4 +177,6 @@
   }
 
   return Object.freeze({ route, getTopics, normalize, schemaVersion: catalog.schemaVersion, contentVersion: catalog.contentVersion });
-});
+
+})(catalog, schema);
+export default router;
