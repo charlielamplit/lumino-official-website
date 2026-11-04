@@ -484,7 +484,7 @@
       <button class="advisor-widget__stop" type="button" hidden>${label("停止", "Stop")}</button>
       <button class="advisor-widget__send" type="submit">${label("发送", "Send")}</button>
     </form>
-    <footer class="advisor-widget__foot">${label("对话不会提交给 Lumino，也不会进入线索库；仅保存在本次浏览器标签页。正式咨询请走联系页。", "Chats are not submitted to Lumino or a lead database; they stay in this browser tab only. Use the contact page for a formal consultation.")}</footer>
+    <footer class="advisor-widget__foot">${label("需要更有针对性的服务？", "Need more tailored support?")} <a class="advisor-widget__foot-link" href="/apps/site/Lumino%20联系.dc.html?source=advisor-foot">${label("联系我们", "Contact us")}</a></footer>
     <div class="advisor-widget__status" aria-live="polite" aria-atomic="true"></div>`;
     document.body.appendChild(panel);
 

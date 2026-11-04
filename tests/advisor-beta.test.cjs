@@ -28,7 +28,9 @@ test("advisor widget exposes public-beta boundary and preliminary labels", () =>
   assert.match(source, /初步判断，帮助你快速定向/);
   assert.match(source, /retrieval_model/);
   assert.match(source, /\/api\/advisor-metrics/);
-  assert.match(source, /不会提交给 Lumino/);
+  assert.match(source, /需要更有针对性的服务/);
+  assert.match(source, /联系我们/);
+  assert.match(source, /advisor-foot/);
   assert.match(source, /TimeoutError|AbortError/);
   assert.match(source, /data-advisor-cta/);
   assert.doesNotMatch(source, /公开试用/);

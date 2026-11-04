@@ -48,6 +48,14 @@
   background: color-mix(in srgb, var(--wash) 70%, var(--paper));
 }
 
+.advisor-widget__foot-link {
+  color: var(--green);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.advisor-widget__foot-link:hover { color: var(--green-dark); }
+
 .advisor-widget__head p {
   margin-top: 2px;
   color: var(--muted);
