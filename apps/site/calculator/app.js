@@ -284,14 +284,18 @@ async function submitLead(event) {
     });
     const payload = await response.json().catch(() => ({}));
     if (response.ok) {
-      status.textContent = "已记录本次试算上下文。正式跟进仍以受控联系流程为准。";
+      const leadHint = payload.leadId ? `演示编号 ${payload.leadId}。` : "";
+      const notifyHint = payload.notified
+        ? "已向对接人发送通知；该编号不代表正式数据库回执。"
+        : "未确认进入正式数据库或商务处理流程；正式咨询请使用联系页。";
+      status.textContent = `已记录本次试算演示上下文。${leadHint}${notifyHint}`;
       status.classList.add("success");
       unlockComparison();
       return;
     }
-    // 本地原型：Webhook 未配置或接口不可用时仍解锁对比，不伪造顾问跟进
+    // 本地原型：接口不可用时仍解锁对比，不伪造顾问跟进
     if (response.status >= 500 || response.status === 404) {
-      status.textContent = "本页为本地演示：未向外部系统发送。已解锁实测对比；正式咨询请使用联系页。";
+      status.textContent = "本页为本地演示：未向服务端线索库发送。已解锁实测对比；正式咨询请使用联系页。";
       status.classList.add("success");
       unlockComparison();
       return;

@@ -12,14 +12,25 @@
 
 | 优先级 | 选题 | 关联服务 / 行业 | 状态 |
 |---:|---|---|---|
-| P0 | CBAM：进口商要什么数据包，工厂先准备什么 | CBAM · 钢铁 / 铝 | 待写 |
-| P0 | ISO 14067：产品碳足迹的系统边界怎么定 | PCF · 纺织 / 包装 | 待写 |
-| P0 | 组织层面 Scope 1/2 与常见 Scope 3 怎么切 | GHG | 待写 |
-| P1 | ESG 报告：先定框架还是先凑指标 | ESG | 待写 |
-| P1 | 包装企业如何同时面对 PPWR 与客户碳问卷 | 出口合规 · 包装 | 待写 |
+| P0 | CBAM：进口商要什么数据包，工厂先准备什么 | CBAM · 钢铁 / 铝 | 已上线 · `cbam-importer-data` |
+| P0 | ISO 14067：产品碳足迹的系统边界怎么定 | PCF · 纺织 / 包装 | 已上线 · `pcf-system-boundary` |
+| P0 | 组织层面 Scope 1/2 与常见 Scope 3 怎么切 | GHG | 已上线 · `ghg-scope-cut` |
+| P0 | HS / CN / TARIC 编码核对 | CBAM · 钢铁 / 铝 | 已上线 · `cbam-hs-cn-codes` |
+| P0 | CBAM 默认值 vs 实际值 | CBAM | 已上线 · `cbam-default-vs-actual` |
+| P0 | CBAM 前体材料与供应商五问 | CBAM | 已上线 · `cbam-precursors` |
+| P0 | CBAM 季度包与年度节奏 | CBAM | 已上线 · `cbam-reporting-cadence` |
+| P0 | CBAM 与 PCF 勿混用 | CBAM · PCF | 已上线 · `cbam-vs-pcf` |
+| P1 | ESG 报告：先定框架还是先凑指标 | ESG | 已上线 · `esg-framework-first` |
+| P1 | 包装企业如何同时面对 PPWR 与客户碳问卷 | 出口合规 · 包装 | 已上线 · `packaging-ppwr-carbon` |
+| P0 | PCF 活动数据采集与证据 | PCF | 已上线 · `pcf-data-collection` |
+| P0 | PCF 热点与减排叙事 | PCF | 已上线 · `pcf-hotspots-reduction` |
+| P0 | 组织 GHG 盘查首年起步 | GHG | 已上线 · `ghg-inventory-first-year` |
+| P0 | EUDR 与 CSDDD 出口准备 | 出口合规 | 已上线 · `eudr-csddd-exporter-prep` |
 | P1 | 绿证 / 绿电声明时段如何对齐生产期间 | EAC · 铝 / 电子 | 待写 |
 | P2 | 纺织供应链：CBAM 之外的品牌模板 | CBAM · 纺织 | 待写 |
 | P2 | 汽车供应链：Higg / 客户问卷与产品碳 | ESG · 汽车 | 待写 |
+
+初期公开目录目标 **10 篇**（见 `apps/site/knowledge/catalog.json`）；正文在 `content/*.md`，Portal 只改发布状态。
 
 原文法规请从 `docs/knowledge-library/sources/` 对应分类取用，**不要把 PDF 直接挂到站点路径**。
 

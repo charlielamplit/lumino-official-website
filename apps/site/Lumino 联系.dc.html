@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="/apps/site/site/site-v3.css">
   <script defer src="/apps/site/site/i18n.js"></script>
   <script defer src="/apps/site/site/site-shell.js"></script>
+  <script defer src="/packages/shared/leads-client.js"></script>
   <script defer src="/apps/site/site/contact.js"></script>
   <script defer src="/apps/site/site/float-tools.js"></script>
 </head>
@@ -22,14 +23,15 @@
       <p data-i18n-zh="说明行业、产品和时间要求。提交后我们会与你确认适用服务与资料清单。" data-i18n-en="Share your industry, products and deadlines. We’ll confirm what applies and what to prepare."></p>
     </div>
   </section>
-  <section class="m-section" style="padding-top:28px">
+  <section class="m-section m-section--wash contact-section">
     <div class="wrap contact-layout">
       <aside class="contact-steps">
         <div class="contact-step"><span class="n">01</span><div><strong data-i18n-zh="提交需求" data-i18n-en="Send your request"></strong><span data-i18n-zh="说明行业、产品与时间要求。" data-i18n-en="Share your industry, products and deadlines."></span></div></div>
         <div class="contact-step"><span class="n">02</span><div><strong data-i18n-zh="确认适用服务" data-i18n-en="We confirm what applies"></strong><span data-i18n-zh="回复适用服务与建议准备的资料清单。" data-i18n-en="We reply with applicable services and a prep list."></span></div></div>
         <div class="contact-step"><span class="n">03</span><div><strong data-i18n-zh="确定方案与报价" data-i18n-en="Scope and quote"></strong><span data-i18n-zh="确认范围、周期与费用后开始项目。" data-i18n-en="We agree scope, timing and fees, then begin."></span></div></div>
         <div style="padding-top:14px;border-top:1px solid var(--line);font-size:var(--type-ui);color:var(--ink-secondary);display:grid;gap:4px">
-          <span data-i18n-zh="正式对外邮箱上线前，请通过本页表单提交需求" data-i18n-en="Until the public inbox is live, please use this form"></span>
+          <a href="mailto:contact@lumino.tech">contact@lumino.tech</a>
+          <span data-i18n-zh="或通过本页表单提交，线索将进入服务团队收件箱" data-i18n-en="Or use this form — leads go to the service inbox"></span>
           <span data-i18n-zh="上海铄垣环保科技有限公司" data-i18n-en="Shanghai Shuoyuan Environmental Technology"></span>
           <a href="Lumino%20隐私与数据处理.dc.html" data-i18n-zh="隐私与数据处理说明 →" data-i18n-en="Privacy &amp; data →"></a>
         </div>
@@ -39,6 +41,7 @@
           <label class="m-field">姓名 <span>必填</span><input name="name" autocomplete="name" required></label>
           <label class="m-field">公司 <span>必填</span><input name="company" autocomplete="organization" required></label>
           <label class="m-field">工作邮箱<input name="email" type="email" autocomplete="email" placeholder="name@company.com"></label>
+          <label class="m-field">电话 / 微信<input name="phone" autocomplete="tel" placeholder="手机或微信号"></label>
           <label class="m-field">行业
             <select name="industry" id="industrySelect">
               <option value="">请选择</option>
@@ -67,6 +70,10 @@
         <label class="m-field">时间要求<input name="timeline" id="timelineField" placeholder="例如：本季度 / 客户要求 12 月前"></label>
         <label class="m-field">需求说明 <span>必填</span>
           <textarea name="note" required placeholder="例如：欧盟客户要求 12 月前提供热轧钢卷的排放数据"></textarea>
+        </label>
+        <label class="m-field m-field--check" style="display:flex;gap:10px;align-items:flex-start;flex-direction:row">
+          <input type="checkbox" name="consent" value="on" required style="margin-top:4px">
+          <span>我同意 Lumino 就本次咨询联系我，并已阅读 <a href="Lumino%20隐私与数据处理.dc.html">隐私与数据处理说明</a>。<span style="color:var(--ink-secondary)">必填</span></span>
         </label>
         <input type="hidden" name="requestType" value="service-consultation">
         <input type="hidden" name="source" id="sourceField" value="public-contact">

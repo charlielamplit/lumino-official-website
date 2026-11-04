@@ -17,7 +17,10 @@
 
   <section class="m-hero" aria-label="首屏">
     <div class="m-hero__media" data-empty="false" id="hero-media">
-      <img src="/apps/site/site/assets/hero.png" alt="" width="2400" height="1400" decoding="async">
+      <picture>
+        <source type="image/webp" srcset="/apps/site/site/assets/hero-960.webp 960w, /apps/site/site/assets/hero-1600.webp 1600w, /apps/site/site/assets/hero.webp 2400w" sizes="100vw">
+        <img src="/apps/site/site/assets/hero-960.png" alt="" width="2400" height="1400" decoding="async" fetchpriority="high">
+      </picture>
     </div>
     <div class="m-hero__mask" aria-hidden="true"></div>
     <div class="m-hero__grid-tex" aria-hidden="true"></div>
@@ -30,6 +33,7 @@
         <div class="m-hero__actions">
           <a class="button button--primary" href="Lumino%20联系.dc.html" data-i18n-zh="预约咨询" data-i18n-en="Book a consultation"></a>
           <a class="button button--ghost-light" href="#services" data-i18n-zh="查看服务" data-i18n-en="Explore services"></a>
+          <button type="button" class="button button--ghost-light" data-open-advisor hidden data-i18n-zh="不确定需要哪项服务？问 Lumino" data-i18n-en="Not sure which service? Ask Lumino"></button>
         </div>
       </div>
       <aside class="m-panel" aria-label="平台全景">
@@ -86,13 +90,13 @@
         <a class="m-link" href="#services" data-i18n-zh="核心服务 →" data-i18n-en="Core services →"></a>
       </header>
       <div class="m-service-grid">
-        <a class="m-service-tile" href="services/cbam/">
+        <a class="m-service-tile m-service-tile--feature" href="services/cbam/">
           <div class="m-service-tile__top"><span class="m-service-tile__code">CBAM</span></div>
           <h3 data-i18n-zh="欧盟碳边境调节" data-i18n-en="EU CBAM"></h3>
           <p data-i18n-zh="为出口欧盟的钢铁、铝、水泥、化肥等产品，准备进口商所需的嵌入排放数据。" data-i18n-en="The embedded emissions data your EU importers need for steel, aluminium, cement, fertilisers and more."></p>
           <span class="m-link" data-i18n-zh="了解服务 →" data-i18n-en="Learn more →"></span>
         </a>
-        <a class="m-service-tile" href="services/pcf/">
+        <a class="m-service-tile m-service-tile--feature" href="services/pcf/">
           <div class="m-service-tile__top"><span class="m-service-tile__code">PCF</span></div>
           <h3 data-i18n-zh="产品碳足迹" data-i18n-en="Product carbon footprint"></h3>
           <p data-i18n-zh="按 ISO 14067 核算产品从原料到出厂的碳排放，回应品牌与采购方要求。" data-i18n-en="Cradle-to-gate footprints to ISO 14067, for brand and procurement requests."></p>
@@ -144,7 +148,7 @@
       <aside class="m-shot m-shot--diagram" aria-label="平台资料复用示意">
         <div class="m-reuse">
           <header class="m-reuse__bar">
-            <span class="mono">REUSE</span>
+            <span class="m-reuse__tag" data-i18n-zh="资料复用" data-i18n-en="Reuse"></span>
             <strong data-i18n-zh="资料一次入库，多项服务引用" data-i18n-en="Store once, reuse across services"></strong>
           </header>
           <div class="m-reuse__base">
@@ -228,7 +232,7 @@
       </header>
       <div class="m-card-grid">
         <article class="m-card">
-          <div class="m-card__media"><img src="/apps/site/site/assets/cases/steel-mill.png" alt="热轧产线工业场景" width="1200" height="675" loading="lazy" decoding="async"></div>
+          <div class="m-card__media"><picture><source type="image/webp" srcset="/apps/site/site/assets/cases/steel-mill.webp"><img src="/apps/site/site/assets/cases/steel-mill.png" alt="热轧产线工业场景" width="1200" height="675" loading="lazy" decoding="async"></picture></div>
           <div class="m-card__body">
             <div class="m-card__meta"><span data-i18n-zh="钢铁 · 华东" data-i18n-en="Steel · East China"></span><span class="status-chip">CBAM</span></div>
             <h3 data-i18n-zh="热轧钢材出口企业完成首次 CBAM 季度数据交付" data-i18n-en="A hot-rolled steel exporter delivers its first CBAM quarterly data pack"></h3>
@@ -236,7 +240,7 @@
           </div>
         </article>
         <article class="m-card">
-          <div class="m-card__media"><img src="/apps/site/site/assets/cases/textile-mill.png" alt="纺织染整车间场景" width="1200" height="675" loading="lazy" decoding="async"></div>
+          <div class="m-card__media"><picture><source type="image/webp" srcset="/apps/site/site/assets/cases/textile-mill.webp"><img src="/apps/site/site/assets/cases/textile-mill.png" alt="纺织染整车间场景" width="1200" height="675" loading="lazy" decoding="async"></picture></div>
           <div class="m-card__body">
             <div class="m-card__meta"><span data-i18n-zh="纺织服装 · 华南" data-i18n-en="Textiles · South China"></span><span class="status-chip">PCF</span></div>
             <h3 data-i18n-zh="面料供应商按品牌要求完成产品碳足迹核算" data-i18n-en="A fabric supplier completes product footprints for a global brand"></h3>
@@ -244,7 +248,7 @@
           </div>
         </article>
         <article class="m-card">
-          <div class="m-card__media"><img src="/apps/site/site/assets/cases/packaging-plant.png" alt="包装产线场景" width="1200" height="675" loading="lazy" decoding="async"></div>
+          <div class="m-card__media"><picture><source type="image/webp" srcset="/apps/site/site/assets/cases/packaging-plant.webp"><img src="/apps/site/site/assets/cases/packaging-plant.png" alt="包装产线场景" width="1200" height="675" loading="lazy" decoding="async"></picture></div>
           <div class="m-card__body">
             <div class="m-card__meta"><span data-i18n-zh="包装 · 华北" data-i18n-en="Packaging · North China"></span><span class="status-chip">GHG</span><span class="status-chip">ESG</span></div>
             <h3 data-i18n-zh="包装企业完成首次碳盘查，并编制 ESG 报告" data-i18n-en="A packaging manufacturer completes its first GHG inventory and ESG report"></h3>
@@ -276,9 +280,9 @@
         </div>
         <div class="m-row-list">
           <a href="Lumino%20CBAM%20指南.dc.html"><span class="meta" data-i18n-zh="法规解读 · 钢铁" data-i18n-en="Regulations · Steel"></span><div class="grow"><strong data-i18n-zh="CBAM 正式期：进口商需要供应商提供哪些数据" data-i18n-en="CBAM definitive period: what importers need from suppliers"></strong></div></a>
-          <a href="knowledge/"><span class="meta" data-i18n-zh="方法指南 · 纺织服装" data-i18n-en="Methods · Textiles"></span><div class="grow"><strong data-i18n-zh="ISO 14067：产品碳足迹的系统边界怎么定" data-i18n-en="ISO 14067: setting the system boundary for a footprint"></strong></div></a>
-          <a href="knowledge/"><span class="meta" data-i18n-zh="法规解读 · 包装" data-i18n-en="Regulations · Packaging"></span><div class="grow"><strong data-i18n-zh="欧盟包装法规（PPWR）对出口企业意味着什么" data-i18n-en="What the EU PPWR means for exporters"></strong></div></a>
-          <a href="knowledge/"><span class="meta" data-i18n-zh="方法指南 · 铝" data-i18n-en="Methods · Aluminium"></span><div class="grow"><strong data-i18n-zh="哪些绿电与绿证可以用于碳足迹声明" data-i18n-en="Which renewable electricity claims count in a footprint"></strong></div></a>
+          <a href="knowledge/article.html?id=cbam-importer-data"><span class="meta" data-i18n-zh="法规解读 · CBAM" data-i18n-en="Regulations · CBAM"></span><div class="grow"><strong data-i18n-zh="进口商要什么，工厂先准备什么" data-i18n-en="What importers ask — what plants prepare first"></strong></div></a>
+          <a href="knowledge/article.html?id=cbam-default-vs-actual"><span class="meta" data-i18n-zh="实务问答 · CBAM" data-i18n-en="Q&amp;A · CBAM"></span><div class="grow"><strong data-i18n-zh="默认值还是实际值？怎么选" data-i18n-en="Default values or actuals?"></strong></div></a>
+          <a href="knowledge/article.html?id=cbam-precursors"><span class="meta" data-i18n-zh="方法指南 · CBAM" data-i18n-en="Methods · CBAM"></span><div class="grow"><strong data-i18n-zh="前体材料：哪些要拆、怎么问供应商" data-i18n-en="Precursors: what to split and how to ask"></strong></div></a>
         </div>
         <a class="m-link" href="knowledge/" data-i18n-zh="进入知识库 →" data-i18n-en="Browse insights →"></a>
       </div>
@@ -293,6 +297,7 @@
       </div>
       <div class="m-closing__actions">
         <a class="button button--on-dark button--sm" href="Lumino%20联系.dc.html" data-i18n-zh="预约咨询" data-i18n-en="Book a consultation"></a>
+        <button type="button" class="button button--ghost-light button--sm" data-open-advisor hidden data-i18n-zh="不确定需要哪项服务？问 Lumino" data-i18n-en="Not sure which service? Ask Lumino"></button>
         <a class="button button--ghost-light button--sm" href="/apps/portal/" data-i18n-zh="客户门户 ↗" data-i18n-en="Client portal ↗"></a>
       </div>
     </div>

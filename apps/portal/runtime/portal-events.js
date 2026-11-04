@@ -143,8 +143,108 @@
       }
       if (globalCustomerPages.has(page)) state.currentService = null;
       state.page = page;
+      if (page === "leads") state.leadsHydrated = false;
+      if (page === "knowledge") state.knowledgeHydrated = false;
       persistPortalState(); render(); closeDrawer();
       $("#sidebar").classList.remove("open"); $("#mobileMenu").setAttribute("aria-expanded", "false"); $("#mobileMenu").setAttribute("aria-label", "打开导航"); $("#main").focus({ preventScroll: true }); return;
+    }
+    const knowledgeSelect = event.target.closest("[data-knowledge-select]");
+    if (knowledgeSelect) {
+      state.selectedKnowledgeId = knowledgeSelect.dataset.knowledgeSelect;
+      render();
+      return;
+    }
+    const knowledgeAction = event.target.closest("[data-knowledge-action]");
+    if (knowledgeAction) {
+      const action = knowledgeAction.dataset.knowledgeAction;
+      const articleId = knowledgeAction.dataset.knowledgeId || state.selectedKnowledgeId;
+      const actor = roleConfig[state.role].name;
+      const client = window.LuminoKnowledgeClient;
+      if (action === "refresh") {
+        state.knowledgeHydrated = false;
+        refreshKnowledgeArticles({ render: true });
+        toast("正在刷新知识库…");
+        return;
+      }
+      if (!client || !articleId) { toast("知识库客户端不可用。"); return; }
+      const run = async () => {
+        if (action === "publish") {
+          const result = await client.patchArticle(articleId, { status: "published", actor, note: "发布到官网" });
+          if (!result.ok) { toast(result.error || "发布失败"); return; }
+          toast("已发布");
+        } else if (action === "draft") {
+          const result = await client.patchArticle(articleId, { status: "draft", actor, note: "改回草稿" });
+          if (!result.ok) { toast(result.error || "更新失败"); return; }
+          toast("已改为草稿");
+        } else if (action === "archive") {
+          const result = await client.patchArticle(articleId, { status: "archived", actor, note: "下架" });
+          if (!result.ok) { toast(result.error || "下架失败"); return; }
+          toast("已下架");
+        } else if (action === "note") {
+          const text = window.prompt("添加备注", "");
+          if (!text || !text.trim()) return;
+          const result = await client.patchArticle(articleId, { note: text.trim(), actor });
+          if (!result.ok) { toast(result.error || "备注失败"); return; }
+          toast("备注已保存");
+        } else {
+          return;
+        }
+        state.knowledgeHydrated = false;
+        await refreshKnowledgeArticles({ render: true });
+      };
+      run();
+      return;
+    }
+    const leadSelect = event.target.closest("[data-lead-select]");
+    if (leadSelect) {
+      state.selectedLeadId = leadSelect.dataset.leadSelect;
+      render();
+      return;
+    }
+    const leadAction = event.target.closest("[data-lead-action]");
+    if (leadAction) {
+      const action = leadAction.dataset.leadAction;
+      const leadId = leadAction.dataset.leadId || state.selectedLeadId;
+      const actor = roleConfig[state.role].name;
+      const client = window.LuminoLeadsClient;
+      if (action === "refresh") {
+        state.leadsHydrated = false;
+        refreshPublicLeads({ render: true });
+        toast("正在刷新线索收件箱…");
+        return;
+      }
+      if (!client || !leadId) { toast("线索客户端不可用。"); return; }
+      const run = async () => {
+        if (action === "claim") {
+          const result = await client.patchLead(leadId, { status: "claimed", claimedBy: actor, actor });
+          if (!result.ok) { toast(result.error || "认领失败"); return; }
+          toast(`已认领 ${leadId}`);
+        } else if (action === "qualify") {
+          const result = await client.patchLead(leadId, { status: "qualified", actor, note: "确认有服务意向" });
+          if (!result.ok) { toast(result.error || "更新失败"); return; }
+          toast("已标记为确认意向");
+        } else if (action === "disqualify") {
+          const result = await client.patchLead(leadId, { status: "disqualified", actor, note: "排除跟进" });
+          if (!result.ok) { toast(result.error || "更新失败"); return; }
+          toast("已排除该线索");
+        } else if (action === "convert") {
+          const result = await client.patchLead(leadId, { status: "converted", actor, note: "已线下跟进或转项目" });
+          if (!result.ok) { toast(result.error || "更新失败"); return; }
+          toast("已标记转化（可继续在报价/订单中开户）");
+        } else if (action === "note") {
+          const text = window.prompt("添加备注", "");
+          if (!text || !text.trim()) return;
+          const result = await client.patchLead(leadId, { note: text.trim(), actor });
+          if (!result.ok) { toast(result.error || "备注失败"); return; }
+          toast("备注已保存");
+        } else {
+          return;
+        }
+        state.leadsHydrated = false;
+        await refreshPublicLeads({ render: true });
+      };
+      run();
+      return;
     }
     const answer = event.target.closest("[data-answer]");
     if (answer) {

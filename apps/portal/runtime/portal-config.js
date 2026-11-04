@@ -32,11 +32,11 @@
     },
     ops: {
       name: "林晓", initial: "林", title: "客户运营", company: "Lumino 项目中心",
-      nav: [["engagements", "▣", "订单履约", "3"], ["workflow-governance", "∿", "状态与责任"], ["portfolio", "◉", "项目组合", "8"], ["handoffs", "→", "交接中心", "2"], ["sla", "◷", "SLA 与阻塞", "5"], ["resources", "◎", "资源与异常"]]
+      nav: [["leads", "◉", "线索收件箱"], ["knowledge", "▦", "知识库"], ["engagements", "▣", "订单履约", "3"], ["workflow-governance", "∿", "状态与责任"], ["portfolio", "◉", "项目组合", "8"], ["handoffs", "→", "交接中心", "2"], ["sla", "◷", "SLA 与阻塞", "5"], ["resources", "◎", "资源与异常"]]
     },
     sales: {
       name: "陈宇", initial: "陈", title: "商务顾问", company: "Lumino 商务中心",
-      nav: [["leads", "◉", "线索与客户", "6"], ["quotes", "◇", "报价与合同", "4"], ["accounts", "◎", "客户关系"]]
+      nav: [["leads", "◉", "线索收件箱"], ["knowledge", "▦", "知识库"], ["quotes", "◇", "报价与合同", "4"], ["accounts", "◎", "客户关系"]]
     },
     importer: {
       name: "Anna", initial: "A", title: "欧盟进口商 / 申报人", company: "NordWerk GmbH",
@@ -56,7 +56,7 @@
     },
     platform_admin: {
       name: "顾清", initial: "顾", title: "平台管理员", company: "Lumino 平台团队",
-      nav: [["tenant-governance", "◎", "租户治理"], ["rulepacks", "▣", "规则包"], ["audit-events", "□", "审计与紧急访问", "1"]]
+      nav: [["tenant-governance", "◎", "租户治理"], ["knowledge", "▦", "知识库"], ["rulepacks", "▣", "规则包"], ["audit-events", "□", "审计与紧急访问", "1"]]
     }
   };
 
@@ -422,7 +422,7 @@
     ],
   });
 
-  const defaultPages = { customer_admin: "workbench", customer_owner: "workbench", customer_contrib: "workbench", customer_approver: "workbench", expert: "queue", reviewer: "review", ops: "engagements", sales: "leads", importer: "received-packages", verifier: "verification-cases", supplier: "supplier-requests", support: "support-cases", platform_admin: "tenant-governance" };
+  const defaultPages = { customer_admin: "workbench", customer_owner: "workbench", customer_contrib: "workbench", customer_approver: "workbench", expert: "queue", reviewer: "review", ops: "leads", sales: "leads", importer: "received-packages", verifier: "verification-cases", supplier: "supplier-requests", support: "support-cases", platform_admin: "tenant-governance" };
   const incoming = new URLSearchParams(window.location.search);
   const incomingYear = incoming.get("year") || "2027";
   const incomingCnCode = incoming.get("cnCode") || "72081000";
@@ -445,7 +445,7 @@
     yearCreated: false, deliveryExpanded: null, productAdded: false,
     configurationAdded: false, orgEditing: false, selectedProduct: "hrc",
     productYears: [], productCnCodes: [], questionHelpOpen: false, findingChoiceOpen: false, dataPathChoice: null,
-    drawer: null, assetFacet: "attention", taskTab: "全部", periodData: {}, productOverrides: {}, configurationDrafts: {}, facilities: [], invitedMembers: [], consultationRequests: [], actionBusy: false,
+    drawer: null, assetFacet: "attention", taskTab: "全部", periodData: {}, productOverrides: {}, configurationDrafts: {}, facilities: [], invitedMembers: [], consultationRequests: [], publicLeads: [], selectedLeadId: null, leadsSource: "local", knowledgeArticles: [], selectedKnowledgeId: null, knowledgeSource: "local", knowledgeHydrated: false, actionBusy: false,
     pcfCalculationFailed: incoming.get("scenario") === "pcf-calculation-failed",
     onboardingDismissed: window.localStorage.getItem("lumino-portal-onboarding") === "dismissed", online: navigator.onLine,
     organization: (() => {

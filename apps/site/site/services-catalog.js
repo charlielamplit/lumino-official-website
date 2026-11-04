@@ -40,6 +40,12 @@
         L("前体缺口与证明形式表", "Precursor gap and evidence-format table"),
         L("下一窗口可复用填报模板", "Reusable template for the next window"),
       ],
+      delivStructure: [
+        [L("封面 · 期间 · 版本", "Cover · period · version"), L("产品 / CN / 数量", "Products / CN / qty"), L("嵌入排放汇总表", "Embedded-emissions table"), L("证据与缺口索引", "Evidence & gap index")],
+        [L("设施与边界", "Installation & boundary"), L("工艺与能源点", "Process & energy points"), L("实际值 / 默认值说明", "Actual vs default note"), L("引用文件清单", "Referenced files")],
+        [L("前体清单", "Precursor list"), L("已有声明", "Statements on hand"), L("缺口与可接受形式", "Gaps & accepted forms"), L("责任人", "Owners")],
+        [L("字段对照", "Field map"), L("填报说明", "Filing notes"), L("校验规则", "Checks"), L("下季变更位", "Next-window change slots")],
+      ],
       boundaries: [
         L("本服务交付核算与证据整理，不替代欧盟侧进口商的法定申报义务。", "We deliver calculation and evidence organisation; we do not replace the importer’s statutory filing duty."),
         L("免费配额、原产国碳价抵扣等完整情形需按当期规则与项目约定单独确认。", "Free allocation and origin carbon-price offsets need separate confirmation under current rules and the engagement."),

@@ -21,6 +21,8 @@
   }
 
   function renderOps() {
+    if (state.page === "leads") return renderLeadsInbox();
+    if (state.page === "knowledge") return renderKnowledgeInbox();
     if (state.page === "workflow-governance") return renderWorkflowGovernance();
     if (state.page !== "portfolio") return renderStaffSecondary("ops");
     $("#main").innerHTML = `
@@ -35,16 +37,196 @@
       </tbody></table></section>`;
   }
 
-  function renderSales() {
-    if (state.page !== "leads") return renderStaffSecondary("sales");
+  function serviceLabel(id) {
+    return ({ cbam: "CBAM", pcf: "PCF", esg: "ESG", inventory: "碳盘查", assets: "碳资产", export: "出口合规" })[id] || id;
+  }
+
+  function leadStatusChip(status) {
+    const labels = window.LuminoLeadsClient?.STATUS_LABELS || {};
+    const warn = ["new", "claimed"].includes(status);
+    return `<span class="status-chip${warn ? " warn" : ""}">${safe(labels[status] || status || "new")}</span>`;
+  }
+
+  function refreshPublicLeads(options = {}) {
+    const client = window.LuminoLeadsClient;
+    if (!client) {
+      state.publicLeads = [];
+      state.leadsSource = "none";
+      if (options.render !== false && ["sales", "ops"].includes(state.role) && state.page === "leads") render();
+      return Promise.resolve();
+    }
+    if (!state.publicLeads?.length) state.publicLeads = client.readLocal();
+    return client.fetchLeads().then(({ leads, source }) => {
+      state.publicLeads = leads;
+      state.leadsSource = source;
+      if (!state.selectedLeadId && leads[0]) state.selectedLeadId = leads[0].id;
+      if (state.selectedLeadId && !leads.some((lead) => lead.id === state.selectedLeadId)) {
+        state.selectedLeadId = leads[0]?.id || null;
+      }
+      if (options.render !== false && ["sales", "ops"].includes(state.role) && state.page === "leads") render();
+    });
+  }
+
+  function renderLeadsInbox() {
+    const leads = Array.isArray(state.publicLeads) ? state.publicLeads : [];
+    const selected = leads.find((lead) => lead.id === state.selectedLeadId) || leads[0] || null;
+    if (selected && state.selectedLeadId !== selected.id) state.selectedLeadId = selected.id;
+    const openCount = leads.filter((lead) => lead.status === "new").length;
+    const claimedCount = leads.filter((lead) => lead.status === "claimed").length;
+    const sourceNote = state.leadsSource === "api+local"
+      ? "已合并服务端线索库与本机缓存。"
+      : state.leadsSource === "local"
+        ? "当前显示本机线索箱（静态预览或 API 未接通时）。"
+        : "线索客户端未加载。";
+
+    const listHtml = leads.length
+      ? leads.map((lead) => {
+          const active = selected && selected.id === lead.id ? " active" : "";
+          const services = (lead.services || []).map(serviceLabel).join(" · ") || "未选服务";
+          return `<button class="case-item${active}" type="button" data-lead-select="${safe(lead.id)}"><span><strong>${safe(lead.company)}</strong><em>${safe(lead.name)}</em></span><p>${safe(services)}</p><small>${leadStatusChip(lead.status)} · ${safe(String(lead.createdAt || "").slice(0, 16).replace("T", " "))}</small></button>`;
+        }).join("")
+      : `<div class="callout"><strong>暂无公开线索。</strong>官网联系表或试算解锁提交后会出现在此收件箱。客户租户角色不会看到本池。</div>`;
+
+    const detailHtml = selected
+      ? `<div class="case-meta">${leadStatusChip(selected.status)}${selected.localOnly ? '<span class="status-chip">本机</span>' : '<span class="status-chip">已入库</span>'}</div>
+          <h2>${safe(selected.company)}</h2>
+          <p>${safe(selected.note || "（无需求说明）")}</p>
+          <dl class="detail-ledger" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0">
+            <div><dt>联系人</dt><dd>${safe(selected.name)}</dd></div>
+            <div><dt>回执号</dt><dd>${safe(selected.id)}</dd></div>
+            <div><dt>手机 / 微信</dt><dd>${safe(selected.phone || "—")}</dd></div>
+            <div><dt>邮箱</dt><dd>${safe(selected.email || "—")}</dd></div>
+            <div><dt>行业</dt><dd>${safe(selected.industry || "—")}</dd></div>
+            <div><dt>时间要求</dt><dd>${safe(selected.timeline || "—")}</dd></div>
+            <div><dt>服务</dt><dd>${safe((selected.services || []).map(serviceLabel).join("、") || "—")}</dd></div>
+            <div><dt>来源</dt><dd>${safe(selected.source || "—")}</dd></div>
+            <div><dt>认领人</dt><dd>${safe(selected.claimedBy || "未认领")}</dd></div>
+            <div><dt>更新</dt><dd>${safe(String(selected.updatedAt || selected.createdAt || "").replace("T", " ").slice(0, 19))}</dd></div>
+          </dl>
+          ${(selected.notes || []).length ? `<div class="evidence-box"><h3>备注</h3>${selected.notes.map((note) => `<p><small>${safe(note.by)} · ${safe(String(note.at || "").slice(0, 16))}</small><br>${safe(note.text)}</p>`).join("")}</div>` : ""}
+          <div class="action-bar">
+            ${selected.status === "new" ? `<button class="button button--primary" type="button" data-lead-action="claim" data-lead-id="${safe(selected.id)}">认领</button>` : ""}
+            ${selected.status === "claimed" || selected.status === "new" ? `<button class="button button--secondary" type="button" data-lead-action="qualify" data-lead-id="${safe(selected.id)}">确认意向</button><button class="button button--secondary" type="button" data-lead-action="disqualify" data-lead-id="${safe(selected.id)}">排除</button>` : ""}
+            ${["qualified", "claimed"].includes(selected.status) ? `<button class="button button--primary" type="button" data-lead-action="convert" data-lead-id="${safe(selected.id)}">标记已转化</button>` : ""}
+            <button class="button button--secondary" type="button" data-lead-action="note" data-lead-id="${safe(selected.id)}">添加备注</button>
+            <button class="button button--secondary" type="button" data-lead-action="refresh">刷新</button>
+          </div>`
+      : `<p class="muted">选择左侧线索查看详情。专家与客户角色默认不可见未成交线索池。</p>`;
+
     $("#main").innerHTML = `
-      ${pageHeader("LEADS & ACCOUNTS", "把一次试算，接成一条清晰的服务路径。", '<p class="head-note">商务可看试算摘要、联系人和合规里程碑；生产数据、原始证据与专家内部意见保持隐藏。</p>')}
-      <div class="metric-line"><div><span>本周新线索</span><strong>14</strong><small>个</small></div><div><span>待首次联系</span><strong>6</strong><small>个</small></div><div><span>方案中</span><strong>4</strong><small>家</small></div><div><span>已签约</span><strong>9</strong><small>家</small></div></div>
-      <section class="panel wide-panel"><div class="panel-head"><h2>优先跟进</h2><button class="text-button" type="button" data-drawer="record-detail" data-drawer-label="全部销售线索" data-drawer-object="14 个本周新增线索" data-drawer-scope="试算摘要、联系人与商务阶段">查看全部线索</button></div><table class="data-table"><thead><tr><th>企业 / 联系人</th><th>来源</th><th>试算摘要</th><th>合规里程碑</th><th>敏感数据</th><th>下一动作</th></tr></thead><tbody>
-        <tr><td><strong>华星钢铁</strong><small>周岚 · 外贸负责人</small></td><td>免费成本计算器</td><td><strong>钢铁 · 10,000 t</strong><small>估算成本 ¥3.82m · 非正式</small></td><td><span class="status-chip">数据采集中</span></td><td class="privacy-cell">无权查看</td><td><button class="button button--primary" type="button" data-staff-action="已记录联系">记录联系</button></td></tr>
-        <tr><td><strong>远航铝业</strong><small>孙哲 · EHS</small></td><td>专家转介绍</td><td><strong>铝制品 · 4,800 t</strong><small>已完成诊断</small></td><td><span class="status-chip warn">核查整改</span></td><td class="privacy-cell">无权查看</td><td>续费沟通 · 周五</td></tr>
-        <tr><td><strong>新锐紧固件</strong><small>刘女士 · 总经理</small></td><td>官网预约</td><td><strong>钢铁下游制品</strong><small>待确认 CN Code</small></td><td>尚未创建项目</td><td class="privacy-cell">无权查看</td><td>预约诊断会 · 明天</td></tr>
-      </tbody></table></section>`;
+      ${pageHeader("PUBLIC LEADS INBOX", "官网与试算线索收件箱", `<p class="head-note">${sourceNote} 仅商务 / 运营可见；成交后再开客户租户。</p>`)}
+      <div class="metric-line"><div><span>全部</span><strong>${leads.length}</strong></div><div><span>待认领</span><strong>${openCount}</strong></div><div><span>跟进中</span><strong>${claimedCount}</strong></div><div><span>角色</span><strong>${safe(roleConfig[state.role].title)}</strong></div></div>
+      <div class="privacy-band"><strong>边界</strong><span>此处是销售漏斗前端，不是完整 CRM；不含生产证据与专家内部意见。</span></div>
+      <div class="staff-layout">
+        <section class="panel"><div class="panel-head"><h2>线索列表</h2><button class="text-button" type="button" data-lead-action="refresh">刷新</button></div><div class="case-list">${listHtml}</div></section>
+        <section class="panel case-detail">${detailHtml}</section>
+      </div>`;
+
+    if (!state.leadsHydrated) {
+      state.leadsHydrated = true;
+      refreshPublicLeads({ render: true });
+    }
+  }
+
+  function renderSales() {
+    if (state.page === "leads") return renderLeadsInbox();
+    if (state.page === "knowledge") return renderKnowledgeInbox();
+    return renderStaffSecondary("sales");
+  }
+
+  function knowledgeStatusChip(status) {
+    const labels = window.LuminoKnowledgeClient?.STATUS_LABELS || {};
+    const warn = status === "draft";
+    const muted = status === "archived";
+    return `<span class="status-chip${warn ? " warn" : ""}${muted ? "" : ""}">${safe(labels[status] || status || "draft")}</span>`;
+  }
+
+  function refreshKnowledgeArticles(options = {}) {
+    const client = window.LuminoKnowledgeClient;
+    const roles = ["sales", "ops", "platform_admin"];
+    if (!client) {
+      state.knowledgeArticles = [];
+      state.knowledgeSource = "none";
+      if (options.render !== false && roles.includes(state.role) && state.page === "knowledge") render();
+      return Promise.resolve();
+    }
+    return client.fetchArticles({ publicOnly: false }).then(({ articles, source }) => {
+      state.knowledgeArticles = articles;
+      state.knowledgeSource = source;
+      if (!state.selectedKnowledgeId && articles[0]) state.selectedKnowledgeId = articles[0].id;
+      if (state.selectedKnowledgeId && !articles.some((a) => a.id === state.selectedKnowledgeId)) {
+        state.selectedKnowledgeId = articles[0]?.id || null;
+      }
+      if (options.render !== false && roles.includes(state.role) && state.page === "knowledge") render();
+    }).catch(() => {
+      state.knowledgeArticles = [];
+      state.knowledgeSource = "none";
+      if (options.render !== false && roles.includes(state.role) && state.page === "knowledge") render();
+    });
+  }
+
+  function renderKnowledgeInbox() {
+    const articles = Array.isArray(state.knowledgeArticles) ? state.knowledgeArticles : [];
+    const selected = articles.find((a) => a.id === state.selectedKnowledgeId) || articles[0] || null;
+    if (selected && state.selectedKnowledgeId !== selected.id) state.selectedKnowledgeId = selected.id;
+    const published = articles.filter((a) => a.status === "published").length;
+    const draft = articles.filter((a) => a.status === "draft").length;
+    const archived = articles.filter((a) => a.status === "archived").length;
+    const sourceNote = state.knowledgeSource === "api"
+      ? "已连接知识库 API；状态变更会写入服务端覆盖层。"
+      : state.knowledgeSource === "catalog"
+        ? "当前读取静态 catalog（本地预览）。状态变更会先写入本机缓存。"
+        : "知识库客户端未加载。";
+
+    const listHtml = articles.length
+      ? articles.map((article) => {
+          const active = selected && selected.id === article.id ? " active" : "";
+          const title = article.title?.zh || article.title?.en || article.id;
+          return `<button class="case-item${active}" type="button" data-knowledge-select="${safe(article.id)}"><span><strong>${safe(title)}</strong><em>${safe(article.serviceId || "")}</em></span><p>${safe(article.typeLabel?.zh || article.type || "")} · ${safe(article.industryLabel?.zh || "")}</p><small>${knowledgeStatusChip(article.status)} · ${safe(article.updatedAt || "")}</small></button>`;
+        }).join("")
+      : `<div class="callout"><strong>暂无文章。</strong>在 <code>apps/site/knowledge/catalog.json</code> 与 <code>content/</code> 中维护 Markdown 后会出现在此。</div>`;
+
+    const publicUrl = selected && window.LuminoKnowledgeClient
+      ? window.LuminoKnowledgeClient.publicHref(selected.id)
+      : "#";
+    const detailHtml = selected
+      ? `<div class="case-meta">${knowledgeStatusChip(selected.status)}<span class="status-chip">${safe(selected.serviceId || "—")}</span></div>
+          <h2>${safe(selected.title?.zh || selected.id)}</h2>
+          <p>${safe(selected.lead?.zh || "")}</p>
+          <p class="muted">${safe(selected.title?.en || "")}</p>
+          <dl class="detail-ledger" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0">
+            <div><dt>ID</dt><dd>${safe(selected.id)}</dd></div>
+            <div><dt>更新</dt><dd>${safe(selected.updatedAt || "—")}</dd></div>
+            <div><dt>类型</dt><dd>${safe(selected.typeLabel?.zh || selected.type || "—")}</dd></div>
+            <div><dt>行业</dt><dd>${safe(selected.industryLabel?.zh || "—")}</dd></div>
+            <div><dt>中文 MD</dt><dd><code style="font-size:12px">${safe(selected.paths?.zh || "—")}</code></dd></div>
+            <div><dt>英文 MD</dt><dd><code style="font-size:12px">${safe(selected.paths?.en || "—")}</code></dd></div>
+          </dl>
+          ${(selected.notes || []).length ? `<div class="evidence-box"><h3>备注</h3>${selected.notes.map((note) => `<p><small>${safe(note.by)} · ${safe(String(note.at || "").slice(0, 16))}</small><br>${safe(note.text)}</p>`).join("")}</div>` : ""}
+          <div class="action-bar">
+            ${selected.status !== "published" ? `<button class="button button--primary" type="button" data-knowledge-action="publish" data-knowledge-id="${safe(selected.id)}">发布</button>` : ""}
+            ${selected.status === "published" ? `<button class="button button--secondary" type="button" data-knowledge-action="draft" data-knowledge-id="${safe(selected.id)}">改回草稿</button>` : ""}
+            ${selected.status !== "archived" ? `<button class="button button--secondary" type="button" data-knowledge-action="archive" data-knowledge-id="${safe(selected.id)}">下架</button>` : `<button class="button button--secondary" type="button" data-knowledge-action="draft" data-knowledge-id="${safe(selected.id)}">恢复为草稿</button>`}
+            <button class="button button--secondary" type="button" data-knowledge-action="note" data-knowledge-id="${safe(selected.id)}">添加备注</button>
+            <a class="button button--secondary" href="${safe(publicUrl)}" target="_blank" rel="noopener">预览官网</a>
+            <button class="button button--secondary" type="button" data-knowledge-action="refresh">刷新</button>
+          </div>
+          <p class="muted" style="margin-top:12px">正文以 Git 中的 Markdown 为准；此处只改发布状态与备注，不提供富文本编辑。</p>`
+      : `<p class="muted">选择左侧文章管理发布状态。客户租户不可见本页。</p>`;
+
+    $("#main").innerHTML = `
+      ${pageHeader("KNOWLEDGE CATALOG", "官网知识库运营", `<p class="head-note">${sourceNote} 运营 / 商务 / 平台管理员可改状态；正文仍走 PR。</p>`)}
+      <div class="metric-line"><div><span>全部</span><strong>${articles.length}</strong></div><div><span>已发布</span><strong>${published}</strong></div><div><span>草稿</span><strong>${draft}</strong></div><div><span>已下架</span><strong>${archived}</strong></div></div>
+      <div class="privacy-band"><strong>边界</strong><span>状态覆盖写在服务端 data 层或本机缓存；catalog.json + content/*.md 仍是 Git 源。</span></div>
+      <div class="staff-layout">
+        <section class="panel"><div class="panel-head"><h2>文章列表</h2><button class="text-button" type="button" data-knowledge-action="refresh">刷新</button></div><div class="case-list">${listHtml}</div></section>
+        <section class="panel case-detail">${detailHtml}</section>
+      </div>`;
+
+    if (!state.knowledgeHydrated) {
+      state.knowledgeHydrated = true;
+      refreshKnowledgeArticles({ render: true });
+    }
   }
 
   function renderStaffSecondary(role) {
@@ -165,6 +347,7 @@
   }
 
   function renderPlatformRole() {
+    if (state.page === "knowledge") return renderKnowledgeInbox();
     if (state.role === "support") {
       const jobs = state.page === "job-health";
       $("#main").innerHTML = jobs ? `${pageHeader("PROCESSING JOBS", "任务运行", statusChip("1 个失败运行", "warn"))}

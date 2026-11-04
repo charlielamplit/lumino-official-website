@@ -21,3 +21,10 @@ apps/knowledgebase/**/*.docx
 .env.gitea
 .env.*.local
 !.env.example
+
+# Lead intake / knowledge status persistence (local /tmp fallback also used on serverless)
+data/leads.json
+data/knowledge-catalog.json
+
+# Advisor eval local report
+packages/advisor/evals/.last-report.json
