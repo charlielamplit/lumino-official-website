@@ -13,15 +13,19 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /\/packages\/advisor\/router\.js/);
   assert.match(source, /\/api\/advisor-config/);
   assert.match(source, /tool-float__btn--primary/);
-  assert.match(source, /tool-float__btn--tools/);
+  assert.match(source, /data-float-tools/);
+  assert.match(source, /data-float-top/);
+  assert.match(source, /scrollTo/);
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
 });
 
-test("float chrome styles keep a single FAB bar without glow effects", () => {
+test("float dock stays viewport-fixed and clusters ask/tools/top", () => {
   const css = read("apps/site/site/site-v3.css");
-  assert.match(css, /\.tool-float__bar/);
-  assert.match(css, /\.tool-float__btn--tools/);
+  assert.match(css, /\.tool-float\s*\{[\s\S]*?position:\s*fixed\s*!important/);
+  assert.match(css, /\.tool-float__stack/);
+  assert.match(css, /\.tool-float__btn--top/);
   assert.match(css, /safe-area-inset-bottom/);
+  assert.doesNotMatch(css, /\.tool-float\s*,\s*main/);
   assert.doesNotMatch(css, /\.tool-float[^{]*\{[^}]*linear-gradient/);
 });
 

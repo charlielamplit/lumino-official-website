@@ -17,6 +17,7 @@ test("float tools gates Ask Lumino behind public beta config", () => {
   assert.match(source, /wirePrimaryAsAdvisor/);
   assert.match(source, /wirePrimaryAsTools/);
   assert.match(source, /data-float-tools/);
+  assert.match(source, /data-float-top/);
   assert.match(source, /问 Lumino|Ask Lumino/);
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
   assert.doesNotMatch(source, /insertAdvisorMenuItem/);

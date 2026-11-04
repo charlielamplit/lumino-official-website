@@ -1,6 +1,7 @@
 (function () {
   "use strict";
   const i18n = window.LuminoI18n || { detectLang: () => "zh" };
+  const TOP_SHOW_Y = 480;
   const tools = [
     { zh: "CBAM 成本计算器", en: "CBAM cost calculator", href: "/apps/site/calculator/" },
     { zh: "申请产品碳足迹初步估算", en: "Request a footprint estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=pcf&source=tool-float" },
@@ -39,7 +40,6 @@
       if (!response.ok) throw new Error("config_http");
       return await response.json();
     } catch (_) {
-      // Preview/local keep Ask Lumino available when config is unreachable.
       return { public_beta: previewHost(), model_enabled: true, lead_capture: false };
     }
   }
@@ -47,7 +47,7 @@
   function ensureAdvisor() {
     if (window.LuminoAdvisorWidget) return Promise.resolve(window.LuminoAdvisorWidget);
     if (!advisorPromise) {
-      const v = "20261104-fab1";
+      const v = "20261104-fab2";
       loadStyle(`/apps/site/site/advisor-widget.css?v=${v}`);
       advisorPromise = loadScript(`/packages/advisor/catalog.js?v=${v}`)
         .then(() => loadScript(`/packages/advisor/schema.js?v=${v}`))
@@ -100,54 +100,69 @@
           tools: "Tools",
           toolsTitle: "Choose a tool",
           toolsHint: "Calculators and estimates",
+          top: "Top",
+          topHint: "Back to top",
         }
       : {
           ask: "问 Lumino",
           tools: "工具",
           toolsTitle: "选择工具",
           toolsHint: "计算器与初步估算",
+          top: "顶部",
+          topHint: "回到页面顶部",
         };
   }
   function mountShell() {
     if (document.querySelector(".tool-float")) return null;
-    // Soft homepage CTAs stay hidden until config confirms beta is on.
     hideSoftEntries();
     const L = i18n.detectLang();
     const copy = labels(L);
     const root = document.createElement("div");
     root.className = "tool-float";
+    root.setAttribute("data-float-dock", "1");
     root.innerHTML = `
       <div class="tool-float__panel" id="tool-float-panel" hidden role="menu" aria-label="${copy.toolsTitle}">
         ${tools.map((t) => `<a href="${t.href}" role="menuitem"><strong>${L === "en" ? t.en : t.zh}</strong></a>`).join("")}
       </div>
-      <div class="tool-float__bar">
-        <button type="button" class="tool-float__btn tool-float__btn--primary" data-float-primary>${copy.tools}</button>
-        <button type="button" class="tool-float__btn tool-float__btn--tools" data-float-tools hidden aria-expanded="false" aria-controls="tool-float-panel" title="${copy.toolsHint}">${copy.tools}</button>
+      <div class="tool-float__stack">
+        <button type="button" class="tool-float__btn tool-float__btn--secondary" data-float-top hidden title="${copy.topHint}" aria-label="${copy.topHint}">${copy.top}</button>
+        <button type="button" class="tool-float__btn tool-float__btn--secondary" data-float-tools aria-expanded="false" aria-controls="tool-float-panel" title="${copy.toolsHint}">${copy.tools}</button>
+        <button type="button" class="tool-float__btn tool-float__btn--primary" data-float-primary data-open-advisor>${copy.ask}</button>
       </div>`;
     document.body.appendChild(root);
     const primary = root.querySelector("[data-float-primary]");
     const toolsBtn = root.querySelector("[data-float-tools]");
+    const topBtn = root.querySelector("[data-float-top]");
     const panel = root.querySelector(".tool-float__panel");
     const closePanel = () => {
       toolsBtn.setAttribute("aria-expanded", "false");
       panel.hidden = true;
     };
-    const togglePanel = () => {
+    toolsBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
       const open = toolsBtn.getAttribute("aria-expanded") !== "true";
       toolsBtn.setAttribute("aria-expanded", String(open));
       panel.hidden = !open;
-    };
-    toolsBtn.addEventListener("click", (event) => {
-      event.stopPropagation();
-      togglePanel();
     });
+    topBtn.addEventListener("click", () => {
+      closePanel();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    const syncTop = () => {
+      const show = window.scrollY > TOP_SHOW_Y;
+      topBtn.hidden = !show;
+    };
+    window.addEventListener("scroll", syncTop, { passive: true });
+    syncTop();
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanel(); });
     document.addEventListener("click", (e) => { if (!root.contains(e.target)) closePanel(); });
-    return { root, panel, primary, toolsBtn, closePanel, L, copy };
+    return { root, panel, primary, toolsBtn, topBtn, closePanel, L, copy };
   }
   function wirePrimaryAsTools(shell) {
     const { primary, toolsBtn, panel, copy } = shell;
     primary.textContent = copy.tools;
+    primary.classList.remove("tool-float__btn--primary");
+    primary.classList.add("tool-float__btn--secondary");
     primary.removeAttribute("data-open-advisor");
     primary.setAttribute("aria-expanded", "false");
     primary.setAttribute("aria-controls", "tool-float-panel");
@@ -161,6 +176,8 @@
   function wirePrimaryAsAdvisor(shell, flags) {
     const { primary, toolsBtn, panel, closePanel, copy } = shell;
     primary.textContent = copy.ask;
+    primary.classList.add("tool-float__btn--primary");
+    primary.classList.remove("tool-float__btn--secondary");
     primary.setAttribute("data-open-advisor", "");
     primary.removeAttribute("aria-controls");
     primary.removeAttribute("aria-expanded");
