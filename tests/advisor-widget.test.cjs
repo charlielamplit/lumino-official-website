@@ -12,7 +12,17 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /\/packages\/advisor\/catalog\.js/);
   assert.match(source, /\/packages\/advisor\/router\.js/);
   assert.match(source, /\/api\/advisor-config/);
+  assert.match(source, /tool-float__btn--primary/);
+  assert.match(source, /tool-float__btn--tools/);
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
+});
+
+test("float chrome styles keep a single FAB bar without glow effects", () => {
+  const css = read("apps/site/site/site-v3.css");
+  assert.match(css, /\.tool-float__bar/);
+  assert.match(css, /\.tool-float__btn--tools/);
+  assert.match(css, /safe-area-inset-bottom/);
+  assert.doesNotMatch(css, /\.tool-float[^{]*\{[^}]*linear-gradient/);
 });
 
 test("advisor widget preserves keyboard, privacy and current-tab recovery controls", () => {
