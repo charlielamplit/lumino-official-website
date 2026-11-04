@@ -153,6 +153,13 @@
   customElements.define("lumino-footer", LuminoFooter);
 
   let revealIo = null;
+  function preferReducedMotion() {
+    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+  function revealAll(targets) {
+    targets.forEach((el) => el.classList.add("is-in"));
+    document.documentElement.classList.remove("js-reveal");
+  }
   function enhanceChrome(root) {
     const scope = root || document;
     const header = document.querySelector(".site-header");
@@ -191,24 +198,33 @@
       el.style.setProperty("--d", `${Math.min(i % 6, 5) * 60}ms`);
       if (dynamic) el.classList.add("is-in");
     });
-    if (!("IntersectionObserver" in window)) {
-      targets.forEach((el) => el.classList.add("is-in"));
+    if (preferReducedMotion() || !("IntersectionObserver" in window)) {
+      revealAll(targets);
       return;
     }
     if (dynamic) return;
-    if (!revealIo) {
-      revealIo = new IntersectionObserver((entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            e.target.classList.add("is-in");
-            revealIo.unobserve(e.target);
-          }
-        });
-      }, { rootMargin: "0px 0px -6% 0px", threshold: 0.08 });
+    try {
+      document.documentElement.classList.add("js-reveal");
+      if (!revealIo) {
+        revealIo = new IntersectionObserver((entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add("is-in");
+              revealIo.unobserve(e.target);
+            }
+          });
+        }, { rootMargin: "0px 0px -6% 0px", threshold: 0.08 });
+      }
+      targets.forEach((el) => {
+        if (!el.classList.contains("is-in")) revealIo.observe(el);
+      });
+      /* Failsafe: never leave content invisible if IO stalls. */
+      window.setTimeout(() => {
+        targets.forEach((el) => el.classList.add("is-in"));
+      }, 1800);
+    } catch (_) {
+      revealAll(targets);
     }
-    targets.forEach((el) => {
-      if (!el.classList.contains("is-in")) revealIo.observe(el);
-    });
   }
   window.LuminoEnhanceChrome = enhanceChrome;
 

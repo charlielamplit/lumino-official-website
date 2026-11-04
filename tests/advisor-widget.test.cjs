@@ -19,6 +19,7 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /data-float-top/);
   assert.match(source, /scrollTo/);
   assert.match(source, /ask:\s*'<svg class="tool-float__icon"/);
+  assert.match(source, /openAdvisorExpanded|source:\s*"auto-open"/);
   assert.doesNotMatch(source, /tool-float__glyph/);
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
 });
@@ -62,6 +63,9 @@ test("advisor presentation reuses site tokens and has mobile and reduced-motion 
   assert.match(source, /var\(--radius-card\)/);
   assert.match(source, /\.advisor-widget__mark/);
   assert.match(source, /\.advisor-widget__identity/);
+  assert.match(source, /\.advisor-widget__close\s*\{[\s\S]*?min-height:\s*44px/);
+  assert.match(source, /\.advisor-reply,\s*\n\.advisor-link\s*\{[\s\S]*?min-height:\s*44px/);
+  assert.match(source, /\.advisor-widget__stop,[\s\S]*?min-height:\s*44px/);
   assert.match(source, /@media \(max-width: 640px\)/);
   assert.match(source, /width: 100%/);
   assert.match(source, /@media \(prefers-reduced-motion: reduce\)/);
