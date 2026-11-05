@@ -157,7 +157,7 @@
       : "";
     return `
       ${response.next_question ? `<p class="advisor-answer__question">${escapeHtml(response.next_question)}</p>` : ""}
-      ${replies ? `<div class="advisor-replies">${replies}</div>` : ""}
+      ${replies ? `<div class="advisor-replies" role="group" aria-label="${label("可选回答", "Answer choices")}">${replies}</div>` : ""}
       ${(links || retry) ? `<div class="advisor-actions">${links}${retry}</div>` : ""}
       ${sources ? `<div class="advisor-sources"><span>${label("相关资料", "Related reading")}</span>${sources}</div>` : ""}`;
   }

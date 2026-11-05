@@ -27,7 +27,7 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /root\.hidden\s*=\s*true/);
   assert.match(source, /shell\.root\.hidden\s*=\s*false/);
   assert.match(source, /preloadScript|rel:\s*"preload"|rel = "preload"/);
-  assert.match(source, /ADVISOR_ASSET_V|20261104-fab15/);
+  assert.match(source, /ADVISOR_ASSET_V|20261105-fab16/);
   assert.match(source, /link\[rel="stylesheet"\]\[href=/);
   assert.match(source, /style_load_timeout/);
   assert.match(source, /openAdvisorSafe\(shell\.primary, flags, "auto-open"\)/);
@@ -40,9 +40,9 @@ test("public tool menu loads the deterministic advisor without embedding model s
 
 test("homepage preloads advisor assets for instant Ask open", () => {
   const html = read("apps/site/Lumino 官网.dc.html");
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.css\?v=20261104-fab15/);
-  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261104-fab15/);
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261104-fab15/);
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.css\?v=20261105-fab16/);
+  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261105-fab16/);
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261105-fab16/);
 });
 
 test("float dock stays viewport-fixed and clusters ask/tools/top", () => {
@@ -79,6 +79,7 @@ test("advisor widget preserves keyboard, privacy and current-tab recovery contro
   assert.match(source, /startThinking/);
   assert.match(source, /client_deterministic/);
   assert.match(source, /data-advisor-show-more|data-advisor-more-topics/);
+  assert.match(source, /role="group"|Answer choices/);
   assert.doesNotMatch(source, /THINK_MIN_FIXED_MS|remainingThink|CHUNK_MS/);
   assert.match(source, /对照已发布说明|Checking published guidance/);
   assert.match(source, /Buffer stream text only|deliberation/);
@@ -99,6 +100,8 @@ test("advisor presentation reuses site tokens and has mobile and reduced-motion 
   assert.match(source, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(source, /data-thinking/);
   assert.match(source, /advisor-think-pulse/);
+  assert.match(source, /container-type:\s*inline-size/);
+  assert.match(source, /grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/);
   assert.doesNotMatch(source, /linear-gradient|radial-gradient/);
 });
 

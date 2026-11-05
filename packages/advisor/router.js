@@ -85,14 +85,13 @@
     return response;
   }
 
-  function buildReplyOutcome(record, replyId, replyLabel, lang) {
+  function buildReplyOutcome(record, replyId, lang) {
     const response = buildFixed(record, lang);
     const allowed = (record.suggestedReplies || []).find((item) => item.id === replyId);
     if (!allowed) return response;
-    const selected = replyLabel || text(allowed.label, lang);
-    response.answer = lang === "en"
-      ? `Recorded: ${selected}. Next, use the reading or service entry below. A formal conclusion still needs the relevant business facts and, where applicable, specialist review.`
-      : `已记录：${selected}。接下来可先查看下方资料或服务入口。正式结论仍需结合相关业务事实，必要时由专业人员复核。`;
+    const outcome = catalog.replyOutcomes && catalog.replyOutcomes[record.topicId] && catalog.replyOutcomes[record.topicId][replyId];
+    if (!outcome) throw new Error(`Missing deterministic reply outcome: ${record.topicId}.${replyId}`);
+    response.answer = text(outcome, lang);
     response.next_question = null;
     response.suggested_replies = [];
     assertValid(response);
@@ -169,7 +168,7 @@
     if (toolRoute) return buildToolRoute(toolRoute, lang);
 
     const answer = catalog.fixedAnswers.find((record) => isPublished(record, asOf) && record.topicId === topicId);
-    if (answer && request.replyId) return buildReplyOutcome(answer, request.replyId, request.text, lang);
+    if (answer && request.replyId) return buildReplyOutcome(answer, request.replyId, lang);
     if (answer) return buildFixed(answer, lang);
     return buildFallback(lang);
   }
