@@ -93,7 +93,7 @@ function buildDocument() {
     "6. 本文件必须由目录重新生成并通过 `--check`，避免文档与运行时内容漂移。",
     ""
   );
-  return `${lines.join("\n")}\n`;
+  return lines.join("\n");
 }
 
 const generated = buildDocument();
