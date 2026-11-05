@@ -62,9 +62,35 @@ test("a suggested reply advances the deterministic flow instead of falling back"
   const response = advisor.route({ topicId: "cbam_scope", replyId: "steel", text: "钢铁", lang: "zh", asOf: AS_OF });
   assert.equal(response.answer_mode, "fixed");
   assert.equal(response.topic_id, "cbam_scope");
-  assert.match(response.answer, /已记录：钢铁/);
+  assert.equal(response.answer, catalog.replyOutcomes.cbam_scope.steel.zh);
+  assert.match(response.answer, /8 位 CN Code/);
   assert.equal(response.next_question, null);
   assert.equal(response.suggested_replies.length, 0);
+});
+
+test("every visible preset reply has a bilingual deterministic terminal answer", () => {
+  let checked = 0;
+  for (const record of catalog.fixedAnswers) {
+    for (const option of record.suggestedReplies || []) {
+      const outcome = catalog.replyOutcomes?.[record.topicId]?.[option.id];
+      assert.ok(outcome, `missing outcome for ${record.topicId}.${option.id}`);
+      assert.ok(outcome.zh.length >= 24, `short zh outcome for ${record.topicId}.${option.id}`);
+      assert.ok(outcome.en.length >= 24, `short en outcome for ${record.topicId}.${option.id}`);
+      for (const lang of ["zh", "en"]) {
+        const response = advisor.route({ topicId: record.topicId, replyId: option.id, lang, asOf: AS_OF });
+        assert.equal(response.answer_mode, "fixed");
+        assert.equal(response.confidence, "high");
+        assert.equal(response.answer, outcome[lang]);
+        assert.equal(response.next_question, null);
+        assert.deepEqual(response.suggested_replies, []);
+        assert.ok(response.cta, `missing terminal CTA for ${record.topicId}.${option.id}`);
+        assert.ok(response.sources.length > 0, `missing source for ${record.topicId}.${option.id}`);
+        assert.equal(schema.validateResponse(response).ok, true);
+      }
+      checked += 1;
+    }
+  }
+  assert.equal(checked, 37);
 });
 
 test("unknown questions fail safely instead of inventing an answer", () => {

@@ -176,6 +176,67 @@
     }
   ]);
 
+  // Every visible reply has a reviewed deterministic outcome. Keeping these
+  // outcomes in the catalog makes the full flow auditable and prevents a
+  // preset choice from falling through to a model-generated answer.
+  const replyOutcomes = Object.freeze({
+    cbam_scope: Object.freeze({
+      steel: L("钢铁产品是 CBAM 的重点范围之一，但仍要按欧盟进口端使用的 8 位 CN Code 核对具体货物。先向进口商确认申报编码，再用编码指南检查对应品类和工艺范围。", "Iron and steel are core CBAM sectors, but the exact goods still need to be checked against the eight-digit CN code used by the EU importer. Confirm that declared code first, then check the covered category and production route."),
+      aluminium: L("铝产品可能属于 CBAM，但不能只凭材质名称判断。请先取得进口商使用的 8 位 CN Code，并确认产品形态与生产工艺，再核对当期覆盖范围。", "Aluminium products may fall under CBAM, but material name alone is not enough. Obtain the eight-digit CN code used by the importer and confirm product form and production route before checking current coverage."),
+      "other-cbam": L("水泥、化肥、氢等品类中只有特定 CN Code 被覆盖，并非同类产品全部自动纳入。先整理产品说明、现有 HS Code 和欧盟进口编码，再逐项核对。", "Only specified CN codes in sectors such as cement, fertilisers and hydrogen are covered; not every related product is automatically in scope. Gather the product description, current HS code and EU import code for a line-by-line check."),
+      unknown: L("先准备产品中英文名称、用途、材质或成分、生产工艺，以及出口报关使用的 HS Code，并向欧盟进口商索取其申报的 CN Code。信息齐全后才能进行初步范围判断。", "Prepare the product name, use, material or composition, production process and export HS code, and ask the EU importer for its declared CN code. Those facts are needed for a preliminary scope check.")
+    }),
+    cbam_data_start: Object.freeze({
+      template: L("先锁定模板版本、报告期间、提交口径和截止时间，再把每个字段映射到产品、产量、燃料、电热、工艺排放和前体材料的数据来源。无法填写的字段单独列为缺口，不要用估算值直接覆盖。", "Lock the template version, reporting period, submission basis and deadline. Map every field to sources for products, output, fuels, electricity or heat, process emissions and precursors, and list missing fields as gaps rather than silently estimating them."),
+      deadline: L("只有时限时，应立即向进口商确认使用的模板、产品 CN Code、报告期间、生产设施以及是否需要前体材料数据。同时先建立最小资料包：产量、燃料、电热、工艺和供应商声明。", "When only a deadline is known, immediately confirm the template, product CN code, reporting period, installation and precursor requirements with the importer. In parallel, assemble a minimum pack covering output, fuels, purchased energy, processes and supplier statements."),
+      "request-only": L("先把口头要求转成书面需求，至少确认产品和 CN Code、数据期间、用途、模板、截止时间及接收方。未确认这些边界前，可以盘点数据来源，但不宜直接出正式数据表。", "Turn the informal request into a written brief covering product and CN code, data period, intended use, template, deadline and recipient. You can inventory data sources meanwhile, but should not issue a formal data sheet before those boundaries are confirmed."),
+      unknown: L("先向进口商发送五个确认项：要哪些产品、使用什么 CN Code、覆盖哪个期间、采用哪份模板、何时提交。内部同时确认生产厂区和前体材料，这样可以快速形成可执行的数据清单。", "Ask the importer five things first: which products, which CN codes, what period, which template and what deadline. Internally confirm the producing sites and precursors so an actionable data list can be created quickly.")
+    }),
+    cbam_vs_pcf: Object.freeze({
+      "eu-importer": L("欧盟进口商提出要求时，应优先按 CBAM 的编码、设施、工艺和前体规则准备嵌入排放数据。若对方同时要产品碳足迹，应另行确认功能单位和生命周期边界，不能直接把 CBAM 数值当作 PCF。", "When the EU importer is asking, prioritise CBAM data by code, installation, production route and precursor rules. If a product carbon footprint is also requested, confirm its functional unit and life-cycle boundary separately rather than reusing the CBAM result as the PCF."),
+      brand: L("品牌或采购方通常更关注产品碳足迹或其指定问卷。先确认方法标准、功能单位、边界和验证要求；只有涉及欧盟进口申报且产品在覆盖编码内时，才另外启动 CBAM 路径。", "A brand or procurement team usually needs a product footprint or its own questionnaire. Confirm the method, functional unit, boundary and assurance requirement; start a separate CBAM track only where EU import reporting and covered codes apply."),
+      both: L("两项要求可以共用产量、物料、能源和供应商数据底账，但应建立两套计算边界、字段映射和结论页。建议先做一张共用数据清单，再分别输出 CBAM 与 PCF 交付物。", "The two requests can share ledgers for output, materials, energy and suppliers, but need separate boundaries, field mappings and conclusions. Build one shared data inventory, then produce distinct CBAM and PCF deliverables."),
+      internal: L("内部管理先明确目标：组织减排通常从碳盘查开始，产品设计或客户沟通通常用 PCF。只有存在欧盟进口合规需求时，CBAM 才应作为独立的合规工作流。", "For internal management, define the objective first: organisational reduction usually starts with a GHG inventory, while product design or customer communication usually calls for a PCF. CBAM should remain a separate compliance workflow when EU import obligations apply.")
+    }),
+    esg_ghg: Object.freeze({
+      report: L("ESG 报告应先确定报告期间、组织范围、采用框架、重大议题和披露责任人，再建立指标与证据清单。碳盘查可以作为环境数据底座，但不能代替完整的 ESG 报告。", "For an ESG report, first define the reporting period, organisational scope, framework, material topics and disclosure owners, then create an indicator and evidence list. A GHG inventory can support environmental data but does not replace the full ESG report."),
+      questionnaire: L("先取得原始问卷、评分说明和截止时间，把每一题标为已有证据、需补数据或需管理确认。回答应引用可追溯的制度、记录或指标，避免只写原则性承诺。", "Obtain the original questionnaire, scoring guidance and deadline. Mark each item as evidenced, data gap or management confirmation, and support responses with traceable policies, records or metrics rather than broad commitments."),
+      inventory: L("组织碳盘查应先确定组织边界、基准年、运营边界和核算方法，再收集 Scope 1/2，并按相关性筛选 Scope 3。最终交付应包含清单、因子来源、假设和数据质量说明。", "A corporate GHG inventory should first set the organisational boundary, base year, operational boundary and method, then collect Scope 1/2 and screen relevant Scope 3 categories. The deliverable should include the inventory, factor sources, assumptions and data-quality notes."),
+      "scope-data": L("先确认对方要的是总量、分项台账还是特定 Scope 类别，并确认组织范围、期间、单位和方法。Scope 1/2/3 不能只按费用科目机械分类，应按排放源和价值链关系判断。", "Confirm whether the requester needs totals, a detailed ledger or selected Scope categories, together with the organisational boundary, period, unit and method. Scope 1/2/3 should be classified by emission source and value-chain relationship, not merely by expense account.")
+    }),
+    pcf_data_start: Object.freeze({
+      boundary: L("先写一页边界说明：产品与功能单位、生命周期起止点、纳入的工厂和工艺、时间与地域代表性、分配规则及排除项。边界确认后再发采集表，可避免大量返工。", "Write a one-page boundary note covering product and functional unit, life-cycle start and end, included sites and processes, temporal and geographic representativeness, allocation rules and exclusions. Confirm it before issuing data templates to avoid rework."),
+      collect: L("最小采集清单包括产品产量与合格率、BOM 和材料用量、各工序能源、边界内运输、废料与处置，以及每项数据的期间、单位、负责人和证据。先从一个代表产品跑通。", "The minimum list covers product output and yield, BOM and material quantities, process energy, in-boundary transport, scrap and treatment, plus period, unit, owner and evidence for each item. Prove the flow with one representative product first."),
+      hotspot: L("先把各阶段结果统一到同一功能单位，检查高贡献项是否由真实用量、排放因子或分配方法驱动，再区分可控与不可控热点。对外说明应同时写贡献、原因、数据质量和可执行的减排动作。", "Normalise all stages to the same functional unit, check whether major contributions are driven by quantities, factors or allocation, and separate controllable from less-controllable hotspots. External communication should cover contribution, cause, data quality and actionable reduction measures."),
+      unknown: L("建议先选一个产量稳定、资料相对完整的代表产品，完成边界确认和最小数据清单，再决定是否扩展到其他型号。这样可以最快发现数据口径和分配难点。", "Choose one stable, well-documented representative product, confirm its boundary and minimum data list, and only then decide whether to expand to other models. This is the fastest way to expose data-basis and allocation issues.")
+    }),
+    inventory_first_year: Object.freeze({
+      bills: L("先把连续 12 个月的电力、燃料、制冷剂和外购热力账单按法人、厂区和月份归集，并记录计量点与费用主体不一致的情况。随后补充排放源清单和缺失月份说明。", "Consolidate twelve months of electricity, fuel, refrigerant and purchased-heat records by legal entity, site and month, noting mismatches between meters and billed entities. Then add an emission-source register and document missing periods."),
+      sites: L("先确定采用运营控制、财务控制还是股权比例，并列出所有法人、厂区、仓库和租赁地点的纳入理由。多厂数据应使用统一模板、单位和截止日期，并保留合并抵销规则。", "Choose operational control, financial control or equity share, and list the inclusion rationale for every entity, plant, warehouse and leased location. Use one template, units and cut-off across sites and retain consolidation and elimination rules."),
+      scope3: L("先确认客户点名的 Scope 3 类别和数据粒度，再结合采购、物流、差旅、售出产品等价值链活动做相关性筛选。首年优先 2–4 个高相关类别，并区分供应商实测数据与估算。", "Confirm the Scope 3 categories and granularity named by the customer, then screen relevance across purchasing, logistics, travel, sold products and other value-chain activities. Prioritise two to four material categories in year one and distinguish supplier data from estimates."),
+      unknown: L("从两张清单开始：组织与厂区清单，以及过去 12 个月能源和制冷剂资料清单。先完成 Scope 1/2 的边界与数据缺口图，再决定 Scope 3 的优先类别。", "Start with two lists: entities and sites, and twelve months of energy and refrigerant evidence. Complete the Scope 1/2 boundary and gap map first, then select priority Scope 3 categories.")
+    }),
+    eudr_csddd: Object.freeze({
+      eudr: L("先确认产品是否属于相关商品范围，并建立供应商—批次—原料产地—地块的追溯链。资料通常包括地理位置、合法性证明、批次关联、风险评估与减缓记录；仅有供应商承诺通常不够。", "First confirm whether the product falls within the relevant commodity scope and build a supplier-to-lot-to-origin-to-plot traceability chain. Evidence commonly includes geolocation, legality, lot linkage, risk assessment and mitigation; a supplier declaration alone is usually insufficient."),
+      csddd: L("先建立适用性与客户要求清单，再准备治理职责、价值链风险识别、供应商条款、申诉渠道、纠正和跟踪记录。重点是可运行的尽职管理过程，而不是单独一份政策文件。", "Create an applicability and customer-requirement list, then prepare governance roles, value-chain risk identification, supplier clauses, grievance channels, remediation and monitoring records. The focus is an operating due-diligence process, not a standalone policy."),
+      both: L("可以共用供应商主数据和风险分层，但应分别建立 EUDR 的商品与地块证据矩阵，以及 CSDDD 的治理与尽职管理证据矩阵。为两条路径指定责任人和更新时间，避免一套文件混用。", "A shared supplier master and risk tiering can support both, but maintain separate evidence matrices for EUDR commodity and plot traceability and for CSDDD governance and due diligence. Assign owners and refresh dates to each track."),
+      unknown: L("先请客户书面确认适用法规、涉及产品或原料、所需交付物和截止时间。拿到要求后，再判断是地块与批次追溯、公司尽职管理，还是两者都需要。", "Ask the customer to confirm in writing the applicable regulation, products or materials, required deliverable and deadline. Then determine whether plot and lot traceability, corporate due diligence or both are needed.")
+    }),
+    renewable_power: Object.freeze({
+      specified: L("把指定凭证的标准、签发机构、适用地域、生产年份、时间匹配、核销主体和客户接受条件写成核对表。再对现有采购合同和证书逐项查缺口，避免购买后无法被客户认可。", "Turn the specified evidence into a checklist covering standard, issuer, geography, production vintage, time matching, retirement entity and customer acceptance. Compare current contracts and certificates against it before purchasing."),
+      "target-only": L("先确定基准年用电量、目标年份与比例，并按厂区和负荷特征拆分。随后比较自建、直购和证书的可获得性、成本、凭证质量和年度匹配，形成分阶段组合方案。", "Set the baseline electricity use, target year and share, split by site and load profile. Then compare on-site generation, direct purchase and certificates on availability, cost, evidence quality and annual matching to form a phased portfolio."),
+      planning: L("内部规划先盘点各厂区年用电、屋顶或场地条件、合同约束、预算和减排目标，再设计自建、绿电交易与证书的组合。应同时明确凭证归属和核销规则。", "For internal planning, inventory annual demand by site, roof or land potential, contract constraints, budget and reduction targets, then design a mix of on-site generation, renewable procurement and certificates, including ownership and retirement rules."),
+      unknown: L("先确认购买目的、用电地域、覆盖期间、目标比例，以及客户或披露框架接受什么凭证。没有这些条件时不宜先选证书或报价。", "Confirm the purpose, electricity location, coverage period, target share and evidence accepted by the customer or disclosure framework. Do not select certificates or quotes before those conditions are known.")
+    }),
+    service_triage: Object.freeze({
+      "eu-importer": L("这类要求通常先进入 CBAM 路径。请准备产品名称、进口商使用的 CN Code、报告期间、模板和截止时间；若对方还要求生命周期足迹，再单独增加 PCF 工作流。", "This usually starts with the CBAM track. Prepare the product name, importer CN code, reporting period, template and deadline; add a separate PCF track only if a life-cycle footprint is also required."),
+      customer: L("先让客户明确交付物：产品碳足迹、ESG 报告或问卷、组织碳盘查，还是出口合规资料。拿到样表或原始要求后，才能准确匹配主服务。", "Ask the customer to name the deliverable: product footprint, ESG report or questionnaire, corporate GHG inventory, or export-compliance evidence. Obtain the original request or template before matching the primary service."),
+      regulator: L("先记录具体法规或市场、产品范围、适用主体、司法辖区、提交形式和截止时间，再进入出口合规或专项核查。法规名称不清时，不应直接承诺结论。", "Record the exact regulation or market, product scope, obligated entity, jurisdiction, submission format and deadline before starting export compliance or a scoped review. Do not promise a conclusion while the legal basis is unclear."),
+      internal: L("内部目标决定服务：组织减排与披露从碳盘查开始，产品设计与客户足迹从 PCF 开始，能源转型进入绿电与绿证规划。先选一个可量化目标和时间点。", "The internal objective determines the service: organisational reduction and disclosure start with a GHG inventory, product design and customer footprints with PCF, and energy transition with renewable-power planning. Choose one measurable objective and date first."),
+      unknown: L("请先补齐三项最小信息：是谁提出要求、希望收到什么文件或数据、什么时候要。如果有邮件、问卷或模板，按原样提供，比先猜服务更有效。", "Provide three minimum facts first: who is asking, what file or data they expect, and when it is due. An original email, questionnaire or template is more useful than guessing the service.")
+    })
+  });
+
   const toolRoutes = Object.freeze([
     {
       id: "tool-cn-code",
@@ -198,11 +259,12 @@
 
   return Object.freeze({
     schemaVersion: "1.0.0",
-    contentVersion: "2026-11-02.2",
+    contentVersion: "2026-11-05.1",
     reviewCycleDays: 120,
     topics,
     sources,
     fixedAnswers,
+    replyOutcomes,
     toolRoutes
   });
 });
