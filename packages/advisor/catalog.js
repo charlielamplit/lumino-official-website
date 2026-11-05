@@ -184,7 +184,7 @@
       steel: L("钢铁产品是 CBAM 的重点范围之一，但仍要按欧盟进口端使用的 8 位 CN Code 核对具体货物。先向进口商确认申报编码，再用编码指南检查对应品类和工艺范围。", "Iron and steel are core CBAM sectors, but the exact goods still need to be checked against the eight-digit CN code used by the EU importer. Confirm that declared code first, then check the covered category and production route."),
       aluminium: L("铝产品可能属于 CBAM，但不能只凭材质名称判断。请先取得进口商使用的 8 位 CN Code，并确认产品形态与生产工艺，再核对当期覆盖范围。", "Aluminium products may fall under CBAM, but material name alone is not enough. Obtain the eight-digit CN code used by the importer and confirm product form and production route before checking current coverage."),
       "other-cbam": L("水泥、化肥、氢等品类中只有特定 CN Code 被覆盖，并非同类产品全部自动纳入。先整理产品说明、现有 HS Code 和欧盟进口编码，再逐项核对。", "Only specified CN codes in sectors such as cement, fertilisers and hydrogen are covered; not every related product is automatically in scope. Gather the product description, current HS code and EU import code for a line-by-line check."),
-      unknown: L("先准备产品中英文名称、用途、材质或成分、生产工艺，以及出口报关使用的 HS Code，并向欧盟进口商索取其申报的 CN Code。信息齐全后才能进行初步范围判断。", "Prepare the product name, use, material or composition, production process and export HS code, and ask the EU importer for its declared CN code. Those facts are needed for a preliminary scope check.")
+      unknown: L("先准备产品中英文名称、用途、材质或成分、生产工艺，以及出口报关使用的 HS Code，并向欧盟进口商索取其申报的 CN Code。若无法取得或双方编码不一致，保留两套编码和产品资料，不自行下结论，转海关归类或专业复核。", "Prepare the product name, use, material or composition, production process and export HS code, and ask the EU importer for its declared CN code. If the code is unavailable or the two sides disagree, retain both codes and the product evidence and seek customs-classification or specialist review rather than deciding it yourself.")
     }),
     cbam_data_start: Object.freeze({
       template: L("先锁定模板版本、报告期间、提交口径和截止时间，再把每个字段映射到产品、产量、燃料、电热、工艺排放和前体材料的数据来源。无法填写的字段单独列为缺口，不要用估算值直接覆盖。", "Lock the template version, reporting period, submission basis and deadline. Map every field to sources for products, output, fuels, electricity or heat, process emissions and precursors, and list missing fields as gaps rather than silently estimating them."),
@@ -247,7 +247,7 @@
       reviewer: "Lumino CBAM 服务负责人",
       topicIds: ["cn_code_lookup"],
       keywords: ["cn code", "cn-code", "hs code", "hs 编码", "taric", "海关编码", "商品编码", "查cn", "查 cn", "查hs", "查 hs", "正式归类", "归类决定", "customs classification", "classify my goods", "正式 cn", "编码是多少", "认定我的", "告诉我编码"],
-      answer: L("可以先使用现有工具。CBAM 试算器可从已支持的 CN Code 列表选择产品并进行成本试算；编码指南用于理解 HS、CN 和 TARIC 的关系与核对顺序。这些入口不替代正式海关归类或专家复核。", "Use the existing tools first. The CBAM calculator lets you select from supported CN codes and estimate cost; the code guide explains HS, CN and TARIC and the checking order. These tools do not replace formal customs classification or expert review."),
+      answer: L("可以先使用现有合规工具。CBAM 试算器可从已支持的 CN Code 列表选择产品并进行成本试算；编码指南用于理解 HS、CN 和 TARIC 的关系与核对顺序。这些入口不替代正式海关归类或专家复核。", "Start with the available compliance tools. The CBAM calculator lets you select from supported CN codes and estimate cost; the code guide explains HS, CN and TARIC and the checking order. These tools do not replace formal customs classification or expert review."),
       links: [
         { type: "tool", label: L("进入 CBAM 试算器", "Open the CBAM calculator"), url: "/calculator" },
         { type: "knowledge", label: L("查看编码核对指南", "View the code-checking guide"), url: "/knowledge/article?id=cbam-hs-cn-codes" },
@@ -259,7 +259,7 @@
 
   return Object.freeze({
     schemaVersion: "1.0.0",
-    contentVersion: "2026-11-05.1",
+    contentVersion: "2026-11-05.3",
     reviewCycleDays: 120,
     topics,
     sources,

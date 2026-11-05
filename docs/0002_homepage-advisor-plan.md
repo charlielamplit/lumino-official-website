@@ -80,8 +80,8 @@
 **已采用方案 B**（主按钮 = 问 Lumino）。不增加第二个大悬浮按钮。
 
 - 右下角主按钮文案为「问 Lumino」/「Ask Lumino」；`public_beta` 开启时点击直接打开顾问浮窗；
-- 旁侧次级「工具」按钮展开计算器、PCF/盘查/绿电等快捷入口；
-- `ADVISOR_PUBLIC_BETA=0` 时主按钮回退为仅「工具」菜单，顾问 soft CTA 隐藏；
+- 旁侧次级「合规工具」按钮展开计算器、PCF/盘查/绿电等快捷入口；
+- `ADVISOR_PUBLIC_BETA=0` 时主按钮回退为仅「合规工具」菜单，顾问 soft CTA 隐藏；
 - 首页 Hero 与页底 closing 各保留一条非悬浮 soft CTA：「不确定需要哪项服务？问 Lumino」，与 FAB 打开同一浮窗。
 
 ### 4.2 桌面端

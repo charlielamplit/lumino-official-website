@@ -3,7 +3,7 @@
   const i18n = window.LuminoI18n || { detectLang: () => "zh" };
   const TOP_SHOW_Y = 480;
   // Preload hints reduce download time; the runtime itself starts only after user intent.
-  const ADVISOR_ASSET_V = "20261105-fab16";
+  const ADVISOR_ASSET_V = "20261105-fab17";
   const ADVISOR_OPEN_TIMEOUT_MS = 12000;
   const ADVISOR_SCRIPT_TIMEOUT_MS = 6000;
   const pendingScriptCancels = new Set();
@@ -278,16 +278,16 @@
     return lang === "en"
       ? {
           ask: "Ask Lumino",
-          tools: "Tools",
-          toolsTitle: "Choose a tool",
-          toolsHint: "Calculators and estimates",
+          tools: "Compliance tools",
+          toolsTitle: "Choose a compliance tool",
+          toolsHint: "Calculators and quick checks",
           top: "Back to top",
         }
       : {
           ask: "问 Lumino",
-          tools: "工具",
-          toolsTitle: "选择工具",
-          toolsHint: "计算器与初步估算",
+          tools: "合规工具",
+          toolsTitle: "选择合规工具",
+          toolsHint: "计算器与快速核对",
           top: "回到顶部",
         };
   }

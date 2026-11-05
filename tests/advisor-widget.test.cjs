@@ -27,7 +27,7 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /root\.hidden\s*=\s*true/);
   assert.match(source, /shell\.root\.hidden\s*=\s*false/);
   assert.match(source, /preloadScript|rel:\s*"preload"|rel = "preload"/);
-  assert.match(source, /ADVISOR_ASSET_V|20261105-fab16/);
+  assert.match(source, /ADVISOR_ASSET_V|20261105-fab17/);
   assert.match(source, /link\[rel="stylesheet"\]\[href=/);
   assert.match(source, /style_load_timeout/);
   assert.match(source, /openAdvisorSafe\(shell\.primary, flags, "auto-open"\)/);
@@ -40,9 +40,23 @@ test("public tool menu loads the deterministic advisor without embedding model s
 
 test("homepage preloads advisor assets for instant Ask open", () => {
   const html = read("apps/site/Lumino 官网.dc.html");
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.css\?v=20261105-fab16/);
-  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261105-fab16/);
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261105-fab16/);
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.css\?v=20261105-fab17/);
+  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261105-fab17/);
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261105-fab17/);
+});
+
+test("public navigation and advisor use the Compliance tools name consistently", () => {
+  const floatTools = read("apps/site/site/float-tools.js");
+  const shell = read("apps/site/site/site-shell.js");
+  const widget = read("apps/site/site/advisor-widget.js");
+  const toolsPage = read("apps/site/tools/index.html");
+  assert.match(floatTools, /tools:\s*"Compliance tools"/);
+  assert.match(floatTools, /tools:\s*"合规工具"/);
+  assert.match(floatTools, /toolsTitle:\s*"选择合规工具"/);
+  assert.match(shell, /zh:\s*"合规工具",\s*en:\s*"Compliance tools"/);
+  assert.match(widget, /推荐合规工具/);
+  assert.match(toolsPage, /<title>合规工具 · Lumino<\/title>/);
+  assert.match(toolsPage, /data-i18n-zh="合规工具" data-i18n-en="Compliance tools"/);
 });
 
 test("float dock stays viewport-fixed and clusters ask/tools/top", () => {

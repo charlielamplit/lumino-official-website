@@ -17,7 +17,7 @@
     { id: "services", href: "/apps/site/Lumino%20官网.dc.html#services", zh: "我们的服务", en: "Services" },
     { id: "platform", href: "/apps/site/Lumino%20平台.dc.html", zh: "我们的平台", en: "Platform" },
     { id: "industries", href: "/apps/site/industries/", zh: "解决方案", en: "Industries" },
-    { id: "tools", href: "/apps/site/tools/", zh: "工具", en: "Tools" },
+    { id: "tools", href: "/apps/site/tools/", zh: "合规工具", en: "Compliance tools" },
     { id: "knowledge", href: "/apps/site/knowledge/", zh: "行业知识库", en: "Insights" },
     { id: "about", href: "/apps/site/Lumino%20关于.dc.html", zh: "关于我们", en: "About" },
     { id: "contact", href: "/apps/site/Lumino%20联系.dc.html", zh: "联系我们", en: "Contact" },
@@ -112,7 +112,7 @@
         { zh: "我们的平台", en: "Platform", href: "/apps/site/Lumino%20平台.dc.html" },
         { zh: "解决方案", en: "Industries", href: "/apps/site/industries/" },
         { zh: "项目案例", en: "Project cases", href: "/apps/site/cases/" },
-        { zh: "工具", en: "Tools", href: "/apps/site/tools/" },
+        { zh: "合规工具", en: "Compliance tools", href: "/apps/site/tools/" },
         { zh: "行业知识库", en: "Insights", href: "/apps/site/knowledge/" },
       ];
       const company = [
