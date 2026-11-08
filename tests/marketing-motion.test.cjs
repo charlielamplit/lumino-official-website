@@ -34,7 +34,7 @@ test("audit fixes remove side stripes and low-signal REUSE label", () => {
 
 test("industry cards and compact subpages keep content readable and dense", () => {
   const css = read("apps/site/site/site-v3.css");
-  assert.match(css, /\.m-ind-cell::before\s*\{[\s\S]*?rgba\(7,31,22,\.86\)/);
+  assert.match(css, /\.m-ind-cell::before\s*\{[\s\S]*?rgba\(7,31,22,\.62\)[\s\S]*?rgba\(7,31,22,\.88\)/);
   assert.match(css, /\.m-ind-cell\s*\{[\s\S]*?color:\s*#fff/);
   assert.match(css, /\.m-ind-cell p\s*\{[\s\S]*?rgba\(247, 250, 248, \.86\)/);
   assert.match(css, /\.m-page-hero--compact\s*\{[^}]*padding:\s*clamp\(22px, 3vw, 32px\)/);

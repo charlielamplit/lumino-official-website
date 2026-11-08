@@ -32,6 +32,7 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /style_load_timeout/);
   assert.match(source, /openAdvisorSafe\(shell\.primary, flags, "auto-open"\)/);
   assert.match(source, /if \(isHomepage\(\)\) openAdvisorSafe/);
+  assert.match(source, /path === "\/site"/);
   assert.doesNotMatch(source, /primary\.disabled\s*=\s*true/);
   assert.doesNotMatch(source, /warmAdvisor|scheduleAutoOpen/);
   assert.doesNotMatch(source, /window\.location\.href\s*=\s*"\/apps\/site\/Lumino%20联系/);

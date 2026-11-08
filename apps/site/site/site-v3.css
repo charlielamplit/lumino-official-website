@@ -829,7 +829,7 @@ lumino-header {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(180deg, rgba(7,31,22,.48) 0%, rgba(7,31,22,.7) 56%, rgba(7,31,22,.86) 100%),
+    linear-gradient(180deg, rgba(7,31,22,.62) 0%, rgba(7,31,22,.74) 56%, rgba(7,31,22,.88) 100%),
     var(--ind-img, none) center / cover no-repeat;
   opacity: 1;
   transition: filter .35s var(--ease-soft);

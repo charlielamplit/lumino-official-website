@@ -29,6 +29,7 @@
   function isHomepage() {
     const path = decodeURIComponent(window.location.pathname || "/").replace(/\/+$/, "") || "/";
     return path === "/"
+      || path === "/site"
       || path === "/apps/site/Lumino 官网.dc.html"
       || path === "/Lumino 官网.dc.html";
   }
