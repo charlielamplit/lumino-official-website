@@ -128,18 +128,28 @@
 
   function initialMarkup() {
     const topics = root.LuminoAdvisor.getTopics(lang());
-    const primaryIds = new Set(["cbam_scope", "cbam_data_start", "pcf_data_start", "service_triage"]);
-    const primaryTopics = topics.filter((topic) => primaryIds.has(topic.id));
-    const moreTopics = topics.filter((topic) => !primaryIds.has(topic.id));
-    const topicButton = (topic) => `<button class="advisor-topic" type="button" data-topic-id="${escapeHtml(topic.id)}">${escapeHtml(topic.label)}</button>`;
+    const topicTones = {
+      cbam_scope: "green",
+      cbam_data_start: "green",
+      cbam_vs_pcf: "gold",
+      pcf_data_start: "teal",
+      esg_ghg: "blue",
+      inventory_first_year: "blue",
+      eudr_csddd: "gold",
+      renewable_power: "green",
+      service_triage: "teal",
+    };
+    const topicButton = (topic) => `<button class="advisor-topic" type="button" data-topic-id="${escapeHtml(topic.id)}" data-topic-tone="${topicTones[topic.id] || "green"}">
+      <span class="advisor-topic__marker" aria-hidden="true"></span>
+      <span class="advisor-topic__label">${escapeHtml(topic.label)}</span>
+      <span class="advisor-topic__arrow" aria-hidden="true">→</span>
+    </button>`;
     return `<section class="advisor-welcome">
       <p class="advisor-welcome__one">${label("用一句话提问，或点选话题", "Ask in one sentence, or pick a topic")}</p>
     </section>
     <div class="advisor-topics" aria-label="${label("预选话题", "Suggested topics")}">
-      ${primaryTopics.map(topicButton).join("")}
-    </div>
-    ${moreTopics.length ? `<button class="advisor-topics__more" type="button" data-advisor-show-more aria-expanded="false">${label("更多问题", "More topics")}</button>
-      <div class="advisor-topics advisor-topics--more" data-advisor-more-topics hidden>${moreTopics.map(topicButton).join("")}</div>` : ""}`;
+      ${topics.map(topicButton).join("")}
+    </div>`;
   }
 
   function extrasMarkup(response) {
@@ -548,15 +558,6 @@
     panel.querySelector(".advisor-widget__reset").addEventListener("click", reset);
     panel.querySelector(".advisor-widget__stop").addEventListener("click", () => stopActive("user_stop"));
     panel.querySelector(".advisor-thread").addEventListener("click", (event) => {
-      const showMore = event.target.closest("[data-advisor-show-more]");
-      if (showMore) {
-        const moreTopics = panel.querySelector("[data-advisor-more-topics]");
-        const expanded = showMore.getAttribute("aria-expanded") === "true";
-        showMore.setAttribute("aria-expanded", String(!expanded));
-        showMore.textContent = expanded ? label("更多问题", "More topics") : label("收起问题", "Fewer topics");
-        moreTopics.hidden = expanded;
-        return;
-      }
       const stopBtn = event.target.closest("[data-advisor-stop]");
       if (stopBtn) {
         const article = stopBtn.closest(".advisor-turn--assistant");

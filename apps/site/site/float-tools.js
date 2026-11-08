@@ -3,7 +3,7 @@
   const i18n = window.LuminoI18n || { detectLang: () => "zh" };
   const TOP_SHOW_Y = 480;
   // Preload hints reduce download time; the runtime itself starts only after user intent.
-  const ADVISOR_ASSET_V = "20261108-type1";
+  const ADVISOR_ASSET_V = "20261108-type2";
   const ADVISOR_OPEN_TIMEOUT_MS = 12000;
   const ADVISOR_SCRIPT_TIMEOUT_MS = 6000;
   const pendingScriptCancels = new Set();
@@ -25,6 +25,14 @@
     router: `/packages/advisor/router.js?v=${ADVISOR_ASSET_V}`,
     widget: `/apps/site/site/advisor-widget.js?v=${ADVISOR_ASSET_V}`,
   });
+
+  function isHomepage() {
+    const path = decodeURIComponent(window.location.pathname || "/").replace(/\/+$/, "") || "/";
+    return path === "/"
+      || path === "/site"
+      || path === "/apps/site/Lumino 官网.dc.html"
+      || path === "/Lumino 官网.dc.html";
+  }
 
   function loadStyle(href) {
     return new Promise((resolve, reject) => {
@@ -402,8 +410,8 @@
     if (flags.public_beta) {
       wirePrimaryAsAdvisor(shell, flags);
       bindSoftEntries(flags);
-      // Product requirement: enter the homepage with Ask already expanded.
-      openAdvisorSafe(shell.primary, flags, "auto-open");
+      // Product requirement: auto-open only on the public homepage.
+      if (isHomepage()) openAdvisorSafe(shell.primary, flags, "auto-open");
     } else {
       wirePrimaryAsTools(shell);
     }
