@@ -17,6 +17,9 @@
   --danger: #B42318;
   --danger-soft: #FDECEA;
   --white: #FFFFFF;
+  --brand-forest: #013D29;
+  --brand-yellow: #FCC71E;
+  --brand-teal: #539D9D;
 
   /* Semantic color roles. */
   --surface-canvas: #F5F7F6;
@@ -84,10 +87,9 @@ button:active, a:active { transform: translateY(1px); }
 .text-success { color: var(--status-success-text); }
 .text-warning { color: var(--status-warning-text); }
 .text-danger { color: var(--danger); }
-.brand { position: relative; display: inline-flex; align-self: flex-start; align-items: center; min-height: var(--control-sm); color: var(--ink); text-decoration: none; font: 600 .9375rem/1 var(--font-body); letter-spacing: .08em; }
+.brand { position: relative; display: inline-flex; align-self: flex-start; align-items: center; gap: var(--space-xs); min-height: var(--control-sm); color: var(--brand-yellow); text-decoration: none; font: 800 .9375rem/1 "Poppins", var(--font-body); letter-spacing: .04em; }
+.brand img { display: block; width: 33px; height: 24px; object-fit: cover; border-radius: var(--radius-sm); }
 .brand span { position: relative; }
-.brand span::after { content: "LUMINO"; position: absolute; inset: 0; color: var(--green); clip-path: inset(61% 0 0); }
-.brand i { position: absolute; left: -7px; right: -7px; top: 58%; height: 2px; background: var(--ink); }
 .brand-light { color: var(--ink); }
 
 /* Login */
@@ -3266,4 +3268,35 @@ body.drawer-open { overflow: hidden; }
 @keyframes lumino-rise {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Keep the editorial login composition single-column after the later desktop
+   overrides above. This block must remain after those overrides. */
+@media (max-width: 820px) {
+  .login-screen {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 76px auto auto;
+  }
+  .login-header { grid-column: 1; padding-inline: 20px; }
+  .login-story {
+    grid-column: 1;
+    min-height: auto;
+    padding: 40px 28px 32px;
+  }
+  .story-copy h1 { max-width: 13ch; font-size: clamp(36px, 9vw, 48px); }
+  .trust-note { margin-top: 32px; }
+  .login-panel {
+    grid-column: 1;
+    min-height: auto;
+    padding: 20px 28px 48px;
+  }
+  .login-box { width: 100%; }
+}
+
+@media (max-width: 560px) {
+  .login-header nav > a:not(.login-header-cta) { display: none; }
+  .login-story { padding: 32px 20px 28px; }
+  .story-copy h1 { font-size: 36px; }
+  .login-panel { padding: 16px 20px 40px; }
+  .login-box { padding: 24px 20px; }
 }

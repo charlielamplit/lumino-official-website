@@ -3,7 +3,7 @@
   const i18n = window.LuminoI18n || { detectLang: () => "zh" };
   const TOP_SHOW_Y = 480;
   // Preload hints reduce download time; the runtime itself starts only after user intent.
-  const ADVISOR_ASSET_V = "20261105-fab17";
+  const ADVISOR_ASSET_V = "20261108-compact1";
   const ADVISOR_OPEN_TIMEOUT_MS = 12000;
   const ADVISOR_SCRIPT_TIMEOUT_MS = 6000;
   const pendingScriptCancels = new Set();

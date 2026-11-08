@@ -145,26 +145,24 @@ lumino-header {
   white-space: nowrap;
 }
 .brand-lockup .brand-shuoyuan {
-  font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font-family: "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: .08em;
-  color: #063C29;
+  color: var(--brand-forest);
 }
 .brand-lockup .brand-sep {
   font-size: 16px;
   font-weight: 500;
-  color: color-mix(in srgb, #063C29 35%, #FDC82F);
+  color: color-mix(in srgb, var(--brand-forest) 35%, var(--brand-yellow));
   transform: translateY(-1px);
 }
 .brand-lockup .brand-lumino {
-  font-family: "Archivo", "Arial Black", "Helvetica Neue", "PingFang SC", sans-serif;
+  font-family: "Poppins", "Helvetica Neue", "PingFang SC", sans-serif;
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: .04em;
-  color: #E8B400;
-  -webkit-text-stroke: 0.45px #E8B400;
-  paint-order: stroke fill;
+  color: var(--brand-yellow);
 }
 @media (max-width: 720px) {
   .brand-lockup .brand-mark { height: 30px; }

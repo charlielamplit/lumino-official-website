@@ -4,7 +4,7 @@
     const link = document.createElement("link");
     link.id = "lumino-brand-fonts";
     link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&display=swap";
+    link.href = "https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&display=swap";
     document.head.appendChild(link);
   }
   const i18n = window.LuminoI18n || {
@@ -57,7 +57,7 @@
                 <img class="brand-mark" src="/apps/site/site/assets/brand/mark-128.png" width="88" height="64" alt="">
               </picture>
               <span class="brand-text" aria-hidden="false">
-                <span class="brand-shuoyuan">铄垣</span><span class="brand-sep" aria-hidden="true">|</span><span class="brand-lumino">LUMINO</span>
+                <span class="brand-shuoyuan">铄垣</span><span class="brand-sep" aria-hidden="true">|</span><span class="brand-lumino">LUMiNO</span>
               </span>
             </a>
             <nav class="site-nav" aria-label="${L === "en" ? "Primary" : "主导航"}">${links}</nav>
@@ -66,7 +66,7 @@
                 <a href="#" data-lang="zh" aria-current="${L === "zh"}">中</a>
                 <a href="#" data-lang="en" aria-current="${L === "en"}">EN</a>
               </div>
-              <a class="portal-entry" href="/apps/portal/"><span>${portal}</span><b aria-hidden="true">↗</b></a>
+              <a class="portal-entry" href="/apps/portal"><span>${portal}</span><b aria-hidden="true">↗</b></a>
               <a class="header-cta" href="${withLang("/apps/site/Lumino%20联系.dc.html")}">${consult}</a>
               <button class="menu-button" type="button" aria-label="${menu}" aria-expanded="false" aria-controls="site-mobile-nav">
                 <span class="menu-button__icon" aria-hidden="true"><i></i><i></i><i></i></span>
@@ -74,7 +74,7 @@
             </div>
           </div>
           <div class="mobile-nav-shell" data-open="false">
-            <nav id="site-mobile-nav" class="mobile-nav" aria-label="Mobile">${links}<a href="/apps/portal/">${portal} ↗</a><a href="${withLang("/apps/site/Lumino%20联系.dc.html")}">${consult}</a></nav>
+            <nav id="site-mobile-nav" class="mobile-nav" aria-label="Mobile">${links}<a href="/apps/portal">${portal} ↗</a><a href="${withLang("/apps/site/Lumino%20联系.dc.html")}">${consult}</a></nav>
           </div>
         </header>`;
 
@@ -121,7 +121,7 @@
         { zh: "隐私与数据处理", en: "Privacy & data", href: "/apps/site/Lumino%20隐私与数据处理.dc.html" },
         { zh: "Cookie 与本地存储", en: "Cookies & storage", href: "/apps/site/Lumino%20Cookie%20与本地存储.dc.html" },
         { zh: "用户内容与数据许可", en: "Content & data licence", href: "/apps/site/Lumino%20用户内容与数据许可.dc.html" },
-        { zh: "客户门户 ↗", en: "Client portal ↗", href: "/apps/portal/" },
+        { zh: "客户门户 ↗", en: "Client portal ↗", href: "/apps/portal" },
       ];
       const col = (titleZh, titleEn, items) =>
         `<div class="footer-col"><strong>${L === "en" ? titleEn : titleZh}</strong>${items.map((i) => `<a href="${withLang(i.href)}">${L === "en" ? i.en : i.zh}</a>`).join("")}</div>`;
