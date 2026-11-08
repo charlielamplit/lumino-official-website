@@ -51,6 +51,10 @@ test("CN Code questions route to tools and never claim formal classification", (
 test("free text maps common questions to reviewed fixed answers", () => {
   assert.equal(advisor.route({ text: "CBAM 和 PCF 有什么区别", asOf: AS_OF }).intent, "cbam_vs_pcf");
   assert.equal(advisor.route({ text: "进口商让我准备碳数据", asOf: AS_OF }).intent, "cbam_data_start");
+  const customerReply = advisor.route({ text: "现在用户让我提交CBAM相关的报告，我应该怎么回复客户", asOf: AS_OF });
+  assert.equal(customerReply.intent, "cbam_data_start");
+  assert.equal(customerReply.answer_mode, "fixed");
+  assert.match(customerReply.answer, /请确认所需文件或模板/);
   assert.equal(advisor.route({ text: "客户要 Scope 1 2 3 数据", asOf: AS_OF }).intent, "esg_ghg_triage");
   assert.equal(advisor.route({ text: "想做绿电和绿证规划", asOf: AS_OF }).intent, "renewable_power");
   assert.equal(advisor.route({ text: "产品碳足迹活动数据怎么采", asOf: AS_OF }).intent, "pcf_data_start");

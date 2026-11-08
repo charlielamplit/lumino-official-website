@@ -60,7 +60,7 @@
       version: "1.0.0",
       reviewedAt: "2026-11-02",
       reviewer: "Lumino 服务内容负责人",
-      answer: L("先不要直接填数。先固定四件事：进口商要求的期间与模板、产品与 CN Code、生产厂区与产线、是否有需要纳入的前体材料。再按这个范围收集产量、燃料、外购电热和供应商声明。", "Do not start by filling numbers. First fix four things: the importer period and template, product and CN code, producing site and line, and any precursors in scope. Then collect output, fuels, purchased energy and supplier statements against that scope."),
+      answer: L("先不要直接承诺提交一份笼统的“CBAM 报告”。可以先回复客户：请确认所需文件或模板、涉及的产品与 CN Code、报告期间、生产设施、截止时间，以及是否需要前体材料数据。确认边界后，再按要求准备产量、燃料、外购电热、工艺排放和供应商声明。", "Do not immediately promise a generic ‘CBAM report’. Reply by asking the customer to confirm the required file or template, products and CN codes, reporting period, producing installation, deadline, and whether precursor data is needed. Once the scope is confirmed, prepare output, fuels, purchased energy, process emissions and supplier statements."),
       nextQuestion: L("进口商是否已给你模板或提交时限？", "Has the importer provided a template or deadline?"),
       suggestedReplies: [reply("template", "有模板", "I have a template"), reply("deadline", "只有时限", "Only a deadline"), reply("request-only", "只是口头要求", "Only an informal request"), reply("unknown", "不确定", "I am not sure")],
       serviceId: "cbam",
@@ -259,7 +259,7 @@
 
   return Object.freeze({
     schemaVersion: "1.0.0",
-    contentVersion: "2026-11-05.3",
+    contentVersion: "2026-11-08.1",
     reviewCycleDays: 120,
     topics,
     sources,

@@ -829,7 +829,7 @@ lumino-header {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(195deg, rgba(247,250,248,.88) 0%, rgba(247,250,248,.62) 42%, rgba(247,250,248,.48) 100%),
+    linear-gradient(180deg, rgba(7,31,22,.48) 0%, rgba(7,31,22,.7) 56%, rgba(7,31,22,.86) 100%),
     var(--ind-img, none) center / cover no-repeat;
   opacity: 1;
   transition: filter .35s var(--ease-soft);
@@ -860,10 +860,10 @@ lumino-header {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  color: inherit;
+  color: #fff;
   background: transparent;
 }
-.m-ind-cell:hover { background: transparent; color: inherit; }
+.m-ind-cell:hover { background: transparent; color: #fff; }
 .m-ind-cell__top {
   display: flex;
   justify-content: space-between;
@@ -871,11 +871,11 @@ lumino-header {
   gap: 12px;
 }
 .m-ind-cell__top h3 { font-size: var(--type-card); line-height: var(--type-card-lh); }
-.m-ind-cell__top span { color: var(--green); }
+.m-ind-cell__top span { color: #8DE0B7; }
 .m-ind-cell p {
   font-size: var(--type-ui);
   line-height: var(--type-ui-lh);
-  color: var(--ink-secondary);
+  color: rgba(247, 250, 248, .86);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -2737,7 +2737,9 @@ html.js-reveal .m-reveal.is-in {
 .contact-steps { gap: 14px; }
 .contact-card .m-form { gap: 12px; }
 .contact-card .m-form__grid { gap: 12px; }
-.m-page-hero--compact { padding: clamp(32px, 5vw, 48px) 0 clamp(24px, 3vw, 36px); }
+.m-page-hero--compact { padding: clamp(22px, 3vw, 32px) 0 clamp(18px, 2.2vw, 26px); }
+.m-page-hero--compact .crumb { margin-bottom: 8px; }
+.m-page-hero--compact + .m-section { padding-top: clamp(28px, 3.5vw, 44px); }
 
 .m-icon {
   width: 36px;
