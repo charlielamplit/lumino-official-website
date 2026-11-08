@@ -34,6 +34,21 @@ test("the final portal cascade keeps the login single-column on mobile", () => {
   assert.match(css, /@media \(max-width: 560px\)[\s\S]*?\.login-header nav > a:not\(\.login-header-cta\)/);
 });
 
+test("portal login keeps a compact centered header and two-line desktop statement", () => {
+  const html = read("apps/portal/index.html");
+  const css = read("apps/portal/styles.css");
+  assert.match(html, /story-title-line[^>]*>让合规工作清晰可控<\/span>/);
+  assert.match(html, /story-title-line story-title-line--accent[^>]*>让每次交付有据可查<\/span>/);
+  assert.match(css, /\.login-screen\s*\{[\s\S]*?grid-template-rows:\s*56px/);
+  assert.match(css, /\.login-header \.brand\s*\{[^}]*align-self:\s*center/);
+  assert.match(css, /\.login-header \.login-header-cta\s*\{[\s\S]*?height:\s*36px/);
+  assert.match(css, /\.story-copy h1 \.story-title-line\s*\{[^}]*color:\s*var\(--ink\)[^}]*white-space:\s*nowrap/);
+  assert.match(css, /\.story-copy h1 \.story-title-line--accent\s*\{[^}]*color:\s*var\(--green\)/);
+  assert.match(css, /\.login-story\s*\{[^}]*padding:\s*clamp\(96px, 12vh, 128px\)/);
+  assert.match(css, /\.login-panel\s*\{[\s\S]*?padding:\s*clamp\(48px, 7vh, 64px\)/);
+  assert.match(css, /\.demo-roles button\s*\{[^}]*min-height:\s*52px/);
+});
+
 test("public site and portal share the approved Lumino brand colors and type", () => {
   const tokens = read("apps/site/site/tokens.css");
   const siteCss = read("apps/site/site/site-v3.css");
