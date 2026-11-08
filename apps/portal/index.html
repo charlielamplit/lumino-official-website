@@ -10,8 +10,8 @@
   <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css?v=20261028-ds3">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;600&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/apps/portal/styles.css?v=20261108-login2">
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -19,7 +19,8 @@
   <main class="login-screen" id="loginScreen">
     <header class="login-header">
       <a class="brand" href="/apps/site/Lumino%20官网.dc.html" aria-label="返回 Lumino 官网">
-        <span>LUMINO</span><i aria-hidden="true"></i>
+        <img src="/apps/site/site/assets/brand/mark-128.png" width="44" height="32" alt="">
+        <span>LUMiNO</span>
       </a>
       <nav aria-label="登录页导航">
         <a href="/apps/site/Lumino%20官网.dc.html">返回官网 <span aria-hidden="true">↗</span></a>
@@ -28,9 +29,9 @@
     </header>
     <section class="login-story" aria-labelledby="loginTitle">
       <div class="story-copy">
-        <p class="eyebrow">LUMINO SERVICE WORKSPACE</p>
-        <h1 id="loginTitle">用 AI 与平台化服务<br><span>重新定义合规核查业务</span></h1>
-        <p>企业数据沉淀为可复用资产，各项服务在清晰边界内识别、确认、计算和交付。</p>
+        <p class="eyebrow">LUMINO 企业工作门户</p>
+        <h1 id="loginTitle"><span class="story-title-line">让合规工作清晰可控</span><span class="story-title-line story-title-line--accent">让每次交付有据可查</span></h1>
+        <p>从企业数据、协作任务到核算与交付，Lumino 帮助团队在清晰边界内完成每一步。</p>
       </div>
       <div class="trust-note">
         <span aria-hidden="true">✓</span>
@@ -40,7 +41,7 @@
 
     <section class="login-panel" aria-label="登录">
       <div class="login-box">
-        <p class="eyebrow green">SECURE PORTAL</p>
+        <p class="eyebrow green">安全工作区</p>
         <h2>登录工作门户</h2>
         <p class="muted">进入统一服务、任务、资料与交付空间。</p>
         <div class="import-notice" id="importNotice" hidden></div>
@@ -68,7 +69,7 @@
     <header class="topbar">
       <button class="mobile-menu" id="mobileMenu" type="button" aria-label="打开导航" aria-expanded="false">☰</button>
       <div class="topbar-brand">
-        <a class="brand" href="../Lumino%20官网.dc.html" aria-label="返回 Lumino 官网"><span>LUMINO</span><i aria-hidden="true"></i></a>
+        <a class="brand" href="/apps/site/Lumino%20官网.dc.html" aria-label="返回 Lumino 官网"><img src="/apps/site/site/assets/brand/mark-128.png" width="44" height="32" alt=""><span>LUMiNO</span></a>
         <span class="product-name">企业工作门户</span>
       </div>
       <button class="company-switch" type="button"><small id="companyContextLabel">企业</small><strong id="companyName">华星钢铁有限公司</strong><span>⌄</span></button>
@@ -149,15 +150,15 @@
   <script src="../../packages/shared/service-contract.js?v=20261027-6" defer></script>
   <script src="../../packages/shared/leads-client.js?v=20261030-1" defer></script>
   <script src="../../packages/shared/knowledge-client.js?v=20261030-1" defer></script>
-  <script src="./runtime/portal-permissions.js?v=20261028-9" defer></script>
-  <script src="./runtime/portal-config.js?v=20261030-kb1" defer></script>
-  <script src="./runtime/asset-view-model.js?v=20261027-1" defer></script>
-  <script src="./runtime/shared-center-view-model.js?v=20261027-7" defer></script>
-  <script src="./runtime/portal-core.js?v=20261028-ds2" defer></script>
-  <script src="./pages/multi-service-pages.js?v=20261028-ds3" defer></script>
-  <script src="./pages/customer-pages.js?v=20261027-4" defer></script>
-  <script src="./pages/role-pages.js?v=20261030-2" defer></script>
-  <script src="./runtime/portal-events.js?v=20261030-2" defer></script>
-  <script src="./app.js?v=20261027-4" defer></script>
+  <script src="/apps/portal/runtime/portal-permissions.js?v=20261028-9" defer></script>
+  <script src="/apps/portal/runtime/portal-config.js?v=20261030-kb1" defer></script>
+  <script src="/apps/portal/runtime/asset-view-model.js?v=20261027-1" defer></script>
+  <script src="/apps/portal/runtime/shared-center-view-model.js?v=20261027-7" defer></script>
+  <script src="/apps/portal/runtime/portal-core.js?v=20261028-ds2" defer></script>
+  <script src="/apps/portal/pages/multi-service-pages.js?v=20261028-ds3" defer></script>
+  <script src="/apps/portal/pages/customer-pages.js?v=20261027-4" defer></script>
+  <script src="/apps/portal/pages/role-pages.js?v=20261030-2" defer></script>
+  <script src="/apps/portal/runtime/portal-events.js?v=20261030-2" defer></script>
+  <script src="/apps/portal/app.js?v=20261027-4" defer></script>
 </body>
 </html>

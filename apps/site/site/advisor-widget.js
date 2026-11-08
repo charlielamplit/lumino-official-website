@@ -120,7 +120,7 @@
     if (ui === "no_sources" || (response.answer_mode === "fallback" && !response.sources?.length && !ui)) {
       return label("没有足够依据", "Not enough published basis");
     }
-    if (response.answer_mode === "tool_route") return label("推荐工具", "Suggested tool");
+    if (response.answer_mode === "tool_route") return label("推荐合规工具", "Suggested compliance tool");
     if (response.answer_mode === "fixed") return label("服务说明", "Guidance");
     if (response.answer_mode === "retrieval_model") return label("初步判断", "Preliminary view");
     return label("暂无法确认", "Unable to confirm");

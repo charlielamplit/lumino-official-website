@@ -82,6 +82,15 @@ python3 -m http.server 4173 --bind 127.0.0.1
 # 打开 http://127.0.0.1:4173/
 ```
 
+需要同时验证 Advisor、知识库等 Serverless API 时，使用仓库内的本地预览服务器：
+
+```bash
+node scripts/local-site-server.mjs 4174
+# 打开 http://127.0.0.1:4174/site
+```
+
+该服务器只监听 `127.0.0.1`，会读取本地 `.env` 供 API 使用，但不会把隐藏文件作为静态资源公开。
+
 ## 自动化验证
 
 ```bash

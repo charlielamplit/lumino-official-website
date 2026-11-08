@@ -145,26 +145,24 @@ lumino-header {
   white-space: nowrap;
 }
 .brand-lockup .brand-shuoyuan {
-  font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font-family: "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: .08em;
-  color: #063C29;
+  color: var(--brand-forest);
 }
 .brand-lockup .brand-sep {
   font-size: 16px;
   font-weight: 500;
-  color: color-mix(in srgb, #063C29 35%, #FDC82F);
+  color: color-mix(in srgb, var(--brand-forest) 35%, var(--brand-yellow));
   transform: translateY(-1px);
 }
 .brand-lockup .brand-lumino {
-  font-family: "Archivo", "Arial Black", "Helvetica Neue", "PingFang SC", sans-serif;
+  font-family: "Poppins", "Helvetica Neue", "PingFang SC", sans-serif;
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: .04em;
-  color: #E8B400;
-  -webkit-text-stroke: 0.45px #E8B400;
-  paint-order: stroke fill;
+  color: var(--brand-yellow);
 }
 @media (max-width: 720px) {
   .brand-lockup .brand-mark { height: 30px; }
@@ -200,7 +198,7 @@ lumino-header {
   bottom: 18px;
   height: 0;
   border-radius: 1px;
-  background: #E8B400; /* 与 brand-lumino 同色，Header 黄色只服务品牌字 + 当前页 */
+  background: var(--brand-yellow); /* Header 黄色仅用于品牌字与当前页提示。 */
   transition: height .2s var(--ease-soft, ease), opacity .2s ease;
 }
 .site-nav a:hover { color: var(--ink); }
@@ -1016,9 +1014,15 @@ lumino-header {
 .m-page-hero h1 {
   font-size: clamp(26px, 3.2vw, 36px);
   line-height: 1.25;
-  max-width: 18em;
+  max-width: min(100%, 42em);
   letter-spacing: -.015em;
   font-weight: 600;
+  text-wrap: pretty;
+}
+.m-page-hero h1#kb-title {
+  max-width: 100%;
+  text-wrap: unset;
+  white-space: normal;
 }
 .m-page-hero p {
   margin-top: 14px;
@@ -3655,6 +3659,87 @@ html.js-reveal .m-reveal.is-in {
   gap: 8px;
 }
 .kb-article { max-width: 760px; }
+
+/* Markdown article body — global reset zeroes margins; restore reading rhythm. */
+.kb-article #kb-body {
+  font-size: var(--type-ui);
+  line-height: 1.75;
+  color: var(--ink-secondary);
+}
+.kb-article #kb-body > :first-child { margin-top: 0; }
+.kb-article #kb-body > :last-child { margin-bottom: 0; }
+.kb-article #kb-body > h1 {
+  margin: 0 0 14px;
+  font-size: clamp(26px, 3.2vw, 34px);
+  line-height: 1.25;
+  color: var(--ink);
+}
+.kb-article #kb-body > h2 {
+  margin: 2em 0 0.7em;
+  font-size: var(--type-card);
+  line-height: var(--type-card-lh);
+  color: var(--ink);
+}
+.kb-article #kb-body > h3 {
+  margin: 1.6em 0 0.55em;
+  font-size: calc(var(--type-ui) + 2px);
+  line-height: 1.4;
+  color: var(--ink);
+}
+.kb-article #kb-body > h2 + *,
+.kb-article #kb-body > h3 + * {
+  margin-top: 0;
+}
+.kb-article #kb-body > p {
+  margin: 0 0 1.05em;
+}
+.kb-article #kb-body > ul,
+.kb-article #kb-body > ol {
+  margin: 0 0 1.25em;
+  padding-left: 1.35em;
+  display: grid;
+  gap: 0.65em;
+  list-style: disc;
+}
+.kb-article #kb-body > ol {
+  list-style: decimal;
+}
+.kb-article #kb-body > ul > li,
+.kb-article #kb-body > ol > li {
+  padding-left: 0.15em;
+  line-height: 1.7;
+}
+/* Opening meta bullets (类型 / 行业 / 服务…) sit tighter under the title. */
+.kb-article #kb-body > h1 + ul {
+  margin: 0 0 1.75em;
+  padding: 12px 14px 12px 2em;
+  gap: 0.4em;
+  background: var(--wash);
+  border: 1px solid var(--line-soft, var(--line));
+  border-radius: var(--radius);
+  font-size: var(--type-meta);
+  line-height: 1.55;
+  color: var(--muted);
+  list-style: disc;
+}
+.kb-article #kb-body > .kb-table-wrap {
+  margin: 0.35em 0 1.4em;
+}
+.kb-article #kb-body > .kb-callout {
+  margin: 0.4em 0 1.4em;
+}
+.kb-article #kb-body > .kb-code-sample {
+  margin: 0.35em 0 1.4em;
+}
+.kb-article #kb-body a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.kb-article #kb-body strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
 .kb-table-wrap {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -3702,13 +3787,14 @@ html.js-reveal .m-reveal.is-in {
   color: var(--ink-secondary);
 }
 .kb-steps {
-  margin: 0;
-  padding-left: 1.2em;
+  margin: 0 0 1.25em;
+  padding-left: 1.35em;
   display: grid;
-  gap: 10px;
+  gap: 0.65em;
   color: var(--ink-secondary);
   font-size: var(--type-ui);
-  line-height: var(--type-ui-lh);
+  line-height: 1.7;
+  list-style: decimal;
 }
 
 
@@ -3725,60 +3811,4 @@ html.js-reveal .m-reveal.is-in {
 
 [data-open-advisor][hidden] {
   display: none !important;
-}
-
-.advisor-bootstrap {
-  position: fixed;
-  z-index: 1002;
-  right: max(24px, env(safe-area-inset-right));
-  bottom: max(24px, env(safe-area-inset-bottom));
-  width: min(420px, calc(100vw - 32px));
-  min-height: 180px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--paper);
-  color: var(--ink);
-  box-shadow: var(--shadow-float);
-}
-.advisor-bootstrap header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 64px;
-  padding: 12px 12px 12px 20px;
-  border-bottom: 1px solid var(--line);
-}
-.advisor-bootstrap header strong { font-size: 17px; }
-.advisor-bootstrap header button {
-  width: 44px;
-  height: 44px;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  font-size: 24px;
-  cursor: pointer;
-}
-.advisor-bootstrap__body { padding: 28px 20px; }
-.advisor-bootstrap__body > p { margin: 10px 0 0; color: var(--muted); line-height: 1.65; }
-.advisor-bootstrap__spinner {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--line);
-  border-top-color: var(--green);
-  border-radius: 50%;
-  animation: advisor-bootstrap-spin .8s linear infinite;
-}
-.advisor-bootstrap__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-@keyframes advisor-bootstrap-spin { to { transform: rotate(360deg); } }
-
-@media (max-width: 640px) {
-  .advisor-bootstrap {
-    right: 16px;
-    bottom: max(16px, env(safe-area-inset-bottom));
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .advisor-bootstrap__spinner { animation: none; }
 }
