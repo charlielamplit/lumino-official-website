@@ -287,7 +287,17 @@
   max-width: 100%;
   flex: 0 1 auto;
   display: inline-flex;
-  padding: 8px 12px;
+  min-height: 36px;
+  padding: 4px 12px;
+  font-size: var(--type-small);
+  line-height: var(--type-small-lh);
+}
+
+@media (pointer: coarse) {
+  .advisor-reply {
+    min-height: 44px;
+    padding-block: 8px;
+  }
 }
 
 .advisor-reply:hover,
