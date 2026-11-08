@@ -10,6 +10,11 @@
   overflow: hidden;
   color: var(--ink);
   background: var(--paper);
+  font-family: var(--font-sans);
+  font-size: var(--type-ui);
+  line-height: var(--type-ui-lh);
+  font-weight: 400;
+  font-kerning: normal;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-float);
@@ -289,8 +294,8 @@
   display: inline-flex;
   min-height: 36px;
   padding: 4px 12px;
-  font-size: var(--type-small);
-  line-height: var(--type-small-lh);
+  font-size: var(--type-ui);
+  line-height: var(--type-ui-lh);
 }
 
 @media (pointer: coarse) {

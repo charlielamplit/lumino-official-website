@@ -27,7 +27,7 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /root\.hidden\s*=\s*true/);
   assert.match(source, /shell\.root\.hidden\s*=\s*false/);
   assert.match(source, /preloadScript|rel:\s*"preload"|rel = "preload"/);
-  assert.match(source, /ADVISOR_ASSET_V|20261108-compact2/);
+  assert.match(source, /ADVISOR_ASSET_V|20261108-type1/);
   assert.match(source, /link\[rel="stylesheet"\]\[href=/);
   assert.match(source, /style_load_timeout/);
   assert.match(source, /openAdvisorSafe\(shell\.primary, flags, "auto-open"\)/);
@@ -40,9 +40,9 @@ test("public tool menu loads the deterministic advisor without embedding model s
 
 test("homepage preloads advisor assets for instant Ask open", () => {
   const html = read("apps/site/Lumino 官网.dc.html");
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.css\?v=20261108-compact2/);
-  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261108-compact2/);
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261108-compact2/);
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.css\?v=20261108-type1/);
+  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261108-type1/);
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261108-type1/);
 });
 
 test("public navigation and advisor use the Compliance tools name consistently", () => {
@@ -115,12 +115,14 @@ test("advisor presentation reuses site tokens and has mobile and reduced-motion 
   assert.match(source, /data-thinking/);
   assert.match(source, /advisor-think-pulse/);
   assert.match(source, /container-type:\s*inline-size/);
+  assert.match(source, /\.advisor-widget\s*\{[\s\S]*?font-family:\s*var\(--font-sans\)[\s\S]*?font-size:\s*var\(--type-ui\)/);
   assert.match(source, /\.advisor-replies\s*\{[\s\S]*?display:\s*flex[\s\S]*?flex-wrap:\s*wrap/);
   assert.match(source, /\.advisor-reply\s*\{[\s\S]*?width:\s*auto/);
   const replyRule = source.match(/\.advisor-reply\s*\{([^}]*)\}/)?.[1] || "";
   assert.doesNotMatch(replyRule, /(?:^|\n)\s*width:\s*100%/);
   assert.match(replyRule, /min-height:\s*36px/);
-  assert.match(replyRule, /font-size:\s*var\(--type-small\)/);
+  assert.match(replyRule, /font-size:\s*var\(--type-ui\)/);
+  assert.doesNotMatch(source, /--type-small/);
   assert.match(source, /@media \(pointer:\s*coarse\)\s*\{[\s\S]*?\.advisor-reply\s*\{[\s\S]*?min-height:\s*44px/);
   assert.doesNotMatch(source, /linear-gradient|radial-gradient/);
 });
