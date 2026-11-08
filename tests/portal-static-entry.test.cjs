@@ -33,3 +33,21 @@ test("the final portal cascade keeps the login single-column on mobile", () => {
   assert.match(css, /@media \(max-width: 820px\)[\s\S]*?\.login-screen\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0, 1fr\)/);
   assert.match(css, /@media \(max-width: 560px\)[\s\S]*?\.login-header nav > a:not\(\.login-header-cta\)/);
 });
+
+test("public site and portal share the approved Lumino brand colors and type", () => {
+  const tokens = read("apps/site/site/tokens.css");
+  const siteCss = read("apps/site/site/site-v3.css");
+  const portalCss = read("apps/portal/styles.css");
+  const portalHtml = read("apps/portal/index.html");
+
+  for (const source of [tokens, portalCss]) {
+    assert.match(source, /--brand-forest:\s*#013D29/i);
+    assert.match(source, /--brand-yellow:\s*#FCC71E/i);
+    assert.match(source, /--brand-teal:\s*#539D9D/i);
+  }
+  assert.match(siteCss, /\.brand-lockup \.brand-lumino\s*\{[\s\S]*?font-family:\s*"Poppins"[\s\S]*?font-weight:\s*800[\s\S]*?color:\s*var\(--brand-yellow\)/);
+  assert.match(siteCss, /\.brand-lockup \.brand-shuoyuan\s*\{[\s\S]*?color:\s*var\(--brand-forest\)/);
+  assert.doesNotMatch(siteCss, /\.brand-lockup \.brand-lumino\s*\{[\s\S]*?(?:Archivo|#E8B400)/);
+  assert.match(portalCss, /\.brand\s*\{[^}]*color:\s*var\(--brand-yellow\)[^}]*"Poppins"/);
+  assert.match(portalHtml, /<span>LUMiNO<\/span>/);
+});
