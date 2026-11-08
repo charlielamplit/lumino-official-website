@@ -26,4 +26,3 @@ git diff --check
 ```
 
 The deterministic suite reports 90 passing tests and one skipped direct-provider canary because the repository intentionally contains no model API secret. The deployed-endpoint canary above verifies the configured provider path without placing a secret in source control.
-
