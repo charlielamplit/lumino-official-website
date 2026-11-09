@@ -9,8 +9,7 @@ const read = (file) => fs.readFileSync(path.join(root, file), "utf8");
 test("public tool menu loads the deterministic advisor without embedding model secrets", () => {
   const source = read("apps/site/site/float-tools.js");
   assert.match(source, /data-open-advisor/);
-  assert.match(source, /\/packages\/advisor\/catalog\.js/);
-  assert.match(source, /\/packages\/advisor\/router\.js/);
+  assert.match(source, /advisor-bundle\.js/);
   assert.match(source, /\/api\/advisor-config/);
   assert.match(source, /tool-float__btn--ask/);
   assert.match(source, /tool-float__tip/);
@@ -23,7 +22,7 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /openAdvisorSafe|advisor_load_timeout/);
   assert.match(source, /warmAdvisor/);
   assert.match(source, /preloadScript|rel:\s*"preload"|rel = "preload"/);
-  assert.match(source, /ADVISOR_ASSET_V|20261104-fab15/);
+  assert.match(source, /ADVISOR_ASSET_V|20261104-fab17/);
   assert.match(source, /loadStyle\(ADVISOR_ASSETS\.css\)/);
   assert.match(source, /style_load_failed|Never open the dialog before CSS/);
   assert.doesNotMatch(source, /primary\.disabled\s*=\s*true/);
@@ -32,12 +31,27 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.doesNotMatch(source, /OPENAI|API_KEY|sk-/);
 });
 
-test("homepage applies advisor CSS stylesheet before Ask opens", () => {
+test("homepage applies advisor CSS and preloads the single advisor bundle", () => {
   const html = read("apps/site/Lumino 官网.dc.html");
-  assert.match(html, /rel="stylesheet"[^>]+advisor-widget\.css\?v=20261104-fab15/);
-  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261104-fab15/);
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261104-fab15/);
+  assert.match(html, /rel="stylesheet"[^>]+advisor-widget\.css\?v=20261104-fab17/);
+  assert.match(html, /rel="preload"[^>]+advisor-bundle\.js\?v=20261104-fab17/);
   assert.doesNotMatch(html, /rel="preload"[^>]+advisor-widget\.css/);
+  assert.doesNotMatch(html, /packages\/advisor\/catalog\.js/);
+});
+
+test("advisor bundle includes catalog router and widget in one file", () => {
+  const bundle = read("apps/site/site/advisor-bundle.js");
+  assert.match(bundle, /auto-built advisor runtime/);
+  assert.match(bundle, /LuminoAdvisorCatalog|LuminoAdvisorWidget/);
+  assert.match(bundle, /LuminoAdvisorWidget/);
+  assert.match(bundle, /root\.LuminoAdvisor\b|LuminoAdvisor\s*=/);
+});
+
+test("advisor falls back to local fixed answers when /api/advisor is missing", () => {
+  const source = read("apps/site/site/advisor-widget.js");
+  assert.match(source, /basicModeLocal\(reason\)/);
+  assert.match(source, /http_\$\{upstream\.status\}|http_/);
+  assert.match(source, /Static local previews return 404/);
 });
 
 test("float dock stays viewport-fixed and clusters ask/tools/top", () => {

@@ -3,7 +3,7 @@
   const i18n = window.LuminoI18n || { detectLang: () => "zh" };
   const TOP_SHOW_Y = 480;
   // Preload hints reduce download time; the runtime itself starts only after user intent.
-  const ADVISOR_ASSET_V = "20261104-fab15";
+  const ADVISOR_ASSET_V = "20261104-fab17";
   const ADVISOR_OPEN_TIMEOUT_MS = 12000;
   const tools = [
     { zh: "CBAM 成本计算器", en: "CBAM cost calculator", href: "/apps/site/calculator/" },
@@ -18,10 +18,8 @@
   };
   const ADVISOR_ASSETS = Object.freeze({
     css: `/apps/site/site/advisor-widget.css?v=${ADVISOR_ASSET_V}`,
-    catalog: `/packages/advisor/catalog.js?v=${ADVISOR_ASSET_V}`,
-    schema: `/packages/advisor/schema.js?v=${ADVISOR_ASSET_V}`,
-    router: `/packages/advisor/router.js?v=${ADVISOR_ASSET_V}`,
-    widget: `/apps/site/site/advisor-widget.js?v=${ADVISOR_ASSET_V}`,
+    // One bundle = one RTT. Four separate scripts felt fine on localhost and terrible on Vercel from CN.
+    bundle: `/apps/site/site/advisor-bundle.js?v=${ADVISOR_ASSET_V}`,
   });
 
   function loadStyle(href) {
@@ -115,19 +113,12 @@
       return loadStyle(ADVISOR_ASSETS.css).then(() => window.LuminoAdvisorWidget);
     }
     if (!advisorPromise) {
-      preloadScript(ADVISOR_ASSETS.catalog);
-      preloadScript(ADVISOR_ASSETS.schema);
-      preloadScript(ADVISOR_ASSETS.router);
-      preloadScript(ADVISOR_ASSETS.widget);
+      preloadScript(ADVISOR_ASSETS.bundle);
       advisorPromise = loadStyle(ADVISOR_ASSETS.css)
-        .then(() => Promise.all([
-          loadScript(ADVISOR_ASSETS.catalog),
-          loadScript(ADVISOR_ASSETS.schema),
-        ]))
-        .then(() => loadScript(ADVISOR_ASSETS.router))
-        .then(() => loadScript(ADVISOR_ASSETS.widget))
+        .then(() => loadScript(ADVISOR_ASSETS.bundle))
         .then(() => {
           if (!window.LuminoAdvisorWidget) throw new Error("advisor_widget_missing");
+          if (!window.LuminoAdvisor) throw new Error("advisor_router_missing");
           return window.LuminoAdvisorWidget;
         })
         .catch((error) => {

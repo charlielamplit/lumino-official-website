@@ -60,14 +60,19 @@
     }
   };
 
+  /* 图标轨：Lucide 图标名 + 短标签（框架 1d）；侧栏仍用完整文案 */
   const customerGlobalNav = [
-    ["workbench", "▣", "工作台"],
-    ["shared-tasks", "✓", "我的任务"],
-    ["shared-files", "□", "数据资产"],
-    ["shared-deliverables", "↗", "交付中心"],
-    ["services-hub", "▦", "服务目录"],
-    ["org-settings", "◎", "企业与权限"],
+    ["workbench", "layout-dashboard", "工作台", "工作台"],
+    ["shared-tasks", "list-checks", "我的任务", "任务"],
+    ["shared-files", "database", "数据资产", "资产"],
+    ["shared-deliverables", "package-check", "交付中心", "交付"],
   ];
+  const customerRailExtras = {
+    services: ["services-hub", "plus", "服务目录", "服务"],
+    settings: ["org-settings", "settings", "企业与权限", "企业"],
+  };
+  const overviewPages = new Set(["workbench", "services-hub"]);
+  const lucideIcon = (name) => `https://unpkg.com/lucide-static@0.454.0/icons/${name}.svg`;
 
   const serviceRegistry = {
     cbam: {
@@ -98,7 +103,11 @@
     export: { ...window.LuminoServiceContract.export, serviceId: "export", code: "TRADE", agent: "出口合规 Agent", description: "面向出口法规、材料与交付要求的协同支持。", entryPage: null, roles: [], primaryAction: { default: "预约咨询" }, consultation: { enabled: true, requestType: "service_consultation" } },
   };
 
-  const globalCustomerPages = new Set(customerGlobalNav.map(([id]) => id));
+  const globalCustomerPages = new Set([
+    ...customerGlobalNav.map(([id]) => id),
+    customerRailExtras.services[0],
+    customerRailExtras.settings[0],
+  ]);
   const servicePages = new Set(Object.values(serviceRegistry).flatMap((service) => (service.nav || []).map(([id]) => id)));
 
   const years = {
@@ -441,11 +450,11 @@
   try { restoredPortalState = JSON.parse(window.localStorage.getItem(portalStateStorageKey) || "{}"); } catch (_) { restoredPortalState = {}; }
   const state = {
     role: "customer_owner", page: "services-hub", currentService: null, year: "2026", quarter: "Q3", loggedIn: false, answer: null,
-    importedTrial, uploadAdded: false, factConfirmed: false, findingResolved: false,
+    importedTrial, uploadAdded: false, factConfirmed: false, outputConfirmed: false, findingResolved: false,
     yearCreated: false, deliveryExpanded: null, productAdded: false,
     configurationAdded: false, orgEditing: false, selectedProduct: "hrc",
     productYears: [], productCnCodes: [], questionHelpOpen: false, findingChoiceOpen: false, dataPathChoice: null,
-    drawer: null, assetFacet: "attention", taskTab: "全部", periodData: {}, productOverrides: {}, configurationDrafts: {}, facilities: [], invitedMembers: [], consultationRequests: [], publicLeads: [], selectedLeadId: null, leadsSource: "local", knowledgeArticles: [], selectedKnowledgeId: null, knowledgeSource: "local", knowledgeHydrated: false, actionBusy: false,
+    drawer: null, assetFacet: "attention", taskTab: "open", delivFilter: "all", settingsSection: "members", periodData: {}, productOverrides: {}, configurationDrafts: {}, facilities: [], invitedMembers: [], consultationRequests: [], publicLeads: [], selectedLeadId: null, leadsSource: "local", knowledgeArticles: [], selectedKnowledgeId: null, knowledgeSource: "local", knowledgeHydrated: false, actionBusy: false,
     pcfCalculationFailed: incoming.get("scenario") === "pcf-calculation-failed",
     onboardingDismissed: window.localStorage.getItem("lumino-portal-onboarding") === "dismissed", online: navigator.onLine,
     organization: (() => {

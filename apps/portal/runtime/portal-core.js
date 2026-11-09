@@ -32,9 +32,9 @@
       if (id === "shared-deliverables") return deliveryView.summary.inReview || "";
       return "";
     };
-    return customerGlobalNav.map(([id, icon, label]) => {
+    return customerGlobalNav.map(([id, icon, label, short]) => {
       const badge = badgeFor(id);
-      return badge ? [id, icon, label, String(badge)] : [id, icon, label];
+      return [id, icon, label, badge ? String(badge) : "", short || label];
     });
   }
 
@@ -44,6 +44,7 @@
     state.periodData[periodKey()] = {
       uploadAdded: state.uploadAdded,
       factConfirmed: state.factConfirmed,
+      outputConfirmed: state.outputConfirmed,
       findingResolved: state.findingResolved,
       findingChoiceOpen: state.findingChoiceOpen,
       dataPathChoice: state.dataPathChoice,
@@ -55,6 +56,7 @@
     const saved = state.periodData[periodKey()] || {};
     state.uploadAdded = Boolean(saved.uploadAdded);
     state.factConfirmed = Boolean(saved.factConfirmed);
+    state.outputConfirmed = Boolean(saved.outputConfirmed);
     state.findingResolved = Boolean(saved.findingResolved);
     state.findingChoiceOpen = Boolean(saved.findingChoiceOpen);
     state.dataPathChoice = saved.dataPathChoice || null;
@@ -68,8 +70,9 @@
       facilities: state.facilities, invitedMembers: state.invitedMembers, organization: state.organization,
       productYears: state.productYears, productCnCodes: state.productCnCodes, productAdded: state.productAdded,
       configurationAdded: state.configurationAdded, yearCreated: state.yearCreated, selectedProduct: state.selectedProduct,
-      currentService: state.currentService, page: state.page, consultationRequests: state.consultationRequests,
-      assetFacet: state.assetFacet,
+      currentService: state.currentService, page: state.page, settingsSection: state.settingsSection,
+      consultationRequests: state.consultationRequests, assetFacet: state.assetFacet,
+      taskTab: state.taskTab, delivFilter: state.delivFilter,
     };
     window.localStorage.setItem(portalStateStorageKey, JSON.stringify(persisted));
   }
@@ -192,9 +195,11 @@
       ["及时性", quality.timeliness], ["唯一性", quality.uniqueness], ["可追溯性", quality.traceability],
     ].map(([label, value]) => `<li><span>${label}</span><strong>${value == null ? "未知" : Math.round(Number(value) * 100) + "%"}</strong></li>`).join("");
     const issues = (quality.issues || []).length ? quality.issues.map((issue) => `<li>${safe(issue)}</li>`).join("") : "<li>无开放质量问题</li>";
+    const staleBindings = [];
     const bindingRows = bindings.length
       ? bindings.map((binding) => {
         const snapshot = binding.snapshotId ? assetRegistry.getSnapshot(binding.snapshotId) : null;
+        if (snapshot?.status === "STALE") staleBindings.push({ binding, snapshot });
         const staleNote = snapshot?.status === "STALE" ? "输入快照已过期" : snapshot?.locked ? "报告输入已锁定" : snapshot ? `快照 ${snapshot.id}` : "尚未进入计算快照";
         return `<article class="asset-binding-row">
           <div><span class="service-tag ${binding.serviceId === "pcf" ? "pilot" : ""}">${safe(assetServiceName(binding.serviceId))}</span><strong>${safe(binding.usagePurpose || "服务引用")}</strong><small>${safe(binding.id)} · 锁定 ${safe(binding.assetVersionId)}</small></div>
@@ -202,6 +207,12 @@
         </article>`;
       }).join("")
       : `<p class="asset-empty">尚未被任何服务绑定。服务使用前需创建独立确认。</p>`;
+    const staleBanner = staleBindings.length
+      ? staleSnapshotPanel({
+        snapshotId: staleBindings[0].snapshot.id,
+        resumePage: staleBindings[0].binding.serviceId === "pcf" ? "pcf-data" : "data",
+      })
+      : "";
     const lineageName = (id) => assetViews.accessibleAsset(id, { role: state.role, serviceId: state.currentService })?.name || "受限来源";
     const lineageSteps = lineage.length
       ? lineage.map((edge) => `<li><strong>${safe(String(edge.activityType || "").replace(/_/g, " "))}</strong><span>${safe(lineageName(edge.fromAssetId))} → ${safe(lineageName(edge.toAssetId))}</span><small>${safe(edge.agentId || "system")} · ${safe(edge.ruleVersion || "无规则版本")}</small></li>`).join("")
@@ -222,7 +233,16 @@
         ? `<button class="button button--primary" type="button" data-service-enter="${safe(pendingServiceBinding.serviceId)}" data-page-target="${pendingServiceBinding.serviceId === "pcf" ? "pcf-data" : "data"}">去 ${safe(assetServiceName(pendingServiceBinding.serviceId))} 确认绑定</button>`
         : "";
     const valueBlock = asset.payload?.originalValue
-      ? `<div class="asset-value-pair"><div><span>原始值</span><strong>${safe(Number(asset.payload.originalValue).toLocaleString("zh-CN"))} ${safe(asset.payload.originalUnit || "")}</strong></div><div><span>标准值</span><strong>${safe(asset.payload.normalizedValue ? `${Number(asset.payload.normalizedValue).toLocaleString("zh-CN")} ${asset.payload.normalizedUnit || ""}` : "未换算")}</strong></div></div>`
+      ? `<section class="asset-value-panel" aria-label="资产数值">
+          <div class="asset-value-panel__primary">
+            <span>原始值</span>
+            <strong><em>${safe(Number(asset.payload.originalValue).toLocaleString("zh-CN"))}</em> ${safe(asset.payload.originalUnit || "")}</strong>
+          </div>
+          <div class="asset-value-panel__secondary">
+            <span>标准值</span>
+            <strong>${safe(asset.payload.normalizedValue ? `${Number(asset.payload.normalizedValue).toLocaleString("zh-CN")} ${asset.payload.normalizedUnit || ""}` : "未换算")}</strong>
+          </div>
+        </section>`
       : asset.payload?.fileName
         ? `<div class="asset-value-pair"><div><span>文件</span><strong>${safe(asset.payload.fileName)}</strong></div><div><span>类型</span><strong>${safe(asset.payload.documentType || asset.payload.mediaType || "—")}</strong></div></div>`
         : `<div class="asset-value-pair"><div><span>业务对象</span><strong>${safe(assetPlainSummary(asset))}</strong></div><div><span>内部编码</span><strong>${safe(asset.payload?.internalCode || asset.id)}</strong></div></div>`;
@@ -230,21 +250,28 @@
       ? `<p class="asset-impact-hint">若修订此版本：${impact.staleSnapshots.length} 个未锁定快照将过期；${impact.lockedSnapshots.length} 个已锁定报告保持可重现。</p>`
       : `<p class="asset-impact-hint">当前没有依赖此版本的计算快照。</p>`;
 
-    return `<div class="asset-detail">
+    return `<div class="asset-detail drawer-shell" data-template="T3">
+      ${staleBanner}
       <section class="asset-detail__hero">
-        <div><span>${safe(assetTypeLabels[asset.type] || asset.type)}</span><h3>${safe(asset.name)}</h3><p>${safe(assetPlainSummary(asset))} · 属于 ${safe(assetViews.accessibleAsset(asset.ownerOrganizationId, { role: state.role })?.name || "当前企业")}</p></div>
+        <div><span>${safe(assetTypeLabels[asset.type] || asset.type)} · ${safe(asset.versionId)}</span><h3>${safe(asset.name)}</h3><p>${safe(assetPlainSummary(asset))} · 属于 ${safe(assetViews.accessibleAsset(asset.ownerOrganizationId, { role: state.role })?.name || "当前企业")}</p></div>
         <span class="record-state ${asset.status === "CONFIRMED" ? "ok" : "warn"}">${safe(assetStatusLabels[asset.status] || asset.status)}</span>
       </section>
+      ${valueBlock}
       <dl class="asset-detail__facts">
         <div><dt>覆盖对象</dt><dd>${safe(assetSubjectText(asset))}</dd></div>
         <div><dt>覆盖期间</dt><dd>${safe(assetCoverageText(asset))}</dd></div>
         <div><dt>当前版本</dt><dd>${safe(asset.versionId)}</dd></div>
         <div><dt>责任人</dt><dd>${safe(asset.steward?.ownerName || "待分配")}</dd></div>
       </dl>
-      ${valueBlock}
+      <section class="asset-detail__block">
+        <header><span>服务使用</span><strong>${bindings.length} 项绑定</strong></header>
+        <div class="asset-binding-list">${bindingRows}</div>
+        ${impactHint}
+      </section>
       <section class="asset-detail__block ${["PROPOSED", "NEEDS_CONFIRMATION"].includes(asset.status) ? "is-proposal" : ""}">
-        <header><span>${["PROPOSED", "NEEDS_CONFIRMATION"].includes(asset.status) ? "待确认来源" : "来源与确认"}</span><strong>${safe(asset.provenance?.sourceType || "manual")}</strong></header>
+        <header><span>${["PROPOSED", "NEEDS_CONFIRMATION"].includes(asset.status) ? "待确认来源" : "来源与版本"}</span><strong>${safe(asset.provenance?.sourceType || "manual")} · Rev ${asset.revision}</strong></header>
         <p>来自 ${safe(sourceNames)}${asset.provenance?.confirmedBy ? ` · 由 ${safe(asset.provenance.confirmedBy)} 确认` : " · 尚未确认为企业正式事实"}</p>
+        <ol class="asset-timeline">${versionSteps}</ol>
       </section>
       <section class="asset-detail__block">
         <header><span>数据质量</span><strong>${safe(quality.status || "待评估")}</strong></header>
@@ -252,17 +279,8 @@
         <ul class="asset-issue-list">${issues}</ul>
       </section>
       <section class="asset-detail__block">
-        <header><span>服务使用情况</span><strong>${bindings.length} 项绑定</strong></header>
-        <div class="asset-binding-list">${bindingRows}</div>
-        ${impactHint}
-      </section>
-      <section class="asset-detail__block">
         <header><span>处理血缘</span><strong>${lineage.length} 步</strong></header>
         <ol class="asset-timeline">${lineageSteps}</ol>
-      </section>
-      <section class="asset-detail__block">
-        <header><span>历史版本</span><strong>Rev ${asset.revision}</strong></header>
-        <ol class="asset-timeline">${versionSteps}</ol>
       </section>
       <section class="asset-detail__block">
         <header><span>谁可以访问</span><strong>${safe(access.confidentiality || "internal")}</strong></header>
@@ -270,8 +288,7 @@
       </section>
       <footer class="drawer-actions">
         <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
-        <button class="button button--secondary" type="button" data-drawer="asset-impact" data-asset-id="${safe(asset.id)}">查看修订影响</button>
-        ${primaryAction}
+        ${primaryAction || `<button class="button button--secondary" type="button" data-drawer="asset-impact" data-asset-id="${safe(asset.id)}">查看修订影响</button>`}
       </footer>
     </div>`;
   }
@@ -330,6 +347,265 @@
     return `<header class="page-head"><div>${metaHtml}<h1>${title}</h1></div>${aside || ""}</header>`;
   }
 
+  /** Unified in-content system states (framework F): empty / loading / error / forbidden / locked / stale. */
+  function systemStatePanel({
+    code = "empty",
+    title,
+    reason = "",
+    canDo = [],
+    primary = null,
+    secondary = null,
+    errorCode = "",
+  } = {}) {
+    const labels = {
+      empty: "暂无内容",
+      loading: "正在加载",
+      error: "出错了",
+      forbidden: "无权访问",
+      locked: "已锁定",
+      stale: "数据已过期",
+    };
+    const actions = [
+      primary ? `<button class="button button--primary" type="button" ${primary.attrs || ""}>${safe(primary.label)}</button>` : "",
+      secondary ? `<button class="button button--secondary" type="button" ${secondary.attrs || ""}>${safe(secondary.label)}</button>` : "",
+    ].filter(Boolean).join("");
+    const list = (canDo || []).length
+      ? `<ul class="system-state__can">${canDo.map((item) => `<li>${safe(item)}</li>`).join("")}</ul>`
+      : "";
+    const skeleton = code === "loading"
+      ? `<div class="system-state__skeleton" aria-hidden="true"><span></span><span></span><span></span></div>`
+      : "";
+    const errorMeta = code === "error" && errorCode
+      ? `<p class="system-state__error-code">错误编号 ${safe(errorCode)}</p>`
+      : "";
+    return `<section class="system-state system-state--${safe(code)}" data-system-state="${safe(code)}" aria-live="polite"${code === "loading" ? ' aria-busy="true"' : ""}>
+      <p class="system-state__code">${safe(labels[code] || code)}</p>
+      <h2>${safe(title || labels[code] || "状态")}</h2>
+      ${reason ? `<p class="system-state__reason">${safe(reason)}</p>` : ""}
+      ${errorMeta}
+      ${skeleton}
+      ${list}
+      ${actions ? `<div class="system-state__actions">${actions}</div>` : ""}
+    </section>`;
+  }
+
+  function listPageShell({ meta, title, aside = "", tabs = "", body = "", footnote = "" }) {
+    return `<div class="list-page-shell" data-template="T2">
+      ${pageHeader(meta, title, aside)}
+      ${tabs || ""}
+      ${body}
+      ${footnote || ""}
+    </div>`;
+  }
+
+  /** T5 review / compare: queue + decision sheet + optional separation note. */
+  function reviewSuiteShell({
+    meta,
+    title,
+    aside = "",
+    note = "",
+    queueTitle = "待处理队列",
+    queueMeta = "",
+    queueItems = "",
+    decisionKicker = "",
+    decisionTitle = "",
+    decisionLead = "",
+    decisionPoints = "",
+    approveLabel = "批准",
+    approveAttrs = "",
+    rejectLabel = "退回",
+    rejectAttrs = "",
+    secondaryLabel = "",
+    secondaryAttrs = "",
+  } = {}) {
+    const noteHtml = note ? `<div class="callout review-suite__note" role="note"><strong>职责分离：</strong> ${note}</div>` : "";
+    const secondary = secondaryLabel
+      ? `<button class="button button--secondary" type="button" ${secondaryAttrs}>${safe(secondaryLabel)}</button>`
+      : `<button class="button button--secondary" type="button" ${rejectAttrs}>${safe(rejectLabel)}</button>`;
+    return `<div class="review-suite" data-template="T5">
+      ${pageHeader(meta, title, aside)}
+      ${noteHtml}
+      <div class="approval-board review-suite__board">
+        <section class="panel">
+          <div class="panel-head"><h2>${safe(queueTitle)}</h2>${queueMeta || ""}</div>
+          <div class="stack-list">${queueItems}</div>
+        </section>
+        <section class="panel review-sheet">
+          ${decisionKicker ? `<small>${safe(decisionKicker)}</small>` : ""}
+          <h2>${safe(decisionTitle)}</h2>
+          ${decisionLead ? `<p>${decisionLead}</p>` : ""}
+          ${decisionPoints ? `<ol>${decisionPoints}</ol>` : ""}
+          <div class="action-bar">
+            <button class="button button--primary" type="button" ${approveAttrs}>${safe(approveLabel)}</button>
+            ${secondary}
+          </div>
+        </section>
+      </div>
+    </div>`;
+  }
+
+  const settingsNavItems = [
+    ["org", "企业信息", "1"],
+    ["facilities", "设施", null],
+    ["members", "成员与角色", "2"],
+    ["services", "服务与订单", null],
+    ["security", "安全与登录", null],
+    ["audit", "审计记录", null],
+  ];
+
+  /** T6 settings: sectioned shell; year/quarter stay hidden (cross-year page). */
+  function settingsShell({ title = "企业设置", aside = "", section = "members", body = "" } = {}) {
+    const current = settingsNavItems.some(([id]) => id === section) ? section : "members";
+    const nav = settingsNavItems.map(([id, label, badge]) => `
+      <button class="${current === id ? "active" : ""}" type="button" data-settings-section="${id}" ${current === id ? 'aria-current="page"' : ""}>
+        ${safe(label)}${badge ? `<span>${safe(badge)}</span>` : ""}
+      </button>`).join("");
+    return `<div class="settings-shell" data-template="T6" data-settings-section="${safe(current)}">
+      ${pageHeader("ENTERPRISE SETTINGS", title, aside)}
+      <p class="settings-shell__lead">这里回答「谁能看、能做什么」。保存后原位提示，并写入审计记录；不会静默扩大权限。</p>
+      <div class="settings-layout">
+        <nav class="settings-nav" aria-label="企业设置分区">${nav}</nav>
+        <section class="settings-main">${body}</section>
+      </div>
+    </div>`;
+  }
+
+  /** T3 drawer body shell: type/version → usage → source → footer with close + one primary. */
+  function drawerShell({
+    kind = "DETAIL",
+    name = "",
+    version = "",
+    status = "",
+    usage = "",
+    source = "",
+    body = "",
+    primary = null,
+    secondary = null,
+  } = {}) {
+    const primaryBtn = primary
+      ? `<button class="button button--primary" type="button" ${primary.attrs || ""}>${safe(primary.label)}</button>`
+      : "";
+    const secondaryBtn = secondary
+      ? `<button class="button button--secondary" type="button" ${secondary.attrs || ""}>${safe(secondary.label)}</button>`
+      : "";
+    return `<div class="drawer-shell" data-template="T3">
+      <header class="drawer-shell__head">
+        <p>${safe(kind)}${version ? ` · ${safe(version)}` : ""}</p>
+        <h3>${safe(name)}</h3>
+        ${status ? `<span class="record-state">${safe(status)}</span>` : ""}
+      </header>
+      ${usage ? `<section class="drawer-shell__block"><span>服务使用</span><p>${usage}</p></section>` : ""}
+      ${source ? `<section class="drawer-shell__block"><span>来源与版本</span><p>${source}</p></section>` : ""}
+      ${body}
+      <footer class="drawer-actions">
+        <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
+        ${secondaryBtn}
+        ${primaryBtn}
+      </footer>
+    </div>`;
+  }
+
+  /** T4 step-flow footer: previous / continue share one sticky bar. */
+  function stepFlowFooter({ prev = null, next = null, hint = "" } = {}) {
+    const prevBtn = prev
+      ? `<button class="button button--secondary" type="button" ${prev.attrs || ""}>${safe(prev.label || "上一步")}</button>`
+      : `<span></span>`;
+    const nextBtn = next
+      ? `<button class="button button--primary" type="button" ${next.attrs || ""}${next.disabled ? " disabled" : ""}>${safe(next.label || "确认并继续")}<span aria-hidden="true"> →</span></button>`
+      : "";
+    return `<footer class="step-flow-footer" data-template="T4">
+      ${prevBtn}
+      <div class="step-flow-footer__meta">${hint ? `<p>${safe(hint)}</p>` : ""}${nextBtn}</div>
+    </footer>`;
+  }
+
+  function lockedYearBanner() {
+    if (!isLockedYear()) return "";
+    return systemStatePanel({
+      code: "locked",
+      title: `${state.year} 年度已锁定`,
+      reason: "这是交付时的不可变快照。产量、能耗、计算与批准状态不能原位修改；如需更正，请创建 Amendment Revision。",
+      canDo: ["只读查看历史数据包与交付物", "创建更正修订（Amendment）", "切换到进行中的年度继续工作"],
+      primary: { label: "创建更正修订", attrs: 'data-drawer="generic-action" data-drawer-label="创建 Amendment Revision"' },
+      secondary: { label: "切到 2026 年度", attrs: 'data-action="enter-program" data-year="2026"' },
+    });
+  }
+
+  function staleSnapshotPanel({ snapshotId = "", runId = "", resumePage = "pcf-data" } = {}) {
+    return systemStatePanel({
+      code: "stale",
+      title: "输入快照已过期（STALE）",
+      reason: `上游资产或绑定已修订${snapshotId ? `（${snapshotId}）` : ""}。当前计算结果${runId ? ` ${runId}` : ""}不可再作为正式依据；历史数值仅供对照。`,
+      canDo: ["回到活动数据重新确认绑定", "重新运行计算生成新 Run", "对照历史结果，但不用于正式披露"],
+      primary: { label: "返回活动数据", attrs: `data-page="${safe(resumePage)}"` },
+      secondary: { label: "查看服务目录", attrs: 'data-page="services-hub"' },
+    });
+  }
+
+  /** CBAM confirmation step footer (T4): keep prev / continue in one sticky bar. */
+  function cbamConfirmFooter() {
+    const page = state.page;
+    const locked = isLockedYear();
+    if (locked) return "";
+    const planned = annualProfile().mode === "planned";
+    if (page === "work") {
+      if (planned) {
+        return stepFlowFooter({
+          prev: { label: "查看全年流程", attrs: 'data-page="roadmap"' },
+          next: { label: "确认年度范围", attrs: 'data-page="products"' },
+          hint: "先确认产品、工厂与进口商，再生成监测计划与 Q1 任务。",
+        });
+      }
+      if (state.uploadAdded && !state.factConfirmed) {
+        return stepFlowFooter({
+          prev: { label: "返回数据收集", attrs: 'data-page="data"' },
+          next: { label: "核对提取结果", attrs: 'data-page="data"' },
+          hint: "确认前不会写入正式核算，也不会覆盖历史记录。",
+        });
+      }
+      if (!state.uploadAdded) {
+        return stepFlowFooter({
+          prev: { label: "查看产品范围", attrs: 'data-page="products"' },
+          next: { label: "上传当期账单", attrs: 'data-action="mock-upload"' },
+          hint: `当前阻塞项：补齐 ${state.quarter} 天然气账单。`,
+        });
+      }
+      return stepFlowFooter({
+        prev: { label: "返回数据", attrs: 'data-page="data"' },
+        next: { label: "处理数据路径", attrs: 'data-page="results"' },
+        hint: "已确认的事实可进入成本比较与路径决策。",
+      });
+    }
+    if (page === "data") {
+      if (state.uploadAdded && !state.factConfirmed) {
+        return stepFlowFooter({
+          prev: { label: "返回当前工作", attrs: 'data-page="work"' },
+          next: { label: "确认提取结果", attrs: 'data-action="confirm-fact"' },
+          hint: "核对用量、账期与设施后才会产生新计算版本。",
+        });
+      }
+      return stepFlowFooter({
+        prev: { label: "返回当前工作", attrs: 'data-page="work"' },
+        next: state.uploadAdded
+          ? { label: "查看计算结果", attrs: 'data-page="results"' }
+          : { label: "上传本季度材料", attrs: 'data-action="mock-upload"' },
+        hint: state.uploadAdded ? "提取已确认时可进入结果与路径决策。" : "上传后由 Agent 提取，再由你确认。",
+      });
+    }
+    return "";
+  }
+
+  function showForbiddenPage(pageId) {
+    $("#main").innerHTML = systemStatePanel({
+      code: "forbidden",
+      title: "当前角色不能进入此页面",
+      reason: `页面「${pageId}」不在你的授权范围，或当前服务频道未开通该入口。导航仍然可用，可返回工作台或联系企业管理员开通权限。`,
+      canDo: ["返回工作台或工作队列", "切换到有权限的服务频道", "联系企业管理员申请权限"],
+      primary: { label: "返回工作台", attrs: 'data-page="workbench"' },
+      secondary: { label: "查看企业与权限", attrs: 'data-page="org-settings"' },
+    });
+  }
+
   function actionButton(label, variant = "primary", attributes = "") {
     return `<button class="button button--${variant}" type="button" ${attributes}>${label}</button>`;
   }
@@ -383,26 +659,13 @@
     return Boolean(roleConfig[role]?.nav.some(([id]) => id === page));
   }
 
-  function customerHubVisitKey() {
-    return `lumino-portal-hub-seen:${state.organization?.id || "ORG-HX-001"}`;
-  }
-
   function customerHasEnterableServices() {
     return Object.values(serviceRegistry).some((service) => service.roles?.includes(state.role) && service.entryPage);
   }
 
-  function hasSeenCustomerHub() {
-    try { return window.localStorage.getItem(customerHubVisitKey()) === "1"; } catch { return false; }
-  }
-
-  function markCustomerHubSeen() {
-    try { window.localStorage.setItem(customerHubVisitKey(), "1"); } catch { /* ignore */ }
-  }
-
-  /** First portal visit → service catalog; later visits with open services → workbench (not the task ledger). */
+  /** Demo entry: the workbench stays underneath an independent, dismissible service overview. */
   function resolveCustomerHomePage() {
-    if (!customerHasEnterableServices() || !hasSeenCustomerHub()) return "services-hub";
-    return "workbench";
+    return customerHasEnterableServices() ? "workbench" : "services-hub";
   }
 
   function setCustomerDestination(serviceId, page) {
@@ -438,13 +701,13 @@
       else if (options.restore && isValidCustomerDestination(state.currentService, state.page)) setCustomerDestination(state.currentService, state.page);
       else setCustomerDestination(null, resolveCustomerHomePage());
     } else state.page = defaultPages[state.role];
+    state.serviceOverviewMode = isCustomer() ? "open" : "closed";
     state.loggedIn = true;
     window.sessionStorage.setItem("lumino-portal-session-role", state.role);
     loadPeriodState(); syncUiFromWorkflow();
     $("#loginScreen").hidden = true;
     $("#portal").hidden = false;
     $("#roleSelect").value = state.role;
-    $("#settingsButton").hidden = !canManageOrganization();
     syncShell();
     render();
     window.scrollTo(0, 0);
@@ -462,29 +725,194 @@
     $("#mobileMenu").setAttribute("aria-expanded", "false");
   }
 
+  function railIcon(name) {
+    const url = lucideIcon(name);
+    return `<i class="rail-icon" aria-hidden="true" style="-webkit-mask-image:url(${url});mask-image:url(${url})"></i>`;
+  }
+
+  function railButton(id, icon, label, opts = {}) {
+    const active = opts.active || state.page === id || (opts.service && state.currentService === opts.service);
+    const attrs = opts.service
+      ? `data-service-enter="${opts.service}" data-page-target="${opts.pageTarget || ""}"`
+      : `data-page="${id}"`;
+    const short = opts.short || label;
+    const badge = opts.badge ? `<span class="rail-badge">${safe(opts.badge)}</span>` : "";
+    if (opts.code) {
+      return `<button class="rail-item rail-item--code ${active ? "active" : ""}" type="button" title="${safe(label)}" aria-label="${safe(label)}" ${attrs} ${active ? 'aria-current="page"' : ""}>
+        <span class="rail-code" aria-hidden="true">${safe(opts.code)}</span>
+        <span class="rail-label">${safe(short)}</span>
+      </button>`;
+    }
+    return `<button class="rail-item ${active ? "active" : ""}" type="button" title="${safe(label)}" aria-label="${safe(label)}" ${attrs} ${active ? 'aria-current="page"' : ""}>
+      ${railIcon(icon)}
+      <span class="rail-label">${safe(short)}</span>${badge}
+    </button>`;
+  }
+
   function syncShell() {
     const config = roleConfig[state.role];
     const crossYearPage = ["programs", "team", "org-settings", "annual-setup", ...globalCustomerPages].includes(state.page);
-    $("#settingsButton").hidden = isCustomer() || !canManageOrganization();
+    const hideSecondary = isCustomer() && !state.currentService && overviewPages.has(state.page)
+      && state.page !== "org-settings";
+    const showSecondary = !hideSecondary;
     $("#companyName").textContent = isCustomer() ? state.organization.name : config.company;
-    $("#companyContextLabel").textContent = isCustomer() ? "当前企业" : ["importer", "verifier", "supplier"].includes(state.role) ? "当前机构" : "当前工作区";
+    const companySub = isCustomer()
+      ? ""
+      : ["importer", "verifier", "supplier"].includes(state.role) ? "当前机构" : "当前工作区";
+    const companyLabel = $("#companyContextLabel");
+    if (companyLabel) {
+      companyLabel.textContent = companySub;
+      companyLabel.hidden = !companySub;
+    }
+    const mark = $("#companyMark");
+    if (mark) mark.textContent = (isCustomer() ? state.organization.name : config.company).slice(0, 1);
     $("#profileName").textContent = config.name;
     $("#profileInitial").textContent = config.initial;
     $("#profileRole").textContent = config.title;
-    document.querySelector(".project-period").hidden = !isCustomer() || state.currentService !== "cbam" || ["customer_contrib", "customer_approver"].includes(state.role) || crossYearPage;
-    $("#yearSelect").innerHTML = Object.entries(years).map(([value, data]) => `<option value="${value}">${data.label}</option>`).join("") + (canCreateYear() ? `<option value="new">＋ 创建新年度</option>` : "");
+    /* 期间切换：仅 CBAM 服务频道显示；通用页（工作台/任务/资产/交付/服务目录）与设置页隐藏 */
+    const showPeriod = isCustomer()
+      && state.currentService === "cbam"
+      && !["customer_contrib", "customer_approver"].includes(state.role)
+      && !crossYearPage;
+    const periodEl = $("#projectPeriod") || document.querySelector(".project-period");
+    if (periodEl) periodEl.hidden = !showPeriod;
+    $("#yearSelect").innerHTML = Object.keys(years).sort((a, b) => Number(b) - Number(a)).map((value) => `<option value="${value}">${value}</option>`).join("")
+      + (canCreateYear() ? `<option value="new">＋ 新建</option>` : "");
     $("#yearSelect").value = state.year;
     $("#quarterSelect").value = state.quarter;
-    const nav = isCustomer()
-      ? [...customerNavWithLiveBadges(), ...(state.currentService ? [["__service__", "", serviceRegistry[state.currentService].name], ...activeServiceNav()] : [])]
-      : config.nav;
-    $("#roleNav").innerHTML = `<p class="nav-label">${iconLabel(state.role)}</p>` + nav.map(([id, icon, label, badge]) => id === "__service__" ? `<p class="nav-section-label">${safe(label)}</p>` : `
-      <button class="nav-item ${state.page === id ? "active" : ""}" type="button" data-page="${id}" ${state.page === id ? 'aria-current="page"' : ""}>
-        <span class="nav-icon" aria-hidden="true">${icon}</span><span>${label}</span>${badge ? `<span class="nav-badge">${badge}</span>` : ""}
-      </button>`).join("");
-    $("#settingsButton").classList.toggle("active", state.page === "org-settings");
-    if (state.page === "org-settings") $("#settingsButton").setAttribute("aria-current", "page");
-    else $("#settingsButton").removeAttribute("aria-current");
+    const toneEl = $("#yearTone");
+    if (toneEl) {
+      const chip = years[state.year]?.chip || "active";
+      const toneLabel = chip === "locked" ? "已封存" : chip === "warn" ? "待开始" : "进行中";
+      toneEl.dataset.tone = chip === "locked" ? "locked" : chip === "warn" ? "warn" : "active";
+      const label = toneEl.querySelector("em");
+      if (label) label.textContent = toneLabel;
+    }
+
+    const rail = $("#shellRail");
+    const channel = $("#sidebarChannel");
+    const layout = document.querySelector(".portal-layout");
+    const sidebar = $("#sidebar");
+    if (isCustomer()) {
+      const global = customerNavWithLiveBadges();
+      const services = Object.values(serviceRegistry)
+        .filter((service) => service.roles?.includes(state.role) && service.entryPage);
+      const [setId, setIcon, setLabel, setShort] = customerRailExtras.settings;
+      rail.innerHTML = global.map(([id, icon, label, badge, short]) => railButton(id, icon, label, {
+        short: short || label,
+        badge: badge || "",
+      })).join("")
+        + `<div class="rail-divider" aria-hidden="true"></div>`
+        + services.map((service) => railButton(service.entryPage, service.code, service.name, {
+          service: service.id,
+          pageTarget: service.entryPage,
+          active: state.currentService === service.id,
+          code: service.code,
+          short: service.code,
+        })).join("")
+        + `<span class="rail-spacer" aria-hidden="true"></span>`
+        + (canManageOrganization()
+          ? railButton(setId, setIcon, setLabel, { short: setShort, active: state.page === "org-settings" })
+          : "");
+
+      if (!showSecondary) {
+        sidebar.hidden = true;
+        layout?.classList.add("portal-layout--rail-only");
+        channel.hidden = true;
+        $("#roleNav").innerHTML = "";
+      } else if (state.page === "org-settings" && canManageOrganization()) {
+        sidebar.hidden = false;
+        layout?.classList.remove("portal-layout--rail-only");
+        channel.hidden = false;
+        channel.innerHTML = `<p class="sidebar-channel__eyebrow">企业设置</p><strong>${safe(state.organization.name)}</strong><span>长期主档与权限</span>`;
+        $("#roleNav").innerHTML = settingsNavItems.map(([id, label, badge]) => `
+          <button class="nav-item ${state.settingsSection === id ? "active" : ""}" type="button" data-settings-section="${id}" ${state.settingsSection === id ? 'aria-current="page"' : ""}>
+            <span class="nav-icon" aria-hidden="true">◎</span><span>${label}</span>${badge ? `<span class="nav-badge">${badge}</span>` : ""}
+          </button>`).join("");
+      } else if (["shared-tasks", "shared-files", "shared-deliverables"].includes(state.page)) {
+        /* 跨服务列表页：二级栏必须是分类筛选，不能回落到全局页或服务频道导航 */
+        state.currentService = null;
+        sidebar.hidden = false;
+        layout?.classList.remove("portal-layout--rail-only");
+        channel.hidden = false;
+        const actor = roleConfig[state.role].name;
+        if (state.page === "shared-tasks") {
+          const taskView = sharedCenterViews.tasks({ role: state.role, actor });
+          const waiting = taskView.items.filter((task) => /等待|供应商|回执/.test(`${task.nextStep || ""}${task.title || ""}`));
+          const open = taskView.items.filter((task) => !waiting.includes(task));
+          const taskFilter = state.taskTab || "open";
+          channel.innerHTML = `<p class="sidebar-channel__eyebrow">跨服务</p><strong>我的任务</strong>`;
+          $("#roleNav").innerHTML = [
+            ["open", "inbox", "待处理", open.length],
+            ["waiting", "hourglass", "等待他人", waiting.length],
+            ["done", "check-circle-2", "已完成", 0],
+            ["all", "layers", "全部", taskView.items.length],
+          ].map(([id, icon, label, badge]) => `
+            <button class="nav-item ${taskFilter === id ? "active" : ""}" type="button" data-task-tab="${id}" ${taskFilter === id ? 'aria-current="page"' : ""}>
+              ${railIcon(icon)}<span>${label}</span>${badge ? `<span class="nav-badge">${badge}</span>` : ""}
+            </button>`).join("");
+        } else if (state.page === "shared-files") {
+          const assetView = assetViews.overview({ role: state.role, serviceId: null, facet: state.assetFacet || "attention" });
+          const facet = state.assetFacet || "attention";
+          channel.innerHTML = `<p class="sidebar-channel__eyebrow">跨服务</p><strong>数据资产</strong>`;
+          $("#roleNav").innerHTML = assetView.facets.map(({ id, label, count }) => `
+            <button class="nav-item ${facet === id ? "active" : ""}" type="button" data-asset-facet="${id}" ${facet === id ? 'aria-current="page"' : ""}>
+              ${railIcon({ attention: "inbox", all: "layers", master: "building-2", activity: "activity", evidence: "file-text" }[id] || "circle")}<span>${label}</span>${count ? `<span class="nav-badge">${count}</span>` : ""}
+            </button>`).join("");
+        } else {
+          const deliveryView = sharedCenterViews.deliverables({ role: state.role, actor });
+          const df = state.delivFilter || "all";
+          const countFor = (f) => deliveryView.items.filter((item) => f === "all" || (f === "mine" ? item.mine : item.serviceCode === f)).length;
+          channel.innerHTML = `<p class="sidebar-channel__eyebrow">跨服务</p><strong>交付中心</strong>`;
+          $("#roleNav").innerHTML = [
+            ["all", "layers", "全部"],
+            ["mine", "inbox", "待我处理"],
+            ["CBAM", "file-check-2", "CBAM"],
+            ["PCF", "file-check-2", "PCF"],
+          ].map(([id, icon, label]) => {
+            const badge = countFor(id);
+            return `<button class="nav-item ${df === id ? "active" : ""}" type="button" data-deliv-filter="${id}" ${df === id ? 'aria-current="page"' : ""}>
+              ${railIcon(icon)}<span>${label}</span>${badge ? `<span class="nav-badge">${badge}</span>` : ""}
+            </button>`;
+          }).join("");
+        }
+      } else if (state.currentService && serviceRegistry[state.currentService]) {
+        sidebar.hidden = false;
+        layout?.classList.remove("portal-layout--rail-only");
+        const service = serviceRegistry[state.currentService];
+        channel.hidden = false;
+        channel.innerHTML = `<p class="sidebar-channel__eyebrow">${safe(service.code)} · ${safe(service.statusLabel || "已开通")}</p><strong>${safe(service.name)}</strong>`;
+        const nav = activeServiceNav();
+        $("#roleNav").innerHTML = nav.map(([id, icon, label, badge]) => `
+          <button class="nav-item ${state.page === id ? "active" : ""}" type="button" data-page="${id}" ${state.page === id ? 'aria-current="page"' : ""}>
+            <span class="nav-icon" aria-hidden="true">${icon}</span><span>${label}</span>${badge ? `<span class="nav-badge">${badge}</span>` : ""}
+          </button>`).join("");
+      } else {
+        sidebar.hidden = false;
+        layout?.classList.remove("portal-layout--rail-only");
+        channel.hidden = false;
+        channel.innerHTML = `<p class="sidebar-channel__eyebrow">跨服务</p><strong>工作门户</strong>`;
+        $("#roleNav").innerHTML = global.map(([id, icon, label, badge]) => `
+          <button class="nav-item ${state.page === id ? "active" : ""}" type="button" data-page="${id}" ${state.page === id ? 'aria-current="page"' : ""}>
+            ${railIcon(icon)}<span>${label}</span>${badge ? `<span class="nav-badge">${badge}</span>` : ""}
+          </button>`).join("");
+      }
+    } else {
+      layout?.classList.remove("portal-layout--rail-only");
+      sidebar.hidden = false;
+      rail.innerHTML = config.nav.map(([id, icon, label]) => {
+        const known = { "◉": "circle-dot", "▣": "layout-grid", "✓": "list-checks", "!": "triangle-alert", "□": "package-check", "∿": "chart-no-axes-column", "◎": "users", "→": "route", "◇": "factory", "▦": "table-2" };
+        return railButton(id, known[icon] || "circle", label, { short: label.length > 4 ? label.slice(0, 4) : label });
+      }).join("");
+      channel.hidden = false;
+      channel.innerHTML = `<p class="sidebar-channel__eyebrow">${["importer", "verifier", "supplier"].includes(state.role) ? "共享空间" : "工作队列"}</p><strong>${safe(config.title)}</strong><span>${safe(config.company)}</span>`;
+      $("#roleNav").innerHTML = config.nav.map(([id, icon, label, badge]) => `
+        <button class="nav-item ${state.page === id ? "active" : ""}" type="button" data-page="${id}" ${state.page === id ? 'aria-current="page"' : ""}>
+          <span class="nav-icon" aria-hidden="true">${icon}</span><span>${label}</span>${badge ? `<span class="nav-badge">${badge}</span>` : ""}
+        </button>`).join("");
+    }
+
+    if ($("#settingsButton")) $("#settingsButton").hidden = true;
   }
 
   function render() {
@@ -498,9 +926,14 @@
     if (["importer", "verifier", "supplier"].includes(state.role)) renderExternalRole();
     if (["support", "platform_admin"].includes(state.role)) renderPlatformRole();
     if (isCustomer()) syncCustomerUrl();
-    const pageLabel = isCustomer()
-      ? [...customerGlobalNav, ...activeServiceNav()].find(([id]) => id === state.page)?.[2]
-      : roleConfig[state.role].nav.find(([id]) => id === state.page)?.[2];
+    if (typeof syncServiceOverview === "function") syncServiceOverview();
+    const settingsLabel = state.page === "org-settings"
+      ? settingsNavItems.find(([id]) => id === state.settingsSection)?.[1]
+      : null;
+    const pageLabel = settingsLabel
+      || (isCustomer()
+        ? [...customerGlobalNav, customerRailExtras.services, customerRailExtras.settings, ...activeServiceNav()].find(([id]) => id === state.page)?.[2]
+        : roleConfig[state.role].nav.find(([id]) => id === state.page)?.[2]);
     document.title = `${pageLabel || "企业工作门户"} · Lumino`;
   }
 
@@ -577,7 +1010,127 @@
       "pcf-upload": ["PCF DATA PACK", "回传 PCF 数据包", drawerForm("pcf-upload", "请回传完整 Excel 模板，并可同时附上账单、台账和供应商声明。系统先校验表结构、单位、期间和证据引用；确认前不会进入正式计算。", `<div class="drawer-template-link"><div><span>项目模板 · HRC-01 · V1.0</span><strong>还没有填写模板？</strong><small>模板已预填产品、核算期、功能单位和系统边界。</small></div><a class="button button--secondary" href="../outputs/pcf-template/Lumino_PCF_%E6%95%B0%E6%8D%AE%E9%87%87%E9%9B%86%E6%A8%A1%E6%9D%BF_HRC-01.xlsx" download>下载模板</a></div><input type="hidden" name="templateVersion" value="PCF-DATA-PACK-1.0">${formField("核算期间", '<input name="period" value="2026-01-01 至 2026-09-30" readonly>')}${formField("演示校验场景", '<select name="validationScenario"><option value="valid">正常通过</option><option value="structure_error">结构错误（缺表／改名）</option><option value="unit_error">单位错误</option><option value="missing_evidence">缺证据引用</option><option value="partial">部分通过（能源缺口）</option></select>', "原型专用：用于验证失败恢复路径，不代表生产上传选项。")}<label class="upload-drop"><input name="file" type="file" accept=".xlsx" required><strong>选择已填写的 Excel 模板</strong><small>必须保留原工作表名称和字段结构</small></label><label class="upload-drop upload-drop--secondary"><input name="supportFiles" type="file" accept=".pdf,.xlsx,.xls,.csv,.jpg,.jpeg,.png" multiple><strong>添加证明材料（可多选）</strong><small>账单、ERP 导出、采购或物流台账、供应商 PCF / EPD</small></label>${formField("回传说明", '<textarea name="note" rows="3" placeholder="例如：采购和能源数据已完成，供应商 PCF 尚在收集中"></textarea>')}`, "上传并开始校验")],
       "pcf-report-preview": ["PCF REPORT PREVIEW", "产品碳足迹报告预览", `<div class="document-sheet"><small>PREVIEW · ${pcfCase?.status === "DELIVERABLE_READY" ? "REV 1" : "DRAFT"} · ${pcfCalculation.formalUseAllowed ? "CONTROLLED INPUTS" : "DEMO INPUTS"}</small><h3>${safe(pcfDeclaration.productName || "热轧非合金钢卷")}产品碳足迹报告</h3><dl><div><dt>核算声明</dt><dd>${safe(pcfDeclaration.goal || "客户披露与供应链响应")}</dd></div><div><dt>系统边界</dt><dd>${safe(pcfBoundary.boundaryType || pcfCalculation.boundaryType || "尚未确认")}</dd></div><div><dt>功能单位</dt><dd>${safe(pcfDeclaration.functionalUnit || pcfCalculation.functionalUnit || "尚未确认")}</dd></div><div><dt>结果</dt><dd>${pcfCalculation.total != null ? `${safe(pcfCalculation.total)} ${safe(pcfCalculation.unit)}` : "尚未生成计算结果"}</dd></div><div><dt>计算版本</dt><dd>${safe(pcfCalculation.runId || "尚未运行")} · ${safe(pcfCalculation.ruleVersion || "—")}</dd></div></dl><p>${pcfCalculation.formalUseAllowed ? "正式交付前仍需完成独立复核、方法说明和证据完整性检查。" : "当前结果含演示清单输入，仅用于验证计算与报告流程，不可用于正式披露或对外交付。"}</p></div>`],
       "generic-action": [context.eyebrow || "ACTION", context.title || "完成操作", drawerForm("generic-action", context.description || "补充必要信息后执行。动作、理由和影响范围会写入审计记录。", `${commonRole}${formField(context.fieldLabel || "处理说明", `<textarea rows="4" required placeholder="${context.placeholder || "说明处理内容或判断依据"}"></textarea>`)}${formField("责任人", '<select><option>我负责</option><option>转交项目协调人</option><option>转交制备专家</option><option>转交运营</option></select>')}${formField("期望完成时间", '<input type="date" value="2026-10-15">')}`, context.submitLabel || "确认并记录")],
-      "record-detail": [context.eyebrow || "DETAIL", context.title || "记录详情", `<div class="detail-ledger">${commonRole}<dl><div><dt>对象</dt><dd>${context.object || `华星钢铁 · ${state.year}`}</dd></div><div><dt>当前状态</dt><dd>${context.status || "处理中"}</dd></div><div><dt>负责人</dt><dd>${context.owner || roleConfig[state.role].name}</dd></div><div><dt>权限范围</dt><dd>${context.scope || "当前服务订单与已授权数据"}</dd></div><div><dt>最近更新</dt><dd>今天 09:20</dd></div></dl><section><strong>当前需要处理</strong><p>${context.description || "查看记录、确认下一步，并保留处理依据。"}</p></section></div><footer class="drawer-actions"><button class="button button--secondary" type="button" data-close-drawer>关闭</button>${context.action ? `<button class="button button--primary" type="button" data-drawer="generic-action" data-drawer-label="${context.action}">${context.action}</button>` : ""}</footer>`],
+      "record-detail": [context.eyebrow || "DETAIL", context.title || "记录详情", drawerShell({
+        kind: context.eyebrow || "DETAIL",
+        name: context.title || "记录详情",
+        version: context.object || `华星钢铁 · ${state.year}`,
+        status: context.status || "处理中",
+        usage: context.scope || "当前服务订单与已授权数据",
+        source: `负责人 ${context.owner || roleConfig[state.role].name} · 最近更新 今天 09:20`,
+        body: `${commonRole}<section class="drawer-shell__block"><span>当前需要处理</span><p>${context.description || "查看记录、确认下一步，并保留处理依据。"}</p></section>`,
+        primary: context.action
+          ? { label: context.action, attrs: `data-drawer="generic-action" data-drawer-label="${safe(context.action)}"` }
+          : null,
+      })],
+      "calc-run-detail": (() => {
+        const run = cbamRunDetail(context.runId || "Run-0412");
+        const fields = run.fields.map(([k, v]) => `<div><dt>${safe(k)}</dt><dd>${safe(v)}</dd></div>`).join("");
+        const inputs = run.inputs.map((row) => `
+          <li class="cbam-snapshot__row ${row.warn ? "is-warn" : ""}">
+            <span><strong>${safe(row.k)}</strong><small>${safe(row.note)}</small></span>
+            <b>${safe(row.v)}</b>
+          </li>`).join("");
+        const events = (run.events || []).map((e) => `
+          <li class="drawer-timeline__item ${e.tone || ""}">
+            <i aria-hidden="true"></i>
+            <span><strong>${safe(e.t)}</strong><small>${safe(e.d)}</small></span>
+          </li>`).join("");
+        return ["CBAM · 计算版本", run.title, `
+          <div class="drawer-detail" data-template="T3">
+            <p class="drawer-detail__sub">${safe(run.state)} · ${safe(run.source)}</p>
+            <dl class="drawer-kv">${fields}</dl>
+            <section class="drawer-shell__block"><span>锁定输入快照</span>
+              <ul class="cbam-snapshot cbam-snapshot--bordered">${inputs}</ul>
+            </section>
+            ${events ? `<section class="drawer-shell__block"><span>版本记录</span><ol class="drawer-timeline">${events}</ol></section>` : ""}
+            <p class="drawer-note">${safe(run.note)}</p>
+            <footer class="drawer-actions">
+              <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
+              ${run.secondary ? `<button class="button button--secondary" type="button" ${run.secondary.attrs}>${safe(run.secondary.label)}</button>` : ""}
+              ${run.primary ? `<button class="button button--primary" type="button" ${run.primary.attrs}>${safe(run.primary.label)}</button>` : ""}
+            </footer>
+          </div>`];
+      })(),
+      "calc-rerun": (() => {
+        const snap = cbamCalcSnapshot();
+        const ready = snap.every((row) => !row.warn);
+        const rows = snap.map((row) => `
+          <li class="cbam-snapshot__row ${row.warn ? "is-warn" : ""}">
+            <span><strong>${safe(row.k)}</strong><small>${safe(row.note)}</small></span>
+            <b>${safe(row.v)}</b>
+          </li>`).join("");
+        return ["CBAM · 重新计算", "重新计算 Q3 隐含排放", `
+          <div class="drawer-detail" data-template="T3">
+            <p class="drawer-lead">计算会先锁定以下输入版本作为快照，再生成新版本 Run-0418。Run-0412 保留为历史记录，可随时对照。</p>
+            <ul class="cbam-snapshot cbam-snapshot--bordered">${rows}</ul>
+            <p class="drawer-note">规则包 CBAM 2026.3 · 证书价格 2026 Q3 €82.32。计算完成后进入 Lumino 专家复核，你会收到通知。${ready ? "" : "当前仍有未齐输入，演示中仍可预览流程。"}</p>
+            <footer class="drawer-actions">
+              <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
+              <button class="button button--primary" type="button" data-action="demo-calc-rerun">确认并开始计算</button>
+            </footer>
+          </div>`];
+      })(),
+      "extract-output": (() => {
+        const rows = [
+          ["热轧非合金钢卷 · Q3 产量", "生产月报 7–9 月.xlsx · 汇总表", "38,400 t"],
+          ["其中出口欧盟", "发运台账 · NordWerk", "12,000 t"],
+          ["产品 CN Code", "产品主档 · 已确认", "7208 39 00"],
+        ].map(([k, src, v]) => `
+          <li class="cbam-extract__row">
+            <span><strong>${safe(k)}</strong><small>${safe(src)}</small></span>
+            <b>${safe(v)}</b>
+            <button class="text-button" type="button" data-action="demo-fix-field" data-field="${safe(k)}">修正</button>
+          </li>`).join("");
+        return ["CBAM · 产量确认", "确认 Q3 产量提取结果", `
+          <div class="drawer-detail" data-template="T3">
+            <p class="drawer-lead">Agent 从生产月报 7–9 月提取了产量与出口量。确认后用于 Q3 计算的分母。</p>
+            <ul class="cbam-extract">${rows}</ul>
+            <p class="drawer-note">确认后生成企业事实新版本，并用于 Q3 计算；依赖旧版本的计算会标记为需要重算。</p>
+            <footer class="drawer-actions">
+              <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
+              <button class="button button--primary" type="button" data-action="confirm-output">确认提取结果</button>
+            </footer>
+          </div>`];
+      })(),
+      "cbam-deliv-detail": (() => {
+        const item = cbamDelivDetail(context.delivId || "q3");
+        const fields = item.fields.map(([k, v]) => `<div><dt>${safe(k)}</dt><dd>${safe(v)}</dd></div>`).join("");
+        const events = item.events.map((e) => `
+          <li class="drawer-timeline__item ${e.tone || ""}">
+            <i aria-hidden="true"></i>
+            <span><strong>${safe(e.t)}</strong><small>${safe(e.d)}</small></span>
+          </li>`).join("");
+        return [`${item.svc} · 交付物`, item.name, `
+          <div class="drawer-detail" data-template="T3">
+            <p class="drawer-detail__sub">${safe(item.when)}</p>
+            <dl class="drawer-kv">${fields}</dl>
+            <section class="drawer-shell__block"><span>记录</span>
+              <ol class="drawer-timeline">${events}</ol>
+            </section>
+            ${item.note ? `<p class="drawer-note">${safe(item.note)}</p>` : ""}
+            <footer class="drawer-actions">
+              <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
+              ${item.primary ? `<button class="button button--primary" type="button" ${item.primary.attrs}>${safe(item.primary.label)}</button>` : ""}
+            </footer>
+          </div>`];
+      })(),
+      "cbam-package": ["CBAM · PKG-2026-Q3", "检查并共享 Q3 数据包", `
+        <div class="drawer-detail" data-template="T3">
+          <p class="drawer-detail__sub">${state.findingResolved ? "已就绪 · 待共享" : "草稿 · 未就绪"} · Rev 1</p>
+          <p class="drawer-lead">数据包将共享给 NordWerk GmbH 的 Anna。对方只能看到包内文件，回执会显示在交付中心。</p>
+          <ul class="drawer-file-list">
+            <li>Q3 隐含排放汇总 · 热轧非合金钢卷</li>
+            <li>计算方法与数据来源说明</li>
+            <li>${state.findingResolved ? "前体路径说明 · 受控默认值" : "前体缺口说明 · 待处理"}</li>
+          </ul>
+          <p class="drawer-note">“已共享”不等于对方已接收，需等待回执；也不代表欧盟申报已完成。本演示不真正发送。</p>
+          <footer class="drawer-actions">
+            <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
+            ${state.findingResolved
+              ? `<button class="button button--primary" type="button" data-action="demo-share-package">确认共享（演示）</button>`
+              : `<button class="button button--primary" type="button" data-page="work">先完成计算前置</button>`}
+          </footer>
+        </div>`],
       "asset-detail": (() => {
         const asset = assetRegistry.get(context.assetId);
         return ["ENTERPRISE DATA ASSET", asset?.name || context.title || "数据资产详情", assetDetailHtml(context.assetId)];
@@ -588,6 +1141,229 @@
       })(),
     };
     return templates[id] || templates["record-detail"];
+  }
+
+  function cbamCalcSnapshot() {
+    const fndOk = state.findingResolved;
+    const energyDone = state.uploadAdded && state.factConfirmed;
+    const outputDone = Boolean(state.outputConfirmed);
+    return [
+      { k: "上海一厂购入电力", v: energyDone ? "v3 · 12,480 MWh" : "v2 · 12,100 MWh", note: energyDone ? "企业已确认" : "电力 v2 · 已过期", warn: !energyDone },
+      { k: "上海一厂天然气", v: "v1 · 1.86 百万 m³", note: "企业已确认", warn: false },
+      { k: "热轧非合金钢卷 Q3 产量", v: outputDone ? "v1 · 38,400 t" : "预估 · 38,000 t", note: outputDone ? "企业已确认" : "Agent 已提取，待你确认", warn: !outputDone },
+      { k: "发往 NordWerk", v: outputDone ? "v1 · 12,000 t" : "预估 · 12,000 t", note: outputDone ? "企业已确认" : "待产量一并确认", warn: !outputDone },
+      { k: "前体排放 · 钢坯", v: fndOk ? "默认值 1.85" : "—", note: fndOk ? "受控默认值 · 专家复核中" : "缺口未处理，无法锁定", warn: !fndOk },
+    ];
+  }
+
+  function cbamRunDetail(runId) {
+    const catalog = {
+      "Run-0418": {
+        id: "Run-0418",
+        title: "Q3 正式输入 · 电力 v3、产量 v1、前体默认值",
+        state: "当前 · 专家复核中",
+        usage: "写入 NordWerk Q3 数据包 · 热轧非合金钢卷",
+        source: "今天 · 周岚 发起 · 规则包 CBAM 2026.3",
+        fields: [
+          ["计算版本", "Run-0418"],
+          ["产品", "热轧非合金钢卷 · CN 7208 39 00"],
+          ["出口量", "12,000 t · NordWerk GmbH"],
+          ["证书价格", "2026 Q3 · €82.32 / tCO₂e"],
+          ["当前适用情景", "前体默认 + 自身实测"],
+          ["隐含排放合计", "2.44 tCO₂e / t"],
+          ["预估证书成本", "€240.0 万"],
+        ],
+        inputs: cbamCalcSnapshot().map((row) => ({ ...row, warn: false, note: row.k.includes("前体") ? "受控默认值 · 专家复核中" : "企业已确认" })),
+        events: [
+          { t: "锁定输入并开始计算", d: "今天 · 周岚" },
+          { t: "计算结果生成", d: "今天 · 系统", tone: "is-now" },
+          { t: "等待专家王晨复核", d: "—", tone: "is-wait" },
+        ],
+        note: "正式结果需经 Lumino 专家王晨复核后写入数据包。新证据到达后应重新计算，生成新版本而不覆盖本记录。",
+        primary: { label: "去完成数据包", attrs: 'data-page="work"' },
+        secondary: { label: "对照重新计算", attrs: 'data-drawer="calc-rerun"' },
+      },
+      "Run-0412": {
+        id: "Run-0412",
+        title: "Q3 中期 · 电力 v2、产量预估",
+        state: state.findingResolved ? "已被替代" : "预估 · 数据未齐",
+        usage: "演示对照基线 · 不可写入正式数据包",
+        source: "10 月 15 日 · 周岚 发起 · 规则包 CBAM 2026.3",
+        fields: [
+          ["计算版本", "Run-0412"],
+          ["产品", "热轧非合金钢卷 · CN 7208 39 00"],
+          ["出口量", "12,000 t · NordWerk GmbH"],
+          ["证书价格", "2026 Q3 · €82.32 / tCO₂e"],
+          ["当前适用情景", "前体默认 + 自身实测（预估）"],
+          ["隐含排放合计", "2.43 tCO₂e / t"],
+          ["预估证书成本", "€240.0 万"],
+        ],
+        inputs: [
+          { k: "上海一厂购入电力", v: "v2 · 12,100 MWh", note: state.uploadAdded && state.factConfirmed ? "已被 v3 替代" : "预估输入", warn: true },
+          { k: "上海一厂天然气", v: "v1 · 1.86 百万 m³", note: "企业已确认", warn: false },
+          { k: "热轧非合金钢卷 Q3 产量", v: "预估 · 38,000 t", note: state.outputConfirmed ? "已被 38,400 t 替代" : "待确认", warn: true },
+          { k: "发往 NordWerk", v: "v1 · 12,000 t", note: "企业已确认", warn: false },
+          { k: "前体排放 · 钢坯", v: state.findingResolved ? "默认值 1.85" : "缺口", note: state.findingResolved ? "路径已选定" : "当时未处理", warn: !state.findingResolved },
+        ],
+        events: [
+          { t: "中期预估计算", d: "10 月 15 日 · 周岚", tone: "is-now" },
+          { t: "等待输入齐全后重算", d: "—", tone: "is-wait" },
+        ],
+        note: "预估版本仅供进度对照。输入更新后需重新计算；不会覆盖本历史记录。",
+        primary: state.findingResolved
+          ? { label: "对照重新计算", attrs: 'data-drawer="calc-rerun"' }
+          : { label: "去处理阻塞项", attrs: 'data-page="work"' },
+        secondary: state.findingResolved ? null : { label: "对照重新计算", attrs: 'data-drawer="calc-rerun"' },
+      },
+      "Run-0405": {
+        id: "Run-0405",
+        title: "Q3 首次预估 · 仅 7 月数据",
+        state: "已被替代",
+        usage: "早期预估 · 不可用于交付",
+        source: "9 月 30 日 · Agent 自动 · 规则包 CBAM 2026.3",
+        fields: [
+          ["计算版本", "Run-0405"],
+          ["产品", "热轧非合金钢卷 · CN 7208 39 00"],
+          ["数据覆盖", "仅 7 月能源与产量"],
+          ["证书价格", "2026 Q3 · €82.32 / tCO₂e"],
+          ["隐含排放合计", "约 2.55 tCO₂e / t（粗估）"],
+        ],
+        inputs: [
+          { k: "购入电力", v: "7 月账单 · 局部", note: "不完整", warn: true },
+          { k: "产量", v: "7 月月报", note: "不完整", warn: true },
+          { k: "前体排放 · 钢坯", v: "EU 默认值表 3", note: "参考", warn: false },
+        ],
+        events: [
+          { t: "Agent 自动预估", d: "9 月 30 日", tone: "is-now" },
+          { t: "已被 Run-0412 替代", d: "10 月 15 日" },
+        ],
+        note: "首次自动预估已被后续版本替代，保留供审计对照。",
+        primary: null,
+        secondary: null,
+      },
+    };
+    return catalog[runId] || catalog["Run-0412"];
+  }
+
+  function cbamDelivDetail(delivId) {
+    const ready = state.findingResolved;
+    const catalog = {
+      q3: {
+        id: "q3", svc: "CBAM", name: "2026 Q3 数据包 · 热轧非合金钢卷",
+        code: "PKG-2026-Q3-NORDWERK · Rev 1", to: "NordWerk GmbH · Anna",
+        when: "截止 10 月 31 日", state: ready ? "已就绪 · 待共享" : "草稿 · 未就绪",
+        fields: [
+          ["服务", "CBAM"],
+          ["编号", "PKG-2026-Q3-NORDWERK · Rev 1"],
+          ["接收方", "NordWerk GmbH · Anna"],
+          ["当前状态", ready ? "已就绪 · 待共享" : "草稿 · 未就绪"],
+        ],
+        events: ready
+          ? [
+              { t: "生成草稿 · 基于 Run-0412", d: "10 月 15 日 · 系统" },
+              { t: "计算更新为 Run-0418", d: "今天 · 周岚 发起", tone: "is-now" },
+              { t: "等待共享", d: "—", tone: "is-wait" },
+            ]
+          : [
+              { t: "生成草稿 · 基于 Run-0412", d: "10 月 15 日 · 系统", tone: "is-now" },
+              { t: "等待 Q3 计算完成", d: "—", tone: "is-wait" },
+            ],
+        note: ready
+          ? "就绪后可共享给进口商；“已共享”不等于已接收，需等待回执。"
+          : "需要先处理前体数据缺口、确认 Q3 能源与产量，并在「计算与成本」重新计算。完成后即可共享给 NordWerk GmbH。",
+        primary: ready
+          ? { label: "检查并共享", attrs: 'data-drawer="cbam-package"' }
+          : { label: "去处理前置任务", attrs: 'data-page="work"' },
+      },
+      q2: {
+        id: "q2", svc: "CBAM", name: "2026 Q2 数据包 · 热轧非合金钢卷",
+        code: "PKG-2026-Q2-NORDWERK · Rev 2", to: "NordWerk GmbH · Anna",
+        when: "8 月 4 日回执", state: "已回执",
+        fields: [["服务", "CBAM"], ["编号", "PKG-2026-Q2-NORDWERK · Rev 2"], ["接收方", "NordWerk GmbH · Anna"], ["当前状态", "已回执"]],
+        events: [
+          { t: "Rev 1 共享", d: "7 月 28 日" },
+          { t: "进口商提问：天然气单位", d: "7 月 30 日" },
+          { t: "Rev 2 更正后共享", d: "8 月 2 日" },
+          { t: "Anna 确认收到 Rev 2", d: "8 月 4 日", tone: "is-now" },
+        ],
+        note: "回执只表示进口商已收到数据包，不代表其已完成欧盟 CBAM 申报。",
+        primary: null,
+      },
+      q1: {
+        id: "q1", svc: "CBAM", name: "2026 Q1 数据包 · 热轧非合金钢卷",
+        code: "PKG-2026-Q1-NORDWERK · Rev 1", to: "NordWerk GmbH · Anna",
+        when: "4 月 26 日回执", state: "已回执",
+        fields: [["服务", "CBAM"], ["编号", "PKG-2026-Q1-NORDWERK · Rev 1"], ["接收方", "NordWerk GmbH · Anna"], ["当前状态", "已回执"]],
+        events: [
+          { t: "共享给 NordWerk", d: "4 月 22 日" },
+          { t: "Anna 确认收到", d: "4 月 26 日", tone: "is-now" },
+        ],
+        note: null,
+        primary: null,
+      },
+      q4: {
+        id: "q4", svc: "CBAM", name: "2026 Q4 数据包 · 热轧非合金钢卷",
+        code: "PKG-2026-Q4-NORDWERK", to: "NordWerk GmbH",
+        when: "Q4 开始后生成", state: "未开始",
+        fields: [["服务", "CBAM"], ["编号", "尚未生成"], ["接收方", "NordWerk GmbH"], ["当前状态", "未开始"]],
+        events: [{ t: "Q4 尚未开始", d: "—", tone: "is-wait" }],
+        note: "季度数据包按进口商与季度生成，不从上一季复制计算结果。",
+        primary: null,
+      },
+      mp26: {
+        id: "mp26", svc: "CBAM", name: "2026 年度监测计划",
+        code: "MP-2026 · Rev 3", to: "内部 · 已适用",
+        when: "本年度方法已建立", state: "当前适用",
+        fields: [["服务", "CBAM"], ["编号", "MP-2026 · Rev 3"], ["接收方", "内部"], ["当前状态", "当前适用"]],
+        events: [
+          { t: "Rev 1 草稿", d: "2026-01-12" },
+          { t: "Rev 3 适用本年度方法", d: "2026-03-02", tone: "is-now" },
+        ],
+        note: "监测计划定义全年一致的方法、职责与控制；季度包不会替代它。",
+        primary: null,
+      },
+      aer26: {
+        id: "aer26", svc: "CBAM", name: "2026 年度排放报告",
+        code: "AER-2026 · 尚未生成", to: "Veritas Climate · 核查",
+        when: "Q4 数据确认后开始", state: "未开始",
+        fields: [["服务", "CBAM"], ["编号", "尚未生成"], ["接收方", "Veritas Climate"], ["当前状态", "未开始"]],
+        events: [{ t: "Q1–Q4 数据确认后生成", d: "—", tone: "is-wait" }],
+        note: "年度排放报告按设施形成，季度数据包不能替代。",
+        primary: null,
+      },
+      ver26: {
+        id: "ver26", svc: "CBAM", name: "设施核查报告",
+        code: "尚未生成", to: "第三方核查员",
+        when: "年度报告批准后", state: "未开始",
+        fields: [["服务", "CBAM"], ["编号", "尚未生成"], ["接收方", "第三方核查员"], ["当前状态", "未开始"]],
+        events: [{ t: "年度报告批准后启动", d: "—", tone: "is-wait" }],
+        note: null,
+        primary: null,
+      },
+      aer25: {
+        id: "aer25", svc: "CBAM", name: "2025 年度排放报告",
+        code: "AER-2025 · Amendment R0", to: "Veritas Climate · 已核查",
+        when: "2026-04-30 锁定", state: "已锁定 · 已核查",
+        fields: [["服务", "CBAM"], ["编号", "AER-2025 · Amendment R0"], ["接收方", "Veritas Climate"], ["当前状态", "已锁定 · 已核查"]],
+        events: [
+          { t: "专家复核通过", d: "2026-03-18" },
+          { t: "核查员出具结论", d: "2026-04-22" },
+          { t: "锁定年度快照", d: "2026-04-30", tone: "is-now" },
+        ],
+        note: "已锁定文件只读。如需更正，在「当前工作」切换到 2025 并创建更正修订。",
+        primary: null,
+      },
+      ver25: {
+        id: "ver25", svc: "CBAM", name: "设施核查报告",
+        code: "VER-2025-SH01 · Rev 1", to: "Veritas Climate",
+        when: "2026-04-22", state: "已核查",
+        fields: [["服务", "CBAM"], ["编号", "VER-2025-SH01 · Rev 1"], ["接收方", "Veritas Climate"], ["当前状态", "已核查"]],
+        events: [{ t: "核查结论出具", d: "2026-04-22", tone: "is-now" }],
+        note: null,
+        primary: null,
+      },
+    };
+    return catalog[delivId] || catalog.q3;
   }
 
   let drawerReturnFocus = null;
@@ -761,18 +1537,28 @@
     return window.LuminoStageGates.evaluatePipeline(serviceId, buildStageGateContext(serviceId));
   }
 
-  function stageGatePanelHtml(serviceId) {
+  /** Stage gates are secondary reference only — never the primary action surface.
+   *  variant: "rail" (context sidebar) | "footer" (below the working form). */
+  function stageGatePanelHtml(serviceId, { variant = "footer" } = {}) {
     const pipeline = evaluateServicePipeline(serviceId);
     if (!pipeline.length) return "";
     const passed = pipeline.filter((item) => item.ok).length;
     const current = pipeline.find((item) => !item.ok) || pipeline[pipeline.length - 1];
+    const currentHint = current && !current.ok
+      ? ((current.blockers || [])[0] || current.message || "待处理")
+      : (current?.nextAction || "可继续");
     const rows = pipeline.map((item, index) => {
       const tone = item.ok ? "pass" : item.blocked ? "blocked" : "fail";
       const label = item.ok ? "通过" : item.blocked ? "阻塞" : "待完成";
       const detail = item.ok ? (item.nextAction || "可进入下一步") : (item.blockers || []).slice(0, 2).join("；") || item.message;
       return `<li class="stage-gate-row stage-gate-row--${tone}"><span>${String(index + 1).padStart(2, "0")}</span><div><strong>${safe(item.title || item.stageId)}</strong><small>${safe(detail)}</small></div><em>${label}</em></li>`;
     }).join("");
-    return `<section class="stage-gate-panel is-compact" aria-label="${serviceId.toUpperCase()} 分步门槛"><header><p class="eyebrow">PROGRESS CHECK</p><h2>本项目进度</h2></header><p class="stage-gate-summary"><strong>${passed}/${pipeline.length}</strong> 已通过 · 当前：${safe(current?.title || "—")}${current && !current.ok ? ` · ${safe((current.blockers || [])[0] || current.message || "待处理")}` : ""}</p><ol>${rows}</ol></section>`;
+    const variantClass = variant === "rail" ? "is-rail" : "is-footer";
+    return `<section class="stage-gate-panel ${variantClass}" aria-label="${serviceId.toUpperCase()} 分步门槛">
+      <header><p class="eyebrow">分步门槛</p><h2>${variant === "rail" ? "进度参考" : "本项目进度"}</h2></header>
+      <p class="stage-gate-summary"><strong>${passed}/${pipeline.length}</strong> 已通过 · 当前：${safe(current?.title || "—")}${current && !current.ok ? ` · ${safe(currentHint)}` : ""}</p>
+      <ol>${rows}</ol>
+    </section>`;
   }
 
   function assertStageGate(serviceId, stageId) {

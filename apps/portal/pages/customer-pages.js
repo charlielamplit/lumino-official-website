@@ -6,8 +6,7 @@
       <h2>2028 年还会使用这 2 个生产设施吗？</h2>
       <p class="why">我从 2027 年带入的是设施结构，不是年度数值。确认后，我会继续询问新增生产线、产品和供应商变化。</p>
       <div class="answer-row"><button class="answer-button" type="button" data-answer="设施没有变化">是，没有变化</button><button class="answer-button" type="button" data-answer="设施发生变化">有新增或停用</button><button class="answer-button secondary" type="button" data-answer="不确定">我不确定</button><button class="answer-button secondary" type="button" data-answer="delegate">交给生产同事</button></div>`;
-    if (state.year === "2025") return `
-      <div class="locked-banner"><b aria-hidden="true">⌾</b><p><strong>2025 年度已锁定。</strong><br>这是交付时的 Rev 1 快照。如需更正，将创建新的 Amendment Revision。</p></div>`;
+    if (state.year === "2025") return lockedYearBanner();
     if (state.year === "2027") return `
       <p class="question-count">年度范围确认 · 第 1 项</p>
       <h2>2027 年还会使用当前这 2 座生产设施吗？</h2>
@@ -23,79 +22,195 @@
       <div class="answer-row"><button class="answer-button" type="button" data-answer="是，钢坯自产">是，自己生产</button><button class="answer-button" type="button" data-answer="不是，从供应商采购">不是，向外采购</button><button class="answer-button secondary" type="button" data-answer="不确定">我不确定</button><button class="answer-button secondary" type="button" data-answer="delegate">交给同事</button></div>`;
   }
 
+  function cbamWorkQueueItems(profile) {
+    const locked = profile.mode === "archived";
+    const planned = profile.mode === "planned";
+    if (locked) {
+      return [
+        { title: "Communication Package 已交付", sub: "NordWerk GmbH · 已接收", state: "已完成", tone: "ok", go: "查看", attrs: 'data-page="deliverables"' },
+        { title: "核查报告已归档", sub: "Verification Report · Rev 1", state: "已封存", tone: "locked", go: "查看", attrs: 'data-page="deliverables"' },
+      ];
+    }
+    if (planned) {
+      return [
+        { title: "确认年度产品与设施范围", sub: "核对从上一年度引用的结构与本年变化", state: "现在可做", tone: "warn", go: "开始确认", attrs: 'data-page="products"' },
+        { title: "生成年度监测计划草稿", sub: "范围确认后由 Agent 和专家准备", state: "下一步", tone: "locked", go: "查看要求", attrs: 'data-page="deliverables"' },
+        { title: "安排 Q1 数据责任人", sub: "不会复制上一年度季度数值", state: "待范围确认", tone: "locked", go: "查看团队", attrs: 'data-page="team"' },
+      ];
+    }
+    const actor = roleConfig[state.role].name;
+    const fromCenter = sharedCenterViews.tasks({ role: state.role, actor }).items
+      .filter((task) => task.serviceCode === "CBAM" || task.serviceId === "cbam")
+      .map((task) => ({
+        title: task.title,
+        sub: `${task.object} · ${task.nextStep}`,
+        state: task.due?.tone === "danger" ? "已逾期" : task.due?.label || "待处理",
+        tone: task.due?.tone === "danger" ? "danger" : task.due?.tone === "warn" ? "warn" : "",
+        go: "处理",
+        attrs: `data-page="${safe(task.page || "data")}"`,
+      }));
+    if (fromCenter.length) return fromCenter;
+    if (state.findingResolved) {
+      return [
+        { title: "完成监测计划的剩余缺口", sub: "已确认事实会自动复用", state: "今天", tone: "warn", go: "去处理", attrs: 'data-page="deliverables"' },
+        { title: "等待专家复核 Run 05", sub: "王晨制备 · 李娜独立复核", state: "处理中", tone: "", go: "查看结果", attrs: 'data-page="results"' },
+        { title: "继续跟进供应商实测数据", sub: "默认值并行路径不会停止供应商请求", state: "等待中", tone: "locked", go: "查看", attrs: 'data-page="products"' },
+      ];
+    }
+    if (state.factConfirmed) {
+      return [
+        { title: "处理前体排放数据缺口", sub: "FND-PRE-004 · 北方特钢", state: "已逾期", tone: "danger", go: "处理", attrs: 'data-page="results"' },
+        { title: "复核 Run 05 成本变化", sub: "确认新增能源数据带来的影响", state: "待决定", tone: "warn", go: "查看", attrs: 'data-page="results"' },
+        { title: "完成 Q3 数据包", sub: "NordWerk GmbH · 10 月 31 日", state: "进行中", tone: "", go: "查看", attrs: 'data-page="deliverables"' },
+      ];
+    }
+    if (state.uploadAdded) {
+      return [
+        { title: "确认 Agent 提取的能源数据", sub: "核对用量、账期与设施", state: "待确认", tone: "warn", go: "核对", attrs: 'data-page="data"' },
+        { title: "处理前体排放数据缺口", sub: "FND-PRE-004 · 北方特钢", state: "已逾期", tone: "danger", go: "处理", attrs: 'data-page="results"' },
+        { title: "完成 Q3 数据包", sub: "NordWerk GmbH · 10 月 31 日", state: "进行中", tone: "", go: "查看", attrs: 'data-page="deliverables"' },
+      ];
+    }
+    return [
+      { title: "处理前体排放数据缺口", sub: "FND-PRE-004 · 北方特钢", state: "已逾期 3 天", tone: "danger", go: "处理", attrs: 'data-action="resolve-finding"' },
+      { title: `上传 ${state.quarter} 能源证明`, sub: `上海一厂 · ${quarterMeta[state.quarter].months}`, state: "待上传", tone: "warn", go: "上传", attrs: 'data-action="mock-upload"' },
+      { title: "完成 Q3 数据包", sub: "NordWerk GmbH · 10 月 31 日", state: "进行中", tone: "", go: "查看", attrs: 'data-page="deliverables"' },
+    ];
+  }
+
+  function cbamWorkNext(profile, openCount) {
+    if (profile.mode === "archived") return "";
+    if (profile.mode === "planned") {
+      return `<section class="next-action" aria-label="下一步">
+        <div class="next-action__copy">
+          <small class="next-action__kicker">下一步 · 年度准备</small>
+          <strong>确认 ${state.year} 年的产品、工厂与进口商</strong>
+          <span>系统已引用长期主档作为建议；确认变化后再生成监测计划草稿和 Q1 任务。</span>
+        </div>
+        <button class="button button--primary" type="button" data-page="products">确认年度范围<span aria-hidden="true">→</span></button>
+      </section>`;
+    }
+    if (state.findingResolved) {
+      return `<section class="next-action" aria-label="下一步">
+        <div class="next-action__copy">
+          <small class="next-action__kicker">下一步 · CBAM</small>
+          <strong>检查报告与交付准备度</strong>
+          <span>季度数据路径已记录；现在检查监测计划和年度文件还缺什么。</span>
+        </div>
+        <button class="button button--primary" type="button" data-page="deliverables">检查报告与交付<span aria-hidden="true">→</span></button>
+      </section>`;
+    }
+    if (state.factConfirmed) {
+      return `<section class="next-action" aria-label="下一步">
+        <div class="next-action__copy">
+          <small class="next-action__kicker">下一步 · 1 / ${Math.max(openCount, 1)}</small>
+          <strong>处理前体排放数据缺口</strong>
+          <span>FND-PRE-004 已逾期。选择补数、等待供应商或受控默认值后，${state.quarter} 计算才能继续。</span>
+        </div>
+        <button class="button button--primary" type="button" data-page="results">选择处理路径<span aria-hidden="true">→</span></button>
+      </section>`;
+    }
+    if (state.uploadAdded) {
+      return `<section class="next-action" aria-label="下一步">
+        <div class="next-action__copy">
+          <small class="next-action__kicker">下一步 · CBAM</small>
+          <strong>确认 Agent 提取的能源数据</strong>
+          <span>核对用量、账期和设施。确认后才会产生新计算版本。</span>
+        </div>
+        <button class="button button--primary" type="button" data-page="data">核对提取结果<span aria-hidden="true">→</span></button>
+      </section>`;
+    }
+    return `<section class="next-action" aria-label="下一步">
+      <div class="next-action__copy">
+        <small class="next-action__kicker">下一步 · 1 / ${Math.max(openCount, 1)}</small>
+        <strong>处理前体排放数据缺口</strong>
+        <span>已逾期 3 天，阻塞 ${state.quarter} 计算与 NordWerk 数据包交付（10 月 31 日）。</span>
+      </div>
+      <button class="button button--primary" type="button" data-action="resolve-finding">选择处理路径<span aria-hidden="true">→</span></button>
+    </section>`;
+  }
+
   function renderCustomer() {
     if (renderMultiServicePage()) return;
     if (state.page !== "work") return renderCustomerSecondary();
-    const year = years[state.year];
     const profile = annualProfile();
     const locked = profile.mode === "archived";
     const planned = profile.mode === "planned";
-    const currentStep = journeyStage();
-    const stepNames = ["年度范围", "监测计划", "Q1–Q4 数据循环", "年度排放报告", "核查与交付"];
-    const homeTitle = locked ? "查看完整年度档案" : planned ? `下一步：确认 ${state.year} 年度范围` : state.findingResolved ? "下一步：检查年度报告准备度" : state.factConfirmed ? "下一步：选择缺口数据的处理方式" : state.uploadAdded ? "下一步：确认 Agent 提取结果" : `下一步：上传 ${state.quarter} 天然气账单`;
-    const coordinatorNext = locked ? ""
-      : state.findingResolved
-        ? nextAction("当前唯一下一步", "检查年度报告准备度", "季度数据路径已记录；现在检查监测计划和年度文件还缺什么。", "检查报告与交付", 'data-page="deliverables"')
-        : state.factConfirmed
-          ? nextAction("当前唯一下一步", "选择缺口数据的处理方式", "比较默认值、当前实测和等待供应商数据的成本与时间影响。", "比较并做决定", 'data-page="results"')
-          : state.uploadAdded
-            ? nextAction("当前唯一下一步", "确认 Agent 提取的天然气数据", "核对用量、账期和设施。确认后才会产生新计算版本。", "核对提取结果", 'data-page="data"')
-            : planned
-              ? nextAction("当前唯一下一步", `确认 ${state.year} 年的产品、工厂与进口商`, "系统已引用长期主档作为建议；确认变化后再生成年度监测计划和季度任务。", "确认年度范围", 'data-page="products"')
-              : nextAction("当前唯一下一步", `上传 ${state.quarter} 的 ${quarterMeta[state.quarter].endMonth}天然气账单`, "产品、工厂和监测方法已建立。现在只需补齐当期数据，Agent 会自动提取。", "上传当期账单", 'data-action="mock-upload"');
-    const taskRows = locked ? `
-      <li class="task-row"><span class="task-number">✓</span><div><strong>Communication Package 已交付</strong><small>进口商：NordWerk GmbH · 已接收</small></div><time>2026-03-18</time></li>
-      <li class="task-row"><span class="task-number">✓</span><div><strong>核查报告已归档</strong><small>Verification Report · Rev 1</small></div><time>2026-03-12</time></li>`
-      : planned ? `
-      <li class="task-row"><span class="task-number">1</span><div><strong>确认年度产品与设施范围</strong><small>核对从 2026 年引用的结构和本年变化</small></div><div class="task-row-action"><time>现在可做</time><button class="text-button" type="button" data-page="products">开始确认</button></div></li>
-      <li class="task-row"><span class="task-number">2</span><div><strong>生成年度监测计划草稿</strong><small>范围确认后由 Agent 和专家准备</small></div><div class="task-row-action"><time>下一步</time><button class="text-button" type="button" data-page="deliverables">查看要求</button></div></li>
-      <li class="task-row"><span class="task-number">3</span><div><strong>安排 Q1 数据责任人</strong><small>不会复制 2026 年的季度数值</small></div><div class="task-row-action"><time>待范围确认</time><button class="text-button" type="button" data-page="team">查看团队</button></div></li>`
-      : state.findingResolved ? `
-      <li class="task-row"><span class="task-number">1</span><div><strong>完成监测计划的 4 个缺口</strong><small>已确认事实会自动复用，无需重新填写</small></div><div class="task-row-action"><time>今天</time><button class="text-button" type="button" data-page="deliverables">去处理</button></div></li>
-      <li class="task-row"><span class="task-number">2</span><div><strong>等待专家复核 Run 05</strong><small>王晨制备 · 李娜独立复核</small></div><div class="task-row-action"><time>处理中</time><button class="text-button" type="button" data-page="results">查看结果</button></div></li>
-      <li class="task-row"><span class="task-number">3</span><div><strong>继续跟进供应商实测数据</strong><small>默认值并行路径不会停止供应商请求</small></div><div class="task-row-action"><time>已等待 6 天</time><button class="text-button" type="button" data-page="products">查看配置</button></div></li>`
-      : state.factConfirmed ? `
-      <li class="task-row"><span class="task-number">1</span><div><strong>处理钢坯数据缺口</strong><small>比较默认值并行、等待供应商和保守默认值</small></div><div class="task-row-action"><time>现在</time><button class="text-button" type="button" data-page="results">选择路径</button></div></li>
-      <li class="task-row"><span class="task-number">2</span><div><strong>复核 Run 05 成本变化</strong><small>确认新增天然气数据带来的影响</small></div><div class="task-row-action"><time>待决定</time><button class="text-button" type="button" data-page="results">查看</button></div></li>`
-      : `
-      <li class="task-row"><span class="task-number">1</span><div><strong>上传 ${quarterMeta[state.quarter].endMonth}天然气账单</strong><small>补齐 ${state.quarter} 数据包；Agent 会识别用量、账期和设施</small></div><div class="task-row-action"><time>今天</time><button class="text-button" type="button" data-page="data">去处理</button></div></li>
-      <li class="task-row"><span class="task-number">2</span><div><strong>确认钢坯供应商数据路径</strong><small>可转发给采购负责人，不阻塞其他产品</small></div><div class="task-row-action"><time>10 月 12 日</time><button class="text-button" type="button" data-page="products">查看</button></div></li>
-      <li class="task-row"><span class="task-number">3</span><div><strong>复核 Q3 产品覆盖</strong><small>确认本季度发运涉及的产品与进口商</small></div><div class="task-row-action"><time>10 月 15 日</time><button class="text-button" type="button" data-page="products">查看</button></div></li>`;
-    const upcomingRows = locked ? taskRows : planned ? taskRows : state.findingResolved ? `
-      <li class="task-row"><span class="task-number">→</span><div><strong>专家复核当前计算版本</strong><small>王晨制备 · 李娜独立复核</small></div><time>系统自动流转</time></li>
-      <li class="task-row"><span class="task-number">→</span><div><strong>继续跟进供应商实测数据</strong><small>并行路径不会阻塞年度工作</small></div><time>已委派采购</time></li>` : state.factConfirmed ? `
-      <li class="task-row"><span class="task-number">→</span><div><strong>对方案进行具名审批</strong><small>批准默认值并行路径后才可交付</small></div><time>内部审批人</time></li>
-      <li class="task-row"><span class="task-number">→</span><div><strong>准备 ${state.quarter} 进口商数据包</strong><small>根据已批准的数据路径生成</small></div><time>后续自动进入</time></li>` : `
-      <li class="task-row"><span class="task-number">→</span><div><strong>确认 Agent 提取结果</strong><small>核对账期、设施和用量</small></div><time>上传后</time></li>
-      <li class="task-row"><span class="task-number">→</span><div><strong>计算本季度结果并处理数据缺口</strong><small>系统会比较默认值与实测值</small></div><time>数据确认后</time></li>`;
-    const showAgentQuestion = planned || Boolean(state.configurationDrafts[state.selectedProduct] && !state.answer);
-    $("#main").innerHTML = `
-      ${pageHeader(`${state.year} ANNUAL COMPLIANCE CYCLE`, homeTitle, yearBadge())}
-      ${state.online ? "" : '<div class="offline-banner" role="status"><strong>当前处于离线状态</strong><span>你仍可查看本页，但上传、分享和状态变更将在恢复网络后才能提交。</span></div>'}
-      ${onboardingGuide()}
-      <div class="customer-layout">
-        <section class="customer-main">
-          ${state.importedTrial && state.year === String(state.importedTrial.year) ? `<section class="trial-handoff"><div><small>来自免费成本试算</small><strong>${safe(state.importedTrial.cnCode)} · ${safe(state.importedTrial.quantity.toLocaleString("zh-CN"))} 吨</strong><p>估算成本 ¥${safe(state.importedTrial.estimatedCostCny.toLocaleString("zh-CN"))}。这只是线索，确认产品与工厂后才会建立正式事实。</p></div><button class="button button--secondary" type="button" data-action="review-trial">核对并转为项目</button></section>` : ""}
-          <section class="project-position"><div><small>当前年度状态</small><strong>${state.year} · ${profile.position}</strong></div><div><small>${planned ? "已引用的基础" : "已建立的基础"}</small><strong>${profile.foundation}</strong></div><button class="text-button" type="button" data-page="roadmap">查看全年流程 →</button></section>
-          <div class="journey-mini">${stepNames.map((name, index) => `<span class="${index + 1 < currentStep || locked ? "done" : index + 1 === currentStep ? "current" : ""}" title="${name}"><i></i><small>${index + 1}</small></span>`).join("")}</div>
-          ${stageGatePanelHtml("cbam")}
-          ${coordinatorNext}
-          ${showAgentQuestion ? `<section class="panel agent-task secondary-agent-task">
-            <div class="agent-task-top"><div class="agent-identity"><span class="agent-mark" aria-hidden="true">✦</span><div><strong>Lumino 协调 Agent</strong><small>把业务事实转换为合规数据</small></div></div><button class="text-button" type="button" data-action="explain-question" aria-expanded="${state.questionHelpOpen}">为什么问这些？</button></div>
-            <div class="agent-task-body">${customerQuestion()}</div>
-          </section>` : ""}
-          <section class="panel"><div class="panel-head"><div><h2>${locked ? "年度记录" : "完成当前步骤后"}</h2><small>${locked ? "只读档案" : "这些暂时不需要你处理"}</small></div></div>
-            <ol class="task-list">
-              ${upcomingRows}
-            </ol>
-          </section>
+    const org = state.organization?.name || "华星钢铁";
+    const queue = cbamWorkQueueItems(profile);
+    const openCount = queue.filter((item) => !["已完成", "已封存", "已回执"].includes(item.state)).length;
+    const progress = Number(profile.quarters?.[state.quarter]?.[1] ?? profile.progress ?? 0);
+    const progressNote = locked
+      ? "全年数据包、年度报告与核查已锁定为快照。"
+      : planned
+        ? "季度数据不会跨年度复制，确认范围后从 Q1 开始产生。"
+        : state.findingResolved
+          ? "前体路径已记录；剩余能源证明与数据包收尾。"
+          : "截止 10 月 31 日交付 NordWerk GmbH。剩余：前体数据、能源证明。";
+    const quarterTone = (tone) => tone === "ok" ? "is-ok" : tone === "warn" ? "is-warn" : "is-muted";
+    const quarterRows = Object.entries(profile.quarters || {}).map(([q, [label, , tone]]) => `
+      <li class="cbam-work__quarter ${quarterTone(tone)}"><span>${q} 数据包</span><strong>${safe(label)}</strong></li>`).join("");
+
+    const yearStateCard = locked
+      ? `<section class="cbam-work__state" aria-label="年度已封存">
+          <header><span class="cbam-work__state-icon" aria-hidden="true"></span><strong>${state.year} 年度已封存，只读</strong></header>
+          <p>Q1–Q4 数据包、年度排放报告、核查与交付已锁定为快照。如需更正，请创建更正修订，原快照保持不变。</p>
+          <div class="cbam-work__state-actions">
+            <button class="button button--primary" type="button" data-drawer="generic-action" data-drawer-label="创建 Amendment Revision">创建更正修订</button>
+            <button class="text-button" type="button" data-page="deliverables">查看封存的交付物</button>
+          </div>
+        </section>`
+      : planned
+        ? `<section class="cbam-work__state" aria-label="年度尚未开始">
+          <strong>${state.year} 年度尚未开始</strong>
+          <p>可以先确认范围、产品与设施变化和监测方法。季度数据和计算结果不会跨年度复制，会在 ${state.year} Q1 开始后逐季产生。</p>
+          <ul class="cbam-work__inherit">
+            <li>继承为待确认：企业主体、设施、产品与 CN Code 候选</li>
+            <li>复制为草稿：工艺、供应商、职责与数据源映射</li>
+            <li>不复制：产量、能耗、计算、报告与核查结论</li>
+          </ul>
+          <div class="cbam-work__state-actions">
+            <button class="button button--primary" type="button" data-page="products">开始确认 ${state.year} 范围</button>
+          </div>
+        </section>`
+        : "";
+
+    const queueCard = (locked || planned) ? "" : `
+      <div class="cbam-work__board">
+        <section class="cbam-work__queue ds-card" aria-label="${state.quarter} 待办">
+          <header class="ds-card__head">
+            <h2>${state.quarter} 数据包 · 我的待办</h2>
+            <span>${openCount || queue.length} 项未完成</span>
+          </header>
+          <ul class="cbam-work__list">
+            ${queue.map((item) => `
+              <li>
+                <button type="button" class="cbam-work__row" ${item.attrs}>
+                  <span class="cbam-work__row-copy"><strong>${safe(item.title)}</strong><small>${safe(item.sub)}</small></span>
+                  <span class="status-chip ${item.tone === "danger" ? "danger" : item.tone === "warn" ? "warn" : item.tone === "ok" ? "" : item.tone === "locked" ? "locked" : ""}">${safe(item.state)}</span>
+                  <span class="cbam-work__go">${safe(item.go)} →</span>
+                </button>
+              </li>`).join("")}
+          </ul>
         </section>
-        <aside class="panel context-rail" aria-label="当前工作依据">
-          <div class="context-intro"><p>WHY THIS IS NEXT</p><h2>${locked ? "交付时的正式事实快照" : "为什么现在做这一步"}</h2></div>
-          <section class="context-section"><h3>${planned ? "年度准备依据" : locked ? "封存范围" : "前置基础已建立"}</h3><dl class="fact-list"><div><dt>企业与设施</dt><dd>${planned ? "引用主档 · 待确认" : "已确认"}</dd></div><div><dt>年度产品范围</dt><dd>${planned ? "待确认" : "4 个产品"}</dd></div><div><dt>监测计划</dt><dd>${profile.monitoring[0]}</dd></div><div><dt>当前周期</dt><dd>${planned ? "年度准备" : `${state.year} · ${state.quarter}`}</dd></div><div><dt>年度进度</dt><dd>${profile.progress}%</dd></div></dl></section>
-          <section class="context-section"><h3>这一步的作用</h3><p class="source-line"><span>▣</span> ${planned ? "确认今年实际涉及的产品、工厂和进口商。" : locked ? "保留交付时的正式事实、版本和回执。" : "补齐当期活动数据和可追溯证据。"}</p><p class="source-line"><span>→</span> ${planned ? "确认后生成监测计划草稿和 Q1 材料清单。" : locked ? "如需调整，创建 Amendment，不覆盖原档案。" : "完成后自动进入排放计算和默认值对比，无需自己填专业表格。"}</p></section>
-          <section class="context-section"><button class="text-button" type="button" data-page="roadmap">查看完整业务路径 →</button></section>
+        <aside class="cbam-work__progress ds-card" aria-label="${state.quarter} 数据包进度">
+          <strong>${state.quarter} 数据包进度</strong>
+          <span class="cbam-work__pct">${progress}%</span>
+          <span class="cbam-work__bar" aria-hidden="true"><i style="width:${Math.max(0, Math.min(100, progress))}%"></i></span>
+          <p>${safe(progressNote)}</p>
+          <ul class="cbam-work__quarters">${quarterRows}</ul>
+          ${stageGatePanelHtml("cbam", { variant: "rail" })}
         </aside>
+      </div>`;
+
+    $("#main").innerHTML = `
+      <div class="cbam-work" data-template="T1">
+        ${pageHeader(`${org} / CBAM`, "当前工作", statusChip(`${state.year} · ${years[state.year]?.short || profile.position}`, years[state.year]?.chip === "warn" ? "warn" : years[state.year]?.chip === "locked" ? "locked" : ""))}
+        ${state.online ? "" : '<div class="offline-banner" role="status"><strong>当前处于离线状态</strong><span>你仍可查看本页，但上传、分享和状态变更将在恢复网络后才能提交。</span></div>'}
+        ${state.importedTrial && state.year === String(state.importedTrial.year) ? `<section class="trial-handoff"><div><small>来自免费成本试算</small><strong>${safe(state.importedTrial.cnCode)} · ${safe(state.importedTrial.quantity.toLocaleString("zh-CN"))} 吨</strong><p>估算成本 ¥${safe(state.importedTrial.estimatedCostCny.toLocaleString("zh-CN"))}。这只是线索，确认产品与工厂后才会建立正式事实。</p></div><button class="button button--secondary" type="button" data-action="review-trial">核对并转为项目</button></section>` : ""}
+        ${cbamWorkNext(profile, openCount || queue.length)}
+        ${yearStateCard}
+        ${queueCard}
       </div>`;
   }
 
@@ -159,9 +274,30 @@
   }
 
   function renderApprovals() {
-    $("#main").innerHTML = `
-      ${pageHeader(`${state.year} · INTERNAL APPROVAL`, "待我审批", statusChip("2 项等待决定", "warn"))}
-      <div class="approval-board"><section class="panel"><div class="panel-head"><h2>审批队列</h2><span>按成本与交付影响排序</span></div><div class="stack-list"><button type="button" class="stack-row active" data-drawer="record-detail" data-drawer-label="默认值并行路径" data-drawer-object="AP-2026-014" data-drawer-status="等待内部审批"><span>风险路径 · 今天</span><strong>供应商数据未返回，是否暂用默认值？</strong><small>影响 37% 总排放 · 不影响继续采集</small></button><button type="button" class="stack-row" data-drawer="record-detail" data-drawer-label="NordWerk Communication Package" data-drawer-object="2026 Q1–Q3 · 2 个产品"><span>交付范围 · 周五</span><strong>NordWerk Communication Package</strong><small>2 个产品 · 2026 Q1–Q3</small></button></div></section><section class="panel review-sheet"><small>DECISION AP-2026-014</small><h2>默认值并行路径</h2><p>批准后，团队会继续向供应商索取实测数据，同时以保守默认值维持当前进度。批准不会关闭 Finding。</p><ol><li><span>¥</span><div><strong>当前成本影响</strong><small>较目标情景约增加 ¥230k</small></div></li><li><span>✓</span><div><strong>可以撤回</strong><small>供应商数据通过核查后创建新计算版本</small></div></li></ol><div class="action-bar"><button class="button button--primary" type="button" data-workflow-transition="APPROVED" data-object-id="AP-2026-014">批准并记录理由</button><button class="button button--secondary" type="button" data-workflow-transition="REJECTED" data-object-id="AP-2026-014">退回补充</button></div></section></div>`;
+    const queueItems = `
+      <button type="button" class="stack-row active" data-drawer="record-detail" data-drawer-label="默认值并行路径" data-drawer-object="AP-2026-014" data-drawer-status="等待内部审批" data-drawer-action="批准并记录理由"><span>风险路径 · 今天</span><strong>供应商数据未返回，是否暂用默认值？</strong><small>影响 37% 总排放 · 不影响继续采集</small></button>
+      <button type="button" class="stack-row" data-drawer="record-detail" data-drawer-label="NordWerk Communication Package" data-drawer-object="2026 Q1–Q3 · 2 个产品" data-drawer-status="待审批交付范围"><span>交付范围 · 周五</span><strong>NordWerk Communication Package</strong><small>2 个产品 · 2026 Q1–Q3</small></button>`;
+    const decisionPoints = `
+      <li><span>¥</span><div><strong>当前成本影响</strong><small>较目标情景约增加 ¥230k</small></div></li>
+      <li><span>✓</span><div><strong>可以撤回</strong><small>供应商数据通过核查后创建新计算版本</small></div></li>
+      <li><span>→</span><div><strong>批准后</strong><small>锁定本路径快照；Finding 保持开放，实测返回后可开新版本</small></div></li>`;
+    $("#main").innerHTML = reviewSuiteShell({
+      meta: `${state.year} · INTERNAL APPROVAL`,
+      title: "待我审批",
+      aside: statusChip("2 项等待决定", "warn"),
+      note: "批准只记录路径决定，不会关闭 Finding，也不会覆盖已锁定的历史计算。",
+      queueTitle: "审批队列",
+      queueMeta: "<span>按成本与交付影响排序</span>",
+      queueItems,
+      decisionKicker: "DECISION AP-2026-014",
+      decisionTitle: "默认值并行路径",
+      decisionLead: "批准后，团队会继续向供应商索取实测数据，同时以保守默认值维持当前进度。",
+      decisionPoints,
+      approveLabel: "批准并记录理由",
+      approveAttrs: 'data-workflow-transition="APPROVED" data-object-id="AP-2026-014"',
+      rejectLabel: "退回补充",
+      rejectAttrs: 'data-workflow-transition="REJECTED" data-object-id="AP-2026-014"',
+    });
   }
 
   function journeyStage() {
@@ -245,7 +381,7 @@
     $("#main").innerHTML = `
       ${pageHeader(`${state.year} · ${state.quarter} QUARTERLY DATA`, `${state.quarter} 数据与证据`, dataHeaderAction)}
       <section class="cadence-notice"><div><small>季度工作包</small><strong>每个季度独立检查数据完整度、计算版本和进口商反馈</strong></div><p>季度数据持续累积到年度数据集；监测计划、年度排放报告和核查在年度层管理。</p></section>
-      ${locked ? '<div class="privacy-band"><strong>年度快照只读</strong><span>新材料必须通过更正申请进入 Amendment 草稿，不会覆盖 Rev 1。</span><button class="text-button" type="button" data-staff-action="已创建年度更正申请">发起更正</button></div>' : ""}
+      ${locked ? lockedYearBanner() : ""}
       ${planned ? '<div class="privacy-band"><strong>季度数据尚未开始</strong><span>你可以浏览 Q1–Q4 结构，但应先完成年度范围和监测计划准备。</span><button class="text-button" type="button" data-page="roadmap">查看开始条件</button></div>' : ""}
       <section class="period-grid" aria-label="选择季度数据包">${periods.map(([label, status, coverage, tone]) => {
         const price = state.year === "2026" ? certificatePrices2026[label].price : state.year >= "2027" ? "按周价格" : "不适用";
@@ -254,7 +390,8 @@
       ${planned || locked ? "" : reviewStep}
       ${planned || locked ? "" : `<section class="asset-capsule-panel" aria-label="本季度已关联的企业数据资产"><header><div><span>ENTERPRISE ASSETS IN USE</span><h2>这些材料来自企业数据资产</h2><p>看得懂的是业务含义；点胶囊可查看来源、确认状态，以及是否也被 PCF 使用。</p></div></header><div class="asset-capsule-row">${assetCapsule("REC-HX-POWER-2026Q3", { serviceId: "cbam" })}${assetCapsule("EVD-HX-POWER-2026Q3", { serviceId: "cbam" })}${assetCapsule("REC-HX-OUTPUT-2026YTD", { serviceId: "cbam" })}</div></section>`}
       <div class="content-split data-layout"><section class="panel flat-panel"><div class="panel-head"><h2>${state.quarter} ${locked ? "归档记录" : planned ? "准备状态" : "本期材料"}</h2>${planned || locked ? "" : '<button class="text-button" type="button">责任人 ▾</button>'}</div><div class="record-list">${periodRecords}</div></section><aside class="panel trace-panel"><div class="panel-head"><h2>${planned ? "开始 Q1 前" : locked ? "档案包含" : `${state.quarter} 进入核算前`}</h2></div><ol class="trace-list">${planned ? '<li><span>01</span><div><strong>确认年度范围</strong><small>产品、设施、配置、CN Code 和进口商</small></div></li><li><span>02</span><div><strong>确认监测方法</strong><small>取数方式、职责、证据和内部控制</small></div></li>' : locked ? '<li><span>✓</span><div><strong>季度正式事实</strong><small>保留确认人与证据血缘</small></div></li><li><span>✓</span><div><strong>计算与交付版本</strong><small>保留规则包、价格与回执</small></div></li>' : `<li><span>01</span><div><strong>期间完整</strong><small>${state.uploadAdded ? "账期已覆盖，无重复或缺月" : `仍缺 ${currentPeriod.endMonth}天然气`}</small></div></li><li><span>02</span><div><strong>对象已关联</strong><small>设施、产品配置和前体明确</small></div></li><li><span>03</span><div><strong>证据可回溯</strong><small>文件版本与位置已记录</small></div></li><li><span>04</span><div><strong>异常已处理</strong><small>冲突有具名裁决</small></div></li>`}</ol></aside></div>
-      ${locked ? "" : dataNext}`;
+      ${locked ? "" : dataNext}
+      ${cbamConfirmFooter()}`;
   }
 
   function cbamProductCatalog() {
@@ -316,68 +453,235 @@
       ${locked ? "" : configurationDraft && !state.answer ? nextAction("当前任务 · 2/5", "让 Agent 补齐新配置", "用业务语言确认工厂、工艺和钢坯来源；无需填写专业字段。", "回答配置问题", 'data-page="work"', "secondary") : nextAction("当前任务 · 2/5 已核对", "收集本期数据与证据", "产品范围确定后，Agent 已生成按责任人拆分的材料清单。", "继续收集材料", 'data-page="data"', "secondary")}`;
   }
 
+  function cbamCalcStatus() {
+    const energyDone = state.uploadAdded && state.factConfirmed;
+    const outputDone = Boolean(state.outputConfirmed);
+    if (state.findingResolved && energyDone && outputDone) return "current";
+    if (energyDone && outputDone && !state.findingResolved) return "blocked";
+    return "partial";
+  }
+
   function renderResults() {
     const profile = annualProfile();
-    if (profile.mode === "planned") {
+    const org = state.organization?.name || "华星钢铁";
+    const chip = statusChip(`${state.year} · ${years[state.year]?.short || profile.position}`, years[state.year]?.chip === "warn" ? "warn" : years[state.year]?.chip === "locked" ? "locked" : "");
+    if (profile.mode !== "active" || state.year !== "2026") {
       $("#main").innerHTML = `
-        ${pageHeader(`${state.year} · CALCULATION READINESS`, "计算与成本", yearBadge())}
-        <section class="empty-workspace"><small>YEAR NOT STARTED</small><h2>2027 年尚未产生计算结果</h2><p>可以提前确认产品、工厂、CN Code、进口商和监测方法；季度活动数据、证书价格与计算结论不会从 2026 年复制。</p><div class="empty-checks"><span>✓ 企业长期主档已引用</span><span>○ 年度产品范围待确认</span><span>○ 监测计划待生成</span><span>○ Q1 数据尚未开始</span></div><button class="button button--primary" type="button" data-page="products">确认年度范围 <b aria-hidden="true">→</b></button></section>`;
+        <div class="cbam-results" data-template="T5">
+          ${pageHeader(`${org} / CBAM`, "计算与成本", chip)}
+          <section class="cbam-work__state" aria-label="年度计算结果">
+            <strong>${state.year === "2025" ? "2025 计算结果已锁定在年度快照中" : `${state.year} 尚无计算结果`}</strong>
+            <p>计算结果随年度切换；2025 的计算版本已锁定，2027 尚无计算。可切换到 2026 · Q3 查看当前演示情景。</p>
+            <div class="cbam-work__state-actions">
+              <button class="button button--secondary" type="button" data-action="enter-program" data-year="2026">切换到 2026 · Q3</button>
+            </div>
+          </section>
+        </div>`;
       return;
     }
-    if (profile.mode === "archived") {
-      $("#main").innerHTML = `
-        ${pageHeader(`${state.year} · FINAL CALCULATION`, "年度计算结果", yearBadge())}
-        <section class="scenario-intro archived-summary"><div><small>FINAL · LOCKED</small><strong>2025 年最终认可结果</strong><p>Calculation Run 12 · Rulepack EU-CBAM-2025.4 · 与年度排放报告 Rev 1 和核查报告绑定。</p></div><div class="recognized-saving"><small>最终证书成本估算</small><strong>¥3.61m</strong><span>相对默认基线减少 ¥0.94m</span></div></section>
-        <section class="annual-result-grid"><article><small>数据覆盖</small><strong>92% 实测</strong><span>8% 经批准默认值</span></article><article><small>单位排放</small><strong>1.76 tCO₂e/t</strong><span>4 个产品加权结果</span></article><article><small>核查状态</small><strong>已核查</strong><span>无开放 Finding</span></article><article><small>档案状态</small><strong>已封存</strong><span>更正需创建 Amendment</span></article></section>
-        ${nextAction("完整年度档案", "查看报告、核查和进口商回执", "最终结果保持只读，所有版本和依据均可追溯。", "查看年度交付", 'data-page="deliverables"')}`;
-      return;
-    }
-    const resolved = state.findingResolved;
+
+    const st = cbamCalcStatus();
     const pathLabels = { parallel: "供应商请求 + 默认值并行", supplier: "等待供应商实测数据", conservative: "本期采用保守默认值" };
-    const decisionPanel = state.findingChoiceOpen && !resolved ? `<section class="panel decision-panel"><div class="decision-copy"><small>PATH DECISION · GAP-PRE-004</small><h2>钢坯数据暂时怎么处理？</h2><p>这项决定只影响当前计算版本，不会停止向供应商索取实测数据，也可以在新证据通过后撤回。</p></div><div class="decision-options" role="group" aria-label="选择数据处理路径"><button type="button" class="decision-option ${state.dataPathChoice === "parallel" ? "selected" : ""}" data-path-choice="parallel" aria-pressed="${state.dataPathChoice === "parallel"}"><strong>建议：两条路径并行</strong><span>先用默认值保持进度，同时继续追踪供应商数据</span></button><button type="button" class="decision-option ${state.dataPathChoice === "supplier" ? "selected" : ""}" data-path-choice="supplier" aria-pressed="${state.dataPathChoice === "supplier"}"><strong>等待供应商数据</strong><span>结果更完整，但当前核算和交付会继续等待</span></button><button type="button" class="decision-option ${state.dataPathChoice === "conservative" ? "selected" : ""}" data-path-choice="conservative" aria-pressed="${state.dataPathChoice === "conservative"}"><strong>本期使用默认值</strong><span>最快形成结果，预计证书成本最高</span></button></div><div class="decision-footer"><button class="button button--secondary" type="button" data-action="close-path-choice">暂不决定</button><button class="button button--primary" type="button" data-action="confirm-data-path" ${state.dataPathChoice ? "" : "disabled"}>确认${state.dataPathChoice ? `：${pathLabels[state.dataPathChoice]}` : "处理路径"}</button></div></section>` : "";
+    const decisionPanel = state.findingChoiceOpen && !state.findingResolved ? `<section class="panel decision-panel"><div class="decision-copy"><small>PATH DECISION · GAP-PRE-004</small><h2>钢坯数据暂时怎么处理？</h2><p>这项决定只影响当前计算版本，不会停止向供应商索取实测数据，也可以在新证据通过后撤回。</p></div><div class="decision-options" role="group" aria-label="选择数据处理路径"><button type="button" class="decision-option ${state.dataPathChoice === "parallel" ? "selected" : ""}" data-path-choice="parallel" aria-pressed="${state.dataPathChoice === "parallel"}"><strong>建议：两条路径并行</strong><span>先用默认值保持进度，同时继续追踪供应商数据</span></button><button type="button" class="decision-option ${state.dataPathChoice === "supplier" ? "selected" : ""}" data-path-choice="supplier" aria-pressed="${state.dataPathChoice === "supplier"}"><strong>等待供应商数据</strong><span>结果更完整，但当前核算和交付会继续等待</span></button><button type="button" class="decision-option ${state.dataPathChoice === "conservative" ? "selected" : ""}" data-path-choice="conservative" aria-pressed="${state.dataPathChoice === "conservative"}"><strong>本期使用默认值</strong><span>最快形成结果，预计证书成本最高</span></button></div><div class="decision-footer"><button class="button button--secondary" type="button" data-action="close-path-choice">暂不决定</button><button class="button button--primary" type="button" data-action="confirm-data-path" ${state.dataPathChoice ? "" : "disabled"}>确认${state.dataPathChoice ? `：${pathLabels[state.dataPathChoice]}` : "处理路径"}</button></div></section>` : "";
+
+    const energyDone = state.uploadAdded && state.factConfirmed;
+    const outputDone = Boolean(state.outputConfirmed);
+    const blockers = [
+      energyDone
+        ? { k: "Q3 能源用量", d: "已确认", done: true, go: "", attrs: "", diff: "电力 v2 → v3", mark: "✓", danger: false }
+        : state.uploadAdded
+          ? { k: "Q3 能源用量", d: "待你确认", done: false, go: "去确认 →", attrs: 'data-page="data"', diff: "", mark: "", danger: false }
+          : { k: "Q3 能源用量", d: "未上传", done: false, go: "去处理 →", attrs: 'data-page="data"', diff: "", mark: "", danger: false },
+      outputDone
+        ? { k: "Q3 产量", d: "已确认", done: true, go: "", attrs: "", diff: "预估 38,000 → 38,400 t", mark: "✓", danger: false }
+        : { k: "Q3 产量", d: "Agent 已提取，待你确认", done: false, go: "去确认 →", attrs: 'data-drawer="extract-output"', diff: "", mark: "", danger: false },
+      state.findingResolved
+        ? { k: "前体排放", d: "受控默认值 · 专家复核中", done: true, go: "", attrs: "", diff: "默认值 1.85", mark: "✓", danger: false }
+        : { k: "前体排放", d: "缺口未处理，计算无法运行", done: false, go: "去处理 →", attrs: 'data-action="resolve-finding"', diff: "", mark: "!", danger: true },
+    ];
+    const runMeta = {
+      partial: {
+        id: "Run-0412", state: "预估 · 数据未齐", tone: "warn",
+        title: "Q3 数据尚未齐全，当前为预估结果",
+        desc: "Run-0412 基于 10 月 15 日的电力 v2 与预估产量。完成下列确认后即可重新计算。",
+        top: "ink", btn: null,
+      },
+      blocked: {
+        id: "Run-0412", state: "被阻塞", tone: "danger",
+        title: "前体缺口未处理，无法运行新计算",
+        desc: "能源与产量已确认。先为前体排放选择处理路径，计算才能锁定全部输入。",
+        top: "danger",
+        btn: { label: "选择处理路径", attrs: 'data-action="resolve-finding"', primary: true },
+      },
+      current: {
+        id: "Run-0418", state: "当前 · 专家复核中", tone: "",
+        title: "Q3 计算已更新",
+        desc: "结果已提交 Lumino 专家王晨复核，复核通过后写入 Q3 数据包。",
+        top: "green",
+        btn: { label: "去完成数据包", attrs: 'data-page="work"', primary: false },
+      },
+    }[st];
+    const fresh = st === "current";
+    const ind = fresh ? "0.38" : "0.37";
+    const scenarios = [
+      { name: "纯默认值", tag: "参考口径", tone: "locked", applied: false, pending: false, d: "0.30", i: "0.45", p: "1.85", total: "2.60" },
+      { name: "前体默认 + 自身实测", tag: "当前适用", tone: "", applied: true, pending: false, d: "0.21", i: ind, p: "1.85", total: (0.21 + Number(ind) + 1.85).toFixed(2) },
+      { name: "全链路实测", tag: "需供应商数据", tone: "warn", applied: false, pending: true, d: "0.21", i: ind, p: "1.52", total: (0.21 + Number(ind) + 1.52).toFixed(2) },
+    ];
+    const price = 82.32;
+    const exportT = 12000;
+    const cost = (total) => {
+      const v = Number(total) * exportT * price;
+      return `€${(v / 10000).toFixed(1)} 万`;
+    };
+    const baseCost = Number(scenarios[0].total) * exportT * price;
+    const scenarioRows = [
+      ["直接排放", "tCO₂e / t 产品", scenarios.map((c) => ({ t: Number(c.d).toFixed(2) }))],
+      ["间接排放 · 电力", "tCO₂e / t 产品", scenarios.map((c) => ({ t: Number(c.i).toFixed(2), note: c.name === "纯默认值" ? "" : (fresh ? "电力 v3" : "电力 v2 · 已过期"), noteWarn: !fresh && c.name !== "纯默认值" }))],
+      ["前体排放 · 钢坯", "tCO₂e / t 产品", scenarios.map((c) => ({ t: Number(c.p).toFixed(2), note: c.pending ? "待核查 · 供应商估计值" : "EU 默认值表 3", noteWarn: c.pending }))],
+      ["隐含排放合计", "tCO₂e / t 产品", scenarios.map((c) => ({ t: c.total })), true],
+      ["Q3 出口隐含排放", "tCO₂e · × 12,000 t", scenarios.map((c) => ({ t: Math.round(Number(c.total) * exportT).toLocaleString("en-US") })), false],
+      ["预估证书成本", "€82.32 / tCO₂e", scenarios.map((c, i) => {
+        const v = Number(c.total) * exportT * price;
+        const delta = v - baseCost;
+        return { t: cost(c.total), note: i === 0 ? "基准" : `较默认 −€${(Math.abs(delta) / 10000).toFixed(1)} 万`, noteWarn: c.pending, noteOk: !c.pending && i > 0 };
+      }), true],
+    ];
+
+    const runHistory = [
+      ...(fresh ? [{ id: "Run-0418", t: "Q3 正式输入 · 电力 v3、产量 v1、前体默认值", d: "今天 · 周岚 发起", state: "当前 · 复核中", tone: "" }] : []),
+      { id: "Run-0412", t: "Q3 中期 · 电力 v2、产量预估", d: "10 月 15 日 · 周岚 发起", state: fresh ? "已被替代" : "预估", tone: fresh ? "locked" : "warn" },
+      { id: "Run-0405", t: "Q3 首次预估 · 仅 7 月数据", d: "9 月 30 日 · Agent 自动", state: "已被替代", tone: "locked" },
+    ];
+
     $("#main").innerHTML = `
-      ${pageHeader(`${state.year} · ${state.quarter} DATA STRATEGY`, `${state.quarter} 成本与结果`, yearBadge())}
-      <section class="certificate-price-strip"><div><small>2026 OFFICIAL CBAM CERTIFICATE PRICES</small><strong>2026 年按季度；2027 年起按周平均价格</strong><p>单位为 €/tCO₂，更新至 2026-10-10。项目计算必须保存实际采用的期间与价格版本。<a href="https://taxation-customs.ec.europa.eu/carbon-border-adjustment-mechanism/price-cbam-certificates_en" target="_blank" rel="noopener">欧盟委员会原始价格页 ↗</a></p></div>${Object.entries(certificatePrices2026).map(([quarter, data]) => `<button type="button" class="price-cell ${state.year === "2026" && state.quarter === quarter ? "active" : ""}" data-quarter="${quarter}" aria-pressed="${state.year === "2026" && state.quarter === quarter}"><small>${quarter}</small><strong>${data.price}</strong><span>${data.published}</span></button>`).join("")}</section>
-      <section class="scenario-intro"><div><small>当前认可路径 · ${state.quarter}</small><strong>自身实测 + 前体默认</strong><p>同一产品、数量、期间、证书价格和规则版本下比较。实测并不保证一定降低成本。</p></div><div class="recognized-saving"><small>相对默认基线已确认减少</small><strong>¥1.08m</strong><span>另有约 ¥0.47m 潜在变化待核查</span></div></section>
-      <section class="scenario-board">
-        <article><header><span>A</span><div><small>DEFAULT BASELINE</small><h2>默认基线</h2></div></header><strong>¥4.90m</strong><p>预计证书成本</p><dl><div><dt>数据构成</dt><dd>100% 适用默认值</dd></div><div><dt>单位排放</dt><dd>2.34 tCO₂e/t</dd></div><div><dt>准备工作</dt><dd>产品范围与数量</dd></div></dl><span class="scenario-state">保守比较基线</span></article>
-        <article class="current"><header><span>B</span><div><small>CURRENT RECOGNIZED</small><h2>自身实测 + 前体默认</h2></div></header><strong>¥3.82m</strong><p>当前认可结果</p><dl><div><dt>数据构成</dt><dd>76% 实测 / 24% 默认</dd></div><div><dt>单位排放</dt><dd>1.83 tCO₂e/t</dd></div><div><dt>合规要求</dt><dd>监测计划、自身数据、核查</dd></div></dl><span class="scenario-state ok">当前核算 Run 04</span></article>
-        <article><header><span>C</span><div><small>TARGET SCENARIO</small><h2>全链路实测</h2></div></header><strong>¥3.35m</strong><p>情景值 · 尚未认可</p><dl><div><dt>数据构成</dt><dd>预计 94% 实测</dd></div><div><dt>单位排放</dt><dd>1.60 tCO₂e/t</dd></div><div><dt>仍需完成</dt><dd>供应商数据与上游核查</dd></div></dl><span class="scenario-state warn">潜在变化，不是节省承诺</span></article>
-      </section>
-      ${decisionPanel}
-      <section class="panel reduction-ledger"><div class="panel-head"><div><h2>${state.quarter} 成本变化台账</h2><span>每一项变化都能回到当期工作、证据与计算版本</span></div><button class="text-button" type="button">查看计算假设</button></div><table class="data-table"><thead><tr><th>已完成 / 待完成工作</th><th>替代内容</th><th>影响数量</th><th>排放强度变化</th><th>证书成本影响</th><th>认可状态</th></tr></thead><tbody><tr><td><strong>完成上海一厂实测</strong><small>年度监测计划 Rev 3</small></td><td>工厂默认值</td><td>6,500 t</td><td>2.10 → 1.72</td><td class="text-success"><strong>−¥620k</strong></td><td><span class="record-state ok">已复核</span></td></tr><tr><td><strong>获得供应商甲数据</strong><small>${state.quarter} Communication Form 草稿</small></td><td>钢坯默认值</td><td>2,100 t</td><td>1.85 → 1.54</td><td class="text-warning"><strong>约 −¥230k</strong></td><td><span class="record-state warn">待核查</span></td></tr><tr><td><strong>补齐 ${state.quarter} 天然气</strong><small>江苏二厂</small></td><td>缺失期估算</td><td>1 个季度</td><td>待计算</td><td>待计算</td><td><span class="record-state">待材料</span></td></tr></tbody></table><p class="scenario-disclaimer">情景金额为演示。实际结果可能升高或降低，以适用规则、认可数据、核查结论和当期证书价格为准；监测、核查和供应商协作成本应另行评估。</p></section>
-      <div class="content-split result-content">
-        <section class="panel flat-panel"><div class="panel-head"><h2>需要处理的缺口</h2><span>${resolved ? "1" : "2"} 个阻塞项</span></div><div class="finding-list">
-          <article class="finding ${resolved ? "resolved" : ""}"><span class="finding-level">高</span><div><strong>${resolved ? "钢坯数据路径已确定" : "钢坯供应商排放数据缺失"}</strong><p>${resolved ? `已选择“${pathLabels[state.dataPathChoice] || pathLabels.parallel}”，等待后续证据。` : "影响两个产品的前体嵌入排放。可以向供应商索取，或先使用保守默认值。"}</p><small>GAP-PRE-004 · 影响 37% 总排放</small></div>${resolved ? `<span class="record-state ok">已记录决定</span>` : `<button class="button button--secondary" type="button" data-action="resolve-finding">选择处理方式</button>`}</article>
-          <article class="finding"><span class="finding-level medium">中</span><div><strong>6 月电费单尚未关联设施</strong><p>Agent 已识别用电量，需要确认账单覆盖一厂还是两座设施。</p><small>GAP-ENE-012 · 不影响当前试算</small></div><button class="button button--secondary" type="button" data-page="work">去确认</button></article>
-        </div></section>
-        <aside class="panel trace-panel"><div class="panel-head"><h2>结果从哪里来</h2></div><ol class="trace-list"><li><span>01</span><div><strong>业务事实</strong><small>42 条已确认 · 3 条待确认</small></div></li><li><span>02</span><div><strong>活动数据与证据</strong><small>28 份材料 · 76% 实测覆盖</small></div></li><li><span>03</span><div><strong>确定性计算</strong><small>Engine 0.4 · Run 04</small></div></li><li><span>04</span><div><strong>规则校验</strong><small>EU-CBAM-2026.3 · 2 个 Finding</small></div></li></ol><button class="text-button trace-action" type="button">查看完整计算血缘 →</button></aside>
-      </div>
-      ${resolved ? nextAction("当前季度任务已完成", `准备 ${state.quarter} 进口商数据包`, "季度数据路径已记录；年度监测计划、排放报告和核查继续在年度交付区管理。", "检查季度与年度交付", 'data-page="deliverables"') : nextAction("当前季度任务", "先处理阻塞的数据路径", "明确临时使用默认值还是等待供应商数据，当前季度才能形成可交付版本。", "选择处理方式", 'data-action="resolve-finding"')}`;
+      <div class="cbam-results" data-template="T5">
+        ${pageHeader(`${org} / CBAM`, "计算与成本", chip)}
+        ${decisionPanel}
+        <section class="cbam-run ${runMeta.top === "danger" ? "cbam-run--danger" : runMeta.top === "green" ? "cbam-run--ok" : ""}" aria-label="当前计算版本">
+          <div class="cbam-run__head">
+            <div class="cbam-run__copy">
+              <span class="cbam-run__meta"><small>当前计算版本</small><b>${runMeta.id}</b><span class="status-chip ${runMeta.tone}">${runMeta.state}</span></span>
+              <strong>${runMeta.title}</strong>
+              <span>${runMeta.desc}</span>
+            </div>
+            ${runMeta.btn ? `<button class="button button--${runMeta.btn.primary ? "primary" : "secondary"}" type="button" ${runMeta.btn.attrs}>${runMeta.btn.label}<span aria-hidden="true">→</span></button>` : ""}
+          </div>
+          ${st === "current" ? "" : `<ul class="cbam-run__blockers">${blockers.map((r) => `
+            <li>
+              <button type="button" class="cbam-run__blocker" ${r.attrs || "disabled"}>
+                <span class="cbam-run__dot ${r.done ? "is-done" : r.danger ? "is-danger" : ""}" aria-hidden="true">${safe(r.mark)}</span>
+                <span class="cbam-run__blocker-copy"><strong>${safe(r.k)}</strong><small>${safe(r.d)}</small></span>
+                <span class="cbam-run__diff">${safe(r.diff)}</span>
+                <span class="cbam-work__go">${safe(r.go)}</span>
+              </button>
+            </li>`).join("")}</ul>`}
+        </section>
+
+        <section class="cbam-scenario ds-card" aria-label="三情景对比">
+          <header class="ds-card__head">
+            <h2>三情景同口径对比 · 热轧非合金钢卷 · 出口 12,000 t</h2>
+            <span>${fresh ? "基于 Run-0418" : "基于 Run-0412 · 输入已更新，数值可能变化"}</span>
+          </header>
+          <div class="cbam-scenario__grid" role="table">
+            <div class="cbam-scenario__corner" role="columnheader">口径</div>
+            ${scenarios.map((c) => `<div class="cbam-scenario__colhead ${c.applied ? "is-applied" : ""}" role="columnheader"><strong>${safe(c.name)}</strong><span class="status-chip ${c.tone}">${safe(c.tag)}</span></div>`).join("")}
+            ${scenarioRows.map(([k, unit, cells, emph]) => `
+              <div class="cbam-scenario__label ${emph ? "is-emph" : ""}" role="rowheader"><span>${safe(k)}</span><small>${safe(unit)}</small></div>
+              ${cells.map((cell, i) => `<div class="cbam-scenario__cell ${scenarios[i].applied ? "is-applied" : ""} ${emph ? "is-emph" : ""}" role="cell"><strong>${safe(cell.t)}</strong>${cell.note ? `<small class="${cell.noteWarn ? "is-warn" : cell.noteOk ? "is-ok" : ""}">${safe(cell.note)}</small>` : ""}</div>`).join("")}
+            `).join("")}
+          </div>
+          <p class="cbam-scenario__note">证书价格采用 2026 Q3 €82.32 / tCO₂e（季度价格），未扣除免费配额与原产国已付碳价。演示数据，不构成报价或合规结论。“待核查”数值依赖尚未确认的供应商数据。</p>
+        </section>
+
+        <div class="cbam-results__bottom">
+          <section class="cbam-history ds-card" aria-label="计算版本记录">
+            <header class="ds-card__head"><h2>计算版本记录</h2><span>新计算生成新版本，不覆盖旧结果</span></header>
+            <ul class="cbam-history__list">${runHistory.map((h) => `
+              <li>
+                <button type="button" class="cbam-history__row" data-drawer="calc-run-detail" data-run-id="${safe(h.id)}" aria-label="查看 ${safe(h.id)} 详情">
+                  <b>${safe(h.id)}</b>
+                  <span><strong>${safe(h.t)}</strong><small>${safe(h.d)}</small></span>
+                  <span class="status-chip ${h.tone}">${safe(h.state)}</span>
+                </button>
+              </li>`).join("")}</ul>
+          </section>
+          <aside class="cbam-results__aside" aria-label="页面说明">
+            <strong>这一页回答什么</strong>
+            <p>当前数据下 Q3 隐含排放是多少、换一种数据路径成本差多少。正式结果需经 Lumino 专家复核后进入数据包。</p>
+          </aside>
+        </div>
+      </div>`;
+  }
+
+  function cbamDeliverableGroups() {
+    const locked = annualProfile().mode === "archived";
+    const planned = annualProfile().mode === "planned";
+    const q3State = locked ? ["已回执", ""] : state.findingResolved ? ["已就绪 · 待共享", "warn"] : ["草稿 · 未就绪", "locked"];
+    const quarterly = planned ? [
+      { id: "q1", name: `${state.year} Q1 数据包 · 热轧非合金钢卷`, code: "尚未生成", to: "NordWerk GmbH", when: "范围确认后生成", state: "未开始", tone: "locked", go: "详情", dim: true },
+    ] : [
+      { id: "q3", name: "2026 Q3 数据包 · 热轧非合金钢卷", code: "PKG-2026-Q3-NORDWERK · Rev 1", to: "NordWerk GmbH · Anna", when: locked ? "已回执" : "截止 10 月 31 日", state: q3State[0], tone: q3State[1], go: state.findingResolved ? "检查并共享 →" : "详情", mine: state.findingResolved && !locked },
+      { id: "q2", name: "2026 Q2 数据包 · 热轧非合金钢卷", code: "PKG-2026-Q2-NORDWERK · Rev 2", to: "NordWerk GmbH · Anna", when: "8 月 4 日回执", state: "已回执", tone: "", go: "详情" },
+      { id: "q1", name: "2026 Q1 数据包 · 热轧非合金钢卷", code: "PKG-2026-Q1-NORDWERK · Rev 1", to: "NordWerk GmbH · Anna", when: "4 月 26 日回执", state: "已回执", tone: "", go: "详情" },
+      { id: "q4", name: "2026 Q4 数据包 · 热轧非合金钢卷", code: "PKG-2026-Q4-NORDWERK", to: "NordWerk GmbH", when: "Q4 开始后生成", state: "未开始", tone: "locked", go: "详情", dim: true },
+    ];
+    const annual = locked ? [
+      { id: "aer25", name: "2025 年度排放报告", code: "AER-2025 · Amendment R0", to: "Veritas Climate · 已核查", when: "2026-04-30 锁定", state: "已锁定 · 已核查", tone: "", go: "详情" },
+      { id: "ver25", name: "设施核查报告", code: "VER-2025-SH01 · Rev 1", to: "Veritas Climate", when: "2026-04-22", state: "已核查", tone: "", go: "详情" },
+    ] : planned ? [
+      { id: "mp26", name: `${state.year} 年度监测计划`, code: "尚未生成", to: "内部", when: "范围确认后", state: "未开始", tone: "locked", go: "详情", dim: true },
+    ] : [
+      { id: "mp26", name: "2026 年度监测计划", code: "MP-2026 · Rev 3", to: "内部 · 已适用", when: "本年度方法已建立", state: "当前适用", tone: "", go: "详情" },
+      { id: "aer26", name: "2026 年度排放报告", code: "AER-2026 · 尚未生成", to: "Veritas Climate · 核查", when: "Q4 数据确认后开始", state: "未开始", tone: "locked", go: "详情", dim: true },
+      { id: "ver26", name: "设施核查报告", code: "尚未生成", to: "第三方核查员", when: "年度报告批准后", state: "未开始", tone: "locked", go: "详情", dim: true },
+    ];
+    return [
+      { label: "季度数据包 · 发给进口商", note: "每季度一份，按进口商", rows: quarterly },
+      { label: "年度报告与核查", note: "年度申报由欧盟申报人完成", rows: annual },
+    ];
   }
 
   function renderDeliverables() {
     const profile = annualProfile();
-    const locked = profile.mode === "archived";
-    const planned = profile.mode === "planned";
-    const docs = [
-      ["monitoring", "年度监测计划 / 监测报告", profile.monitoring[0], profile.monitoring[1]],
-      ["emissions", "年度排放报告", profile.emissions[0], profile.emissions[1]],
-      ["verification", "年度核查与 Verification Package", profile.verification[0], profile.verification[1]],
+    const org = state.organization?.name || "华星钢铁";
+    const chip = statusChip(`${state.year} · ${years[state.year]?.short || profile.position}`, years[state.year]?.chip === "warn" ? "warn" : years[state.year]?.chip === "locked" ? "locked" : "");
+    const groups = cbamDeliverableGroups();
+    const states = [
+      ["草稿", "locked"],
+      ["已就绪", "warn"],
+      ["已共享 · 待回执", "warn"],
+      ["已回执", ""],
     ];
-    const deliverySource = locked
-      ? "最终事实 · Calculation Run 12 · Rulepack EU-CBAM-2025.4 · 已绑定核查快照。"
-      : planned
-        ? "尚未形成年度正式事实；当前仅引用长期主档，范围确认后才创建年度版本。"
-        : "企业正式事实 · Calculation Run 04 · Rulepack EU-CBAM-2026.3 · 未确认项以 GAP 标记。";
     $("#main").innerHTML = `
-      ${pageHeader(`${state.year} · COMPLIANCE DELIVERABLES`, "合规交付", yearBadge())}
-      <div class="delivery-intro"><div><small>TWO CADENCES</small><strong>${locked ? "季度记录与年度文件均已封存" : planned ? "年度文件尚未开始，可以提前准备" : "季度反馈持续推进，年度文件集中完成"}</strong><p>${locked ? "所有文件保留交付时版本、规则和接收记录。" : planned ? "先确认年度范围，再生成监测计划草稿；年度排放报告和核查不会从上一年度复制。" : "季度数据包用于持续向进口商反馈；监测计划、排放报告和核查属于年度合规闭环。"}</p></div><div class="stage-line"><i class="${locked ? "done" : planned ? "current" : "done"}"></i><i class="${locked ? "done" : ""}"></i><i class="${locked ? "done" : ""}"></i><i class="${locked ? "done" : ""}"></i></div></div>
-      <div class="responsibility-notice compact"><strong>交付支持不等于法定申报完成。</strong><p>季度包用于持续反馈；设施年度排放报告和核查报告按年度形成。正式年度 CBAM 申报与证书责任由欧盟进口商/授权 CBAM 申报人承担。</p></div>
-      <section class="cadence-deliverables"><article class="panel"><div class="panel-head"><div><h2>季度数据包与进口商反馈</h2><small>运营节奏 · 每季重复</small></div><button class="text-button" type="button" data-page="data">查看 ${state.quarter} 数据</button></div><div class="quarter-package-list">${Object.entries(profile.quarters).map(([quarter, values]) => `<button type="button" class="quarter-package ${state.quarter === quarter ? "active" : ""}" data-quarter="${quarter}" aria-pressed="${state.quarter === quarter}"><span>${quarter}</span><strong>${locked ? "已交付 · 已回执" : values[0]}</strong><small>Communication Package</small></button>`).join("")}</div></article><article class="panel annual-rule"><div class="panel-head"><div><h2>年度排放与核查</h2><small>年度节奏 · 按设施形成</small></div></div><ol><li><span>01</span><div><strong>年度监测计划</strong><small>定义全年一致的监测方法、职责和控制</small></div></li><li><span>02</span><div><strong>设施年度排放报告</strong><small>基于全年批准数据，按设施形成</small></div></li><li><span>03</span><div><strong>设施核查报告</strong><small>由获授权的第三方核查员出具并关联报告版本</small></div></li></ol></article></section>
-      <div class="guide-section-head"><div><small>ANNUAL DELIVERABLES</small><h2>年度文件与核查状态</h2></div><p>季度包不会替代年度报告与核查。</p></div>
-      <section class="delivery-list">${docs.map(([id, name, status, note], index) => `<article class="delivery-row ${state.deliveryExpanded === id ? "expanded" : ""}"><span class="delivery-index">0${index + 1}</span><div><small>${["PLAN", "REPORT", "VERIFY"][index]}</small><h2>${name}</h2><p>${status}</p>${state.deliveryExpanded === id ? `<div class="delivery-detail"><strong>来源和版本</strong><p>${deliverySource}</p>${planned ? "" : `<button class="button button--secondary" type="button" data-action="document-preview">预览演示文件</button>`}</div>` : ""}</div><span class="delivery-note">${note}</span><button class="round-action" type="button" data-delivery="${id}" aria-label="展开 ${name}">${state.deliveryExpanded === id ? "−" : "+"}</button></article>`).join("")}</section>
-      ${locked ? nextAction("年度已封存", "返回全年流程", "查看季度循环和年度闭环的完成记录。", "查看完整记录", 'data-page="roadmap"') : planned ? nextAction("年度准备", "先确认 2027 年度范围", "范围确认后，Agent 才会生成本年度监测计划草稿和 Q1 材料清单。", "确认年度范围", 'data-page="products"') : nextAction("年度工作", "继续完成 Q3 数据", "Q1、Q2 已完成；当前先完成 Q3，年度关账后再生成排放报告并启动核查。", "返回当前工作", 'data-page="work"')}`;
+      <div class="cbam-reports" data-template="T2">
+        ${pageHeader(`${org} / CBAM`, "报告与交付", chip)}
+        <p class="shared-legend cbam-reports__legend" role="note">
+          <span class="cbam-reports__legend-label">数据包状态</span>
+          ${states.map(([t, tone], i) => `<span class="cbam-reports__state"><i class="${tone === "warn" ? "is-warn" : tone === "locked" ? "is-muted" : "is-ok"}"></i>${t}${i < states.length - 1 ? "<em>→</em>" : ""}</span>`).join("")}
+          <span class="cbam-reports__legend-note">已共享 ≠ 已接收；回执由进口商确认后才出现</span>
+        </p>
+        <section class="ds-table shared-list shared-list--deliverables cbam-reports__table" aria-label="CBAM 交付物">
+          <table>
+            <colgroup><col class="shared-col--svc"><col class="shared-col--main"><col class="shared-col--recipient"><col class="shared-col--state"><col class="shared-col--go"></colgroup>
+            <thead><tr><th>服务</th><th>交付物</th><th>接收方 · 更新</th><th>状态</th><th></th></tr></thead>
+            <tbody>
+              ${groups.map((g) => `
+                <tr class="cbam-reports__group"><td colspan="5"><span>${safe(g.label)}</span><small>${safe(g.note)}</small></td></tr>
+                ${g.rows.map((d) => `
+                  <tr class="shared-row ${d.mine ? "is-mine" : ""} ${d.dim ? "is-dim" : ""}" data-drawer="${d.mine ? "cbam-package" : "cbam-deliv-detail"}" data-deliv-id="${safe(d.id)}" tabindex="0" role="button">
+                    <td data-label="服务"><span class="shared-code">CBAM</span></td>
+                    <td data-label="交付物"><strong>${safe(d.name)}</strong><small class="mono">${safe(d.code)}</small></td>
+                    <td data-label="接收方 · 更新"><strong>${safe(d.to)}</strong><small>${safe(d.when)}</small></td>
+                    <td data-label="状态"><span class="status-chip ${d.tone}">${safe(d.state)}</span></td>
+                    <td data-label="操作" class="shared-row__go">${safe(d.go)}</td>
+                  </tr>`).join("")}
+              `).join("")}
+            </tbody>
+          </table>
+        </section>
+        <p class="shared-footnote">交付物由本频道的计算版本生成；锁定后只读，更正生成新修订号。</p>
+      </div>`;
   }
 
   function renderTeam() {
@@ -403,6 +707,9 @@
       toast("只有企业管理员可以维护长期主档。");
       return;
     }
+    state.currentService = null;
+    const section = settingsNavItems.some(([id]) => id === state.settingsSection) ? state.settingsSection : "members";
+    state.settingsSection = section;
     const seededFacilities = cbamFacilityOptions().map((facility) => ({
       code: facility.payload?.internalCode || facility.id,
       name: facility.name,
@@ -411,22 +718,82 @@
       assetId: facility.id,
       versionId: facility.versionId,
     }));
-    const facilityRows = [
-      ...seededFacilities,
-      ...state.facilities,
-    ].map((facility) => `<article class="record"><span class="record-code">${safe(facility.code)}</span><div><strong>${safe(facility.name)}</strong><p>${safe(facility.activity || "生产活动待补充")}${facility.assetId ? ` · ${safe(facility.assetId)}` : ""}</p></div><button class="record-state ${facility.status === "在用" ? "ok" : "warn"}" type="button" data-drawer="record-detail" data-drawer-label="${safe(facility.name)}" data-drawer-object="${safe(facility.versionId || `设施 ${facility.code}`)}" data-drawer-status="${safe(facility.status)}" data-drawer-description="查看设施版本、生产活动、年度引用和数据源。">查看</button></article>`).join("");
-    const facilityCount = seededFacilities.length + state.facilities.length;
+    const facilities = [...seededFacilities, ...state.facilities];
+    const facilityRows = facilities.map((facility) => `<article class="record"><span class="record-code">${safe(facility.code)}</span><div><strong>${safe(facility.name)}</strong><p>${safe(facility.activity || "生产活动待补充")}${facility.assetId ? ` · ${safe(facility.assetId)}` : ""}</p></div><button class="record-state ${facility.status === "在用" ? "ok" : "warn"}" type="button" data-drawer="record-detail" data-drawer-label="${safe(facility.name)}" data-drawer-object="${safe(facility.versionId || `设施 ${facility.code}`)}" data-drawer-status="${safe(facility.status)}" data-drawer-description="查看设施版本、生产活动、年度引用和数据源。">查看</button></article>`).join("");
+    const invitedRows = state.invitedMembers.map((member) => `<tr><td><strong>${safe(member.email.split("@")[0])}</strong><small>${safe(member.email)}</small></td><td>${safe(member.role)}</td><td>${safe(member.scope)}</td><td><span class="record-state warn">邀请中 · ${safe(member.expiresAt)}</span></td></tr>`).join("");
     const orgAsset = assetRegistry.get("ORG-HX-001");
-    $("#main").innerHTML = `
-      ${pageHeader("PROGRAM MASTER DATA", "企业设置", actionButton("编辑企业资料", "secondary", 'data-action="toggle-org-edit"'))}
-      <div class="master-data-note"><div><strong>这里维护长期主档</strong><p>企业、设施与产品写入企业数据资产池；年度项目引用当时有效的版本，修改不会覆盖已锁定年度。</p></div><span class="status-chip">主档完整度 91%</span></div>
-      <div class="settings-layout"><nav class="settings-nav" aria-label="企业设置导航"><button class="active" type="button" data-drawer="organization-edit">企业与法定主体</button><button type="button" data-drawer="record-detail" data-drawer-label="生产设施主档" data-drawer-object="${facilityCount} 座设施">生产设施 <span>${facilityCount}</span></button><button type="button" data-drawer="permission-audit">组织与职责 <span>8</span></button><button type="button" data-drawer="record-detail" data-drawer-label="仪表与数据源" data-drawer-object="14 个数据源">仪表与数据源 <span>14</span></button><button type="button" data-drawer="record-detail" data-drawer-label="欧盟进口商目录" data-drawer-object="3 家进口商">欧盟进口商 <span>3</span></button><button type="button" data-drawer="record-detail" data-drawer-label="供应商目录" data-drawer-object="12 家供应商">供应商目录 <span>12</span></button><button type="button" data-drawer="permission-audit">授权与审计</button></nav>
-        <section class="settings-main">
-          <article class="panel master-section"><div class="panel-head"><div><h2>法定主体</h2><span>${safe(orgAsset?.versionId || "ORG-HX-001")} · 当前有效</span></div><span class="record-state ok">已验证</span></div><dl class="master-fields"><div><dt>法定名称</dt><dd>${safe(state.organization.name)}</dd></div><div><dt>统一社会信用代码</dt><dd>${safe(state.organization.code)}</dd></div><div><dt>注册地址</dt><dd>${safe(state.organization.address)}</dd></div><div><dt>企业管理员</dt><dd>周岚 · zhou.lan@huaxing.cn</dd></div></dl></article>
-          <article class="panel master-section"><div class="panel-head"><div><h2>生产设施</h2><span>企业数据资产 · ${facilityCount} 座</span></div><button class="text-button" type="button" data-drawer="new-facility">＋ 新建设施</button></div><div class="record-list">${facilityRows}</div></article>
-          <article class="panel master-section"><div class="panel-head"><div><h2>组织与职责</h2><span>新年度会询问是否变化</span></div><button class="text-button" type="button" data-drawer="permission-audit">查看全部 8 个职责</button></div><div class="responsibility-grid"><div><small>企业管理员</small><strong>周岚</strong><span>账号与长期主档</span></div><div><small>CBAM 协调人</small><strong>周岚</strong><span>年度项目推进</span></div><div><small>生产数据</small><strong>陈浩</strong><span>${safe(assetRegistry.get("FAC-SH-01")?.name || "上海一厂")}</span></div><div><small>内部审批</small><strong>赵总</strong><span>交付与风险路径</span></div></div></article>
-        </section>
-      </div>`;
+    const titles = {
+      org: "企业信息",
+      facilities: "设施",
+      members: "成员与角色",
+      services: "服务与订单",
+      security: "安全与登录",
+      audit: "审计记录",
+    };
+    const asides = {
+      org: actionButton("编辑企业资料", "primary", 'data-action="toggle-org-edit"'),
+      facilities: actionButton("新建设施", "primary", 'data-drawer="new-facility"'),
+      members: actionButton("邀请成员", "primary", 'data-action="invite-member"'),
+      services: actionButton("查看年度与订单", "secondary", 'data-page="programs"'),
+      security: statusChip("演示策略", "warn"),
+      audit: actionButton("打开权限矩阵", "secondary", 'data-drawer="permission-audit"'),
+    };
+    const bodies = {
+      org: `
+        <div class="master-data-note"><div><strong>长期主档，不绑死某个年度</strong><p>企业信息写入资产池；年度项目引用当时有效版本，修改不会覆盖已锁定年度。</p></div><span class="status-chip">主档完整度 91%</span></div>
+        <article class="panel master-section"><div class="panel-head"><div><h2>法定主体</h2><span>${safe(orgAsset?.versionId || "ORG-HX-001")} · 当前有效</span></div><span class="record-state ok">已验证</span></div>
+          <dl class="master-fields"><div><dt>法定名称</dt><dd>${safe(state.organization.name)}</dd></div><div><dt>统一社会信用代码</dt><dd>${safe(state.organization.code)}</dd></div><div><dt>注册地址</dt><dd>${safe(state.organization.address)}</dd></div><div><dt>企业管理员</dt><dd>周岚 · zhoulan@huaxing-steel.cn</dd></div></dl>
+        </article>`,
+      facilities: `
+        <article class="panel master-section"><div class="panel-head"><div><h2>生产设施</h2><span>企业数据资产 · ${facilities.length} 座</span></div><button class="text-button" type="button" data-drawer="new-facility">＋ 新建设施</button></div>
+          <div class="record-list">${facilityRows || systemStatePanel({ code: "empty", title: "还没有设施", reason: "新建设施后，才能纳入年度范围与材料请求。", primary: { label: "新建设施", attrs: 'data-drawer="new-facility"' } })}</div>
+        </article>`,
+      members: `
+        <div class="permission-summary"><div><small>企业成员</small><strong>${12 + state.invitedMembers.length}</strong></div><div><small>待接受邀请</small><strong>${state.invitedMembers.length}</strong></div><div><small>可见范围</small><strong>按角色</strong></div><p>「可见范围」列对应邀请激活时的说明；Agent 不会扩大成员已有权限。</p></div>
+        <section class="panel wide-panel"><div class="panel-head"><h2>成员与角色</h2><button class="text-button" type="button" data-drawer="permission-audit">查看权限审计</button></div>
+          <table class="data-table"><thead><tr><th>成员</th><th>角色</th><th>可见范围</th><th>状态</th></tr></thead><tbody>
+            <tr><td><strong>周岚</strong><small>zhoulan@huaxing-steel.cn</small></td><td>企业管理员</td><td>全部服务与设置</td><td><span class="record-state ok">已启用</span></td></tr>
+            <tr><td><strong>赵海峰</strong><small>zhaohf@huaxing-steel.cn</small></td><td>内部审批人</td><td>待审批报告与结果摘要</td><td><span class="record-state ok">已启用</span></td></tr>
+            <tr><td><strong>陈浩</strong><small>chenhao@huaxing-steel.cn</small></td><td>数据贡献者</td><td>CBAM · 上海一厂材料请求</td><td><span class="record-state ok">已启用</span></td></tr>
+            <tr><td><strong>王晨</strong><small>Lumino 制备专家</small></td><td>服务团队</td><td>SO-2026-018 · 制备范围</td><td><span class="record-state ok">订单授权</span></td></tr>
+            ${invitedRows}
+          </tbody></table>
+        </section>`,
+      services: `
+        <article class="panel master-section"><div class="panel-head"><div><h2>服务与订单</h2><span>跨年度履约视图</span></div></div>
+          <div class="responsibility-grid">
+            <div><small>CBAM</small><strong>SO-2026-018</strong><span>2026 Q3 进行中 · 林晓负责</span></div>
+            <div><small>PCF</small><strong>试点订单</strong><span>热轧非合金钢卷 · 核算声明</span></div>
+            <div><small>合同窗口</small><strong>CT-2025-044</strong><span>至 2027-03-31</span></div>
+          </div>
+          <footer class="pcf-card__actions" style="margin-top:var(--space-md)"><p>范围变更走申请，不会立即覆盖当前服务订单。</p>${actionButton("申请范围变更", "secondary", 'data-drawer="service-scope"')}${actionButton("打开年度与订单", "primary", 'data-page="programs"')}</footer>
+        </article>`,
+      security: `
+        <article class="panel master-section"><div class="panel-head"><div><h2>安全与登录</h2><span>企业策略 · 演示</span></div></div>
+          <dl class="master-fields">
+            <div><dt>SSO 域名</dt><dd>huaxing-steel.cn · 模拟企业 IdP</dd></div>
+            <div><dt>密码登录</dt><dd>允许非 SSO 域名使用 Lumino 密码</dd></div>
+            <div><dt>会话时长</dt><dd>14 天保持登录 · 闲置 8 小时需重新验证</dd></div>
+            <div><dt>二次验证</dt><dd>本轮原型不做 MFA；正式产品见后续工单</dd></div>
+          </dl>
+          <p class="settings-shell__hint">保存策略会写入审计；不会静默改变已登录会话的权限边界。</p>
+          <div class="action-bar">${actionButton("保存策略（演示）", "primary", 'data-staff-action="企业登录策略已记录到审计"')}</div>
+        </article>`,
+      audit: `
+        <article class="panel master-section"><div class="panel-head"><div><h2>审计记录</h2><span>最近 7 天</span></div><button class="text-button" type="button" data-drawer="permission-audit">完整权限矩阵</button></div>
+          <table class="data-table"><thead><tr><th>时间</th><th>操作人</th><th>动作</th><th>对象</th></tr></thead><tbody>
+            <tr><td>今天 09:18</td><td>周岚</td><td>邀请成员</td><td>sunyue@huaxing-steel.cn</td></tr>
+            <tr><td>昨天 16:42</td><td>周岚</td><td>更新企业主档</td><td>ORG-HX-001 · Rev 4</td></tr>
+            <tr><td>10 月 8 日</td><td>系统</td><td>SSO 域名校验通过</td><td>huaxing-steel.cn</td></tr>
+          </tbody></table>
+        </article>`,
+    };
+    $("#main").innerHTML = settingsShell({
+      title: titles[section] || "企业设置",
+      aside: asides[section] || "",
+      section,
+      body: bodies[section] || bodies.members,
+    });
   }
 
   function renderAnnualSetup() {

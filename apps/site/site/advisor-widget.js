@@ -358,6 +358,12 @@
       if (!upstream.ok) {
         const reason = upstream.status === 429 ? "rate_limited" : `http_${upstream.status}`;
         trackMetric({ type: "client", ok: false, timeout: false, answer_mode: "fallback", source: "error", degradation_reason: reason });
+        // Static local previews return 404 HTML for /api/* — still answer from the bundled router.
+        if (payload.topicId || payload.text) {
+          try {
+            return basicModeLocal(reason);
+          } catch (_) {}
+        }
         return unavailableLocal(reason);
       }
       const contentType = String(upstream.headers.get("content-type") || "");

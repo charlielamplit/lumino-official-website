@@ -73,11 +73,10 @@
         attentionIds: [...attentionIds],
         facets: [
           { id: "attention", label: "待我处理", count: attentionIds.size },
-          { id: "all", label: "全部", count: assets.length },
-          { id: "master", label: "主档", count: count("master") },
+          { id: "all", label: "全部资产", count: assets.length },
+          { id: "master", label: "企业主档", count: count("master") },
           { id: "activity", label: "活动数据", count: count("activity") },
-          { id: "evidence", label: "证据", count: count("evidence") },
-          { id: "bound", label: "被服务使用", count: count("bound") },
+          { id: "evidence", label: "原始证据", count: count("evidence") },
         ],
         summary: {
           total: assets.length,
