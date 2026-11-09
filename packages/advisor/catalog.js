@@ -259,7 +259,7 @@
 
   return Object.freeze({
     schemaVersion: "1.0.0",
-    contentVersion: "2026-11-08.1",
+    contentVersion: "2026-11-09.1",
     reviewCycleDays: 120,
     topics,
     sources,

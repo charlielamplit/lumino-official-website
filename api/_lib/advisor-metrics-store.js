@@ -1,11 +1,13 @@
 const WINDOW_MS = 24 * 60 * 60 * 1000;
 const MAX_EVENTS = 500;
 
-const ANSWER_MODES = new Set(["fixed", "tool_route", "retrieval_model", "fallback"]);
+const ANSWER_MODES = new Set(["fixed", "tool_route", "retrieval_model", "general_model", "fallback"]);
 const SOURCES = new Set([
   "deterministic",
   "retrieval_grounded",
   "retrieval_model",
+  "general_model",
+  "actionable_fallback",
   "no_sources",
   "privacy_guard",
   "error",
@@ -30,6 +32,7 @@ function emptyCounters() {
     fixed: 0,
     tool_route: 0,
     retrieval_model: 0,
+    general_model: 0,
     fallback: 0,
     no_sources: 0,
     privacy_guard: 0,
@@ -137,6 +140,7 @@ export function getAdvisorMetricsSummary() {
       no_model_resolution_rate: Number(((counters.fixed + counters.tool_route) / total).toFixed(4)),
       tool_route_rate: Number((counters.tool_route / total).toFixed(4)),
       no_sources_rate: Number((counters.no_sources / total).toFixed(4)),
+      general_guidance_rate: Number((counters.general_model / total).toFixed(4)),
       error_rate: Number((counters.errors / total).toFixed(4)),
       timeout_rate: Number((counters.timeouts / total).toFixed(4)),
       model_failure_rate: counters.model_attempts
