@@ -3,13 +3,9 @@
 
   const SESSION_KEY = "lumino.advisor.state.v1";
   const CLIENT_TIMEOUT_MS = 12000;
-  const CHUNK_MS = 28;
-  // Deterministic answers resolve in milliseconds; hold a short deliberation so
-  // the UI does not feel like a canned dump. Model paths already wait upstream.
-  const THINK_MIN_FIXED_MS = 1400;
-  const THINK_MIN_DEFAULT_MS = 700;
-  const THINK_MIN_REDUCED_MS = 320;
   const THINK_ROTATE_MS = 900;
+  const DETERMINISTIC_DELAY_MIN_MS = 1000;
+  const DETERMINISTIC_DELAY_MAX_MS = 4000;
   const i18n = root.LuminoI18n || { detectLang: () => "zh" };
   let panel = null;
   let trigger = null;
@@ -51,22 +47,35 @@
   function thinkingPhrases() {
     return lang() === "en"
       ? [
-        "Checking published guidance…",
+        "Analysing your question…",
         "Structuring the actionable points…",
-        "Checking wording boundaries…",
+        "Checking applicable conditions…",
       ]
       : [
-        "对照已发布说明…",
+        "分析你的问题…",
         "整理可执行要点…",
-        "核对表述边界…",
+        "核对适用条件…",
       ];
   }
 
-  function minDeliberationMs(answerMode) {
-    if (prefersReducedMotion()) return THINK_MIN_REDUCED_MS;
-    if (answerMode === "fixed" || answerMode === "tool_route") return THINK_MIN_FIXED_MS;
-    if (answerMode === "retrieval_model") return THINK_MIN_REDUCED_MS;
-    return THINK_MIN_DEFAULT_MS;
+  function deterministicDelayMs() {
+    return DETERMINISTIC_DELAY_MIN_MS
+      + Math.floor(Math.random() * (DETERMINISTIC_DELAY_MAX_MS - DETERMINISTIC_DELAY_MIN_MS + 1));
+  }
+
+  function waitForDelay(milliseconds, signal) {
+    return new Promise((resolve) => {
+      if (signal?.aborted) return resolve(false);
+      const timer = setTimeout(() => {
+        signal?.removeEventListener("abort", onAbort);
+        resolve(true);
+      }, milliseconds);
+      const onAbort = () => {
+        clearTimeout(timer);
+        resolve(false);
+      };
+      signal?.addEventListener("abort", onAbort, { once: true });
+    });
   }
 
   function clearThinkTimer() {
@@ -95,24 +104,6 @@
       clearThinkTimer();
       textNode.dataset.thinking = "0";
     };
-  }
-
-  function waitMs(ms, signal) {
-    const duration = Math.max(0, Number(ms) || 0);
-    if (!duration) return Promise.resolve();
-    return new Promise((resolve) => {
-      const timer = setTimeout(() => resolve(), duration);
-      if (!signal) return;
-      const onAbort = () => {
-        clearTimeout(timer);
-        resolve();
-      };
-      if (signal.aborted) {
-        onAbort();
-        return;
-      }
-      signal.addEventListener("abort", onAbort, { once: true });
-    });
   }
 
   function safeUrl(value) {
@@ -149,21 +140,38 @@
     if (ui === "unavailable") return label("服务暂时不可用", "Service temporarily unavailable");
     if (ui === "basic_mode") return label("已切换到基础问答", "Switched to basic guidance");
     if (ui === "no_sources" || (response.answer_mode === "fallback" && !response.sources?.length && !ui)) {
-      return label("没有足够依据", "Not enough published basis");
+      return label("行动建议", "Actionable next step");
     }
-    if (response.answer_mode === "tool_route") return label("推荐工具", "Suggested tool");
+    if (response.answer_mode === "tool_route") return label("推荐合规工具", "Suggested compliance tool");
     if (response.answer_mode === "fixed") return label("服务说明", "Guidance");
     if (response.answer_mode === "retrieval_model") return label("初步判断", "Preliminary view");
+    if (response.answer_mode === "general_model") return label("初步回应", "Initial guidance");
     return label("暂无法确认", "Unable to confirm");
   }
 
   function initialMarkup() {
     const topics = root.LuminoAdvisor.getTopics(lang());
+    const topicTones = {
+      cbam_scope: "green",
+      cbam_data_start: "green",
+      cbam_vs_pcf: "gold",
+      pcf_data_start: "teal",
+      esg_ghg: "blue",
+      inventory_first_year: "blue",
+      eudr_csddd: "gold",
+      renewable_power: "green",
+      service_triage: "teal",
+    };
+    const topicButton = (topic) => `<button class="advisor-topic" type="button" data-topic-id="${escapeHtml(topic.id)}" data-topic-tone="${topicTones[topic.id] || "green"}">
+      <span class="advisor-topic__marker" aria-hidden="true"></span>
+      <span class="advisor-topic__label">${escapeHtml(topic.label)}</span>
+      <span class="advisor-topic__arrow" aria-hidden="true">→</span>
+    </button>`;
     return `<section class="advisor-welcome">
       <p class="advisor-welcome__one">${label("用一句话提问，或点选话题", "Ask in one sentence, or pick a topic")}</p>
     </section>
     <div class="advisor-topics" aria-label="${label("预选话题", "Suggested topics")}">
-      ${topics.map((topic) => `<button class="advisor-topic" type="button" data-topic-id="${escapeHtml(topic.id)}">${escapeHtml(topic.label)}</button>`).join("")}
+      ${topics.map(topicButton).join("")}
     </div>`;
   }
 
@@ -182,7 +190,7 @@
       : "";
     return `
       ${response.next_question ? `<p class="advisor-answer__question">${escapeHtml(response.next_question)}</p>` : ""}
-      ${replies ? `<div class="advisor-replies">${replies}</div>` : ""}
+      ${replies ? `<div class="advisor-replies" role="group" aria-label="${label("可选回答", "Answer choices")}">${replies}</div>` : ""}
       ${(links || retry) ? `<div class="advisor-actions">${links}${retry}</div>` : ""}
       ${sources ? `<div class="advisor-sources"><span>${label("相关资料", "Related reading")}</span>${sources}</div>` : ""}`;
   }
@@ -272,13 +280,13 @@
   function basicModeLocal(payloadReason) {
     const response = root.LuminoAdvisor.route({ text: lastRequest?.text || "", topicId: lastRequest?.topicId || "", lang: lang() });
     if (response.answer_mode === "fallback") {
-      const unavailable = unavailableLocal(payloadReason || "network");
-      unavailable.ui_state = "basic_mode";
-      unavailable.answer = label(
-        "已切换到基础问答模式（本地固定说明）。在线服务暂时不可用，你可以重试获取完整结果。",
-        "Switched to basic guidance (local fixed answers). Online service is temporarily unavailable — retry for the full path."
+      response.ui_state = "basic_mode";
+      response.degradation_reason = payloadReason || "network";
+      response.answer += label(
+        " 在线服务暂时不可用，但你仍可以按以上步骤开始；稍后重试可获得更具体的回答。",
+        " The online service is temporarily unavailable, but you can still start with these steps and retry later for a more specific answer."
       );
-      return unavailable;
+      return response;
     }
     response.ui_state = "basic_mode";
     response.degradation_reason = payloadReason || "network";
@@ -314,34 +322,39 @@
   function printAnswer(article, fullText, onDone) {
     const textNode = article.querySelector(".advisor-answer__text");
     const actions = article.querySelector(".advisor-answer__actions");
-    if (prefersReducedMotion()) {
-      textNode.textContent = fullText;
-      article.dataset.printing = "0";
-      actions.innerHTML = "";
-      onDone(true);
-      return;
-    }
-    let index = 0;
-    const step = () => {
-      index = Math.min(fullText.length, index + 12);
-      textNode.textContent = fullText.slice(0, index);
-      scrollToLatest();
-      if (index >= fullText.length) {
-        article.dataset.printing = "0";
-        actions.innerHTML = "";
-        onDone(true);
-        return;
-      }
-      printTimer = setTimeout(step, CHUNK_MS);
-    };
-    actions.innerHTML = `<button type="button" class="advisor-stop" data-advisor-stop>${label("停止", "Stop")}</button>
-      <button type="button" class="advisor-expand" data-advisor-expand>${label("显示全文", "Show full answer")}</button>`;
+    textNode.textContent = fullText;
+    article.dataset.printing = "0";
+    actions.innerHTML = "";
     article.dataset.fullText = fullText;
-    step();
+    onDone(true);
   }
 
   async function resolveResponse(request, article) {
     const payload = { ...request, lang: lang() };
+    // Published fixed/tool answers are already in the browser bundle. Do not
+    // spend a network round-trip or model budget on deterministic choices.
+    if (payload.topicId && root.LuminoAdvisor?.route) {
+      const local = root.LuminoAdvisor.route(payload);
+      if (local?.answer && (local.answer_mode === "fixed" || local.answer_mode === "tool_route")) {
+        const delayController = new AbortController();
+        activeAbort = delayController;
+        const completed = await waitForDelay(deterministicDelayMs(), delayController.signal);
+        if (!completed) {
+          const stopped = unavailableLocal("user_stop");
+          stopped.answer = label("已停止处理。你可以重试，或继续选择话题。", "Stopped. You can retry or choose another topic.");
+          stopped.ui_state = "unavailable";
+          return stopped;
+        }
+        local.runtime = {
+          ...(local.runtime || {}),
+          source: "client_deterministic",
+          model_configured: runtimeFlags.model_enabled !== false,
+          ui_state: local.ui_state || "ok",
+          degradation_reason: null,
+        };
+        return local;
+      }
+    }
     const controller = new AbortController();
     activeAbort = controller;
     const timeout = setTimeout(() => controller.abort("timeout"), CLIENT_TIMEOUT_MS);
@@ -454,11 +467,6 @@
 
     try {
       const response = await resolveResponse(request, article);
-      const elapsed = performance.now() - started;
-      const remainingThink = minDeliberationMs(response.answer_mode) - elapsed;
-      if (remainingThink > 0 && !activeAbort?.signal?.aborted) {
-        await waitMs(remainingThink, activeAbort?.signal);
-      }
       stopThinking();
 
       const fullText = response.answer || "";

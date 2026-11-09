@@ -51,6 +51,10 @@ test("CN Code questions route to tools and never claim formal classification", (
 test("free text maps common questions to reviewed fixed answers", () => {
   assert.equal(advisor.route({ text: "CBAM 和 PCF 有什么区别", asOf: AS_OF }).intent, "cbam_vs_pcf");
   assert.equal(advisor.route({ text: "进口商让我准备碳数据", asOf: AS_OF }).intent, "cbam_data_start");
+  const customerReply = advisor.route({ text: "现在用户让我提交CBAM相关的报告，我应该怎么回复客户", asOf: AS_OF });
+  assert.equal(customerReply.intent, "cbam_data_start");
+  assert.equal(customerReply.answer_mode, "fixed");
+  assert.match(customerReply.answer, /请确认所需文件或模板/);
   assert.equal(advisor.route({ text: "客户要 Scope 1 2 3 数据", asOf: AS_OF }).intent, "esg_ghg_triage");
   assert.equal(advisor.route({ text: "想做绿电和绿证规划", asOf: AS_OF }).intent, "renewable_power");
   assert.equal(advisor.route({ text: "产品碳足迹活动数据怎么采", asOf: AS_OF }).intent, "pcf_data_start");
@@ -62,17 +66,44 @@ test("a suggested reply advances the deterministic flow instead of falling back"
   const response = advisor.route({ topicId: "cbam_scope", replyId: "steel", text: "钢铁", lang: "zh", asOf: AS_OF });
   assert.equal(response.answer_mode, "fixed");
   assert.equal(response.topic_id, "cbam_scope");
-  assert.match(response.answer, /已记录：钢铁/);
+  assert.equal(response.answer, catalog.replyOutcomes.cbam_scope.steel.zh);
+  assert.match(response.answer, /8 位 CN Code/);
   assert.equal(response.next_question, null);
   assert.equal(response.suggested_replies.length, 0);
 });
 
-test("unknown questions fail safely instead of inventing an answer", () => {
+test("every visible preset reply has a bilingual deterministic terminal answer", () => {
+  let checked = 0;
+  for (const record of catalog.fixedAnswers) {
+    for (const option of record.suggestedReplies || []) {
+      const outcome = catalog.replyOutcomes?.[record.topicId]?.[option.id];
+      assert.ok(outcome, `missing outcome for ${record.topicId}.${option.id}`);
+      assert.ok(outcome.zh.length >= 24, `short zh outcome for ${record.topicId}.${option.id}`);
+      assert.ok(outcome.en.length >= 24, `short en outcome for ${record.topicId}.${option.id}`);
+      for (const lang of ["zh", "en"]) {
+        const response = advisor.route({ topicId: record.topicId, replyId: option.id, lang, asOf: AS_OF });
+        assert.equal(response.answer_mode, "fixed");
+        assert.equal(response.confidence, "high");
+        assert.equal(response.answer, outcome[lang]);
+        assert.equal(response.next_question, null);
+        assert.deepEqual(response.suggested_replies, []);
+        assert.ok(response.cta, `missing terminal CTA for ${record.topicId}.${option.id}`);
+        assert.ok(response.sources.length > 0, `missing source for ${record.topicId}.${option.id}`);
+        assert.equal(schema.validateResponse(response).ok, true);
+      }
+      checked += 1;
+    }
+  }
+  assert.equal(checked, 37);
+});
+
+test("unknown questions provide a safe action framework instead of inventing facts", () => {
   const response = advisor.route({ text: "我有一个完全未发布的特殊问题", lang: "zh", asOf: AS_OF });
   assert.equal(response.answer_mode, "fallback");
   assert.equal(response.confidence, "low");
   assert.equal(response.handoff, "contact");
   assert.equal(response.sources.length, 0);
+  assert.match(response.answer, /三个动作|截止时间/);
   assert.equal(schema.validateResponse(response).ok, true);
 });
 

@@ -259,6 +259,76 @@ test("generateGroundedAnswer maps gateway 401/429/500 and does not send store:fa
   }
 });
 
+test("generateGeneralAnswer uses model capability when no published source matches", async () => {
+  const previous = {
+    key: process.env.ADVISOR_OPENAI_API_KEY,
+    base: process.env.ADVISOR_OPENAI_BASE_URL,
+    mode: process.env.ADVISOR_OPENAI_API_MODE,
+    luna: process.env.ADVISOR_MODEL_LUNA,
+    enabled: process.env.ADVISOR_MODEL_ENABLED,
+  };
+  process.env.ADVISOR_OPENAI_API_KEY = "sk-test";
+  process.env.ADVISOR_OPENAI_BASE_URL = "https://aiberm.com/v1";
+  process.env.ADVISOR_OPENAI_API_MODE = "chat";
+  process.env.ADVISOR_MODEL_LUNA = "luna-general-mock";
+  process.env.ADVISOR_MODEL_ENABLED = "1";
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async (_url, init) => {
+      const body = JSON.parse(init.body);
+      assert.equal(body.model, "luna-general-mock");
+      assert.equal(body.store, undefined);
+      const system = body.messages[0].content;
+      const user = body.messages[1].content;
+      assert.match(system, /运用自身能力直接回答/);
+      assert.match(system, /司法辖区|辖区/);
+      assert.match(system, /不能只说无法确认/);
+      assert.match(user, /没有匹配到已发布资料/);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          choices: [{
+            finish_reason: "stop",
+            message: {
+              content: JSON.stringify({
+                intent: "regulatory_guidance",
+                answer: "按 2026-11-09 的参考时点，可以先核对产品、辖区和报告用途。",
+                confidence: "medium",
+                next_question: "产品将进入哪个市场？",
+                primary_service_id: "cbam",
+                secondary_service_id: null,
+                handoff: "none",
+              }),
+            },
+          }],
+        }),
+      };
+    };
+    const output = await (await loadModel()).generateGeneralAnswer({
+      text: "这个新的法规要求怎么判断？",
+      lang: "zh",
+    });
+    assert.equal(output.answer_mode, "general_model");
+    assert.equal(output.sources.length, 0);
+    assert.equal(output.runtime_model.id, "luna-general-mock");
+    assert.equal(output.service_matches[0]?.service_id, "cbam");
+    assert.match(output.answer, /2026-11-09/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const [key, value] of Object.entries({
+      ADVISOR_OPENAI_API_KEY: previous.key,
+      ADVISOR_OPENAI_BASE_URL: previous.base,
+      ADVISOR_OPENAI_API_MODE: previous.mode,
+      ADVISOR_MODEL_LUNA: previous.luna,
+      ADVISOR_MODEL_ENABLED: previous.enabled,
+    })) {
+      if (value == null) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
 test("official responses mode may request store:false under api_no_store", async () => {
   const prev = {
     key: process.env.ADVISOR_OPENAI_API_KEY,

@@ -8,7 +8,7 @@
 import { checkRateLimit, clientKey, publicLogFields, sanitizeRequest } from "./_lib/advisor-policy.js";
 import { modelConfigured, routeDeterministic } from "./_lib/advisor-runtime.js";
 import { buildGroundedFallback, retrievePublishedKnowledge, stopWithoutSources } from "./_lib/advisor-retrieval.js";
-import { generateGroundedAnswer } from "./_lib/advisor-model.js";
+import { generateGeneralAnswer, generateGroundedAnswer } from "./_lib/advisor-model.js";
 import { getPublicFlags, publicBetaEnabled } from "./_lib/advisor-flags.js";
 import { recordAdvisorMetric } from "./_lib/advisor-metrics-store.js";
 import { ADVISOR_SSE_CHUNK_CHARS, clientTimeoutMs, modelTimeoutMs } from "./_lib/advisor-timing.js";
@@ -118,10 +118,42 @@ async function resolveOpenQuestion(request, signal) {
     limit: 3,
   });
   if (!hits.length) {
+    if (modelConfigured()) {
+      try {
+        const generated = await generateGeneralAnswer({
+          text: request.text,
+          lang: request.lang,
+          signal,
+        });
+        if (generated?.answer) {
+          const { runtime_model: runtimeModel, ...rest } = generated;
+          rest.degradation_reason = "no_published_sources";
+          rest.ui_state = "ok";
+          return {
+            result: rest,
+            source: "general_model",
+            model: runtimeModel,
+            modelAttempted: true,
+            modelFailed: false,
+          };
+        }
+        const result = stopWithoutSources(request.lang);
+        result.degradation_reason = "model_empty";
+        result.ui_state = "basic_mode";
+        return { result, source: "actionable_fallback", modelAttempted: true, modelFailed: true };
+      } catch (error) {
+        const aborted = signal?.aborted || /abort|timeout|advisor_timeout|client_disconnected/i.test(String(error?.message || error));
+        console.error("[lumino-advisor] general model failed", error?.message || error);
+        const result = stopWithoutSources(request.lang);
+        result.degradation_reason = aborted ? "model_timeout" : "model_error";
+        result.ui_state = "basic_mode";
+        return { result, source: "actionable_fallback", modelAttempted: true, modelFailed: true };
+      }
+    }
     const result = stopWithoutSources(request.lang);
-    result.degradation_reason = "no_sources";
-    result.ui_state = "no_sources";
-    return { result, source: "no_sources", modelAttempted: false, modelFailed: false };
+    result.degradation_reason = "no_model";
+    result.ui_state = "basic_mode";
+    return { result, source: "actionable_fallback", modelAttempted: false, modelFailed: false };
   }
 
   if (modelConfigured()) {

@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const { execFileSync } = require("node:child_process");
 const { pathToFileURL } = require("node:url");
 
 const root = path.resolve(__dirname, "..");
@@ -24,6 +25,7 @@ test("serverless ESM advisor-data stays aligned with packages/advisor topics and
   const bAns = new Map(browser.fixedAnswers.filter((a) => a.status === "published").map((a) => [a.topicId, a.answer.zh]));
   const sAns = new Map(server.fixedAnswers.filter((a) => a.status === "published").map((a) => [a.topicId, a.answer.zh]));
   assert.deepEqual(sAns, bAns);
+  assert.deepEqual(server.replyOutcomes, browser.replyOutcomes);
 });
 
 test("every published topic has a published fixed answer with zh/en copy", () => {
@@ -37,6 +39,30 @@ test("every published topic has a published fixed answer with zh/en copy", () =>
     assert.ok(answer.answer.zh.length >= 24);
     assert.ok(answer.answer.en.length >= 24);
   }
+});
+
+test("every preset choice is backed by a specific bilingual default answer", () => {
+  const catalog = globalThis.LuminoAdvisorCatalog || loadCatalog();
+  let count = 0;
+  for (const answer of catalog.fixedAnswers.filter((item) => item.status === "published")) {
+    for (const option of answer.suggestedReplies || []) {
+      const outcome = catalog.replyOutcomes?.[answer.topicId]?.[option.id];
+      assert.ok(outcome, `missing ${answer.topicId}.${option.id}`);
+      assert.ok(outcome.zh.length >= 24);
+      assert.ok(outcome.en.length >= 24);
+      assert.doesNotMatch(outcome.zh, /^已记录/);
+      count += 1;
+    }
+  }
+  assert.equal(count, 37);
+});
+
+test("generated preset path audit stays aligned with the runtime catalog", () => {
+  assert.doesNotThrow(() => execFileSync(
+    process.execPath,
+    [path.join(root, "scripts/generate-advisor-preset-audit.cjs"), "--check"],
+    { cwd: root, stdio: "pipe" },
+  ));
 });
 
 test("eudr/csddd and cbam fixed answers stay preliminary and actionable", () => {

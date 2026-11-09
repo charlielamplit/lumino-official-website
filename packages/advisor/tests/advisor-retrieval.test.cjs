@@ -27,7 +27,7 @@ test("retrieval only returns published knowledge hits with urls", async () => {
   }
 });
 
-test("unmatched questions stop without inventing sources", async () => {
+test("unmatched questions return an actionable fallback without inventing sources", async () => {
   const retrieval = await loadRetrieval();
   const hits = retrieval.retrievePublishedKnowledge({
     text: "xyzzy-no-match completely unrelated tax question",
@@ -39,6 +39,8 @@ test("unmatched questions stop without inventing sources", async () => {
   assert.equal(stopped.answer_mode, "fallback");
   assert.equal(stopped.sources.length, 0);
   assert.equal(stopped.handoff, "contact");
+  assert.match(stopped.answer, /三个动作|截止时间/);
+  assert.match(stopped.next_question, /是谁提出要求/);
   assert.doesNotMatch(stopped.answer, PROCESS_LEAK);
 });
 

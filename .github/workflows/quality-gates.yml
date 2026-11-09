@@ -13,7 +13,7 @@ jobs:
   pr-body:
     name: PR body contract
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check required PR sections
         env:
@@ -32,17 +32,17 @@ jobs:
 
   repository-quality:
     name: Roadmap, syntax and tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout current revision
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Validate Roadmap manifest
         run: node scripts/github-roadmap-sync.mjs --check

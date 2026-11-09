@@ -12,7 +12,7 @@
 
   const topicKeywords = Object.freeze({
     cbam_vs_pcf: ["cbam和pcf", "cbam 和 pcf", "cbam vs pcf", "产品碳足迹有什么区别", "difference between cbam"],
-    cbam_data_start: ["进口商", "碳数据", "importer data", "communication template", "准备什么数据"],
+    cbam_data_start: ["进口商", "碳数据", "cbam相关的报告", "cbam相关报告", "cbam报告", "importer data", "communication template", "准备什么数据", "customer asks for a cbam report"],
     pcf_data_start: ["产品碳足迹", "活动数据", "pcf data", "carbon footprint data", "功能单位", "系统边界怎么采", "collecting pcf", "pcf activity data", "activity data"],
     inventory_first_year: ["组织碳盘查", "首年盘查", "第一次盘查", "year one inventory", "first year ghg", "组织温室气体"],
     eudr_csddd: ["eudr", "csddd", "零毁林", "尽职管理", "毁林", "due diligence directive"],
@@ -85,14 +85,13 @@
     return response;
   }
 
-  function buildReplyOutcome(record, replyId, replyLabel, lang) {
+  function buildReplyOutcome(record, replyId, lang) {
     const response = buildFixed(record, lang);
     const allowed = (record.suggestedReplies || []).find((item) => item.id === replyId);
     if (!allowed) return response;
-    const selected = replyLabel || text(allowed.label, lang);
-    response.answer = lang === "en"
-      ? `Recorded: ${selected}. Next, use the reading or service entry below. A formal conclusion still needs the relevant business facts and, where applicable, specialist review.`
-      : `已记录：${selected}。接下来可先查看下方资料或服务入口。正式结论仍需结合相关业务事实，必要时由专业人员复核。`;
+    const outcome = catalog.replyOutcomes && catalog.replyOutcomes[record.topicId] && catalog.replyOutcomes[record.topicId][replyId];
+    if (!outcome) throw new Error(`Missing deterministic reply outcome: ${record.topicId}.${replyId}`);
+    response.answer = text(outcome, lang);
     response.next_question = null;
     response.suggested_replies = [];
     assertValid(response);
@@ -127,11 +126,11 @@
       intent: "unresolved",
       answer_mode: "fallback",
       answer: lang === "en"
-        ? "I cannot confirm that from the guidance available here yet. Choose a topic below, or use the contact page for a scoped review."
-        : "目前这里的说明还不足以确认这个问题。你可以选择下方话题，或通过联系页申请有范围的人工复核。",
+        ? "Here is a useful starting point: identify who is asking, the exact file or decision they need, and the deadline. Keep the original email, template or screenshot, then list what you already have and what is missing. Share any one of those details and I can turn it into a more specific action list."
+        : "可以先从三个动作开始：确认是谁提出要求、具体要什么文件或判断、截止时间是什么；保留原始邮件、模板或截图；再列出已有资料和缺口。你补充其中任意一项，我就可以继续整理成更具体的行动清单。",
       confidence: "low",
       service_matches: [],
-      next_question: lang === "en" ? "Which topic is closest to your question?" : "以下哪个话题最接近你的问题？",
+      next_question: lang === "en" ? "Who is asking, what do they expect, and when is it due?" : "是谁提出要求、希望收到什么、什么时候要？",
       suggested_replies: catalog.topics.slice(0, 5).map((item) => ({ id: item.id, label: text(item.label, lang) })),
       sources: [],
       links: [{ type: "contact", label: lang === "en" ? "Contact Lumino" : "联系 Lumino", url: "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor&topic=unresolved" }],
@@ -169,7 +168,7 @@
     if (toolRoute) return buildToolRoute(toolRoute, lang);
 
     const answer = catalog.fixedAnswers.find((record) => isPublished(record, asOf) && record.topicId === topicId);
-    if (answer && request.replyId) return buildReplyOutcome(answer, request.replyId, request.text, lang);
+    if (answer && request.replyId) return buildReplyOutcome(answer, request.replyId, lang);
     if (answer) return buildFixed(answer, lang);
     return buildFallback(lang);
   }

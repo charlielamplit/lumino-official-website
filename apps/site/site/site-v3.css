@@ -145,26 +145,24 @@ lumino-header {
   white-space: nowrap;
 }
 .brand-lockup .brand-shuoyuan {
-  font-family: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  font-family: "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: .08em;
-  color: #063C29;
+  color: var(--brand-forest);
 }
 .brand-lockup .brand-sep {
   font-size: 16px;
   font-weight: 500;
-  color: color-mix(in srgb, #063C29 35%, #FDC82F);
+  color: color-mix(in srgb, var(--brand-forest) 35%, var(--brand-yellow));
   transform: translateY(-1px);
 }
 .brand-lockup .brand-lumino {
-  font-family: "Archivo", "Arial Black", "Helvetica Neue", "PingFang SC", sans-serif;
+  font-family: "Poppins", "Helvetica Neue", "PingFang SC", sans-serif;
   font-size: 18px;
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: .04em;
-  color: #E8B400;
-  -webkit-text-stroke: 0.45px #E8B400;
-  paint-order: stroke fill;
+  color: var(--brand-yellow);
 }
 @media (max-width: 720px) {
   .brand-lockup .brand-mark { height: 30px; }
@@ -200,7 +198,7 @@ lumino-header {
   bottom: 18px;
   height: 0;
   border-radius: 1px;
-  background: #E8B400; /* 与 brand-lumino 同色，Header 黄色只服务品牌字 + 当前页 */
+  background: var(--brand-yellow); /* Header 黄色仅用于品牌字与当前页提示。 */
   transition: height .2s var(--ease-soft, ease), opacity .2s ease;
 }
 .site-nav a:hover { color: var(--ink); }
@@ -831,7 +829,7 @@ lumino-header {
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(195deg, rgba(247,250,248,.88) 0%, rgba(247,250,248,.62) 42%, rgba(247,250,248,.48) 100%),
+    linear-gradient(180deg, rgba(7,31,22,.62) 0%, rgba(7,31,22,.74) 56%, rgba(7,31,22,.88) 100%),
     var(--ind-img, none) center / cover no-repeat;
   opacity: 1;
   transition: filter .35s var(--ease-soft);
@@ -862,10 +860,10 @@ lumino-header {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  color: inherit;
+  color: #fff;
   background: transparent;
 }
-.m-ind-cell:hover { background: transparent; color: inherit; }
+.m-ind-cell:hover { background: transparent; color: #fff; }
 .m-ind-cell__top {
   display: flex;
   justify-content: space-between;
@@ -873,11 +871,11 @@ lumino-header {
   gap: 12px;
 }
 .m-ind-cell__top h3 { font-size: var(--type-card); line-height: var(--type-card-lh); }
-.m-ind-cell__top span { color: var(--green); }
+.m-ind-cell__top span { color: #8DE0B7; }
 .m-ind-cell p {
   font-size: var(--type-ui);
   line-height: var(--type-ui-lh);
-  color: var(--ink-secondary);
+  color: rgba(247, 250, 248, .86);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -2739,7 +2737,9 @@ html.js-reveal .m-reveal.is-in {
 .contact-steps { gap: 14px; }
 .contact-card .m-form { gap: 12px; }
 .contact-card .m-form__grid { gap: 12px; }
-.m-page-hero--compact { padding: clamp(32px, 5vw, 48px) 0 clamp(24px, 3vw, 36px); }
+.m-page-hero--compact { padding: clamp(22px, 3vw, 32px) 0 clamp(18px, 2.2vw, 26px); }
+.m-page-hero--compact .crumb { margin-bottom: 8px; }
+.m-page-hero--compact + .m-section { padding-top: clamp(28px, 3.5vw, 44px); }
 
 .m-icon {
   width: 36px;

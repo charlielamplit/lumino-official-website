@@ -83,6 +83,7 @@ test("advisor metrics reject forged counters and keep client events out of reque
   mod.recordAdvisorMetric({ type: "client", answer_mode: "fixed", source: "deterministic", latency_ms: 9, ok: true });
   mod.recordAdvisorMetric({ type: "request", answer_mode: "tool_route", source: "deterministic", latency_ms: 20, ok: true });
   mod.recordAdvisorMetric({ type: "request", answer_mode: "fallback", source: "no_sources", latency_ms: 8, ok: true });
+  mod.recordAdvisorMetric({ type: "request", answer_mode: "general_model", source: "general_model", latency_ms: 18, ok: true, model_attempted: true, model_tier: "luna" });
   mod.recordAdvisorMetric({ type: "cta", cta_type: "contact" });
   mod.recordAdvisorMetric({ type: "client", answer_mode: "errors", source: "toString", ok: true });
   mod.recordAdvisorMetric({
@@ -96,16 +97,145 @@ test("advisor metrics reject forged counters and keep client events out of reque
     ok: true,
   });
   const summary = mod.getAdvisorMetricsSummary();
-  assert.equal(summary.counters.requests, 4);
+  assert.equal(summary.counters.requests, 5);
   assert.equal(summary.counters.client_events, 2);
   assert.equal(summary.counters.cta_clicks, 1);
   assert.equal(summary.counters.errors, 0);
-  assert.equal(summary.counters.model_attempts, 1);
+  assert.equal(summary.counters.model_attempts, 2);
   assert.equal(summary.counters.model_failures, 1);
-  assert.equal(summary.counters.model_luna, 1);
+  assert.equal(summary.counters.model_luna, 2);
   assert.ok(summary.rates.tool_route_rate > 0);
   assert.ok(summary.rates.no_sources_rate > 0);
+  assert.ok(summary.rates.general_guidance_rate > 0);
   assert.equal(JSON.stringify(summary).includes("13800138000"), false);
+});
+
+test("unmatched questions fall back to a useful framework when the model is not configured", async () => {
+  const previous = {
+    beta: process.env.ADVISOR_PUBLIC_BETA,
+    enabled: process.env.ADVISOR_MODEL_ENABLED,
+    advisorKey: process.env.ADVISOR_OPENAI_API_KEY,
+    openaiKey: process.env.OPENAI_API_KEY,
+  };
+  process.env.ADVISOR_PUBLIC_BETA = "1";
+  process.env.ADVISOR_MODEL_ENABLED = "1";
+  delete process.env.ADVISOR_OPENAI_API_KEY;
+  delete process.env.OPENAI_API_KEY;
+  try {
+    const file = pathToFileURL(path.join(root, "api/advisor.js")).href;
+    const mod = await import(`${file}?t=${Date.now()}-${Math.random()}`);
+    const out = { statusCode: 0, body: "" };
+    const res = {
+      status(code) { out.statusCode = code; return this; },
+      setHeader() {},
+      end(body) { out.body = body || ""; },
+      write() {},
+    };
+    await mod.default({
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.91" },
+      body: { text: "客户突然让我准备一份陌生的合规文件，怎么开始？", lang: "zh" },
+      query: {},
+      on() {},
+    }, res);
+    const data = JSON.parse(out.body);
+    assert.equal(out.statusCode, 200);
+    assert.equal(data.runtime.source, "actionable_fallback");
+    assert.equal(data.runtime.model_configured, false);
+    assert.equal(data.runtime.ui_state, "basic_mode");
+    assert.equal(data.sources.length, 0);
+    assert.match(data.answer, /三个动作|截止时间/);
+    assert.doesNotMatch(data.answer, /没有足够依据|无法确认/);
+  } finally {
+    for (const [key, value] of Object.entries({
+      ADVISOR_PUBLIC_BETA: previous.beta,
+      ADVISOR_MODEL_ENABLED: previous.enabled,
+      ADVISOR_OPENAI_API_KEY: previous.advisorKey,
+      OPENAI_API_KEY: previous.openaiKey,
+    })) {
+      if (value == null) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
+test("unmatched questions reach the general model path when the model is configured", async () => {
+  const previous = {
+    beta: process.env.ADVISOR_PUBLIC_BETA,
+    enabled: process.env.ADVISOR_MODEL_ENABLED,
+    key: process.env.ADVISOR_OPENAI_API_KEY,
+    base: process.env.ADVISOR_OPENAI_BASE_URL,
+    mode: process.env.ADVISOR_OPENAI_API_MODE,
+  };
+  const originalFetch = globalThis.fetch;
+  process.env.ADVISOR_PUBLIC_BETA = "1";
+  process.env.ADVISOR_MODEL_ENABLED = "1";
+  process.env.ADVISOR_OPENAI_API_KEY = "sk-test";
+  process.env.ADVISOR_OPENAI_BASE_URL = "https://aiberm.com/v1";
+  process.env.ADVISOR_OPENAI_API_MODE = "chat";
+  try {
+    globalThis.fetch = async (_url, init) => {
+      const body = JSON.parse(init.body);
+      assert.match(body.messages[0].content, /运用自身能力直接回答/);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          choices: [{
+            finish_reason: "stop",
+            message: {
+              content: JSON.stringify({
+                intent: "general_guidance",
+                answer: "先确认适用辖区、产品范围和客户要求，再对照参考时点核实现行规则。",
+                confidence: "medium",
+                next_question: "产品要进入哪个市场？",
+                primary_service_id: null,
+                secondary_service_id: null,
+                handoff: "none",
+              }),
+            },
+          }],
+        }),
+      };
+    };
+    const file = pathToFileURL(path.join(root, "api/advisor.js")).href;
+    const mod = await import(`${file}?t=${Date.now()}-${Math.random()}`);
+    const out = { statusCode: 0, body: "" };
+    const res = {
+      status(code) { out.statusCode = code; return this; },
+      setHeader() {},
+      end(body) { out.body = body || ""; },
+      write() {},
+    };
+    await mod.default({
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.92" },
+      body: { text: "这个完全没有收录的新要求应该怎么判断？", lang: "zh" },
+      query: {},
+      on() {},
+    }, res);
+    const data = JSON.parse(out.body);
+    assert.equal(out.statusCode, 200);
+    assert.equal(data.answer_mode, "general_model");
+    assert.equal(data.runtime.source, "general_model");
+    assert.equal(data.runtime.model_configured, true);
+    assert.equal(data.runtime.ui_state, "ok");
+    assert.equal(data.runtime.degradation_reason, "no_published_sources");
+    assert.equal(data.sources.length, 0);
+    assert.match(data.answer, /适用辖区/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const [key, value] of Object.entries({
+      ADVISOR_PUBLIC_BETA: previous.beta,
+      ADVISOR_MODEL_ENABLED: previous.enabled,
+      ADVISOR_OPENAI_API_KEY: previous.key,
+      ADVISOR_OPENAI_BASE_URL: previous.base,
+      ADVISOR_OPENAI_API_MODE: previous.mode,
+    })) {
+      if (value == null) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
 });
 
 test("advisor API disables when public beta is off", async () => {

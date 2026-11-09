@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-02",
+  "updatedAt": "2026-11-08",
   "labels": [
     {
       "name": "Roadmap",
@@ -315,11 +315,11 @@
       "kind": "feature",
       "parentId": "E02",
       "title": "[Feature] 完成跨服务任务、资料与交付中心",
-      "state": "open",
+      "state": "closed",
       "labels": [
         "Roadmap",
         "type/feature",
-        "status/in-progress",
+        "status/done",
         "priority/P0",
         "area/portal",
         "area/data-assets",
@@ -351,7 +351,7 @@
       "labels": [
         "Roadmap",
         "type/feature",
-        "status/ready",
+        "status/in-progress",
         "priority/P1",
         "area/portal",
         "area/quality",
@@ -901,11 +901,11 @@
       "kind": "feature",
       "parentId": "E07",
       "title": "[Feature] 建立 GitHub Roadmap、Issue 模板与同步机制",
-      "state": "open",
+      "state": "closed",
       "labels": [
         "Roadmap",
         "type/feature",
-        "status/in-progress",
+        "status/done",
         "priority/P0",
         "area/quality"
       ],
@@ -934,7 +934,7 @@
       "labels": [
         "Roadmap",
         "type/feature",
-        "status/ready",
+        "status/in-progress",
         "priority/P1",
         "area/quality"
       ],
@@ -951,6 +951,7 @@
       ],
       "references": [
         "scripts/review-site.mjs",
+        "scripts/local-site-server.mjs",
         "docs/site-review-checklist.md"
       ]
     },

@@ -1,26 +1,27 @@
 #!/usr/bin/env node
 /**
- * Local static + advisor API server (no Vercel login required).
- * Usage: node scripts/local-site-server.mjs [port]
+ * Local static + serverless API preview for the Lumino site.
+ *
+ * Usage:
+ *   node scripts/local-site-server.mjs [port]
  */
-import http from "node:http";
 import fs from "node:fs";
+import http from "node:http";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { Readable } from "node:stream";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const port = Number(process.argv[2] || process.env.PORT || 4174);
 
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return;
-  for (const line of fs.readFileSync(filePath, "utf8").split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq <= 0) continue;
-    const key = trimmed.slice(0, eq).trim();
-    let value = trimmed.slice(eq + 1).trim();
+  for (const rawLine of fs.readFileSync(filePath, "utf8").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+    const separator = line.indexOf("=");
+    if (separator < 1) continue;
+    const key = line.slice(0, separator).trim();
+    let value = line.slice(separator + 1).trim();
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
       value = value.slice(1, -1);
     }
@@ -30,59 +31,18 @@ function loadEnvFile(filePath) {
 
 loadEnvFile(path.join(root, ".env"));
 
-const MIME = {
-  ".html": "text/html; charset=utf-8",
+const mimeTypes = {
   ".css": "text/css; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
-  ".mjs": "text/javascript; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".svg": "image/svg+xml",
-  ".png": "image/png",
+  ".html": "text/html; charset=utf-8",
   ".ico": "image/x-icon",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".mjs": "text/javascript; charset=utf-8",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
   ".webp": "image/webp",
   ".woff2": "font/woff2",
 };
-
-function wrapResponse(res) {
-  if (typeof res.status !== "function") {
-    res.status = (code) => {
-      res.statusCode = Number(code) || 200;
-      return res;
-    };
-  }
-  if (typeof res.json !== "function") {
-    res.json = (body) => {
-      if (!res.getHeader("Content-Type")) {
-        res.setHeader("Content-Type", "application/json; charset=utf-8");
-      }
-      res.end(JSON.stringify(body));
-      return res;
-    };
-  }
-  return res;
-}
-
-async function readBody(req) {
-  const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
-  const raw = Buffer.concat(chunks);
-  if (!raw.length) return undefined;
-  const type = String(req.headers["content-type"] || "");
-  if (type.includes("application/json")) {
-    try {
-      return JSON.parse(raw.toString("utf8"));
-    } catch (_) {
-      return raw.toString("utf8");
-    }
-  }
-  return raw.toString("utf8");
-}
-
-async function loadHandler(rel) {
-  const file = path.join(root, rel);
-  const mod = await import(`${pathToFileURL(file).href}?t=${Date.now()}`);
-  return mod.default;
-}
 
 const apiRoutes = {
   "/api/advisor": "api/advisor.js",
@@ -92,66 +52,129 @@ const apiRoutes = {
   "/api/knowledge": "api/knowledge.js",
 };
 
-function safeJoin(urlPath) {
-  const decoded = decodeURIComponent(urlPath.split("?")[0]);
-  const cleaned = path.normalize(decoded).replace(/^(\.\.[/\\])+/, "");
-  const full = path.join(root, cleaned);
-  if (!full.startsWith(root)) return null;
-  return full;
+const vercelConfig = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
+const rewrites = (vercelConfig.rewrites || []).map(({ source, destination }) => {
+  const parameters = [];
+  const pattern = source.split("/").map((segment) => {
+    if (!segment.startsWith(":")) return segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const catchAll = segment.endsWith("*");
+    parameters.push(segment.slice(1, catchAll ? -1 : undefined));
+    return catchAll ? "(.*)" : "([^/]+)";
+  }).join("/");
+  return { destination, parameters, regex: new RegExp(`^${pattern}$`) };
+});
+
+function applyRewrite(urlPath) {
+  for (const rewrite of rewrites) {
+    const match = urlPath.match(rewrite.regex);
+    if (!match) continue;
+    let destination = rewrite.destination;
+    rewrite.parameters.forEach((name, index) => {
+      destination = destination.replace(`:${name}*`, match[index + 1] || "");
+      destination = destination.replace(`:${name}`, match[index + 1] || "");
+    });
+    return destination.split("?")[0];
+  }
+  return urlPath;
 }
 
-async function serveStatic(req, res, urlPath) {
-  let filePath = safeJoin(urlPath === "/" ? "/index.html" : urlPath);
+function wrapResponse(response) {
+  response.status = (code) => {
+    response.statusCode = Number(code) || 200;
+    return response;
+  };
+  response.json = (body) => {
+    if (!response.getHeader("Content-Type")) {
+      response.setHeader("Content-Type", "application/json; charset=utf-8");
+    }
+    response.end(JSON.stringify(body));
+    return response;
+  };
+}
+
+async function readBody(request) {
+  const chunks = [];
+  for await (const chunk of request) chunks.push(chunk);
+  if (!chunks.length) return undefined;
+  const raw = Buffer.concat(chunks).toString("utf8");
+  if (!String(request.headers["content-type"] || "").includes("application/json")) return raw;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return raw;
+  }
+}
+
+async function loadHandler(relativePath) {
+  const fileUrl = pathToFileURL(path.join(root, relativePath));
+  const module = await import(`${fileUrl.href}?preview=${Date.now()}`);
+  return module.default;
+}
+
+function resolvePublicFile(urlPath) {
+  let decoded;
+  try {
+    decoded = decodeURIComponent(urlPath.split("?")[0]);
+  } catch {
+    return null;
+  }
+  if (decoded.includes("\0")) return null;
+  const relativePath = decoded.replace(/^\/+/, "") || "index.html";
+  if (relativePath.split(/[\\/]/).some((segment) => segment.startsWith("."))) return null;
+  const filePath = path.resolve(root, relativePath);
+  if (filePath !== root && !filePath.startsWith(`${root}${path.sep}`)) return null;
+  return filePath;
+}
+
+function serveStatic(response, urlPath) {
+  let filePath = resolvePublicFile(applyRewrite(urlPath));
   if (!filePath) {
-    res.writeHead(403).end("Forbidden");
+    response.writeHead(403).end("Forbidden");
     return;
   }
   if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
     filePath = path.join(filePath, "index.html");
   }
   if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
-    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("Not found");
+    response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" }).end("Not found");
     return;
   }
-  const ext = path.extname(filePath).toLowerCase();
-  res.writeHead(200, {
-    "Content-Type": MIME[ext] || "application/octet-stream",
+  const extension = path.extname(filePath).toLowerCase();
+  response.writeHead(200, {
     "Cache-Control": "no-store",
+    "Content-Type": mimeTypes[extension] || "application/octet-stream",
   });
-  Readable.fromWeb
-    ? fs.createReadStream(filePath).pipe(res)
-    : fs.createReadStream(filePath).pipe(res);
+  fs.createReadStream(filePath).pipe(response);
 }
 
-const server = http.createServer(async (req, res) => {
-  wrapResponse(res);
-  const host = req.headers.host || `127.0.0.1:${port}`;
-  const url = new URL(req.url || "/", `http://${host}`);
-  const pathname = url.pathname;
-
+const server = http.createServer(async (request, response) => {
+  wrapResponse(response);
+  const url = new URL(request.url || "/", `http://${request.headers.host || `127.0.0.1:${port}`}`);
   try {
-    const apiFile = apiRoutes[pathname];
+    const apiFile = apiRoutes[url.pathname];
     if (apiFile) {
       const handler = await loadHandler(apiFile);
-      req.query = Object.fromEntries(url.searchParams.entries());
-      req.body = ["POST", "PUT", "PATCH"].includes(String(req.method || "").toUpperCase())
-        ? await readBody(req)
+      request.query = Object.fromEntries(url.searchParams.entries());
+      request.body = ["PATCH", "POST", "PUT"].includes(String(request.method || "").toUpperCase())
+        ? await readBody(request)
         : undefined;
-      await handler(req, res);
+      await handler(request, response);
       return;
     }
-    await serveStatic(req, res, pathname);
+    serveStatic(response, url.pathname);
   } catch (error) {
     console.error("[local-site-server]", error);
-    if (!res.headersSent) {
-      res.statusCode = 500;
-      res.setHeader("Content-Type", "application/json; charset=utf-8");
-      res.end(JSON.stringify({ error: "local_server_error", message: String(error?.message || error) }));
+    if (!response.headersSent) {
+      response.statusCode = 500;
+      response.setHeader("Content-Type", "application/json; charset=utf-8");
+    }
+    if (!response.writableEnded) {
+      response.end(JSON.stringify({ error: "local_server_error" }));
     }
   }
 });
 
 server.listen(port, "127.0.0.1", () => {
-  console.log(`Local Lumino site: http://127.0.0.1:${port}/apps/site/Lumino%20%E5%AE%98%E7%BD%91.dc.html`);
-  console.log(`Advisor API:       http://127.0.0.1:${port}/api/advisor`);
+  console.log(`Lumino local preview: http://127.0.0.1:${port}/site`);
+  console.log(`Advisor API:          http://127.0.0.1:${port}/api/advisor`);
 });
