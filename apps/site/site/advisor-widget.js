@@ -4,6 +4,8 @@
   const SESSION_KEY = "lumino.advisor.state.v1";
   const CLIENT_TIMEOUT_MS = 12000;
   const THINK_ROTATE_MS = 900;
+  const DETERMINISTIC_DELAY_MIN_MS = 1000;
+  const DETERMINISTIC_DELAY_MAX_MS = 4000;
   const i18n = root.LuminoI18n || { detectLang: () => "zh" };
   let panel = null;
   let trigger = null;
@@ -45,15 +47,35 @@
   function thinkingPhrases() {
     return lang() === "en"
       ? [
-        "Checking published guidance…",
+        "Analysing your question…",
         "Structuring the actionable points…",
-        "Checking wording boundaries…",
+        "Checking applicable conditions…",
       ]
       : [
-        "对照已发布说明…",
+        "分析你的问题…",
         "整理可执行要点…",
-        "核对表述边界…",
+        "核对适用条件…",
       ];
+  }
+
+  function deterministicDelayMs() {
+    return DETERMINISTIC_DELAY_MIN_MS
+      + Math.floor(Math.random() * (DETERMINISTIC_DELAY_MAX_MS - DETERMINISTIC_DELAY_MIN_MS + 1));
+  }
+
+  function waitForDelay(milliseconds, signal) {
+    return new Promise((resolve) => {
+      if (signal?.aborted) return resolve(false);
+      const timer = setTimeout(() => {
+        signal?.removeEventListener("abort", onAbort);
+        resolve(true);
+      }, milliseconds);
+      const onAbort = () => {
+        clearTimeout(timer);
+        resolve(false);
+      };
+      signal?.addEventListener("abort", onAbort, { once: true });
+    });
   }
 
   function clearThinkTimer() {
@@ -118,11 +140,12 @@
     if (ui === "unavailable") return label("服务暂时不可用", "Service temporarily unavailable");
     if (ui === "basic_mode") return label("已切换到基础问答", "Switched to basic guidance");
     if (ui === "no_sources" || (response.answer_mode === "fallback" && !response.sources?.length && !ui)) {
-      return label("没有足够依据", "Not enough published basis");
+      return label("行动建议", "Actionable next step");
     }
     if (response.answer_mode === "tool_route") return label("推荐合规工具", "Suggested compliance tool");
     if (response.answer_mode === "fixed") return label("服务说明", "Guidance");
     if (response.answer_mode === "retrieval_model") return label("初步判断", "Preliminary view");
+    if (response.answer_mode === "general_model") return label("初步回应", "Initial guidance");
     return label("暂无法确认", "Unable to confirm");
   }
 
@@ -257,13 +280,13 @@
   function basicModeLocal(payloadReason) {
     const response = root.LuminoAdvisor.route({ text: lastRequest?.text || "", topicId: lastRequest?.topicId || "", lang: lang() });
     if (response.answer_mode === "fallback") {
-      const unavailable = unavailableLocal(payloadReason || "network");
-      unavailable.ui_state = "basic_mode";
-      unavailable.answer = label(
-        "已切换到基础问答模式（本地固定说明）。在线服务暂时不可用，你可以重试获取完整结果。",
-        "Switched to basic guidance (local fixed answers). Online service is temporarily unavailable — retry for the full path."
+      response.ui_state = "basic_mode";
+      response.degradation_reason = payloadReason || "network";
+      response.answer += label(
+        " 在线服务暂时不可用，但你仍可以按以上步骤开始；稍后重试可获得更具体的回答。",
+        " The online service is temporarily unavailable, but you can still start with these steps and retry later for a more specific answer."
       );
-      return unavailable;
+      return response;
     }
     response.ui_state = "basic_mode";
     response.degradation_reason = payloadReason || "network";
@@ -313,6 +336,15 @@
     if (payload.topicId && root.LuminoAdvisor?.route) {
       const local = root.LuminoAdvisor.route(payload);
       if (local?.answer && (local.answer_mode === "fixed" || local.answer_mode === "tool_route")) {
+        const delayController = new AbortController();
+        activeAbort = delayController;
+        const completed = await waitForDelay(deterministicDelayMs(), delayController.signal);
+        if (!completed) {
+          const stopped = unavailableLocal("user_stop");
+          stopped.answer = label("已停止处理。你可以重试，或继续选择话题。", "Stopped. You can retry or choose another topic.");
+          stopped.ui_state = "unavailable";
+          return stopped;
+        }
         local.runtime = {
           ...(local.runtime || {}),
           source: "client_deterministic",

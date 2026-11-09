@@ -27,7 +27,7 @@ test("public tool menu loads the deterministic advisor without embedding model s
   assert.match(source, /root\.hidden\s*=\s*true/);
   assert.match(source, /shell\.root\.hidden\s*=\s*false/);
   assert.match(source, /preloadScript|rel:\s*"preload"|rel = "preload"/);
-  assert.match(source, /ADVISOR_ASSET_V|20261108-type2/);
+  assert.match(source, /ADVISOR_ASSET_V|20261109-type3/);
   assert.match(source, /link\[rel="stylesheet"\]\[href=/);
   assert.match(source, /style_load_timeout/);
   assert.match(source, /openAdvisorSafe\(shell\.primary, flags, "auto-open"\)/);
@@ -42,9 +42,9 @@ test("public tool menu loads the deterministic advisor without embedding model s
 
 test("homepage preloads advisor assets for instant Ask open", () => {
   const html = read("apps/site/Lumino 官网.dc.html");
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.css\?v=20261108-type2/);
-  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261108-type2/);
-  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261108-type2/);
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.css\?v=20261109-type3/);
+  assert.match(html, /rel="preload"[^>]+packages\/advisor\/catalog\.js\?v=20261109-type3/);
+  assert.match(html, /rel="preload"[^>]+advisor-widget\.js\?v=20261109-type3/);
 });
 
 test("public navigation and advisor use the Compliance tools name consistently", () => {
@@ -90,7 +90,7 @@ test("advisor widget preserves keyboard, privacy and current-tab recovery contro
   assert.match(source, /data-advisor-stop/);
   assert.match(source, /data-advisor-expand/);
   assert.match(source, /data-advisor-retry/);
-  assert.match(source, /服务暂时不可用|没有足够依据|基础问答/);
+  assert.match(source, /服务暂时不可用|行动建议|基础问答/);
   assert.match(source, /is-busy|setBusy/);
   assert.match(source, /startThinking/);
   assert.match(source, /client_deterministic/);
@@ -100,7 +100,11 @@ test("advisor widget preserves keyboard, privacy and current-tab recovery contro
   assert.doesNotMatch(source, /data-advisor-show-more|data-advisor-more-topics/);
   assert.match(source, /role="group"|Answer choices/);
   assert.doesNotMatch(source, /THINK_MIN_FIXED_MS|remainingThink|CHUNK_MS/);
-  assert.match(source, /对照已发布说明|Checking published guidance/);
+  assert.match(source, /分析你的问题|Analysing your question/);
+  assert.match(source, /DETERMINISTIC_DELAY_MIN_MS\s*=\s*1000/);
+  assert.match(source, /DETERMINISTIC_DELAY_MAX_MS\s*=\s*4000/);
+  assert.match(source, /waitForDelay\(deterministicDelayMs\(\), delayController\.signal\)/);
+  assert.match(source, /general_model/);
   assert.match(source, /Buffer stream text only|deliberation/);
 });
 

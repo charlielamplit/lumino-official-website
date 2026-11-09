@@ -6,7 +6,7 @@
 })(typeof window !== "undefined" ? window : globalThis, function () {
   "use strict";
 
-  const ANSWER_MODES = Object.freeze(["fixed", "tool_route", "retrieval_model", "fallback"]);
+  const ANSWER_MODES = Object.freeze(["fixed", "tool_route", "retrieval_model", "general_model", "fallback"]);
   const CONFIDENCE = Object.freeze(["high", "medium", "low"]);
   const HANDOFF = Object.freeze(["none", "contact", "expert_required"]);
 

@@ -209,11 +209,11 @@ export function stopWithoutSources(lang) {
     intent: "unresolved",
     answer_mode: "fallback",
     answer: lang === "en"
-      ? "I cannot confirm that from published Lumino guidance yet. Choose a topic below, or use the contact page for a scoped review."
-      : "目前还无法从已发布说明中确认这个问题。你可以选择下方话题，或通过联系页申请有范围的人工复核。",
+      ? "Here is a useful starting point: identify who is asking, the exact file or decision they need, and the deadline. Keep the original email, template or screenshot, then list what you already have and what is missing. Share any one of those details and I can turn it into a more specific action list."
+      : "可以先从三个动作开始：确认是谁提出要求、具体要什么文件或判断、截止时间是什么；保留原始邮件、模板或截图；再列出已有资料和缺口。你补充其中任意一项，我就可以继续整理成更具体的行动清单。",
     confidence: "low",
     service_matches: [],
-    next_question: lang === "en" ? "Which topic is closest to your question?" : "哪个话题最接近你的问题？",
+    next_question: lang === "en" ? "Who is asking, what do they expect, and when is it due?" : "是谁提出要求、希望收到什么、什么时候要？",
     suggested_replies: [],
     sources: [],
     links: [{

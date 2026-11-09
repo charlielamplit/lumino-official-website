@@ -97,12 +97,13 @@ test("every visible preset reply has a bilingual deterministic terminal answer",
   assert.equal(checked, 37);
 });
 
-test("unknown questions fail safely instead of inventing an answer", () => {
+test("unknown questions provide a safe action framework instead of inventing facts", () => {
   const response = advisor.route({ text: "我有一个完全未发布的特殊问题", lang: "zh", asOf: AS_OF });
   assert.equal(response.answer_mode, "fallback");
   assert.equal(response.confidence, "low");
   assert.equal(response.handoff, "contact");
   assert.equal(response.sources.length, 0);
+  assert.match(response.answer, /三个动作|截止时间/);
   assert.equal(schema.validateResponse(response).ok, true);
 });
 
