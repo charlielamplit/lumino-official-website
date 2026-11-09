@@ -126,7 +126,7 @@
         return baseTask(object, ctx, { title: `审批${object.scope || "待决定事项"}`, nextStep: "查看差异、依据和影响后具名决定", owner: object.owner, dueAt: "2026-10-27", priority: "high", page: "approvals" });
       }
       if (object.type === "finding" && !["RESOLVED", "CLOSED"].includes(object.status) && ["customer_admin", "customer_owner"].includes(ctx.role)) {
-        return baseTask(object, ctx, { title: "处理当前数据缺口", object: `${object.scope || "CBAM 计算"} · ${object.id}`, nextStep: "选择补数、等待供应商或受控默认值路径", owner: ctx.actor, dueAt: "2026-10-25", priority: "high", page: "results" });
+        return baseTask(object, ctx, { title: "处理前体排放数据缺口", object: `${object.id} · 北方特钢`, nextStep: "选择补数、等待供应商或受控默认值路径", owner: ctx.actor, dueAt: "2026-10-25", priority: "high", page: "results" });
       }
       if (object.type === "quarterlyPackage" && ["PLANNED", "COLLECTING", "READY_FOR_REVIEW"].includes(object.status) && ["customer_admin", "customer_owner"].includes(ctx.role)) {
         return baseTask(object, ctx, { title: `完成 ${object.quarter || "当前季度"} 数据包`, nextStep: object.status === "READY_FOR_REVIEW" ? "检查完整性并提交内部复核" : "补齐当前季度事实与证明材料", owner: object.owner, dueAt: "2026-10-31", page: "data" });
@@ -264,11 +264,14 @@
           name: artifactName(object),
           object: object.scope || object.id,
           owner: object.owner,
+          recipient: object.metadata?.recipientName || object.metadata?.importerName || object.scope || "内部",
+          when: object.metadata?.sharedAt || object.metadata?.dueLabel || (object.quarter ? `${object.quarter} · 截止参考` : "按服务节奏更新"),
           version: artifactVersion(object),
           workflowRevision: object.revision,
           status: STATUS_LABELS[object.status] || object.status,
           rawStatus: object.status,
           controls: artifactControls(object),
+          mine: ["PACKAGE_READY", "READY_FOR_REVIEW", "INTERNAL_REVIEW", "APPROVED", "COLLECTING", "REMEDIATION"].includes(object.status),
           snapshotId: object.metadata?.assetSnapshotId || object.metadata?.snapshotId || null,
           calculationRunId: object.metadata?.calculationRunId || object.metadata?.assetRunId || null,
           page: serviceId === "pcf" ? "pcf-report" : "deliverables",

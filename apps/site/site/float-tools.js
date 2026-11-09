@@ -3,7 +3,7 @@
   const i18n = window.LuminoI18n || { detectLang: () => "zh" };
   const TOP_SHOW_Y = 480;
   // Preload hints reduce download time; the runtime itself starts only after user intent.
-  const ADVISOR_ASSET_V = "20261109-type3";
+  const ADVISOR_ASSET_V = "20261110-bundle1";
   const ADVISOR_OPEN_TIMEOUT_MS = 12000;
   const ADVISOR_SCRIPT_TIMEOUT_MS = 6000;
   const pendingScriptCancels = new Set();
@@ -20,10 +20,8 @@
   };
   const ADVISOR_ASSETS = Object.freeze({
     css: `/apps/site/site/advisor-widget.css?v=${ADVISOR_ASSET_V}`,
-    catalog: `/packages/advisor/catalog.js?v=${ADVISOR_ASSET_V}`,
-    schema: `/packages/advisor/schema.js?v=${ADVISOR_ASSET_V}`,
-    router: `/packages/advisor/router.js?v=${ADVISOR_ASSET_V}`,
-    widget: `/apps/site/site/advisor-widget.js?v=${ADVISOR_ASSET_V}`,
+    // One bundle avoids four serial script requests on high-latency paths.
+    bundle: `/apps/site/site/advisor-bundle.js?v=${ADVISOR_ASSET_V}`,
   });
 
   function isHomepage() {
@@ -147,19 +145,14 @@
       return loadStyle(ADVISOR_ASSETS.css).then(() => window.LuminoAdvisorWidget);
     }
     if (!advisorPromise) {
-      preloadScript(ADVISOR_ASSETS.catalog);
-      preloadScript(ADVISOR_ASSETS.schema);
-      preloadScript(ADVISOR_ASSETS.router);
-      preloadScript(ADVISOR_ASSETS.widget);
+      preloadScript(ADVISOR_ASSETS.bundle);
       const loadAttempt = Promise.all([
         loadStyle(ADVISOR_ASSETS.css),
-        loadScript(ADVISOR_ASSETS.catalog),
-        loadScript(ADVISOR_ASSETS.schema),
+        loadScript(ADVISOR_ASSETS.bundle),
       ])
-        .then(() => loadScript(ADVISOR_ASSETS.router))
-        .then(() => loadScript(ADVISOR_ASSETS.widget))
         .then(() => {
           if (!window.LuminoAdvisorWidget) throw new Error("advisor_widget_missing");
+          if (!window.LuminoAdvisor) throw new Error("advisor_router_missing");
           return window.LuminoAdvisorWidget;
         });
       advisorPromise = withTimeout(loadAttempt, ADVISOR_OPEN_TIMEOUT_MS, "advisor_load_timeout")

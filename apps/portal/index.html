@@ -11,20 +11,21 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;600&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/apps/portal/styles.css?v=20261108-login2">
+  <link rel="stylesheet" href="/apps/portal/styles.css?v=20261110-release1">
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
 
-  <main class="login-screen" id="loginScreen">
+  <main class="login-screen" id="loginScreen" data-login-step="email">
     <header class="login-header">
       <a class="brand" href="/apps/site/Lumino%20官网.dc.html" aria-label="返回 Lumino 官网">
         <img src="/apps/site/site/assets/brand/mark-128.png" width="44" height="32" alt="">
         <span>LUMiNO</span>
       </a>
       <nav aria-label="登录页导航">
+        <a href="/apps/site/knowledge/">帮助中心</a>
+        <a href="/calculator/">免费试算</a>
         <a href="/apps/site/Lumino%20官网.dc.html">返回官网 <span aria-hidden="true">↗</span></a>
-        <a class="login-header-cta" href="/calculator/">免费试算</a>
       </nav>
     </header>
     <section class="login-story" aria-labelledby="loginTitle">
@@ -41,28 +42,77 @@
 
     <section class="login-panel" aria-label="登录">
       <div class="login-box">
-        <p class="eyebrow green">安全工作区</p>
-        <h2>登录工作门户</h2>
-        <p class="muted">进入统一服务、任务、资料与交付空间。</p>
         <div class="import-notice" id="importNotice" hidden></div>
-        <form id="loginForm">
-          <label>工作邮箱<input type="email" value="demo@huaxing-steel.cn" autocomplete="email" required></label>
-          <label>密码<input type="password" value="lumino-demo" autocomplete="current-password" required></label>
-          <div class="login-options"><label class="check"><input type="checkbox" checked> 保持登录</label><button class="link-button" type="button">忘记密码？</button></div>
-          <button class="button button--primary button--large" type="submit">登录进入 <span aria-hidden="true">→</span></button>
+
+        <form id="loginForm" data-step="email">
+          <div class="login-step" data-step-panel="email">
+            <h2 id="loginPanelTitle">登录工作门户</h2>
+            <p class="muted" id="loginPanelHint">使用企业分配的工作邮箱</p>
+            <label>工作邮箱<input id="loginEmail" type="email" value="zhoulan@huaxing-steel.cn" autocomplete="username" required placeholder="name@company.com"></label>
+            <p class="login-email-hint" id="loginEmailHint" aria-live="polite">huaxing-steel.cn 已启用企业 SSO，继续后跳转到企业登录</p>
+            <button class="button button--primary button--large login-continue" type="submit">继续 <span aria-hidden="true">→</span></button>
+            <div class="login-alt-divider" aria-hidden="true"><span>其他方式</span></div>
+            <div class="login-alt-actions">
+              <button class="button button--secondary" type="button" id="activateInvite">收到邀请 · 激活账号</button>
+              <button class="button button--secondary" type="button" id="forgotPassword">忘记密码</button>
+            </div>
+            <label class="demo-role-select">
+              <span>原型演示 · 以角色身份直接进入</span>
+              <select id="demoRoleSelect" aria-label="选择演示角色">
+                <option value="">选择角色…</option>
+                <optgroup label="客户企业">
+                  <option value="customer_owner">项目协调人</option>
+                  <option value="customer_admin">企业管理员</option>
+                  <option value="customer_contrib">数据贡献者</option>
+                  <option value="customer_approver">内部审批人</option>
+                </optgroup>
+                <optgroup label="Lumino 服务团队">
+                  <option value="expert">CBAM 制备专家</option>
+                  <option value="reviewer">独立复核专家</option>
+                  <option value="ops">运营 / 客户成功</option>
+                  <option value="sales">商务 / 销售</option>
+                </optgroup>
+                <optgroup label="外部协作">
+                  <option value="importer">欧盟进口商</option>
+                  <option value="verifier">第三方核查员</option>
+                  <option value="supplier">前体供应商</option>
+                </optgroup>
+              </select>
+            </label>
+          </div>
+          <div class="login-step" data-step-panel="sso" hidden>
+            <p class="login-email-chip"><span id="ssoEmailLabel">zhoulan@huaxing-steel.cn</span> <button class="link-button" type="button" data-login-back>更换</button></p>
+            <h2>使用企业账号登录</h2>
+            <p class="muted login-step-copy">huaxing-steel.cn 由华星钢铁统一管理登录。正式环境会跳转到企业身份系统，原型中直接模拟成功。</p>
+            <p class="login-sso-card"><span class="login-sso-card__mark" aria-hidden="true">华</span><span><strong>华星钢铁 统一身份认证</strong><small>sso.huaxing-steel.cn · 模拟</small></span></p>
+            <button class="button button--primary button--large login-continue" type="button" id="ssoContinue">前往企业登录 <span aria-hidden="true">→</span></button>
+            <button class="link-button login-secondary-link" type="button" id="usePasswordInstead">改用 Lumino 密码登录</button>
+          </div>
+          <div class="login-step" data-step-panel="password" hidden>
+            <p class="login-email-chip"><span id="passwordEmailLabel">zhoulan@huaxing-steel.cn</span> <button class="link-button" type="button" data-login-back>更换</button></p>
+            <h2>输入密码</h2>
+            <label>密码<input id="loginPassword" type="password" value="lumino-demo" autocomplete="current-password" minlength="6" placeholder="至少 12 位"></label>
+            <div class="login-options"><label class="check"><input type="checkbox" checked> 在此设备保持登录</label><button class="link-button" type="button" id="forgotPasswordInline">忘记密码</button></div>
+            <p class="login-email-hint login-email-hint--muted">演示密码：任意 6 位以上</p>
+            <button class="button button--primary button--large login-continue" type="submit">登录</button>
+          </div>
+          <div class="login-step" data-step-panel="workspace" hidden>
+            <h2>选择工作区</h2>
+            <p class="muted login-workspace-lead" id="workspaceLead">zhoulan@huaxing-steel.cn 在 3 个工作区有权限</p>
+            <div class="workspace-list" role="list">
+              <button type="button" class="workspace-card" data-workspace-role="customer_owner" data-workspace-home="workbench"><span class="workspace-card__mark" aria-hidden="true">华</span><span><strong>华星钢铁有限公司</strong><small>企业 · 项目协调人 → 工作台</small></span><span aria-hidden="true">→</span></button>
+              <button type="button" class="workspace-card" data-workspace-role="customer_approver" data-workspace-home="approvals"><span class="workspace-card__mark" aria-hidden="true">精</span><span><strong>华星精密部件</strong><small>企业 · 内部审批人 → 待我审批</small></span><span aria-hidden="true">→</span></button>
+              <button type="button" class="workspace-card" data-workspace-role="importer" data-workspace-home="received-packages"><span class="workspace-card__mark workspace-card__mark--ext" aria-hidden="true">N</span><span><strong>NordWerk GmbH 共享空间</strong><small>外部 · 只读 → 收到的数据包</small></span><span aria-hidden="true">→</span></button>
+            </div>
+            <p class="login-workspace-foot">登录后可在顶栏随时切换，不需要重新登录</p>
+          </div>
         </form>
-        <div class="demo-divider"><span>原型快速入口</span></div>
-        <div class="demo-roles" aria-label="选择演示角色">
-          <button type="button" data-demo-role="customer_owner"><b>客户</b><small>年度任务与 Agent</small></button>
-          <button type="button" data-demo-role="customer_admin"><b>管理员</b><small>服务、组织与授权</small></button>
-          <button type="button" data-demo-role="expert"><b>专家</b><small>判断与制备</small></button>
-          <button type="button" data-demo-role="reviewer"><b>复核</b><small>独立复核与锁定</small></button>
-          <button type="button" data-demo-role="ops"><b>运营</b><small>项目与 SLA</small></button>
-          <button type="button" data-demo-role="sales"><b>商务</b><small>线索与客户</small></button>
-        </div>
-        <p class="prototype-note">这是交互原型。演示登录不会连接真实账号或提交企业数据。</p>
       </div>
     </section>
+    <footer class="login-footer">
+      <span>企业数据、证据和交付文件仅对获授权成员开放 · 这是交互原型，不连接真实账号</span>
+      <span>隐私政策 · 服务条款 · 安全说明</span>
+    </footer>
   </main>
 
   <div class="portal" id="portal" hidden>
@@ -70,56 +120,94 @@
       <button class="mobile-menu" id="mobileMenu" type="button" aria-label="打开导航" aria-expanded="false">☰</button>
       <div class="topbar-brand">
         <a class="brand" href="/apps/site/Lumino%20官网.dc.html" aria-label="返回 Lumino 官网"><img src="/apps/site/site/assets/brand/mark-128.png" width="44" height="32" alt=""><span>LUMiNO</span></a>
-        <span class="product-name">企业工作门户</span>
       </div>
-      <button class="company-switch" type="button"><small id="companyContextLabel">企业</small><strong id="companyName">华星钢铁有限公司</strong><span>⌄</span></button>
+      <button class="company-switch" type="button" title="切换工作区">
+        <span class="company-switch__mark" id="companyMark" aria-hidden="true">华</span>
+        <span class="company-switch__copy"><strong id="companyName">华星钢铁有限公司</strong><small id="companyContextLabel" hidden></small></span>
+        <span aria-hidden="true">⌄</span>
+      </button>
       <div class="topbar-spacer" aria-hidden="true"></div>
-      <div class="project-period" aria-label="当前项目期间">
-        <label class="year-switch"><small>年度</small><select id="yearSelect"></select></label>
-        <label class="quarter-switch" id="quarterSwitch"><small>季度</small><select id="quarterSelect"><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select></label>
+      <button class="cmdk-trigger" id="cmdkTrigger" type="button" aria-haspopup="dialog" aria-controls="cmdkDialog">
+        <i class="topbar-icon topbar-icon--search" aria-hidden="true"></i>
+        <span>搜索对象或跳转</span><kbd>⌘K</kbd>
+      </button>
+      <div class="project-period" id="projectPeriod" hidden aria-label="当前项目期间">
+        <label class="year-switch">
+          <small>年度</small>
+          <select id="yearSelect" aria-label="年度项目"></select>
+          <span class="project-period__tone" id="yearTone"><i aria-hidden="true"></i><em>进行中</em></span>
+        </label>
+        <span class="project-period__sep" aria-hidden="true"></span>
+        <label class="quarter-switch" id="quarterSwitch">
+          <small>季度</small>
+          <select id="quarterSelect" aria-label="季度数据包"><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select>
+        </label>
+        <span class="project-period__chevron" aria-hidden="true"></span>
       </div>
       <div class="topbar-actions">
-        <button class="resource-button" type="button" data-drawer="resources" data-drawer-label="资源中心">资源</button>
-        <button class="icon-button" type="button" aria-label="通知">●<span class="notification-dot"></span></button>
-        <button class="profile-button" id="profileButton" type="button"><span id="profileInitial">周</span><span><strong id="profileName">周岚</strong><small id="profileRole">项目协调人</small></span></button>
-        <button class="logout-button" id="logoutButton" type="button">退出</button>
+        <button class="icon-button" type="button" aria-label="通知" id="notifButton"><i class="topbar-icon topbar-icon--bell" aria-hidden="true"></i><span class="notification-dot" aria-hidden="true">3</span></button>
+        <button class="icon-button" type="button" data-drawer="resources" data-drawer-label="资源中心" aria-label="帮助"><i class="topbar-icon topbar-icon--help" aria-hidden="true"></i></button>
+        <div class="account-menu">
+          <button class="profile-button" id="profileButton" type="button" aria-haspopup="menu" aria-expanded="false"><span id="profileInitial">周</span><span><strong id="profileName">周岚</strong><small id="profileRole">项目协调人</small></span><span aria-hidden="true">⌄</span></button>
+          <div class="account-menu__panel" id="accountMenu" hidden role="menu">
+            <button type="button" role="menuitem" data-account-action="settings" data-settings-section="members">企业设置</button>
+            <button type="button" role="menuitem" data-account-action="workspace">切换工作区</button>
+            <label class="account-menu__role" role="none">
+              <span>演示角色</span>
+              <select id="roleSelect" aria-label="切换演示角色">
+                <optgroup label="客户企业">
+                  <option value="customer_admin">企业管理员</option>
+                  <option value="customer_owner">项目协调人</option>
+                  <option value="customer_contrib">数据贡献者</option>
+                  <option value="customer_approver">内部审批人</option>
+                </optgroup>
+                <optgroup label="Lumino 服务团队">
+                  <option value="expert">CBAM 制备专家</option>
+                  <option value="reviewer">独立复核专家</option>
+                  <option value="ops">运营 / 客户成功</option>
+                  <option value="sales">商务 / 销售</option>
+                </optgroup>
+                <optgroup label="外部协作方">
+                  <option value="importer">欧盟进口商 / 申报人</option>
+                  <option value="verifier">第三方核查员</option>
+                  <option value="supplier">前体供应商</option>
+                </optgroup>
+                <optgroup label="平台治理">
+                  <option value="support">平台支持</option>
+                  <option value="platform_admin">平台管理员</option>
+                </optgroup>
+              </select>
+            </label>
+            <button type="button" role="menuitem" id="logoutButton">退出登录</button>
+          </div>
+        </div>
       </div>
     </header>
 
     <div class="portal-layout">
+      <aside class="shell-rail" id="shellRail" aria-label="全局导航"></aside>
       <aside class="sidebar" id="sidebar">
-        <nav id="roleNav" aria-label="门户导航"></nav>
-        <div class="sidebar-foot">
-          <button class="settings-entry" id="settingsButton" type="button"><span aria-hidden="true">⚙</span><span><strong>企业设置</strong><small>企业、设施与长期主档</small></span></button>
-          <div class="demo-role-switch">
-            <span class="demo-role-switch__label">原型角色 · 仅演示</span>
-            <label><span class="sr-only">切换演示角色</span><select id="roleSelect">
-              <optgroup label="客户企业">
-                <option value="customer_admin">企业管理员</option>
-                <option value="customer_owner">项目协调人</option>
-                <option value="customer_contrib">数据贡献者</option>
-                <option value="customer_approver">内部审批人</option>
-              </optgroup>
-              <optgroup label="Lumino 服务团队">
-                <option value="expert">CBAM 制备专家</option>
-                <option value="reviewer">独立复核专家</option>
-                <option value="ops">运营 / 客户成功</option>
-                <option value="sales">商务 / 销售</option>
-              </optgroup>
-              <optgroup label="外部协作方">
-                <option value="importer">欧盟进口商 / 申报人</option>
-                <option value="verifier">第三方核查员</option>
-                <option value="supplier">前体供应商</option>
-              </optgroup>
-              <optgroup label="平台治理">
-                <option value="support">平台支持</option>
-                <option value="platform_admin">平台管理员</option>
-              </optgroup>
-            </select></label>
-          </div>
+        <div class="sidebar-channel" id="sidebarChannel" hidden></div>
+        <nav id="roleNav" aria-label="频道导航"></nav>
+        <div class="sidebar-foot" hidden>
+          <button class="settings-entry" id="settingsButton" type="button" hidden><span aria-hidden="true">⚙</span><span><strong>企业设置</strong><small>企业、设施与长期主档</small></span></button>
         </div>
       </aside>
       <main class="workspace" id="main" tabindex="-1"></main>
+    </div>
+    <section class="service-overview-layer" id="serviceOverviewLayer" hidden aria-label="服务总览"></section>
+    <button class="service-overview-dock" id="serviceOverviewDock" type="button" hidden data-service-overview="open" aria-label="展开服务总览">
+      <span class="service-overview-dock__mark" aria-hidden="true">L</span>
+      <span>服务总览</span>
+      <i aria-hidden="true">6</i>
+    </button>
+  </div>
+
+  <div class="cmdk-layer" id="cmdkLayer" hidden>
+    <button class="cmdk-backdrop" id="cmdkBackdrop" type="button" aria-label="关闭搜索"></button>
+    <div class="cmdk-dialog" id="cmdkDialog" role="dialog" aria-modal="true" aria-label="搜索对象或跳转">
+      <input id="cmdkInput" type="search" placeholder="输入页面、任务或资产名称" autocomplete="off">
+      <div class="cmdk-results" id="cmdkResults" role="listbox"></div>
     </div>
   </div>
 
@@ -151,14 +239,14 @@
   <script src="../../packages/shared/leads-client.js?v=20261030-1" defer></script>
   <script src="../../packages/shared/knowledge-client.js?v=20261030-1" defer></script>
   <script src="/apps/portal/runtime/portal-permissions.js?v=20261028-9" defer></script>
-  <script src="/apps/portal/runtime/portal-config.js?v=20261030-kb1" defer></script>
-  <script src="/apps/portal/runtime/asset-view-model.js?v=20261027-1" defer></script>
-  <script src="/apps/portal/runtime/shared-center-view-model.js?v=20261027-7" defer></script>
-  <script src="/apps/portal/runtime/portal-core.js?v=20261028-ds2" defer></script>
-  <script src="/apps/portal/pages/multi-service-pages.js?v=20261028-ds3" defer></script>
-  <script src="/apps/portal/pages/customer-pages.js?v=20261027-4" defer></script>
-  <script src="/apps/portal/pages/role-pages.js?v=20261030-2" defer></script>
-  <script src="/apps/portal/runtime/portal-events.js?v=20261030-2" defer></script>
+  <script src="/apps/portal/runtime/portal-config.js?v=20261109-shared2" defer></script>
+  <script src="/apps/portal/runtime/asset-view-model.js?v=20261109-shared1" defer></script>
+  <script src="/apps/portal/runtime/shared-center-view-model.js?v=20261109-shared1" defer></script>
+  <script src="/apps/portal/runtime/portal-core.js?v=20261110-release1" defer></script>
+  <script src="/apps/portal/pages/multi-service-pages.js?v=20261110-release1" defer></script>
+  <script src="/apps/portal/pages/customer-pages.js?v=20261110-release1" defer></script>
+  <script src="/apps/portal/pages/role-pages.js?v=20261109-fw5" defer></script>
+  <script src="/apps/portal/runtime/portal-events.js?v=20261110-release1" defer></script>
   <script src="/apps/portal/app.js?v=20261027-4" defer></script>
 </body>
 </html>

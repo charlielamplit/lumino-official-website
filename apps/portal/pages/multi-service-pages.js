@@ -41,267 +41,339 @@
     return null;
   }
 
-  function renderServicesHub() {
-    if (typeof markCustomerHubSeen === "function") markCustomerHubSeen();
-
-    const services = Object.values(serviceRegistry);
-    const open = services.filter((service) => service.roles.includes(state.role) && service.entryPage);
-    const catalog = services.filter((service) => !(service.roles.includes(state.role) && service.entryPage));
-
-    const openTiles = open.map((service) => {
+  function serviceOverviewFacts(service) {
+    if (service.id === "cbam") return [
+      ["产品范围", "4 个"],
+      ["生产设施", "2 座"],
+      ["发运批次", "18 批"],
+    ];
+    if (service.id === "pcf") {
       const progress = serviceProgressLine(service);
-      const page = serviceEntryPage(service.id);
-      const chip = service.status === "pilot"
-        ? statusChip(service.statusLabel || "试点", "warn")
-        : statusChip(service.statusLabel || "已开通", "ok");
-      return `<article class="service-tile" data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}" role="button" tabindex="0">
-        <div class="service-tile__top"><span class="service-tile__code">${safe(service.code)}</span>${chip}</div>
-        <h2 class="service-tile__title">${safe(service.name)}</h2>
-        <div>
-          <div class="progress-bar" aria-hidden="true"><i style="width:${progress?.percent || 0}%"></i></div>
-          <span class="workbench-service-row__detail">${progress ? `${safe(progress.title)}${progress.percent && !progress.pilot ? ` ${progress.percent}%` : ""} · ${safe(progress.detail)}` : safe(service.description)}</span>
-        </div>
-        <button class="button button--primary" type="button" data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}">进入服务</button>
-      </article>`;
-    }).join("");
+      return [
+        ["足迹项目", "1 项"],
+        ["核算产品", "1 个"],
+        ["当前阶段", progress?.title || "核算声明"],
+      ];
+    }
+    const scope = {
+      esg: [["工作范围", "议题与指标"], ["数据对象", "披露证据"], ["交付方向", "ESG 报告"]],
+      inventory: [["工作范围", "组织边界"], ["数据对象", "排放源"], ["交付方向", "盘查报告"]],
+      assets: [["工作范围", "绿电需求"], ["数据对象", "证书资产"], ["交付方向", "履约记录"]],
+      export: [["工作范围", "法规识别"], ["数据对象", "出口材料"], ["交付方向", "合规交付"]],
+    };
+    return scope[service.id] || [["工作范围", "待确认"], ["数据对象", "待确认"], ["交付方向", "服务成果"]];
+  }
 
-    const catalogRows = catalog.map((service) => `<li>
-      <span class="mono">${safe(service.code)}</span>
-      <div><strong>${safe(service.name)}</strong><small>${safe(service.description)}</small></div>
-      <span class="service-catalog-list__status">${safe(service.statusLabel || "规划中")}</span>
-      <button class="text-button" type="button" data-drawer="service-consultation" data-service-id="${safe(service.id)}">预约咨询</button>
-    </li>`).join("");
+  function serviceOverviewAction(service) {
+    const page = serviceEntryPage(service.id);
+    if (page) return `data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}"`;
+    return `data-drawer="service-consultation" data-service-id="${safe(service.id)}" data-drawer-label="${safe(service.name)}"`;
+  }
 
+  function serviceOverviewIcon(service) {
+    const icon = {
+      cbam: "landmark",
+      pcf: "footprints",
+      esg: "notebook-tabs",
+      inventory: "cloud-cog",
+      assets: "leaf",
+      export: "ship",
+    }[service.id] || "layers-3";
+    const url = lucideIcon(icon);
+    return `<span class="service-overview-card__icon" aria-hidden="true"><i style="-webkit-mask-image:url(${url});mask-image:url(${url})"></i></span>`;
+  }
+
+  function serviceOverviewCard(service) {
+    const facts = serviceOverviewFacts(service);
+    return `<article class="service-overview-card">
+      <header>
+        <span class="service-overview-card__identity">${serviceOverviewIcon(service)}<span class="service-overview-card__code">${safe(service.code)}</span></span>
+        <button class="service-overview-card__enter" type="button" ${serviceOverviewAction(service)} aria-label="查看${safe(service.name)}">查看服务 <span aria-hidden="true">→</span></button>
+      </header>
+      <div class="service-overview-card__copy">
+        <h3>${safe(service.name)}</h3>
+        <p>${safe(service.description)}</p>
+      </div>
+      <dl>${facts.map(([label, value]) => `<div><dt>${safe(label)}</dt><dd>${safe(value)}</dd></div>`).join("")}</dl>
+    </article>`;
+  }
+
+  function serviceOverviewContent() {
+    const services = Object.values(serviceRegistry);
+    return `<div class="service-overview-backdrop" aria-hidden="true"></div>
+      <div class="service-overview-dialog" role="dialog" aria-labelledby="serviceOverviewTitle" aria-describedby="serviceOverviewIntro">
+        <header class="service-overview-head">
+          <div>
+            <span class="service-overview-kicker">LUMINO SERVICES · ${services.length} 项服务</span>
+            <h2 id="serviceOverviewTitle">应对全球绿色要求，我们全程陪伴。</h2>
+            <p id="serviceOverviewIntro">从碳边境调节、产品碳足迹到 ESG 报告，在此汇总企业可用服务与当前范围；选择一项即可进入对应工作。</p>
+          </div>
+          <div class="service-overview-actions">
+            <button type="button" data-service-overview="collapse" aria-label="收起服务总览"><span aria-hidden="true">−</span><em>收起</em></button>
+            <button type="button" data-service-overview="close" aria-label="关闭服务总览"><span aria-hidden="true">×</span><em>关闭</em></button>
+          </div>
+        </header>
+        <div class="service-overview-grid">${services.map(serviceOverviewCard).join("")}</div>
+        <footer class="service-overview-foot">
+          <span>统计范围：华星钢铁 · 2026 年当前演示数据</span>
+          <button class="text-button" type="button" data-service-overview="close">进入工作台 →</button>
+        </footer>
+      </div>`;
+  }
+
+  function syncServiceOverview() {
+    const layer = $("#serviceOverviewLayer");
+    const dock = $("#serviceOverviewDock");
+    if (!layer || !dock) return;
+    const mode = isCustomer() && state.loggedIn ? (state.serviceOverviewMode || "open") : "closed";
+    if (mode === "open") {
+      const wasHidden = layer.hidden;
+      if (!layer.innerHTML || layer.dataset.role !== state.role) {
+        layer.innerHTML = serviceOverviewContent();
+        layer.dataset.role = state.role;
+      }
+      layer.hidden = false;
+      dock.hidden = true;
+      document.body.classList.add("service-overview-open");
+      if (wasHidden) queueMicrotask(() => layer.querySelector("[data-service-overview='collapse']")?.focus());
+      return;
+    }
+    layer.hidden = true;
+    dock.hidden = mode !== "collapsed";
+    document.body.classList.remove("service-overview-open");
+  }
+
+  function setServiceOverviewMode(mode) {
+    state.serviceOverviewMode = mode;
+    syncServiceOverview();
+    if (mode === "open") queueMicrotask(() => $("#serviceOverviewLayer [data-service-overview='collapse']")?.focus());
+    if (mode === "collapsed") queueMicrotask(() => $("#serviceOverviewDock")?.focus());
+    if (mode === "closed") queueMicrotask(() => $("#main")?.focus({ preventScroll: true }));
+  }
+
+  function renderServicesHub() {
+    const services = Object.values(serviceRegistry);
     $("#main").innerHTML = `
       <div class="service-hub-shell">
-        ${pageHeader(`${open.length} 项已开通 · ${catalog.length} 项可咨询`, "服务目录")}
-        <section class="service-section" aria-label="已开通服务">
-          <div class="service-section__head"><h2>已开通</h2></div>
-          <div class="service-hub-grid">${openTiles || `<p class="workbench-quiet">当前角色还没有可进入的服务。</p>`}</div>
-        </section>
-        <section class="service-section" aria-label="尚未开通">
-          <div class="service-section__head"><h2>尚未开通</h2><small>可预约咨询，不生成空工作区</small></div>
-          <div class="ds-card"><ul class="service-catalog-list">${catalogRows}</ul></div>
-        </section>
+        ${pageHeader(`${services.length} 项企业服务`, "服务总览")}
+        <div class="service-overview-grid service-overview-grid--page">${services.map(serviceOverviewCard).join("")}</div>
       </div>`;
+  }
+
+  function workbenchGreeting(name) {
+    const hour = new Date().getHours();
+    const hello = hour < 12 ? "早上好" : hour < 18 ? "下午好" : "晚上好";
+    return `${hello}，${name}`;
+  }
+
+  function orgShortName(name = "") {
+    return String(name).replace(/(股份)?有限公司$/u, "").trim() || name || "当前企业";
   }
 
   function renderWorkbench() {
     const actor = roleConfig[state.role].name;
     const taskView = sharedCenterViews.tasks({ role: state.role, actor });
-    const deliveryView = sharedCenterViews.deliverables({ role: state.role, actor });
-    const assetView = assetViews.overview({ role: state.role, serviceId: null, facet: "attention" });
     const openServices = Object.values(serviceRegistry).filter((service) => service.roles.includes(state.role) && service.entryPage);
+    const consultServices = Object.values(serviceRegistry).filter((service) => !(service.roles.includes(state.role) && service.entryPage));
     const focus = taskView.items[0] || null;
-    const nextTasks = taskView.items.slice(1, 3);
-    const attentionAssets = (assetView.items || []).slice(0, 2);
-    const orgName = state.organization?.name || "当前企业";
-    const today = new Date();
-    const dateLabel = `${today.getMonth() + 1} 月 ${today.getDate()} 日`;
+    const queueTasks = taskView.items.slice(0, 5);
+    const crumb = orgShortName(state.organization?.name);
 
-    const focusBlock = focus
-      ? `<section class="focus-card" aria-labelledby="workbenchFocusTitle">
-          <div class="focus-card__copy">
-            <div class="focus-card__label">
-              <span>优先处理</span>
-              <span class="status-chip ${focus.due.tone === "danger" ? "danger" : focus.due.tone === "warn" ? "warn" : ""}">${safe(focus.due.label)}</span>
-            </div>
-            <h2 id="workbenchFocusTitle">${safe(focus.title)}</h2>
-            <p>${safe(focus.object)} · ${safe(focus.nextStep)}</p>
-            <div class="focus-card__meta">
-              <span class="mono">${safe(focus.serviceCode)}${focus.sourceId ? ` · ${safe(focus.sourceId)}` : ""}</span>
-              <span>负责人 ${safe(focus.owner)}</span>
-            </div>
+    const nextAction = focus
+      ? `<section class="next-action" aria-labelledby="workbenchFocusTitle">
+          <div class="next-action__copy">
+            <small class="next-action__kicker">今天最重要 · ${safe(focus.serviceCode || "任务")}</small>
+            <strong id="workbenchFocusTitle">${safe(focus.title)}</strong>
+            <span>${safe(focus.due.label)}，${safe(focus.nextStep)}</span>
           </div>
-          <div class="focus-card__actions">
-            <button class="button button--primary" type="button" data-service-enter="${safe(focus.serviceId)}" data-page-target="${safe(focus.page)}">继续处理</button>
-            <button class="button button--secondary" type="button" data-page="shared-tasks">全部任务</button>
-          </div>
+          <button class="button button--primary" type="button" data-service-enter="${safe(focus.serviceId)}" data-page-target="${safe(focus.page)}">继续处理<span aria-hidden="true">→</span></button>
         </section>`
-      : `<section class="focus-card" aria-labelledby="workbenchFocusTitle">
-          <div class="focus-card__copy">
-            <div class="focus-card__label"><span>优先处理</span></div>
-            <h2 id="workbenchFocusTitle">暂无紧急事项</h2>
-            <p>从已开通服务继续，或打开任务清单查看后续安排。</p>
+      : `<section class="next-action next-action--done" aria-label="待办已完成">
+          <div class="next-action__copy">
+            <strong>你在本季度的待办已全部处理</strong>
+            <span>等待中的事项会在对方回复后出现在这里，并发送通知。</span>
           </div>
-          <div class="focus-card__actions">
-            <button class="button button--primary" type="button" data-page="services-hub">服务目录</button>
-          </div>
+          <button class="button button--secondary" type="button" data-page="shared-tasks">查看全部任务</button>
         </section>`;
 
-    const queuePreview = nextTasks.length
-      ? `<ul class="workbench-queue">${nextTasks.map((task) => `<li data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}" role="button" tabindex="0">
+    const queuePreview = queueTasks.length
+      ? `<ul class="workbench-queue">${queueTasks.map((task) => `<li data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}" role="button" tabindex="0">
           <span class="workbench-queue__code">${safe(task.serviceCode)}</span>
           <div class="workbench-queue__body"><strong>${safe(task.title)}</strong><small>${safe(task.object)} · ${safe(task.nextStep)}</small></div>
-          <div class="workbench-queue__due"><span>${safe(task.due.label)}</span></div>
+          <span class="status-chip ${task.due.tone === "danger" ? "danger" : task.due.tone === "warn" ? "warn" : ""}">${safe(task.due.label)}</span>
+          <span class="workbench-queue__go">处理</span>
         </li>`).join("")}</ul>`
-      : `<p class="workbench-quiet">${taskView.summary.total ? "其余事项见「我的任务」。" : "暂无其他待办。"}</p>`;
+      : `<p class="workbench-quiet">暂无待办。</p>`;
 
-    const assetPreview = attentionAssets.length
-      ? `<ul class="workbench-asset-preview">${attentionAssets.map(({ asset, primaryIssue }) => `<li data-drawer="asset-detail" data-asset-id="${safe(asset.id)}" role="button" tabindex="0">
-          <div class="workbench-asset-preview__body"><strong>${safe(asset.name)}</strong><small>${safe(primaryIssue || assetPlainSummary(asset))}</small></div>
-          ${statusChip(assetStatusLabels[asset.status] || asset.status, asset.status === "CONFIRMED" ? "ok" : "warn")}
-        </li>`).join("")}</ul>`
-      : `<p class="workbench-quiet">暂无待处理资产。</p>`;
-
-    const servicePulse = openServices.map((service) => {
+    const serviceCards = openServices.map((service) => {
       const progress = serviceProgressLine(service);
       const page = serviceEntryPage(service.id);
-      return `<article class="workbench-service-row" data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}" role="button" tabindex="0">
-        <div class="workbench-service-row__top">
-          <span><span class="mono">${safe(service.code)}</span><strong>${safe(service.name)}</strong></span>
-          ${progress?.pilot ? statusChip("试点", "warn") : `<span class="workbench-service-row__pct">${progress?.percent ?? 0}%</span>`}
-        </div>
-        ${progress && !progress.pilot ? `<div class="progress-bar" aria-hidden="true"><i style="width:${progress.percent}%"></i></div>` : ""}
-        <span class="workbench-service-row__detail">${progress ? `${safe(progress.title)} · ${safe(progress.detail)}` : safe(service.description)}</span>
-      </article>`;
+      const tone = progress?.pilot ? "warn" : "ok";
+      const status = progress?.pilot ? "试点" : "已开通";
+      const meta = progress?.pilot ? (progress.detail || "") : `${state.year} · ${state.quarter}`;
+      return `<button class="workbench-service-card" type="button" data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}">
+        <span class="workbench-service-card__top">
+          <span class="mono workbench-service-card__code ${tone === "warn" ? "is-warn" : ""}">${safe(service.code)} · ${status}</span>
+          <span class="workbench-service-card__meta">${safe(meta)}</span>
+        </span>
+        <strong>${safe(service.name)}</strong>
+        ${progress && !progress.pilot ? `<span class="progress-bar" aria-hidden="true"><i style="width:${progress.percent}%"></i></span>` : ""}
+        <span class="workbench-service-card__foot">
+          <span>${progress ? `${safe(progress.title)}${progress.percent && !progress.pilot ? ` ${progress.percent}%` : ""}` : safe(service.description)}</span>
+          <span class="workbench-service-card__go">进入频道 →</span>
+        </span>
+      </button>`;
     }).join("");
 
-    const pipeline = [
-      ["受控交付", deliveryView.summary.total],
-      ["复核中", deliveryView.summary.inReview],
-      ["已锁定", deliveryView.summary.locked],
-      ["已发送", deliveryView.summary.delivered],
-    ].map(([label, n]) => `<div>
-      <div class="bar ${n ? "is-on" : ""}" aria-hidden="true"></div>
-      <div class="metric-strip__meta"><span>${label}</span><strong class="${n ? "" : "is-empty"}">${n}</strong></div>
-    </div>`).join("");
+    const consultLink = consultServices.length
+      ? `<button class="workbench-consult-link" type="button" data-service-overview="open">
+          <span>ESG、碳盘查等 ${consultServices.length} 项服务</span>
+          <span>查看全部服务 →</span>
+        </button>`
+      : "";
 
     $("#main").innerHTML = `
-      <div class="workbench">
+      <div class="workbench" data-template="T1">
         <header class="workbench__head">
           <div>
-            <p class="workbench__meta">${safe(orgName)} · ${safe(state.year)} ${safe(state.quarter)}</p>
-            <h1>工作台</h1>
+            <p class="workbench__meta">${safe(crumb)}</p>
+            <h1>${safe(workbenchGreeting(actor))}</h1>
           </div>
-          <span class="workbench__date">${dateLabel}</span>
         </header>
 
-        ${focusBlock}
+        ${nextAction}
 
-        <div class="workbench-grid">
-          <div class="workbench-col">
-            <section class="ds-card" aria-labelledby="workbenchQueueTitle">
-              <header class="ds-card__head">
-                <h2 id="workbenchQueueTitle">接下来</h2>
-                <button class="text-button" type="button" data-page="shared-tasks">全部 ${safe(taskView.summary.total)} 项</button>
-              </header>
-              ${queuePreview}
-            </section>
-            <section class="ds-card" aria-labelledby="workbenchAssetsTitle">
-              <header class="ds-card__head">
-                <h2 id="workbenchAssetsTitle">资产留意</h2>
-                <button class="text-button" type="button" data-page="shared-files">数据资产</button>
-              </header>
-              ${assetPreview}
-            </section>
-          </div>
-          <div class="workbench-col">
-            <section class="ds-card" aria-labelledby="workbenchChannelsTitle">
-              <header class="ds-card__head">
-                <h2 id="workbenchChannelsTitle">进行中的服务</h2>
-                <button class="text-button" type="button" data-page="services-hub">服务目录</button>
-              </header>
-              ${servicePulse || `<p class="workbench-quiet">暂无开通服务。</p>`}
-            </section>
-            <section class="ds-card" aria-label="交付进度">
-              <header class="ds-card__head">
-                <h2>交付进度</h2>
-                <button class="text-button" type="button" data-page="shared-deliverables">交付中心</button>
-              </header>
-              <div class="workbench-delivery-grid">${pipeline}</div>
-            </section>
+        <div class="workbench-grid workbench-grid--proto">
+          <section class="ds-card workbench-todo" aria-labelledby="workbenchQueueTitle">
+            <header class="ds-card__head">
+              <h2 id="workbenchQueueTitle">我的待办 · 所有服务</h2>
+              <button class="text-button" type="button" data-page="shared-tasks">全部任务 →</button>
+            </header>
+            ${queuePreview}
+          </section>
+          <div class="workbench-col workbench-col--services">
+            ${serviceCards || `<p class="workbench-quiet">暂无开通服务。</p>`}
+            ${consultLink}
           </div>
         </div>
       </div>`;
+  }
+
+  function taskBucket(task) {
+    return /等待|供应商|回执/.test(`${task.nextStep || ""}${task.title || ""}`) ? "waiting" : "open";
+  }
+
+  function taskStateLabel(task) {
+    if (task.due?.tone === "danger") return ["已逾期", "danger"];
+    if (taskBucket(task) === "waiting") return ["等待中", "warn"];
+    if (task.due?.tone === "warn") return ["待处理", "warn"];
+    return ["进行中", "ok"];
   }
 
   function renderSharedTasks() {
     const view = sharedCenterViews.tasks({ role: state.role, actor: roleConfig[state.role].name });
-    const tab = state.taskTab || "全部";
-    const overdue = view.items.filter((task) => task.due?.tone === "danger");
-    const byService = (code) => view.items.filter((task) => task.serviceCode === code || task.serviceId === code.toLowerCase());
-    const filtered = tab === "逾期" ? overdue
-      : tab === "CBAM" ? byService("CBAM")
-      : tab === "PCF" ? byService("PCF")
-      : view.items;
-    const tabs = [
-      ["全部", view.summary.total],
-      ["逾期", overdue.length],
-      ["CBAM", byService("CBAM").length],
-      ["PCF", byService("PCF").length],
-    ];
-    const meta = `${view.summary.total} 项待办${view.summary.urgent ? ` · ${view.summary.urgent} 项紧急` : ""} · 涉及 ${view.summary.services} 个服务`;
-    const rows = filtered.map((task) => `<tr data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}" tabindex="0">
-      <td data-label="服务"><span class="mono">${safe(task.serviceCode)}</span></td>
-      <td data-label="任务"><strong>${safe(task.title)}</strong><small>${safe(task.object)} · ${safe(task.nextStep)}</small></td>
-      <td data-label="编号"><span class="source-reference">${safe(task.sourceId)} · Rev ${safe(task.sourceRevision)}</span></td>
-      <td data-label="负责人">${safe(task.owner)}</td>
-      <td data-label="截止"><span class="due-state due-state--${safe(task.due.tone)}">${safe(task.due.label)}</span></td>
-    </tr>`).join("");
-    const empty = `<tr class="shared-empty-row"><td colspan="5"><strong>这一筛选下没有任务</strong><p>可切换页签，或返回工作台查看摘要。</p></td></tr>`;
-    $("#main").innerHTML = `
-      <div class="task-ledger-shell">
-        ${pageHeader(meta, "我的任务")}
-        <div class="ds-tabs" role="tablist" aria-label="任务筛选">${tabs.map(([label, n]) =>
-          `<button type="button" class="ds-tab ${tab === label ? "is-active" : ""}" data-task-tab="${label}" role="tab" aria-selected="${tab === label}">${label} <span>${n}</span></button>`
-        ).join("")}</div>
-        <section class="ds-table" aria-label="已授权任务"><table><thead><tr><th>服务</th><th>任务</th><th>编号</th><th>负责人</th><th>截止</th></tr></thead><tbody>${rows || empty}</tbody></table></section>
-      </div>`;
+    const tab = state.taskTab || "open";
+    const waiting = view.items.filter((task) => taskBucket(task) === "waiting");
+    const open = view.items.filter((task) => taskBucket(task) === "open");
+    const filtered = tab === "waiting" ? waiting
+      : tab === "done" ? []
+      : tab === "all" ? view.items
+      : open;
+    const titleMap = { open: "待处理", waiting: "等待他人", done: "已完成", all: "全部任务" };
+    const meta = `${view.summary.total} 项跨服务任务${view.summary.urgent ? ` · ${view.summary.urgent} 项紧急` : ""}`;
+    const rows = filtered.map((task) => {
+      const [stateLabel, tone] = taskStateLabel(task);
+      return `<tr class="shared-row" data-service-enter="${safe(task.serviceId)}" data-page-target="${safe(task.page)}" tabindex="0" role="button">
+        <td data-label="服务"><span class="shared-code">${safe(task.serviceCode)}</span></td>
+        <td data-label="任务"><strong>${safe(task.title)}</strong><small>${safe(task.object)} · ${safe(task.nextStep)}</small></td>
+        <td data-label="截止">${safe(task.due.label)}</td>
+        <td data-label="状态"><span class="status-chip ${tone === "danger" ? "danger" : tone === "warn" ? "warn" : ""}">${safe(stateLabel)}</span></td>
+        <td data-label="操作" class="shared-row__go">处理 →</td>
+      </tr>`;
+    }).join("");
+    const empty = `<tr class="shared-empty-row"><td colspan="5">${systemStatePanel({
+      code: "empty",
+      title: tab === "done" ? "还没有已完成任务" : "这一分类下暂时没有任务",
+      reason: tab === "done" ? "完成后的任务会保留在这里，便于回溯。" : "可切换左侧分类，或返回工作台查看摘要。",
+      canDo: ["切换「待处理 / 等待他人 / 全部」", "返回工作台"],
+      primary: { label: "返回工作台", attrs: 'data-page="workbench"' },
+    })}</td></tr>`;
+    const org = state.organization?.name || "华星钢铁";
+    $("#main").innerHTML = listPageShell({
+      meta: `${org} / 我的任务`,
+      title: titleMap[tab] || "我的任务",
+      aside: statusChip(meta),
+      body: `<section class="ds-table shared-list shared-list--tasks" aria-label="已授权任务"><table><colgroup><col class="shared-col--svc"><col class="shared-col--main"><col class="shared-col--due"><col class="shared-col--state"><col class="shared-col--go"></colgroup><thead><tr><th>服务</th><th>任务</th><th>截止</th><th>状态</th><th></th></tr></thead><tbody>${rows || empty}</tbody></table></section>`,
+    });
   }
 
   function renderSharedFiles() {
     const facet = state.assetFacet || "attention";
-    const assetView = assetViews.overview({ role: state.role, serviceId: state.currentService, facet });
-    const { assets, items: assetItems, bindings: visibleBindings, facets } = assetView;
-    const qualityText = (asset) => asset.quality?.status === "verified" ? "已验证" : asset.quality?.status === "usable" ? "可使用" : asset.quality?.status === "needs_review" ? "需复核" : "待评估";
+    const assetView = assetViews.overview({ role: state.role, serviceId: null, facet });
+    const { items: assetItems, facets } = assetView;
+    const title = facets.find((item) => item.id === facet)?.label || "数据资产";
+    const org = state.organization?.name || "华星钢铁";
     const rows = assetItems.map(({ asset, bindings, hasPendingBinding, primaryIssue }) => {
       const serviceTags = bindings.length
-        ? bindings.map((binding) => `<span class="mono" title="${safe(assetBindingLabels[binding.status] || binding.status)}">${safe(assetServiceName(binding.serviceId))}</span>`).join(" ")
-        : '<span class="asset-unused">—</span>';
-      return `<tr data-drawer="asset-detail" data-asset-id="${safe(asset.id)}" tabindex="0">
-        <td data-label="资产"><span class="asset-kind">${safe(assetTypeLabels[asset.type] || asset.type)}</span><strong>${safe(asset.name)}</strong><small class="mono">${safe(asset.versionId)}</small></td>
-        <td data-label="覆盖范围 / 责任人"><strong>${safe(assetCoverageText(asset))}</strong><small>${safe(assetSubjectText(asset))} · ${safe(asset.steward?.ownerName || "责任人待分配")}</small></td>
-        <td data-label="服务使用">${serviceTags}</td>
-        <td data-label="状态"><span class="status-chip ${asset.status === "CONFIRMED" && !hasPendingBinding ? "" : "warn"}">${safe(assetStatusLabels[asset.status] || asset.status)}</span><small>${safe(qualityText(asset))}${primaryIssue ? ` · ${safe(primaryIssue)}` : ""}</small></td>
+        ? [...new Set(bindings.map((binding) => assetServiceName(binding.serviceId)))].join(" ")
+        : "—";
+      const tone = asset.status === "CONFIRMED" && !hasPendingBinding ? "ok" : "warn";
+      const statusText = hasPendingBinding && asset.status === "CONFIRMED"
+        ? "PCF 待确认"
+        : (assetStatusLabels[asset.status] || asset.status);
+      return `<tr class="shared-row" data-drawer="asset-detail" data-asset-id="${safe(asset.id)}" tabindex="0" role="button">
+        <td data-label="资产"><small class="shared-type">${safe(assetTypeLabels[asset.type] || asset.type)}</small><strong>${safe(asset.name)}</strong><small class="mono">${safe(asset.versionId)}</small></td>
+        <td data-label="期间 · 责任"><strong>${safe(assetCoverageText(asset))}</strong><small>${safe(asset.steward?.ownerName || assetSubjectText(asset) || "责任人待分配")}</small></td>
+        <td data-label="服务使用"><span class="mono">${safe(serviceTags)}</span></td>
+        <td data-label="状态"><span class="status-chip ${tone === "ok" ? "" : "warn"}">${safe(statusText)}</span>${primaryIssue ? `<small>${safe(primaryIssue)}</small>` : ""}</td>
+        <td data-label="操作" class="shared-row__go">详情 →</td>
       </tr>`;
     }).join("");
-    const primaryAttention = assets.some((item) => item.id === "REC-HX-POWER-2026Q3") && visibleBindings.some((item) => item.assetId === "REC-HX-POWER-2026Q3" && item.serviceId === "pcf" && ["PROPOSED", "PENDING_CONFIRMATION"].includes(item.status));
-    const facetBar = `<div class="ds-tabs" role="tablist" aria-label="数据资产分面">${facets.map(({ id, label, count }) => `<button type="button" class="ds-tab ${facet === id ? "is-active" : ""}" data-asset-facet="${id}" role="tab" aria-selected="${facet === id}">${label} <span>${count}</span></button>`).join("")}</div>`;
-    $("#main").innerHTML = `<div class="portal-shell">
-      ${pageHeader(`${assets.length} 项当前资产 · 框架 v0.2.0`, "数据资产", `<button class="button button--secondary" type="button" data-drawer="upload-evidence">登记新资料</button>`)}
-      ${primaryAttention ? `<section class="focus-card" aria-labelledby="assetAttentionTitle"><div class="focus-card__copy"><span class="focus-card__label">优先处理</span><h2 id="assetAttentionTitle">确认购入电力是否用于 PCF 产品分配</h2><p>CBAM 已确认使用企业电力事实；PCF 仍需独立确认产品范围和分配方法，原始账单不会被复制。</p></div><div class="focus-card__actions"><button class="button button--primary" type="button" data-service-enter="pcf" data-page-target="pcf-data">进入 PCF 确认</button><button class="button button--secondary" type="button" data-drawer="asset-detail" data-asset-id="REC-HX-POWER-2026Q3">查看电力资产</button></div></section>` : ""}
-      ${facetBar}
-      <section class="ds-table" aria-label="数据资产列表"><table><thead><tr><th>资产</th><th>覆盖期间 / 责任方</th><th>服务使用</th><th>状态</th></tr></thead><tbody>${rows || `<tr class="shared-empty-row"><td colspan="4"><strong>这一分面暂时没有资产</strong><p>${facet === "attention" ? "没有待你确认的绑定或质量问题。" : "可切换分面，或登记新资料。"}</p></td></tr>`}</tbody></table></section>
-      <section class="asset-governance" aria-label="数据资产处理原则"><article><h2>Agent 负责识别与建议，不负责越权确认</h2><ol><li>识别文件、期间、单位和业务对象</li><li>生成带来源引用的待确认记录</li><li>检测重复、冲突和跨服务复用机会</li><li>由授权人员确认后生成新资产版本</li></ol></article><article><h2>复用资产，不复用结论</h2><p>服务必须通过绑定引用具体资产版本，并单独记录用途、转换、分配、确认和输入快照。一个服务的确认不会改变其他服务。</p><a class="text-button" href="../docs/enterprise-data-asset-framework.md" target="_blank" rel="noopener">查看标准框架 v0.2.0</a></article></section>
-    </div>`;
+    $("#main").innerHTML = listPageShell({
+      meta: `${org} / 数据资产`,
+      title,
+      aside: `<button class="button button--secondary" type="button" data-drawer="upload-evidence">登记新资料</button>`,
+      body: `<section class="ds-table shared-list shared-list--assets" aria-label="数据资产列表"><table><colgroup><col class="shared-col--asset"><col class="shared-col--period"><col class="shared-col--svc-use"><col class="shared-col--state"><col class="shared-col--go"></colgroup><thead><tr><th>资产</th><th>期间 · 责任</th><th>服务使用</th><th>状态</th><th></th></tr></thead><tbody>${rows || `<tr class="shared-empty-row"><td colspan="5">${systemStatePanel({
+        code: "empty",
+        title: "这一分类暂时没有资产",
+        reason: facet === "attention" ? "没有待你确认的绑定或质量问题。" : "可切换左侧分类，或登记新资料。",
+        canDo: ["切换资产分类", "登记新资料"],
+        primary: { label: "登记新资料", attrs: 'data-drawer="upload-evidence"' },
+      })}</td></tr>`}</tbody></table></section>`,
+      footnote: `<p class="shared-footnote">状态由列表第一行承担；详情在右侧 Drawer 打开，主操作跳回对应服务频道。</p>`,
+    });
   }
 
   function renderSharedDeliverables() {
     const view = sharedCenterViews.deliverables({ role: state.role, actor: roleConfig[state.role].name });
-    const pipeline = [
-      ["受控交付", view.summary.total],
-      ["复核中", view.summary.inReview],
-      ["已锁定", view.summary.locked],
-      ["已发送", view.summary.delivered],
-    ].map(([label, n]) => `<div>
-      <div class="metric-strip__bar ${n ? "is-active" : ""}" aria-hidden="true"></div>
-      <div class="metric-strip__meta"><span>${label}</span><strong class="${n ? "" : "is-empty"}">${n}</strong></div>
-    </div>`).join("");
-    const rows = view.items.map((item) => `<tr data-service-enter="${safe(item.serviceId)}" data-page-target="${safe(item.page)}" tabindex="0">
-      <td data-label="交付物"><div style="display:flex;gap:12px;min-width:0"><span class="mono" style="width:40px;flex:none">${safe(item.serviceCode)}</span><div><strong>${safe(item.name)}</strong><small>${safe(item.object)} · <span class="mono">${safe(item.id)}</span></small></div></div></td>
-      <td data-label="阶段"><span class="status-chip ${["已锁定", "已共享", "已交付", "已回执", "已封存", "核查完成"].includes(item.status) ? "ok" : ["内部复核", "待复核", "核查中", "整改中"].includes(item.status) ? "warn" : "locked"}">${safe(item.status)}</span></td>
-      <td data-label="审批">${safe(item.controls.approval)}</td>
-      <td data-label="锁定">${safe(item.controls.lock)}</td>
-      <td data-label="交付">${safe(item.controls.delivery)}</td>
-      <td data-label="版本" class="mono">${safe(item.version)}</td>
+    const df = state.delivFilter || "all";
+    const filtered = view.items.filter((item) => df === "all" || (df === "mine" ? item.mine : item.serviceCode === df));
+    const titleMap = { all: "全部交付物", mine: "待我处理", CBAM: "CBAM 交付物", PCF: "PCF 交付物" };
+    const org = state.organization?.name || "华星钢铁";
+    const toneFor = (item) => ["已锁定", "已共享", "已交付", "已回执", "已封存", "核查完成"].includes(item.status) ? "ok"
+      : ["内部复核", "待复核", "核查中", "整改中", "采集中"].includes(item.status) ? "warn" : "locked";
+    const rows = filtered.map((item) => `<tr class="shared-row" data-service-enter="${safe(item.serviceId)}" data-page-target="${safe(item.page)}" tabindex="0" role="button">
+      <td data-label="服务"><span class="shared-code">${safe(item.serviceCode)}</span></td>
+      <td data-label="交付物"><strong>${safe(item.name)}</strong><small class="mono">${safe(item.id)} · ${safe(item.version)}</small></td>
+      <td data-label="接收方 · 更新"><strong>${safe(item.recipient)}</strong><small>${safe(item.when)}</small></td>
+      <td data-label="状态"><span class="status-chip ${toneFor(item) === "ok" ? "" : toneFor(item) === "warn" ? "warn" : "locked"}">${safe(item.status)}</span></td>
+      <td data-label="操作" class="shared-row__go">${item.mine ? "去处理 →" : "详情 →"}</td>
     </tr>`).join("");
-    const empty = `<tr class="shared-empty-row"><td colspan="6"><strong>还没有可查看的交付物</strong><p>报告或数据包在对应服务里生成后会出现在这里。</p></td></tr>`;
-    $("#main").innerHTML = `<div class="portal-shell">
-      ${pageHeader("报告与数据包的版本、审批和交付状态；正式操作在对应服务中完成", "交付中心")}
-      <div class="metric-strip" aria-label="交付进度">${pipeline}</div>
-      <section class="ds-table" aria-label="已授权交付物"><table><thead><tr><th>交付物</th><th>阶段</th><th>审批</th><th>锁定</th><th>交付</th><th>版本</th></tr></thead><tbody>${rows || empty}</tbody></table></section>
-    </div>`;
+    const empty = `<tr class="shared-empty-row"><td colspan="5">${systemStatePanel({
+      code: "empty",
+      title: "这一分类下暂时没有交付物",
+      reason: "报告或数据包在对应服务里生成后会出现在这里。",
+      canDo: ["切换左侧分类", "进入 CBAM / PCF 服务"],
+      primary: { label: "返回工作台", attrs: 'data-page="workbench"' },
+    })}</td></tr>`;
+    $("#main").innerHTML = listPageShell({
+      meta: `${org} / 交付中心`,
+      title: titleMap[df] || "交付中心",
+      aside: statusChip(`${view.summary.total} 项交付物`),
+      body: `<p class="shared-legend" role="note"><span>已共享 ≠ 已接收</span><span>回执由进口商确认后才出现</span><span>正式操作仍回到对应服务频道</span></p>
+      <section class="ds-table shared-list shared-list--deliverables" aria-label="已授权交付物"><table><colgroup><col class="shared-col--svc"><col class="shared-col--main"><col class="shared-col--recipient"><col class="shared-col--state"><col class="shared-col--go"></colgroup><thead><tr><th>服务</th><th>交付物</th><th>接收方 · 更新</th><th>状态</th><th></th></tr></thead><tbody>${rows || empty}</tbody></table></section>`,
+      footnote: `<p class="shared-footnote">交付中心汇总只读查看；共享、审批等操作在对应服务频道或详情中完成。</p>`,
+    });
   }
 
   function renderSharedOrganization() {
@@ -330,6 +402,29 @@
     DELIVERABLE_READY: "报告就绪",
   };
 
+  function pcfStepNav(page = state.page) {
+    const chain = [
+      ["pcf-scope", "核算声明"],
+      ["pcf-boundary", "系统边界"],
+      ["pcf-data", "活动数据"],
+      ["pcf-results", "计算与热点"],
+      ["pcf-report", "复核与报告"],
+    ];
+    const index = Math.max(0, chain.findIndex(([id]) => id === page));
+    const prev = index > 0 ? { label: `上一步：${chain[index - 1][1]}`, attrs: `data-page="${chain[index - 1][0]}"` } : { label: "返回服务目录", attrs: 'data-page="services-hub"' };
+    const next = index < chain.length - 1
+      ? { label: `继续：${chain[index + 1][1]}`, attrs: `data-page="${chain[index + 1][0]}"` }
+      : { label: "返回工作台", attrs: 'data-page="workbench"' };
+    const hints = {
+      "pcf-scope": "确认后进入系统边界；草稿会自动保留。",
+      "pcf-boundary": "边界写入后，活动数据模板按此范围生成。",
+      "pcf-data": "完成校验与绑定确认后，才能进入计算。",
+      "pcf-results": "计算草稿可重现；正式披露需经独立复核。",
+      "pcf-report": "锁定后输入版本不可覆盖，只能开新修订。",
+    };
+    return stepFlowFooter({ prev, next, hint: hints[page] || "" });
+  }
+
   function pcfChannelHeader(title, description) {
     const item = workflowEngine.get("PCF-2026-001");
     const declaration = item?.metadata?.declaration || {};
@@ -338,7 +433,7 @@
     const productCode = product?.payload?.internalCode || "HRC-01";
     const index = Math.max(0, pcfSteps.indexOf(item?.status));
     return `${pageHeader(`PCF · ${safe(productCode)} · 试点`, title, statusChip(workflowStateLabel(item?.status || "SCOPING"), workflowStateTone(item?.status)))}
-      <div class="pcf-shell">
+      <div class="pcf-shell" data-template="T4">
         <section class="pcf-context" aria-label="当前 PCF 项目">
           <div class="pcf-context__identity"><span>试点项目</span><strong>${safe(productName)}</strong><small>${safe(productCode)} · 华星钢铁有限公司${declaration.confirmed ? ` · ${safe(declaration.functionalUnit || "")}` : ""}</small></div>
           <p class="pcf-channel-lead">${description}</p>
@@ -448,7 +543,8 @@
         </section>
         <aside class="pcf-agent-note" aria-labelledby="pcfAgentScope"><span class="pcf-agent-mark" aria-hidden="true">✦</span><div><span class="pcf-kicker">PCF AGENT · 准备提示</span><h2 id="pcfAgentScope">声明确认后将据此准备</h2><ol><li>系统边界与截断建议</li><li>与 ${safe(product?.name || declaration.productName || "所选产品")} 对应的过程清单</li><li>能源、原料与运输的模板字段</li></ol><dl><div><dt>当前产品</dt><dd>${safe(declaration.productName || product?.name || "未选择")}</dd></div><div><dt>功能单位</dt><dd>${safe(declaration.functionalUnit || "待填写")}</dd></div><div><dt>期间</dt><dd>${safe(declaration.period || "待填写")}</dd></div></dl><p>以上为 Agent 提议，确认前不会成为正式事实。</p></div></aside>
       </div>
-      ${stageGatePanelHtml("pcf")}`;
+      ${stageGatePanelHtml("pcf", { variant: "footer" })}
+      ${pcfStepNav()}`;
   }
 
   function pcfBoundaryView() {
@@ -508,7 +604,8 @@
         </section>
         <aside class="pcf-agent-note pcf-agent-note--proposal" aria-labelledby="pcfAgentBoundary"><span class="pcf-agent-mark" aria-hidden="true">✦</span><div><span class="pcf-kicker">PCF AGENT · proposal_only</span><h2 id="pcfAgentBoundary">${safe(proposal ? `建议采用“${proposal.boundaryType}”` : "边界建议待生成")}</h2><p>${safe(suggestion?.summary || "确认核算声明后，将基于产品生成边界建议。")}</p><dl><div><dt>纳入</dt><dd>${safe((proposal?.includedProcesses || []).slice(0, 4).join("、") || "—")}</dd></div><div><dt>排除</dt><dd>${safe((proposal?.excludedItems || []).slice(0, 3).join("、") || "—")}</dd></div><div><dt>截断</dt><dd>${safe(proposal?.cutOffRule || "—")}</dd></div></dl><small>prompt: ${safe(suggestion?.promptId || "pcf.suggest_boundary")} · 不会自动写入正式核算。</small>${canEdit && proposal ? `<div class="pcf-card__actions" style="margin-top:var(--space-sm)">${actionButton("将建议填入表单", "secondary", 'data-action="pcf-apply-boundary-proposal"')}</div>` : ""}</div></aside>
       </div>
-      ${stageGatePanelHtml("pcf")}`;
+      ${stageGatePanelHtml("pcf", { variant: "footer" })}
+      ${pcfStepNav()}`;
   }
 
   function renderPcfData() {
@@ -545,7 +642,23 @@
     const boundaryReady = Boolean(item?.metadata?.boundary?.confirmed) || item?.metadata?.boundary?.status === "CONFIRMED";
     const validationBanner = !declarationReady ? `<section class="pcf-recovery" role="status"><div><span class="pcf-kicker">DECLARATION REQUIRED</span><h2>请先确认核算声明</h2><p>功能单位、期间和用途确认后，才能采集活动数据。</p></div>${actionButton("前往核算声明", "primary", 'data-page="pcf-scope"')}</section>`
       : !boundaryReady ? `<section class="pcf-recovery" role="status"><div><span class="pcf-kicker">BOUNDARY REQUIRED</span><h2>请先确认系统边界</h2><p>纳入／排除与截断规则确认后，模板字段才有稳定范围。</p></div>${actionButton("前往系统边界", "primary", 'data-page="pcf-boundary"')}</section>`
-      : templateInvalid ? `<section class="pcf-recovery" role="alert"><div><span class="pcf-kicker">TEMPLATE VALIDATION FAILED</span><h2>模板校验未通过</h2><p>${safe((template.issues || []).map((entry) => entry.message).join("；") || "请修正后重新回传。")}</p><ul>${(template.issues || []).map((entry) => `<li><strong>${safe(entry.code)}</strong> · ${safe(entry.recovery || "修正后重传")}</li>`).join("")}</ul></div>${actionButton("重新回传模板", "primary", 'data-drawer="pcf-upload"')}</section>`
+      : templateInvalid ? systemStatePanel({
+        code: "error",
+        title: "模板校验未通过",
+        reason: (template.issues || []).map((entry) => entry.message).join("；") || "请修正后重新回传。",
+        errorCode: (template.issues || [])[0]?.code || "ERR-PCF-TEMPLATE",
+        canDo: (template.issues || []).slice(0, 3).map((entry) => entry.recovery || entry.message).filter(Boolean),
+        primary: { label: "重新回传模板", attrs: 'data-drawer="pcf-upload"' },
+        secondary: { label: "返回系统边界", attrs: 'data-page="pcf-boundary"' },
+      })
+      : ["UPLOADED", "VALIDATING", "PARSING"].includes(template.status) ? systemStatePanel({
+        code: "loading",
+        title: "正在校验数据包",
+        reason: "系统正在检查表结构、单位、期间和证据引用。预计约 1 分钟；完成后会在任务中提醒你确认绑定。",
+        canDo: ["可以先去处理其他任务", "校验完成后回到本页确认服务绑定"],
+        primary: { label: "去处理其他任务", attrs: 'data-page="workbench"' },
+        secondary: { label: "查看服务目录", attrs: 'data-page="services-hub"' },
+      })
       : template.status === "VALIDATED_PARTIAL" ? `<section class="pcf-recovery" role="status"><div><span class="pcf-kicker">PARTIAL VALIDATION</span><h2>模板部分通过，仍有数据域缺口</h2><p>可先核对已映射资产，但建议补齐缺口后再确认全部绑定。</p></div>${actionButton("回传修订版", "secondary", 'data-drawer="pcf-upload"')}</section>`
       : "";
     const latestImport = evidenceReady && !templateInvalid ? `<section class="pcf-import-review" id="pcfEvidenceReview" aria-labelledby="pcfImportTitle">
@@ -562,7 +675,8 @@
       <ol class="pcf-collection-flow" aria-label="模板采集流程"><li class="done"><span>1</span><div><strong>下载项目模板</strong><small>边界信息已预填</small></div></li><li class="${evidenceReady ? "done" : "current"}"><span>2</span><div><strong>分工填写</strong><small>采购、生产、EHS、物流与财务</small></div></li><li class="${templateReady ? "done" : evidenceReady ? "current" : ""}"><span>3</span><div><strong>整体回传 / 校验</strong><small>结构、单位、证据索引</small></div></li><li class="${factConfirmed ? "done" : templateReady ? "current" : ""}"><span>4</span><div><strong>确认服务绑定</strong><small>Agent 提议需人工确认</small></div></li></ol>
       <section class="pcf-domain-ledger" aria-labelledby="pcfDomainsTitle"><header><div><span class="pcf-kicker">LIFE CYCLE INVENTORY</span><h2 id="pcfDomainsTitle">数据域清单</h2><p>清单状态由模板校验结果与服务绑定投影，不再使用页面硬编码计数。</p></div><div class="pcf-domain-summary"><strong>${safe(ledger.summary.ready)} / ${safe(ledger.summary.total)}</strong><span>${safe(summaryLabel)}</span></div></header><div>${domainHtml}</div></section>
       ${latestImport}
-      ${stageGatePanelHtml("pcf")}`;
+      ${stageGatePanelHtml("pcf", { variant: "footer" })}
+      ${pcfStepNav()}`;
   }
 
   function renderPcfResults() {
@@ -618,8 +732,17 @@
       <section class="pcf-card" aria-labelledby="pcfLedgerTitle"><header class="pcf-card__header"><div><span class="pcf-kicker">CALCULATION LEDGER</span><h2 id="pcfLedgerTitle">逐项计算台账</h2></div><small>${safe(calculation?.lineItems?.length || 0)} 项 · ${safe(calculation?.ruleVersion || "尚未计算")}</small></header><div class="pcf-stage-table"><table><thead><tr><th>清单项</th><th>活动数据</th><th>排放因子</th><th>排放量</th><th>数据来源</th></tr></thead><tbody>${lineRows || "<tr><td colspan='5'>运行计算后显示逐项台账</td></tr>"}</tbody></table></div><footer class="pcf-card__actions"><p>每一行都保留活动数据、单位换算、因子标识、分配比例和证据来源，可在复核时逐项追溯。</p></footer></section>`;
     $("#main").innerHTML = `${pcfChannelHeader("计算与排放热点", "确认系统推荐的因子适用后，再生成可重现的计算草稿与热点。")}
       ${factorPanel}
-      ${state.pcfCalculationFailed ? pcfRecovery("计算未完成", "排放因子版本读取失败。已确认的数据和输入快照均已保留，可安全重试。", "重新加载因子并计算", 'data-action="pcf-retry-calculation"') : blocked ? pcfRecovery("活动数据尚未确认", "完成模板校验并确认待处理服务绑定后，才能建立输入快照和运行计算。", "返回活动数据", 'data-page="pcf-data"') : needsFactors ? pcfRecovery("排放因子适用性未确认", "系统已按匹配逻辑给出推荐；请确认适用性，或改选备选后再确认。无需自行检索因子库。", "确认推荐因子适用性", 'data-action="pcf-confirm-factors"') : canRun ? `<section class="pcf-calculation-ready"><div><span class="pcf-kicker">STEP 04 · READY TO CALCULATE</span><h2>输入已锁定，可以生成计算草稿</h2><p>本次运行使用逐项清单和固定因子执行确定性计算。原型中除购入电力外的清单行为明示演示输入，不可正式披露。</p>${actionButton("运行确定性计算", "primary", 'data-action="pcf-run-calculation"')}</div><dl><div><dt>确认绑定</dt><dd>${safe(ctx.powerBinding?.id || "—")}</dd></div><div><dt>资产版本</dt><dd>${safe(ctx.powerBinding?.assetVersionId || "—")}</dd></div><div><dt>因子集</dt><dd>${safe(factors?.setId || "CN-EF-2026.1")}</dd></div><div><dt>功能单位</dt><dd>${safe(item?.metadata?.declaration?.functionalUnit || "1 吨产品")}</dd></div></dl></section>` : hasResult && ctx.snapshot?.status === "STALE" ? `${pcfRecovery("输入快照已过期（STALE）", "上游资产或绑定已修订；当前计算结果不可再作为正式依据。请回到活动数据确认绑定后重新运行计算。", "返回活动数据", 'data-page="pcf-data"')}<section class="result-summary" aria-disabled="true"><div class="pcf-result-total"><span class="pcf-kicker">${safe(runId)} · STALE</span><strong>${safe(calculation?.total ?? "—")}</strong><span>${safe(calculation?.unit || "tCO₂e / t 产品")}</span><p>历史结果保留供对照，不可直接进入独立复核。</p></div></section>` : hasResult ? `<section class="result-summary"><div class="pcf-result-total"><span class="pcf-kicker">${safe(runId)} · ${calculation?.formalUseAllowed ? "受控计算草稿" : "演示计算草稿"}</span><strong>${safe(calculation?.total ?? "—")}</strong><span>${safe(calculation?.unit || "tCO₂e / t 产品")}</span><p>${calculation?.formalUseAllowed ? "已固定正式输入" : "含演示清单·不可正式披露"}<br>输入快照 ${safe(snapshotId)}</p></div><div class="hotspot-list"><header><div><span class="pcf-kicker">EMISSION HOTSPOTS</span><h2>排放热点</h2></div>${statusChip("可重现", "ok")}</header><ol>${hotspotList || "<li><span>暂无热点</span><b>—</b></li>"}</ol><footer><p>结果尚未成为正式报告，需替换演示输入并完成独立复核。</p><button class="text-button" data-page="pcf-report">进入独立复核 →</button></footer></div></section>${resultDetail}` : pcfRecovery("尚未生成计算草稿", "确认因子后运行确定性计算，结果会写入可追溯的 Run 与热点结构。", "确认因子适用性", 'data-action="pcf-confirm-factors"')}
-      ${stageGatePanelHtml("pcf")}`;
+      ${state.pcfCalculationFailed ? systemStatePanel({
+        code: "error",
+        title: "计算未完成",
+        reason: "排放因子版本读取失败。已确认的数据和输入快照均已保留，可安全重试。",
+        errorCode: "ERR-PCF-FACTOR-01",
+        canDo: ["重试不会覆盖已确认的活动数据", "可先返回活动数据核对绑定", "若持续失败，联系支持并附上错误编号"],
+        primary: { label: "重新加载因子并计算", attrs: 'data-action="pcf-retry-calculation"' },
+        secondary: { label: "返回活动数据", attrs: 'data-page="pcf-data"' },
+      }) : blocked ? pcfRecovery("活动数据尚未确认", "完成模板校验并确认待处理服务绑定后，才能建立输入快照和运行计算。", "返回活动数据", 'data-page="pcf-data"') : needsFactors ? pcfRecovery("排放因子适用性未确认", "系统已按匹配逻辑给出推荐；请确认适用性，或改选备选后再确认。无需自行检索因子库。", "确认推荐因子适用性", 'data-action="pcf-confirm-factors"') : canRun ? `<section class="pcf-calculation-ready"><div><span class="pcf-kicker">STEP 04 · READY TO CALCULATE</span><h2>输入已锁定，可以生成计算草稿</h2><p>本次运行使用逐项清单和固定因子执行确定性计算。原型中除购入电力外的清单行为明示演示输入，不可正式披露。</p>${actionButton("运行确定性计算", "primary", 'data-action="pcf-run-calculation"')}</div><dl><div><dt>确认绑定</dt><dd>${safe(ctx.powerBinding?.id || "—")}</dd></div><div><dt>资产版本</dt><dd>${safe(ctx.powerBinding?.assetVersionId || "—")}</dd></div><div><dt>因子集</dt><dd>${safe(factors?.setId || "CN-EF-2026.1")}</dd></div><div><dt>功能单位</dt><dd>${safe(item?.metadata?.declaration?.functionalUnit || "1 吨产品")}</dd></div></dl></section>` : hasResult && ctx.snapshot?.status === "STALE" ? `${staleSnapshotPanel({ snapshotId, runId, resumePage: "pcf-data" })}<section class="result-summary" aria-disabled="true"><div class="pcf-result-total"><span class="pcf-kicker">${safe(runId)} · STALE</span><strong>${safe(calculation?.total ?? "—")}</strong><span>${safe(calculation?.unit || "tCO₂e / t 产品")}</span><p>历史结果保留供对照，不可直接进入独立复核。</p></div></section>` : hasResult ? `<section class="result-summary"><div class="pcf-result-total"><span class="pcf-kicker">${safe(runId)} · ${calculation?.formalUseAllowed ? "受控计算草稿" : "演示计算草稿"}</span><strong>${safe(calculation?.total ?? "—")}</strong><span>${safe(calculation?.unit || "tCO₂e / t 产品")}</span><p>${calculation?.formalUseAllowed ? "已固定正式输入" : "含演示清单·不可正式披露"}<br>输入快照 ${safe(snapshotId)}</p></div><div class="hotspot-list"><header><div><span class="pcf-kicker">EMISSION HOTSPOTS</span><h2>排放热点</h2></div>${statusChip("可重现", "ok")}</header><ol>${hotspotList || "<li><span>暂无热点</span><b>—</b></li>"}</ol><footer><p>结果尚未成为正式报告，需替换演示输入并完成独立复核。</p><button class="text-button" data-page="pcf-report">进入独立复核 →</button></footer></div></section>${resultDetail}` : pcfRecovery("尚未生成计算草稿", "确认因子后运行确定性计算，结果会写入可追溯的 Run 与热点结构。", "确认因子适用性", 'data-action="pcf-confirm-factors"')}
+      ${stageGatePanelHtml("pcf", { variant: "footer" })}
+      ${pcfStepNav()}`;
   }
 
   function renderPcfReport() {
@@ -645,7 +768,8 @@
     $("#main").innerHTML = `${pcfChannelHeader("复核与报告", "把边界、清单、计算与限制收成同一受控版本，再完成独立复核。")}
       ${reportHeader}${reportOutline}${lockPanel}
       ${inReview ? `<section class="pcf-review-grid"><div class="pcf-card review-checklist"><header class="pcf-card__header"><div><span class="pcf-kicker">STEP 05 · INDEPENDENT REVIEW</span><h2>独立复核清单</h2></div><small>3 / 4 已完成</small></header><ul><li class="done"><span>✓</span><div><strong>核算目标与功能单位一致</strong><small>${safe(item?.metadata?.declaration?.functionalUnit || "与项目范围定义一致")}</small></div></li><li class="done"><span>✓</span><div><strong>活动数据已关联证明材料</strong><small>${safe(ctx.power?.versionId || "资产版本")} · ${safe(ctx.evidence?.id || "EVD-HX-POWER-2026Q3")}</small></div></li><li class="done"><span>✓</span><div><strong>确定性计算可重现</strong><small>${safe(runId)} · ${safe(snapshotId)}</small></div></li><li><span>4</span><div><strong>方法说明、限制与不确定性待签署</strong><small>完成后锁定受控版本 Rev 1 及全部输入版本</small></div></li></ul><footer class="pcf-card__actions"><p>已提交 Lumino 独立复核；客户可查看草稿，但不能代替复核员锁定版本。</p>${actionButton("查看当前草稿", "secondary", 'data-drawer="pcf-report-preview"')}</footer></div><aside class="pcf-version-note"><span class="pcf-kicker">VERSION CONTROL</span><h2>本版将锁定什么</h2><dl><div><dt>系统边界</dt><dd>${safe(boundaryType)}</dd></div><div><dt>活动数据</dt><dd>${safe(ctx.powerBinding?.assetVersionId || "已确认资产版本")}</dd></div><div><dt>输入快照</dt><dd>${safe(snapshotId)}</dd></div><div><dt>因子集</dt><dd>${safe(calculation?.factorSetId || item?.metadata?.factors?.setId || "CN-EF-2026.1")}</dd></div></dl><p>后续更正将生成新修订版，不覆盖本次复核记录。</p></aside></section>` : !ready ? pcfRecovery("报告尚未就绪", "需要先完成数据域确认与确定性计算；已经确认的范围内容会保留在报告草稿中。", "查看计算状态", 'data-page="pcf-results"') : `<section class="pcf-report-ready"><div><span class="pcf-ready-mark" aria-hidden="true">✓</span><span class="pcf-kicker">${formalReady ? "CONTROLLED OUTPUT" : "PROTOTYPE OUTPUT"} · REV 1</span><h2>${formalReady ? "报告已通过复核，可以预览和交付" : "演示报告已完成复核流程，可预览但不可对外交付"}</h2><p>${safe(reportArtifact?.id || "PCF-RPT-2026-001-R1")} · ${safe(runId)} · 输入快照 ${safe(snapshotId)}${ctx.snapshot?.locked || reportLock ? " · 已锁定" : ""}</p><div>${actionButton("预览 PCF 报告", "primary", 'data-drawer="pcf-report-preview"')}${formalReady ? '<button class="button button--secondary" type="button" data-page="shared-deliverables">在交付中心查看</button>' : ""}</div></div><dl><div><dt>核算结果</dt><dd>${safe(calculation?.total ?? reportLock?.total ?? "—")} ${safe(calculation?.unit || reportLock?.unit || "tCO₂e / t 产品")}</dd></div><div><dt>系统边界</dt><dd>${safe(boundaryType)}</dd></div><div><dt>锁定输入</dt><dd>${safe(reportLock?.items?.length || 0)} 项</dd></div><div><dt>版本用途</dt><dd>${formalReady ? "受控交付" : "原型演示"}</dd></div></dl></section>`}
-      ${stageGatePanelHtml("pcf")}`;
+      ${stageGatePanelHtml("pcf", { variant: "footer" })}
+      ${pcfStepNav()}`;
   }
 
   function renderMultiServicePage() {

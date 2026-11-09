@@ -3,7 +3,8 @@
   function renderExpert() {
     if (state.page !== "queue") return renderStaffSecondary("expert");
     $("#main").innerHTML = `
-      ${pageHeader("EXPERT DECISION QUEUE", "需要专业判断的，不应留给客户猜。", '<p class="head-note">按计算影响、截止日期和置信度排序。任何修改都保留理由、规则版本与重算记录。</p>')}
+      <div data-template="T1">
+      ${pageHeader("工作队列 · 制备专家", "今天最重要：确认钢坯前体来源", '<p class="head-note">按计算影响、截止日期和置信度排序。任何修改都保留理由、规则版本与重算记录。</p>')}
       <div class="metric-line"><div><span>待判断</span><strong>12</strong><small>项</small></div><div><span>阻塞核算</span><strong>5</strong><small>项</small></div><div><span>本周到期</span><strong>7</strong><small>项</small></div><div><span>待独立复核</span><strong>3</strong><small>项</small></div></div>
       <div class="staff-layout">
         <section class="panel"><div class="panel-head"><h2>案件队列</h2><button class="text-button" type="button" data-drawer="record-detail" data-drawer-label="判断队列筛选">筛选 ▾</button></div><div class="case-list">
@@ -17,6 +18,7 @@
           <div class="evidence-box"><h3>依据与版本</h3><p>采购台账_2026_Q3.xlsx · Sheet 供应商明细；生产说明_v2.pdf；Rulepack EU-CBAM-2026.3。Q3 新增“北方特钢”来源。</p></div>
           <div class="action-bar"><button class="button button--primary" type="button" data-staff-action="接受并拆分来源">接受并拆分来源</button><button class="button button--secondary" type="button" data-staff-action="修改 Agent 建议">修改建议</button><button class="button button--secondary" type="button" data-staff-action="退回客户确认并说明所需业务事实">退回客户确认</button></div>
         </section>
+      </div>
       </div>`;
   }
 
@@ -252,21 +254,54 @@
       const pcfCase = workflowEngine.get("PCF-2026-001");
       const pcfReport = workflowEngine.get("PCF-RPT-2026-001-R1");
       if (pcfCase?.status === "EXPERT_REVIEW") {
-        $("#main").innerHTML = `${pageHeader("INDEPENDENT PCF REVIEW", "复核与锁定", statusChip("1 个 PCF 待复核", "warn"))}
-          <div class="callout"><strong>职责分离：</strong> 客户已确认业务事实，计算引擎已生成可重现草稿；只有独立复核员可以批准并锁定本报告版本。</div>
-          <div class="approval-board"><section class="panel"><div class="panel-head"><h2>待复核交付件</h2><span class="record-state warn">优先</span></div><div class="stack-list">
+        $("#main").innerHTML = reviewSuiteShell({
+          meta: "INDEPENDENT PCF REVIEW",
+          title: "复核与锁定",
+          aside: statusChip("1 个 PCF 待复核", "warn"),
+          note: "客户已确认业务事实，计算引擎已生成可重现草稿；只有独立复核员可以批准并锁定本报告版本。",
+          queueTitle: "待复核交付件",
+          queueMeta: '<span class="record-state warn">优先</span>',
+          queueItems: `
             <div class="stack-row active"><span>华星钢铁 · 产品碳足迹</span><strong>热轧非合金钢卷 PCF 报告</strong><small>${safe(pcfReport?.id || "PCF-RPT-2026-001-R1")} · ${safe(pcfReport ? workflowStateLabel(pcfReport.status) : "草稿待生成")}</small></div>
-            <div class="stack-row"><span>华星钢铁 · 2026 Q3</span><strong>CBAM 数据包 Rev 2</strong><small>制备：王晨 · 常规队列</small></div>
-          </div></section><section class="panel review-sheet"><small>PCF REPORT · REV 1 DRAFT</small><h2>热轧非合金钢卷产品碳足迹报告</h2><p>计算运行 ARUN-PCF-001 已固定输入快照；批准后将锁定报告与 SNAP-PCF-HRC-01，不再静默替换输入版本。</p><ol><li><span>✓</span><div><strong>目标、功能单位与边界一致</strong><small>从摇篮到大门 · 1 吨产品</small></div></li><li><span>✓</span><div><strong>证据与服务绑定可追溯</strong><small>企业资产确认与 PCF 使用确认相互独立</small></div></li><li><span>✓</span><div><strong>确定性计算可重现</strong><small>ARUN-PCF-001 · CN-EF-2026.1</small></div></li><li><span>4</span><div><strong>复核限制、不确定性与版本声明</strong><small>由当前独立复核员具名完成</small></div></li></ol><div class="action-bar"><button class="button button--primary" type="button" data-action="pcf-complete-review">批准并锁定 Rev 1</button><button class="button button--secondary" type="button" data-drawer="pcf-report-preview">查看报告草稿</button></div></section></div>`;
+            <div class="stack-row"><span>华星钢铁 · 2026 Q3</span><strong>CBAM 数据包 Rev 2</strong><small>制备：王晨 · 常规队列</small></div>`,
+          decisionKicker: "PCF REPORT · REV 1 DRAFT",
+          decisionTitle: "热轧非合金钢卷产品碳足迹报告",
+          decisionLead: "计算运行 ARUN-PCF-001 已固定输入快照；批准后将锁定报告与 SNAP-PCF-HRC-01，不再静默替换输入版本。",
+          decisionPoints: `
+            <li><span>✓</span><div><strong>目标、功能单位与边界一致</strong><small>从摇篮到大门 · 1 吨产品</small></div></li>
+            <li><span>✓</span><div><strong>证据与服务绑定可追溯</strong><small>企业资产确认与 PCF 使用确认相互独立</small></div></li>
+            <li><span>✓</span><div><strong>确定性计算可重现</strong><small>ARUN-PCF-001 · CN-EF-2026.1</small></div></li>
+            <li><span>4</span><div><strong>复核限制、不确定性与版本声明</strong><small>由当前独立复核员具名完成</small></div></li>`,
+          approveLabel: "批准并锁定 Rev 1",
+          approveAttrs: 'data-action="pcf-complete-review"',
+          secondaryLabel: "查看报告草稿",
+          secondaryAttrs: 'data-drawer="pcf-report-preview"',
+        });
         return;
       }
-      $("#main").innerHTML = `${pageHeader("INDEPENDENT REVIEW", "复核与锁定", statusChip("3 个待复核", "warn"))}
-        <div class="callout"><strong>职责分离：</strong> 你不能批准自己制备的最终交付件。下列项目已自动排除制单人与复核人相同的情况。</div>
-        <div class="approval-board"><section class="panel"><div class="panel-head"><h2>待复核交付件</h2><button class="text-button" type="button" data-drawer="record-detail" data-drawer-label="复核队列排序">按风险排序</button></div><div class="stack-list">
+      $("#main").innerHTML = reviewSuiteShell({
+        meta: "INDEPENDENT REVIEW",
+        title: "复核与锁定",
+        aside: statusChip("3 个待复核", "warn"),
+        note: "你不能批准自己制备的最终交付件。下列项目已自动排除制单人与复核人相同的情况。",
+        queueTitle: "待复核交付件",
+        queueMeta: '<button class="text-button" type="button" data-drawer="record-detail" data-drawer-label="复核队列排序">按风险排序</button>',
+        queueItems: `
           <button type="button" class="stack-row active" data-drawer="record-detail" data-drawer-label="Q3 计算与数据包 Rev 2" data-drawer-object="华星钢铁 · 2026 Q3" data-drawer-status="待独立复核"><span>华星钢铁 · 2026 Q3</span><strong>Q3 计算与数据包 Rev 2</strong><small>制备：王晨 · 与当前复核人不同</small></button>
           <button type="button" class="stack-row" data-drawer="record-detail" data-drawer-label="排放报告 Amendment 2" data-drawer-object="远航铝业 · 2026"><span>远航铝业 · 2026</span><strong>排放报告 Amendment 2</strong><small>制备：李明 · 1 小时前</small></button>
-          <button type="button" class="stack-row" data-drawer="record-detail" data-drawer-label="Calculation Run 08" data-drawer-object="北辰化工 · 2027"><span>北辰化工 · 2027</span><strong>Calculation Run 08</strong><small>制备：周敏 · 昨天</small></button>
-        </div></section><section class="panel review-sheet"><small>QUARTERLY PACKAGE · REV 2</small><h2>华星钢铁 2026 Q3 数据包</h2><p>22 项要素中 21 项已通过结构校验；1 项采用具名风险接受。</p><ol><li><span>✓</span><div><strong>范围与工艺一致</strong><small>4 个产品、2 个设施均有确认关系</small></div></li><li><span>✓</span><div><strong>证据血缘完整</strong><small>42 条事实可回溯至 28 份材料</small></div></li><li><span>!</span><div><strong>供应商数据仍使用默认值</strong><small>客户已批准保守路径，Finding 保持开放</small></div></li></ol><div class="action-bar"><button class="button button--primary" type="button" data-staff-action="复核通过并进入锁定队列">复核通过</button><button class="button button--secondary" type="button" data-staff-action="退回复核件并要求制备人修改">退回修改</button></div></section></div>`;
+          <button type="button" class="stack-row" data-drawer="record-detail" data-drawer-label="Calculation Run 08" data-drawer-object="北辰化工 · 2027"><span>北辰化工 · 2027</span><strong>Calculation Run 08</strong><small>制备：周敏 · 昨天</small></button>`,
+        decisionKicker: "QUARTERLY PACKAGE · REV 2",
+        decisionTitle: "华星钢铁 2026 Q3 数据包",
+        decisionLead: "22 项要素中 21 项已通过结构校验；1 项采用具名风险接受。",
+        decisionPoints: `
+          <li><span>✓</span><div><strong>范围与工艺一致</strong><small>4 个产品、2 个设施均有确认关系</small></div></li>
+          <li><span>✓</span><div><strong>证据血缘完整</strong><small>42 条事实可回溯至 28 份材料</small></div></li>
+          <li><span>!</span><div><strong>供应商数据仍使用默认值</strong><small>客户已批准保守路径，Finding 保持开放</small></div></li>`,
+        approveLabel: "复核通过",
+        approveAttrs: 'data-staff-action="复核通过并进入锁定队列"',
+        rejectLabel: "退回修改",
+        rejectAttrs: 'data-staff-action="退回复核件并要求制备人修改"',
+      });
       return;
     }
     if (role === "ops" && state.page === "engagements") {

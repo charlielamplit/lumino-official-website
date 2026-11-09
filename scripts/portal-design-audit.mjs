@@ -60,12 +60,15 @@ async function navigate(path) {
 }
 
 const pages = [
+  ['login', '/apps/portal/'],
   ['workbench', '/apps/portal/?demoRole=customer_owner&page=workbench'],
   ['tasks', '/apps/portal/?demoRole=customer_owner&page=shared-tasks'],
   ['services', '/apps/portal/?demoRole=customer_owner&page=services-hub'],
   ['assets', '/apps/portal/?demoRole=customer_owner&page=shared-files'],
   ['deliverables', '/apps/portal/?demoRole=customer_owner&page=shared-deliverables'],
   ['access', '/apps/portal/?demoRole=customer_owner&page=shared-organization'],
+  ['pcf-scope', '/apps/portal/?demoRole=customer_owner&service=pcf&page=pcf-scope'],
+  ['cbam-work', '/apps/portal/?demoRole=customer_owner&service=cbam&page=work'],
 ];
 
 // Keep browser expression ASCII-only; Chinese probes via unicode escapes.
@@ -122,9 +125,24 @@ const auditExpression = `(() => {
     .map((el) => String(el.className));
   const font = getComputedStyle(document.body).fontFamily || '';
   const hasIbm = /IBM Plex Sans/i.test(font);
+  const shellRail = document.querySelector('.shell-rail');
+  const shellRailVisible = visible(shellRail);
+  const shellRailW = shellRailVisible ? Math.round(shellRail.getBoundingClientRect().width) : 0;
+  const cmdk = document.querySelector('.cmdk-trigger, #cmdkTrigger, [data-cmdk-open]');
+  const cmdkVisible = visible(cmdk);
+  const stepFooter = document.querySelector('.step-flow-footer[data-template="T4"]');
+  const stepFooterVisible = visible(stepFooter);
+  const loginEmail = document.querySelector('#loginEmail, input[type="email"][name="email"], .login-email-step input[type="email"]');
+  const loginPassword = document.querySelector('#loginPassword, input[type="password"]');
+  const loginScreen = Boolean(document.querySelector('.login-screen, #loginScreen, [data-login-step]'));
+  const emailFirst = loginScreen
+    ? Boolean(loginEmail) && (!loginPassword || loginPassword.closest('[hidden], .is-hidden, [aria-hidden="true"]') || getComputedStyle(loginPassword).display === 'none')
+    : null;
+  const singleColumnLegacy = Boolean(document.querySelector('.portal-layout--single, .sidebar-only-shell'));
   return {
     topbarH, sidebarW, contentMax, englishEyebrows, systemLead, minRadius, thickTop,
     focusPrimaries, rowOpenButtons, yellowServiceCards, font, hasIbm,
+    shellRailVisible, shellRailW, cmdkVisible, stepFooterVisible, loginScreen, emailFirst, singleColumnLegacy,
     h1: [...document.querySelectorAll('h1')].filter(visible).map((el) => el.textContent.trim()),
   };
 })()`;
@@ -149,17 +167,28 @@ for (const [name, path] of pages) {
   };
   const ok = (checkId, detail) => checks.push({ id: checkId, ok: true, detail });
 
-  if (data.topbarH >= 52 && data.topbarH <= 60) ok('topbar-height', data.topbarH); else fail('topbar-height', data.topbarH);
-  if (data.sidebarW >= 210 && data.sidebarW <= 230) ok('sidebar-width', data.sidebarW); else fail('sidebar-width', data.sidebarW);
-  if (data.contentMax <= 1200) ok('content-max', data.contentMax); else fail('content-max', data.contentMax);
-  if (!data.englishEyebrows.length) ok('no-english-eyebrow', []); else fail('no-english-eyebrow', data.englishEyebrows);
-  if (data.minRadius >= 7) ok('card-radius', data.minRadius); else fail('card-radius', { minRadius: data.minRadius });
-  if (!data.thickTop.length) ok('no-thick-top-stripe', []); else fail('no-thick-top-stripe', data.thickTop);
-  if (data.focusPrimaries <= 1) ok('focus-primary-le-1', data.focusPrimaries); else fail('focus-primary-le-1', data.focusPrimaries);
-  if (!data.rowOpenButtons.length) ok('no-row-open-buttons', []); else fail('no-row-open-buttons', data.rowOpenButtons);
-  if (!data.systemLead) ok('no-system-lead', false); else fail('no-system-lead', true);
-  if (!data.yellowServiceCards.length) ok('no-yellow-service-cards', []); else fail('no-yellow-service-cards', data.yellowServiceCards);
-  if (data.hasIbm) ok('ibm-plex-sans', data.font); else fail('ibm-plex-sans', data.font);
+  if (name === 'login') {
+    if (data.emailFirst) ok('login-email-first', true); else fail('login-email-first', { emailFirst: data.emailFirst, loginScreen: data.loginScreen });
+    if (!data.singleColumnLegacy) ok('no-single-column-shell', true); else fail('no-single-column-shell', true);
+  } else {
+    if (data.topbarH >= 52 && data.topbarH <= 60) ok('topbar-height', data.topbarH); else fail('topbar-height', data.topbarH);
+    if (data.sidebarW >= 200 && data.sidebarW <= 230) ok('sidebar-width', data.sidebarW); else fail('sidebar-width', data.sidebarW);
+    if (data.contentMax <= 1200) ok('content-max', data.contentMax); else fail('content-max', data.contentMax);
+    if (!data.englishEyebrows.length) ok('no-english-eyebrow', []); else fail('no-english-eyebrow', data.englishEyebrows);
+    if (data.minRadius >= 7) ok('card-radius', data.minRadius); else fail('card-radius', { minRadius: data.minRadius });
+    if (!data.thickTop.length) ok('no-thick-top-stripe', []); else fail('no-thick-top-stripe', data.thickTop);
+    if (data.focusPrimaries <= 1) ok('focus-primary-le-1', data.focusPrimaries); else fail('focus-primary-le-1', data.focusPrimaries);
+    if (!data.rowOpenButtons.length) ok('no-row-open-buttons', []); else fail('no-row-open-buttons', data.rowOpenButtons);
+    if (!data.systemLead) ok('no-system-lead', false); else fail('no-system-lead', true);
+    if (!data.yellowServiceCards.length) ok('no-yellow-service-cards', []); else fail('no-yellow-service-cards', data.yellowServiceCards);
+    if (data.hasIbm) ok('ibm-plex-sans', data.font); else fail('ibm-plex-sans', data.font);
+    if (data.shellRailVisible && data.shellRailW >= 48 && data.shellRailW <= 80) ok('shell-rail', data.shellRailW); else fail('shell-rail', { visible: data.shellRailVisible, w: data.shellRailW });
+    if (data.cmdkVisible) ok('cmdk-trigger', true); else fail('cmdk-trigger', false);
+    if (!data.singleColumnLegacy) ok('no-single-column-shell', true); else fail('no-single-column-shell', true);
+    if (name === 'pcf-scope' || name === 'cbam-work') {
+      if (data.stepFooterVisible) ok('t4-step-footer', true); else fail('t4-step-footer', false);
+    }
+  }
 
   report.pages[name] = { path, ...data, checks, runtimeIssues: [...new Set(pageIssues)] };
 }

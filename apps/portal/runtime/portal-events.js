@@ -35,12 +35,281 @@
     submitButton.textContent = label;
   }
 
-  $("#loginForm").addEventListener("submit", (event) => { event.preventDefault(); login("customer_owner"); });
-  document.querySelectorAll("[data-demo-role]").forEach((button) => button.addEventListener("click", () => login(button.dataset.demoRole)));
-  $("#logoutButton").addEventListener("click", logout);
-  $("#settingsButton").addEventListener("click", () => { if (canManageOrganization()) { state.page = "org-settings"; render(); } });
+  function loginUsesSso(email) {
+    const domain = String(email || "").split("@")[1]?.toLowerCase() || "";
+    return domain === "huaxing-steel.cn";
+  }
+
+  function isValidWorkEmail(email) {
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(email || "").trim());
+  }
+
+  function updateLoginEmailHint(email) {
+    const hint = $("#loginEmailHint");
+    const submit = $("#loginForm")?.querySelector('[data-step-panel="email"] button[type="submit"]');
+    if (!hint) return;
+    const value = String(email || "").trim();
+    hint.classList.remove("is-error", "is-muted");
+    if (!value) {
+      hint.textContent = "";
+      if (submit) submit.disabled = true;
+      return;
+    }
+    if (!isValidWorkEmail(value)) {
+      hint.textContent = "请输入完整的工作邮箱";
+      hint.classList.add("is-error");
+      if (submit) submit.disabled = true;
+      return;
+    }
+    if (loginUsesSso(value)) {
+      hint.textContent = "huaxing-steel.cn 已启用企业 SSO，继续后跳转到企业登录";
+    } else {
+      hint.textContent = "继续后输入密码";
+      hint.classList.add("is-muted");
+    }
+    if (submit) submit.disabled = false;
+  }
+
+  function setLoginStep(step) {
+    const screen = $("#loginScreen");
+    const form = $("#loginForm");
+    if (screen) screen.dataset.loginStep = step;
+    if (form) form.dataset.step = step;
+    form?.querySelectorAll("[data-step-panel]").forEach((panel) => {
+      panel.hidden = panel.dataset.stepPanel !== step;
+    });
+    const email = ($("#loginEmail")?.value || "").trim() || "zhoulan@huaxing-steel.cn";
+    if (step === "email") updateLoginEmailHint(email);
+    if (step === "workspace") {
+      const lead = $("#workspaceLead");
+      if (lead) lead.textContent = `${email} 在 3 个工作区有权限`;
+    }
+  }
+
+  function syncLoginEmailLabels(email) {
+    ["ssoEmailLabel", "passwordEmailLabel"].forEach((id) => {
+      const node = document.getElementById(id);
+      if (node) node.textContent = email;
+    });
+  }
+
+  $("#loginEmail")?.addEventListener("input", (event) => updateLoginEmailHint(event.target.value));
+  $("#loginForm").addEventListener("submit", (event) => {
+    event.preventDefault();
+    const step = $("#loginForm").dataset.step || "email";
+    const email = ($("#loginEmail")?.value || "").trim();
+    if (step === "email") {
+      if (!isValidWorkEmail(email)) { updateLoginEmailHint(email || " "); toast("请输入有效的工作邮箱"); return; }
+      syncLoginEmailLabels(email);
+      setLoginStep(loginUsesSso(email) ? "sso" : "password");
+      return;
+    }
+    if (step === "password") {
+      const password = $("#loginPassword")?.value || "";
+      if (password.length < 6) { toast("请输入至少 6 位密码"); return; }
+      setLoginStep("workspace");
+      return;
+    }
+  });
+  $("#ssoContinue")?.addEventListener("click", () => setLoginStep("workspace"));
+  $("#usePasswordInstead")?.addEventListener("click", () => setLoginStep("password"));
+  document.querySelectorAll("[data-login-back]").forEach((button) => {
+    button.addEventListener("click", () => setLoginStep("email"));
+  });
+  document.querySelectorAll("[data-workspace-role]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const role = button.dataset.workspaceRole;
+      const home = button.dataset.workspaceHome;
+      login(role);
+      if (home) {
+        if (customerRoles.has(role)) setCustomerDestination(null, home);
+        else state.page = home;
+        render();
+      }
+      toast("已进入工作区（原型）");
+    });
+  });
+  $("#demoRoleSelect")?.addEventListener("change", (event) => {
+    const role = event.target.value;
+    if (!role) return;
+    login(role);
+    event.target.value = "";
+  });
+  const sendResetToast = () => {
+    const email = ($("#loginEmail")?.value || "").trim() || "工作邮箱";
+    toast(`重置链接已发送到 ${email}（原型模拟，30 分钟内有效）。`);
+  };
+  $("#forgotPassword")?.addEventListener("click", sendResetToast);
+  $("#forgotPasswordInline")?.addEventListener("click", sendResetToast);
+  $("#activateInvite")?.addEventListener("click", () => {
+    toast("正式环境会打开邀请链接；原型中请用演示角色「数据贡献者」进入。");
+  });
+  setLoginStep("email");
+
+  function closeAccountMenu() {
+    const panel = $("#accountMenu");
+    if (!panel) return;
+    panel.hidden = true;
+    $("#profileButton")?.setAttribute("aria-expanded", "false");
+  }
+  $("#profileButton")?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const panel = $("#accountMenu");
+    if (!panel) return;
+    const open = panel.hidden;
+    panel.hidden = !open;
+    $("#profileButton").setAttribute("aria-expanded", String(open));
+  });
+  $("#accountMenu")?.addEventListener("click", (event) => {
+    const item = event.target.closest("[data-account-action], #logoutButton");
+    if (!item) return;
+    if (item.id === "logoutButton") { closeAccountMenu(); logout(); setLoginStep("email"); return; }
+    if (item.dataset.accountAction === "workspace") {
+      closeAccountMenu();
+      logout();
+      setLoginStep("workspace");
+      syncLoginEmailLabels(($("#loginEmail")?.value || "").trim() || "zhoulan@huaxing-steel.cn");
+      return;
+    }
+    if (item.dataset.accountAction === "settings") {
+      closeAccountMenu();
+      if (!canManageOrganization()) { toast("只有企业管理员可以打开企业设置。"); return; }
+      state.currentService = null;
+      state.page = "org-settings";
+      state.settingsSection = item.dataset.settingsSection || "members";
+      render();
+    }
+  });
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".account-menu")) closeAccountMenu();
+  });
+
+  function cmdkTargets() {
+    const pages = isCustomer()
+      ? [...customerGlobalNav, ...activeServiceNav()].map(([id, , label]) => ({
+        kind: "页面",
+        label,
+        hay: id,
+        run: () => {
+          if (globalCustomerPages.has(id)) { state.currentService = null; state.page = id; }
+          else { state.page = id; }
+          render();
+        },
+      }))
+      : (roleConfig[state.role]?.nav || []).map(([id, , label]) => ({
+        kind: "页面",
+        label,
+        hay: id,
+        run: () => { state.page = id; render(); },
+      }));
+    let tasks = [];
+    let assets = [];
+    let deliverables = [];
+    try {
+      if (isCustomer()) {
+        const actor = roleConfig[state.role].name;
+        const taskView = sharedCenterViews.tasks({ role: state.role, actor });
+        tasks = (taskView.items || []).slice(0, 6).map((task) => ({
+          kind: "任务",
+          label: task.title,
+          hay: `${task.serviceCode || ""} ${task.sourceId || ""} ${task.object || ""}`,
+          run: () => {
+            setCustomerDestination(task.serviceId, task.page);
+            render();
+          },
+        }));
+        const assetView = assetViews.overview({ role: state.role, serviceId: null, facet: "all" });
+        assets = (assetView.items || []).slice(0, 6).map(({ asset }) => ({
+          kind: "资产",
+          label: asset.name,
+          hay: `${asset.id || ""} ${asset.versionId || ""}`,
+          run: () => {
+            state.currentService = null;
+            state.page = "shared-files";
+            render();
+            openDrawer("asset-detail", { assetId: asset.id, title: asset.name });
+          },
+        }));
+        const deliveryView = sharedCenterViews.deliverables({ role: state.role, actor });
+        deliverables = (deliveryView.items || []).slice(0, 6).map((item) => ({
+          kind: "交付",
+          label: item.name,
+          hay: `${item.id || ""} ${item.serviceCode || ""}`,
+          run: () => {
+            setCustomerDestination(item.serviceId, item.page);
+            render();
+          },
+        }));
+      }
+    } catch (_) {
+      /* keep page-only palette if view models unavailable */
+    }
+    return [...pages, ...tasks, ...assets, ...deliverables];
+  }
+
+  function renderCmdk(query) {
+    const q = String(query || "").trim().toLowerCase();
+    const items = cmdkTargets()
+      .filter((item) => !q || `${item.label} ${item.kind} ${item.hay || ""}`.toLowerCase().includes(q))
+      .slice(0, 9);
+    const host = $("#cmdkResults");
+    if (!host) return;
+    if (!items.length) {
+      host.innerHTML = `<p class="cmdk-empty">没有匹配结果</p>`;
+      return;
+    }
+    host.innerHTML = items.map((item, index) => `
+      <button type="button" class="cmdk-item" role="option" data-cmdk-index="${index}">
+        <strong>${safe(item.label)}</strong><span>${safe(item.kind)}</span>
+      </button>`).join("");
+    host.querySelectorAll(".cmdk-item").forEach((button, index) => {
+      button.addEventListener("click", () => {
+        items[index].run();
+        closeCmdk();
+      });
+    });
+  }
+
+  function openCmdk() {
+    if ($("#portal")?.hidden) return;
+    $("#cmdkLayer").hidden = false;
+    $("#cmdkInput").value = "";
+    renderCmdk("");
+    $("#cmdkInput").focus();
+  }
+  function closeCmdk() {
+    if ($("#cmdkLayer")) $("#cmdkLayer").hidden = true;
+  }
+  $("#cmdkTrigger")?.addEventListener("click", openCmdk);
+  $("#cmdkBackdrop")?.addEventListener("click", closeCmdk);
+  $("#cmdkInput")?.addEventListener("input", (event) => renderCmdk(event.target.value));
+  document.addEventListener("keydown", (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      if ($("#portal")?.hidden) return;
+      event.preventDefault();
+      openCmdk();
+    }
+    if (event.key === "Escape" && $("#cmdkLayer") && !$("#cmdkLayer").hidden) {
+      event.preventDefault();
+      closeCmdk();
+    }
+  });
+
+  $("#settingsButton")?.addEventListener("click", () => {
+    if (!canManageOrganization()) return;
+    state.currentService = null;
+    state.page = "org-settings";
+    state.settingsSection = state.settingsSection || "members";
+    render();
+  });
   document.querySelector(".company-switch").addEventListener("click", () => {
-    if (canManageOrganization()) { state.page = "org-settings"; render(); return; }
+    if (canManageOrganization()) {
+      state.currentService = null;
+      state.page = "org-settings";
+      state.settingsSection = state.settingsSection || "org";
+      render();
+      return;
+    }
     openDrawer("record-detail", { title: isCustomer() ? "当前企业" : "当前工作区", object: isCustomer() ? state.organization.name : roleConfig[state.role].company, status: "由账号与授权决定", description: "正式产品会在这里切换你有权访问的企业或工作区；当前原型固定展示一个上下文。" });
   });
   $("#roleSelect").addEventListener("change", (event) => {
@@ -79,6 +348,13 @@
   $("#drawerClose").addEventListener("click", closeDrawer);
   $("#drawerBackdrop").addEventListener("click", closeDrawer);
   document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape"
+      && $("#drawerLayer").hidden
+      && $("#cmdkLayer").hidden
+      && state.serviceOverviewMode === "open") {
+      setServiceOverviewMode("collapsed");
+      return;
+    }
     if ($("#drawerLayer").hidden) return;
     if (event.key === "Escape") { closeDrawer(); return; }
     if (event.key === "Tab") {
@@ -92,6 +368,21 @@
     }
   });
   document.addEventListener("click", (event) => {
+    const overviewAction = event.target.closest("[data-service-overview]");
+    if (overviewAction) {
+      setServiceOverviewMode(overviewAction.dataset.serviceOverview);
+      return;
+    }
+    const settingsSection = event.target.closest("[data-settings-section]");
+    if (settingsSection) {
+      if (!canManageOrganization()) { toast("只有企业管理员可以维护企业设置。"); return; }
+      state.currentService = null;
+      state.page = "org-settings";
+      state.settingsSection = settingsSection.dataset.settingsSection || "members";
+      persistPortalState();
+      render();
+      return;
+    }
     const closeDrawerButton = event.target.closest("[data-close-drawer]");
     if (closeDrawerButton) { closeDrawer(); return; }
     const drawerTrigger = event.target.closest("[data-drawer]");
@@ -109,6 +400,8 @@
         flow: drawerTrigger.dataset.flow,
         serviceId: drawerTrigger.dataset.serviceId,
         assetId: drawerTrigger.dataset.assetId,
+        runId: drawerTrigger.dataset.runId,
+        delivId: drawerTrigger.dataset.delivId,
       });
       return;
     }
@@ -126,8 +419,16 @@
       render();
       return;
     }
+    const delivFilter = event.target.closest("[data-deliv-filter]");
+    if (delivFilter) {
+      state.delivFilter = delivFilter.dataset.delivFilter;
+      persistPortalState();
+      render();
+      return;
+    }
     const serviceEntry = event.target.closest("[data-service-enter]");
     if (serviceEntry) {
+      if (serviceEntry.closest("#serviceOverviewLayer")) state.serviceOverviewMode = "closed";
       setCustomerDestination(serviceEntry.dataset.serviceEnter, serviceEntry.dataset.pageTarget);
       persistPortalState(); render(); closeDrawer();
       $("#sidebar").classList.remove("open");
@@ -138,6 +439,7 @@
     if (nav) {
       const page = nav.dataset.page;
       if (!canAccessPage(page)) {
+        showForbiddenPage(page);
         toast("当前角色或服务范围无权进入该页面。");
         return;
       }
@@ -727,6 +1029,24 @@
       }
       if (action === "document-preview") openDrawer("document-preview");
       if (action === "invite-member") openDrawer("invite-member");
+      if (action === "confirm-output") {
+        state.outputConfirmed = true;
+        persistPortalState();
+        closeDrawer();
+        render();
+        toast("Q3 产量已确认", "热轧非合金钢卷累计产量 → 企业已确认");
+      }
+      if (action === "demo-fix-field") {
+        toast(`修正 ${customerAction.dataset.field || "字段"}`, "原型中修正会打开字段编辑，并保留 Agent 原值以供对照。");
+      }
+      if (action === "demo-calc-rerun") {
+        closeDrawer();
+        toast("演示：已记录重新计算请求", "正式引擎与 Run-0418 写入逻辑稍后接入。");
+      }
+      if (action === "demo-share-package") {
+        closeDrawer();
+        toast("演示：数据包已标记为待共享", "正式共享与回执逻辑稍后接入。");
+      }
       if (action === "create-year") {
         savePeriodState();
         years["2028"] = { label: "2028 · 变化确认", short: "变化确认中", progress: 8, chip: "warn" };
