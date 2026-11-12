@@ -14,10 +14,25 @@
     const boundary = input.boundary || {};
     const template = input.template || {};
     const bindings = Array.isArray(input.bindings) ? input.bindings : [];
+    const valueHints = input.valueHints || {};
     const powerBinding = bindings.find(function (item) { return item.assetId === "REC-HX-POWER-2026Q3" || /POWER/i.test(item.id || ""); });
     const templateDomains = Array.isArray(template.domains) ? template.domains : [];
     const templateReady = ["VALIDATED", "VALIDATED_PARTIAL"].includes(template.status);
     const boundaryReady = boundary.status === "CONFIRMED" || boundary.confirmed;
+    const sampleValues = {
+      materials: "铁矿石 1.12 t/t · 废钢 0.18 t/t",
+      energy: valueHints.energy || "购入电力 12,480 MWh · 天然气 1.86 百万 m³",
+      transport: "公路 420 km · 铁路 1,860 km",
+      output: valueHints.output || "热轧卷 38,400 t",
+      waste: "炉渣 0.24 t/t · 回收 62%",
+      supplier: "钢坯 1.52 tCO₂e/t（待核查）"
+    };
+
+    const periodLabel = declaration.period
+      || (declaration.periodStart && declaration.periodEnd ? (declaration.periodStart + " 至 " + declaration.periodEnd) : "");
+    const scopeValue = [declaration.functionalUnit || "1 吨产品", periodLabel]
+      .filter(Boolean)
+      .join(" · ") || "—";
 
     const rows = [
       {
@@ -26,6 +41,7 @@
         name: "产品与边界",
         description: "功能单位、核算期、系统边界与分配规则",
         owner: "项目协调人",
+        value: scopeValue,
         count: declaration.confirmed && boundaryReady ? "14 / 14" : "0 / 14",
         status: declaration.confirmed && boundaryReady ? "已确认" : "待确认",
         tone: declaration.confirmed && boundaryReady ? "ok" : "warn",
@@ -43,6 +59,7 @@
           name: fallbackName,
           description: "",
           owner: owner,
+          value: "—",
           count: "0 / —",
           status: boundaryReady ? "待回传模板" : "待确认边界",
           tone: "warn",
@@ -55,22 +72,27 @@
       let tone = "ok";
       let label = "查看记录";
       let action = drawer;
+      let value = sampleValues[domainId] || (found.imported ? (found.imported + " 项已导入") : "—");
       if (found.status === "gap") {
         status = "存在缺口";
         tone = "danger";
         label = "优先补充";
         action = "pcf-upload";
+        value = (sampleValues[domainId] || (found.imported + " 项已导入")) + " · 有缺口";
       } else if (found.status === "missing") {
         status = "待填写";
         tone = "warn";
         label = "回传模板";
         action = "pcf-upload";
+        value = "—";
       } else if (found.status === "optional") {
         status = "按需填写";
         tone = "neutral";
         label = "查看要求";
+        value = found.imported ? (sampleValues[domainId] || (found.imported + " 项已导入")) : "未提供（可选）";
       }
       if (domainId === "energy" && powerBinding) {
+        if (valueHints.energy) value = valueHints.energy;
         if (powerBinding.status === "CONFIRMED") {
           status = "已确认";
           tone = "ok";
@@ -89,6 +111,7 @@
         name: found.name || fallbackName,
         description: "",
         owner: owner,
+        value: value,
         count: count,
         status: status,
         tone: tone,

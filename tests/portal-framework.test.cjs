@@ -20,19 +20,21 @@ test("framework shell markers exist in markup and styles", () => {
   assert.match(css, /\.system-state--locked/);
 });
 
-test("T4 / locked / STALE helpers are wired", () => {
+test("workflow, locked and STALE helpers are wired", () => {
   const core = read("runtime/portal-core.js");
   const pcf = read("pages/multi-service-pages.js");
   const customer = read("pages/customer-pages.js");
   assert.match(core, /function stepFlowFooter\(/);
   assert.match(core, /function lockedYearBanner\(/);
   assert.match(core, /function staleSnapshotPanel\(/);
-  assert.match(core, /function cbamConfirmFooter\(/);
   assert.match(pcf, /function pcfStepNav\(/);
   assert.match(pcf, /\$\{pcfStepNav\(\)\}/);
   assert.match(pcf, /staleSnapshotPanel\(/);
   assert.match(customer, /lockedYearBanner\(\)/);
-  assert.match(customer, /cbamConfirmFooter\(\)/);
+  assert.match(customer, /data-template="T2"/);
+  assert.match(customer, /nextAction\(model\.next\.kicker/);
+  assert.match(customer, /data-drawer="extract-energy"/);
+  assert.match(customer, /data-drawer="extract-output"/);
 });
 
 test("stage-gate panel is secondary: rail on CBAM work, footer on PCF", () => {
