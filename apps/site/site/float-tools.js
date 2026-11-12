@@ -8,7 +8,7 @@
   const ADVISOR_SCRIPT_TIMEOUT_MS = 6000;
   const pendingScriptCancels = new Set();
   const tools = [
-    { zh: "CBAM 成本计算器", en: "CBAM cost calculator", href: "/apps/site/calculator/" },
+    { zh: "CBAM 成本计算器", en: "CBAM cost calculator", href: "/calculator" },
     { zh: "申请产品碳足迹初步估算", en: "Request a footprint estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=pcf&source=tool-float" },
     { zh: "申请企业排放初步估算", en: "Request an emissions estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=inventory&source=tool-float" },
     { zh: "申请绿电需求测算", en: "Request a renewable-power estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=assets&source=tool-float" },
