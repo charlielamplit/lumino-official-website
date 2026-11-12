@@ -32,6 +32,8 @@
 
   --type-hero: 48px;
   --type-hero-lh: 56px;
+  --type-page-title: clamp(26px, 3.2vw, 36px);
+  --type-page-title-lh: 1.25;
   --type-section: 32px;
   --type-section-lh: 40px;
   --type-card: 20px;

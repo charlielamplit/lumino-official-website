@@ -339,59 +339,176 @@
       </div>`;
   }
 
+  function cbamDataModel() {
+    const energyDone = state.uploadAdded && state.factConfirmed;
+    const energyReview = state.uploadAdded && !state.factConfirmed;
+    const outputDone = Boolean(state.outputConfirmed);
+    const fndOk = Boolean(state.findingResolved);
+    const tone = (label, kind) => {
+      if (kind === "ok") return { state: label, tone: "", go: "详情" };
+      if (kind === "warn") return { state: label, tone: "warn", go: kind === "warn" && label.includes("待确认") ? "核对 →" : "查看" };
+      if (kind === "danger") return { state: label, tone: "danger", go: label.includes("缺") ? "上传 →" : "处理 →" };
+      return { state: label, tone: "locked", go: label.includes("补充") ? "上传 →" : "查看" };
+    };
+    const energySt = energyDone
+      ? { ...tone("已确认", "ok"), src: "电力账单 · 天然气计量表", v: "12,480 MWh", vc: "", open: "" }
+      : energyReview
+        ? { ...tone("待确认", "warn"), go: "核对 →", src: "Agent 提取 · 2 份文件", v: "…", vc: "is-warn", open: 'data-drawer="extract-energy"' }
+        : { ...tone("缺材料", "danger"), go: "上传 →", src: "未上传", v: "—", vc: "is-muted", open: 'data-action="mock-upload"' };
+    const outSt = outputDone
+      ? { ...tone("已确认", "ok"), src: "生产月报 7–9 月.xlsx", v: "38,400 t", vc: "", open: "" }
+      : { ...tone("待确认", "warn"), go: "核对 →", src: "Agent 提取 · 生产月报 7–9 月", v: "38,400 t", vc: "is-warn", open: 'data-drawer="extract-output"' };
+    const preSt = fndOk
+      ? { ...tone("默认值 · 复核中", "warn"), go: "查看", src: "EU 默认值表 3", v: "1.85 tCO₂e/t", vc: "is-warn", open: 'data-action="resolve-finding"' }
+      : { ...tone("缺口 · 逾期 3 天", "danger"), go: "处理 →", src: "北方特钢 · 未提供", v: "—", vc: "is-muted", open: 'data-action="resolve-finding"' };
+    const dieselSt = state.dieselDone
+      ? { ...tone("已确认", "ok"), src: "叉车柴油台账 Q3", v: "6.2 t", vc: "", open: "" }
+      : { ...tone("建议补充", "locked"), go: "上传 →", src: "未提供", v: "—", vc: "is-muted", open: 'data-action="mock-upload"' };
+
+    const mk = (id, cat, name, req, st) => ({
+      id, cat, name, req, src: st.src, v: st.v, state: st.state, tone: st.tone, go: st.go, vc: st.vc || "",
+      attrs: st.open || `data-drawer="cbam-data-item" data-item-id="${id}"`,
+      danger: st.tone === "danger",
+    });
+
+    const groups = [
+      {
+        id: "output", label: "产量", note: "计算分母",
+        items: [
+          mk("out-qty", "产量", "热轧非合金钢卷 · Q3 产量", "必填 · 按产品", outSt),
+          mk("out-cn", "产量", "产品 CN Code", "必填 · 产品主档", { ...tone("已确认", "ok"), src: "产品主档 v2", v: "7208 39 00", vc: "", open: "" }),
+        ],
+      },
+      {
+        id: "energy", label: "能源", note: "直接与间接排放",
+        items: [
+          mk("en-power", "能源", "购入电力", "必填 · 按月", { ...energySt, v: energyDone ? "12,480 MWh" : energySt.v }),
+          mk("en-gas", "能源", "天然气", "必填 · 季度汇总", { ...energySt, v: energyDone ? "1.86 百万 m³" : energySt.v }),
+          mk("en-diesel", "能源", "厂内运输柴油", "可选 · Agent 建议补充", dieselSt),
+        ],
+      },
+      {
+        id: "ship", label: "发运", note: "出口至欧盟",
+        items: [
+          mk("ship-nord", "发运", "发往 NordWerk GmbH", "必填 · 按进口商", { ...tone("已确认", "ok"), src: "发运台账 Q3", v: "12,000 t", vc: "", open: "" }),
+          mk("ship-docs", "发运", "报关与提单", "证明材料", { ...tone("已确认", "ok"), src: "3 份文件", v: "3 份", vc: "", open: "" }),
+        ],
+      },
+      {
+        id: "pre", label: "前体", note: "钢坯隐含排放",
+        items: [
+          mk("pre-emiss", "前体", "钢坯实测排放 · 北方特钢", "必填 · 或受控默认值", preSt),
+          mk("pre-qty", "前体", "钢坯采购量", "必填", { ...tone("已确认", "ok"), src: "采购台账 Q3", v: "41,000 t", vc: "", open: "" }),
+        ],
+      },
+    ];
+    const cat = state.dataCat || "all";
+    const all = groups.flatMap((g) => g.items);
+    const sum = (items) => {
+      const bad = items.filter((i) => i.tone === "danger").length;
+      const pend = items.filter((i) => i.tone === "warn").length;
+      const done = items.filter((i) => i.state === "已确认").length;
+      if (bad) return { state: `${bad} 项缺失`, tone: "danger" };
+      if (pend) return { state: `${pend} 项待确认`, tone: "warn" };
+      if (done === items.length) return { state: "已齐全", tone: "" };
+      return { state: "处理中", tone: "locked" };
+    };
+    const cats = [{ id: "all", label: "全部", items: all }, ...groups].map((g) => ({
+      id: g.id,
+      label: g.label,
+      count: `${g.items.filter((i) => i.state === "已确认").length} / ${g.items.length}`,
+      ...sum(g.items),
+      on: cat === g.id,
+    }));
+    const done = all.filter((i) => i.state === "已确认").length;
+    const flow = [
+      { n: "1", t: `企业事实 · ${done}/${all.length} 已确认`, d: "Agent 提取后由你确认，原文件不可修改", ok: true },
+      { n: "2", t: "Q3 计算 Run", d: !fndOk ? "被前体缺口阻塞" : !energyDone || !outputDone ? "等待能源与产量确认" : "可以运行 · 生成新版本", ok: false },
+      { n: "3", t: "NordWerk 数据包", d: "10 月 31 日 · 共享后等待回执", ok: false },
+    ];
+    return {
+      groups: groups.filter((g) => cat === "all" || g.id === cat),
+      cats,
+      flow,
+      next: !energyDone
+        ? { kicker: "本季度数据 · 下一步", title: energyReview ? "核对 Q3 能源用量" : "上传 Q3 能源材料", desc: energyReview ? "Agent 已提取电力与天然气用量，确认后写入企业事实。" : "上传电力账单与天然气计量表，Agent 提取后由你确认。", label: energyReview ? "去核对" : "上传材料", attrs: energyReview ? 'data-drawer="extract-energy"' : 'data-action="mock-upload"' }
+        : !outputDone
+          ? { kicker: "本季度数据 · 下一步", title: "确认 Q3 产量提取结果", desc: "产量确认后用于计算分母，并更新发往欧盟的数量口径。", label: "去确认", attrs: 'data-drawer="extract-output"' }
+          : !fndOk
+            ? { kicker: "本季度数据 · 下一步", title: "处理前体排放数据缺口", desc: "选择受控默认值或继续等待供应商，才能解锁 Q3 计算。", label: "选择处理路径", attrs: 'data-action="resolve-finding"' }
+            : { kicker: "本季度数据 · 下一步", title: "去计算与成本重新计算", desc: "能源、产量与前体路径已确认，可锁定输入生成 Run-0418。", label: "去计算", attrs: 'data-page="results"' },
+    };
+  }
+
   function renderData() {
-    const locked = isLockedYear();
     const profile = annualProfile();
-    const planned = profile.mode === "planned";
-    const currentPeriod = quarterMeta[state.quarter];
+    const org = state.organization?.name || "华星钢铁";
+    const chip = statusChip(`${state.year} · ${years[state.year]?.short || profile.position}`, years[state.year]?.chip === "warn" ? "warn" : years[state.year]?.chip === "locked" ? "locked" : "");
     if (state.role === "customer_contrib") {
       $("#main").innerHTML = `
-        ${pageHeader(`${state.year} · MY EVIDENCE`, "我的材料", statusChip("上海一厂 · 限定范围"))}
+        ${pageHeader(`${org} / CBAM`, "我的材料", statusChip("上海一厂 · 限定范围"))}
         <div class="privacy-band"><strong>最小可见范围</strong><span>这里仅显示分配给你的设施与材料。其他设施、供应商和完整计算结果保持隐藏。</span></div>
         <section class="panel wide-panel"><div class="panel-head"><h2>${state.quarter} 我负责的材料</h2><button class="button button--primary" type="button" data-action="mock-upload">上传材料</button></div><div class="record-list"><article class="record"><span class="record-code">BILL</span><div><strong>上海一厂电力账单 · ${quarterMeta[state.quarter].months}</strong><p>已解析 3/3 · 等待项目协调人确认</p></div><span class="record-state ok">已上传</span></article><article class="record"><span class="record-code">GAS</span><div><strong>上海一厂天然气账单 · ${quarterMeta[state.quarter].endMonth}</strong><p>今天到期</p></div><span class="record-state warn">待上传</span></article></div></section>`;
       return;
     }
-    const periods = Object.entries(profile.quarters).map(([quarter, values]) => {
-      if (profile.mode === "active" && quarter === "Q3" && state.uploadAdded) return [quarter, "采集中", 84, "warn"];
-      return [quarter, ...values];
-    });
-    const gasState = state.uploadAdded ? '<span class="record-state ok">已解析</span>' : '<span class="record-state warn">待补</span>';
-    const dataHeaderAction = locked ? yearBadge() : planned ? statusChip("先完成年度准备", "warn") : actionButton("上传本季度材料", "secondary", 'data-action="mock-upload"');
-    const periodRecords = locked
-      ? `<article class="record"><span class="record-code">DATA</span><div><strong>${state.quarter} 季度数据集</strong><p>产量、能源、前体与发运数据 · 最终版本</p></div><span class="record-state ok">已冻结</span></article><article class="record"><span class="record-code">PACK</span><div><strong>${state.quarter} Communication Package</strong><p>已分享并记录进口商回执</p></div><span class="record-state ok">已归档</span></article>`
-      : planned
-        ? `<article class="record"><span class="record-code">Q1</span><div><strong>Q1 材料清单尚未生成</strong><p>年度范围和监测计划确认后，Agent 将按岗位生成任务。</p></div><span class="record-state">待年度准备</span></article>`
-        : (() => {
-          const power = assetRegistry.get("REC-HX-POWER-2026Q3");
-          const powerEvidence = assetRegistry.get("EVD-HX-POWER-2026Q3");
-          const powerBinding = assetRegistry.bindings({ serviceId: "cbam", assetId: "REC-HX-POWER-2026Q3" })[0];
-          const shName = assetRegistry.get("FAC-SH-01")?.name || "上海一厂";
-          const jsName = assetRegistry.get("FAC-JS-02")?.name || "江苏二厂";
-          const powerValue = power?.payload?.originalValue ? `${Number(power.payload.originalValue).toLocaleString("zh-CN")} ${power.payload.originalUnit}` : "已解析";
-          return `<article class="record"><span class="record-code">BILL</span><div><strong>电力账单 · ${currentPeriod.months}</strong><p>${safe(shName)} · ${safe(powerEvidence?.id || "EVD-HX-POWER-2026Q3")} · ${safe(powerValue)} · ${safe(powerBinding?.status || "已关联")}</p></div><span class="record-state ok">资产已绑定</span></article><article class="record"><span class="record-code">GAS</span><div><strong>天然气账单 · ${currentPeriod.months}</strong><p>${safe(jsName)} · FAC-JS-02 · ${state.uploadAdded ? "已解析 3/3" : `缺 ${currentPeriod.endMonth}`}</p></div>${gasState}</article><article class="record"><span class="record-code">PRE</span><div><strong>钢坯供应商数据</strong><p>北方特钢 · 请求已发送</p></div><span class="record-state warn">等待外部</span></article>`;
-        })();
-    const reviewStep = state.uploadAdded ? `<section class="panel extraction-review"><div><small>AGENT EXTRACTION · 写入企业资产池后待确认</small><h2>${currentPeriod.endMonth}天然气：18,420 Nm³</h2><p>识别自“${safe(assetRegistry.get("FAC-JS-02")?.name || "江苏二厂")}天然气账单_${state.year}-${currentPeriod.endMonth.replace(" 月", "").padStart(2, "0")}.pdf”，账期与设施 FAC-JS-02 已匹配。确认后将登记为能源资产并绑定 CBAM。</p></div>${state.factConfirmed ? '<span class="status-chip">已确认并进入 Run 05</span>' : '<button class="button button--primary" type="button" data-action="confirm-fact">确认提取结果</button>'}</section>` : "";
-    const dataNext = planned
-      ? nextAction("年度准备", "先确认 2027 年度范围", "季度数据不从 2026 年复制。确认产品、工厂、进口商和监测方法后，系统会生成 Q1 材料清单。", "确认年度范围", 'data-page="products"')
-      : !state.uploadAdded
-        ? nextAction("当前季度任务", `先补齐 ${state.quarter} 的 ${currentPeriod.endMonth}天然气账单`, "上传后 Agent 会提取用量、账期和设施，你只需核对结果。", "演示上传并解析", 'data-action="mock-upload"')
-      : !state.factConfirmed
-        ? nextAction("当前任务 · 3/5", "确认 Agent 提取的数据", "确认前不会进入正式核算，也不会覆盖历史记录。", "确认提取结果", 'data-action="confirm-fact"')
-        : nextAction("当前任务 · 3/5 已完成", "查看成本与数据路径", "新数据已进入待复核计算版本，下一步选择默认值或实测数据路径。", "查看更新结果", 'data-page="results"');
+    if (profile.mode !== "active" || state.year !== "2026") {
+      $("#main").innerHTML = `
+        <div class="cbam-data" data-template="T2">
+          ${pageHeader(`${org} / CBAM`, "季度数据", chip)}
+          <section class="cbam-work__state" aria-label="年度季度数据">
+            <strong>${state.year === "2025" ? "2025 年度季度数据已封存" : `${state.year} 年度尚无季度数据`}</strong>
+            <p>${state.year === "2025" ? "Q1–Q4 数据已随年度快照锁定，只读查看；更正需在「当前工作」创建更正修订。" : "季度数据会在该年度 Q1 开始后逐季产生，不从上一年度复制。"}</p>
+            <div class="cbam-work__state-actions">
+              <button class="button button--secondary" type="button" data-action="enter-program" data-year="2026">切换到 2026 · Q3</button>
+            </div>
+          </section>
+        </div>`;
+      return;
+    }
+
+    const model = cbamDataModel();
     $("#main").innerHTML = `
-      ${pageHeader(`${state.year} · ${state.quarter} QUARTERLY DATA`, `${state.quarter} 数据与证据`, dataHeaderAction)}
-      <section class="cadence-notice"><div><small>季度工作包</small><strong>每个季度独立检查数据完整度、计算版本和进口商反馈</strong></div><p>季度数据持续累积到年度数据集；监测计划、年度排放报告和核查在年度层管理。</p></section>
-      ${locked ? lockedYearBanner() : ""}
-      ${planned ? '<div class="privacy-band"><strong>季度数据尚未开始</strong><span>你可以浏览 Q1–Q4 结构，但应先完成年度范围和监测计划准备。</span><button class="text-button" type="button" data-page="roadmap">查看开始条件</button></div>' : ""}
-      <section class="period-grid" aria-label="选择季度数据包">${periods.map(([label, status, coverage, tone]) => {
-        const price = state.year === "2026" ? certificatePrices2026[label].price : state.year >= "2027" ? "按周价格" : "不适用";
-        return `<button type="button" class="period-card ${tone} ${state.quarter === label ? "selected" : ""}" data-quarter="${label}" aria-pressed="${state.quarter === label}"><div><small>${label}</small><span class="record-state ${tone}">${status}</span></div><strong>${coverage}%</strong><p>数据与证据覆盖</p><i><em style="width:${coverage}%"></em></i><ul><li>产品数量 ${coverage ? "✓" : "—"}</li><li>能源数据 ${coverage > 70 ? "✓" : coverage ? "待补" : "—"}</li><li>前体数据 ${coverage > 90 ? "✓" : coverage ? "缺 1 项" : "—"}</li><li>证书价格 ${price}</li></ul></button>`;
-      }).join("")}</section>
-      ${planned || locked ? "" : reviewStep}
-      ${planned || locked ? "" : `<section class="asset-capsule-panel" aria-label="本季度已关联的企业数据资产"><header><div><span>ENTERPRISE ASSETS IN USE</span><h2>这些材料来自企业数据资产</h2><p>看得懂的是业务含义；点胶囊可查看来源、确认状态，以及是否也被 PCF 使用。</p></div></header><div class="asset-capsule-row">${assetCapsule("REC-HX-POWER-2026Q3", { serviceId: "cbam" })}${assetCapsule("EVD-HX-POWER-2026Q3", { serviceId: "cbam" })}${assetCapsule("REC-HX-OUTPUT-2026YTD", { serviceId: "cbam" })}</div></section>`}
-      <div class="content-split data-layout"><section class="panel flat-panel"><div class="panel-head"><h2>${state.quarter} ${locked ? "归档记录" : planned ? "准备状态" : "本期材料"}</h2>${planned || locked ? "" : '<button class="text-button" type="button">责任人 ▾</button>'}</div><div class="record-list">${periodRecords}</div></section><aside class="panel trace-panel"><div class="panel-head"><h2>${planned ? "开始 Q1 前" : locked ? "档案包含" : `${state.quarter} 进入核算前`}</h2></div><ol class="trace-list">${planned ? '<li><span>01</span><div><strong>确认年度范围</strong><small>产品、设施、配置、CN Code 和进口商</small></div></li><li><span>02</span><div><strong>确认监测方法</strong><small>取数方式、职责、证据和内部控制</small></div></li>' : locked ? '<li><span>✓</span><div><strong>季度正式事实</strong><small>保留确认人与证据血缘</small></div></li><li><span>✓</span><div><strong>计算与交付版本</strong><small>保留规则包、价格与回执</small></div></li>' : `<li><span>01</span><div><strong>期间完整</strong><small>${state.uploadAdded ? "账期已覆盖，无重复或缺月" : `仍缺 ${currentPeriod.endMonth}天然气`}</small></div></li><li><span>02</span><div><strong>对象已关联</strong><small>设施、产品配置和前体明确</small></div></li><li><span>03</span><div><strong>证据可回溯</strong><small>文件版本与位置已记录</small></div></li><li><span>04</span><div><strong>异常已处理</strong><small>冲突有具名裁决</small></div></li>`}</ol></aside></div>
-      ${locked ? "" : dataNext}
-      ${cbamConfirmFooter()}`;
+      <div class="cbam-data" data-template="T2">
+        ${pageHeader(`${org} / CBAM`, "季度数据", `<div class="head-actions">${chip}<button class="button button--secondary" type="button" data-action="mock-upload">上传材料</button></div>`)}
+        <div class="cbam-data__cats" role="tablist" aria-label="数据类别">
+          ${model.cats.map((c) => `
+            <button type="button" role="tab" class="cbam-data__cat ${c.on ? "is-on" : ""}" aria-selected="${c.on}" data-data-cat="${safe(c.id)}">
+              <span><strong>${safe(c.label)}</strong><small>${safe(c.count)}</small></span>
+              <em class="${c.tone}"><i aria-hidden="true"></i>${safe(c.state)}</em>
+            </button>`).join("")}
+        </div>
+        <div class="cbam-data__body">
+          <section class="cbam-data__table ds-card" aria-label="季度数据项">
+            <div class="cbam-data__head" role="row">
+              <span>数据项</span><span>来源</span><span>Q3 数值</span><span>状态</span><span></span>
+            </div>
+            ${model.groups.map((g) => `
+              <div class="cbam-data__group">
+                <div class="cbam-data__group-head"><span>${safe(g.label)}</span><small>${safe(g.note)}</small></div>
+                ${g.items.map((d) => `
+                  <button type="button" class="cbam-data__row ${d.danger ? "is-danger" : ""}" ${d.attrs}>
+                    <span class="cbam-data__name"><strong>${safe(d.name)}</strong><small>${safe(d.req)}</small></span>
+                    <span class="cbam-data__src" title="${safe(d.src)}">${safe(d.src)}</span>
+                    <span class="cbam-data__val ${d.vc}">${safe(d.v)}</span>
+                    <span class="status-chip ${d.tone}">${safe(d.state)}</span>
+                    <span class="cbam-work__go">${safe(d.go)}</span>
+                  </button>`).join("")}
+              </div>`).join("")}
+          </section>
+          <aside class="cbam-data__aside" aria-label="确认后流向">
+            <section class="cbam-data__flow">
+              <strong>确认后流向</strong>
+              <ol>${model.flow.map((f) => `
+                <li>
+                  <span class="${f.ok ? "is-ok" : ""}">${safe(f.n)}</span>
+                  <div><b>${safe(f.t)}</b><small>${safe(f.d)}</small></div>
+                </li>`).join("")}</ol>
+            </section>
+            <p class="cbam-data__note">季度数据不跨年度复制。切换到 Q1、Q2 可查看已回执的数据包；产品、设施与 CN Code 在「产品与工厂」维护。</p>
+          </aside>
+        </div>
+        ${nextAction(model.next.kicker, model.next.title, model.next.desc, model.next.label, model.next.attrs)}
+      </div>`;
   }
 
   function cbamProductCatalog() {

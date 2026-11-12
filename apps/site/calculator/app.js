@@ -1,6 +1,8 @@
 import { createCalculator } from "./engine.mjs";
 
-const DATA_ROOT = "./data";
+// Vercel canonicalizes /calculator/ to /calculator. Keep runtime data rooted at
+// the public route so the browser never resolves it against the site root.
+const DATA_ROOT = "/calculator/data";
 const sectorLabels = {
   "Iron and Steel": "钢铁",
   Aluminium: "铝",

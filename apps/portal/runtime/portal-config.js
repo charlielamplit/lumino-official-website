@@ -454,7 +454,7 @@
     yearCreated: false, deliveryExpanded: null, productAdded: false,
     configurationAdded: false, orgEditing: false, selectedProduct: "hrc",
     productYears: [], productCnCodes: [], questionHelpOpen: false, findingChoiceOpen: false, dataPathChoice: null,
-    drawer: null, assetFacet: "attention", taskTab: "open", delivFilter: "all", settingsSection: "members", periodData: {}, productOverrides: {}, configurationDrafts: {}, facilities: [], invitedMembers: [], consultationRequests: [], publicLeads: [], selectedLeadId: null, leadsSource: "local", knowledgeArticles: [], selectedKnowledgeId: null, knowledgeSource: "local", knowledgeHydrated: false, actionBusy: false,
+    drawer: null, assetFacet: "attention", taskTab: "open", delivFilter: "all", dataCat: "all", dieselDone: false, settingsSection: "members", periodData: {}, productOverrides: {}, configurationDrafts: {}, facilities: [], invitedMembers: [], consultationRequests: [], publicLeads: [], selectedLeadId: null, leadsSource: "local", knowledgeArticles: [], selectedKnowledgeId: null, knowledgeSource: "local", knowledgeHydrated: false, actionBusy: false,
     pcfCalculationFailed: incoming.get("scenario") === "pcf-calculation-failed",
     onboardingDismissed: window.localStorage.getItem("lumino-portal-onboarding") === "dismissed", online: navigator.onLine,
     organization: (() => {

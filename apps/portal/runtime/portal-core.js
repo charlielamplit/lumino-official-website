@@ -542,59 +542,6 @@
     });
   }
 
-  /** CBAM confirmation step footer (T4): keep prev / continue in one sticky bar. */
-  function cbamConfirmFooter() {
-    const page = state.page;
-    const locked = isLockedYear();
-    if (locked) return "";
-    const planned = annualProfile().mode === "planned";
-    if (page === "work") {
-      if (planned) {
-        return stepFlowFooter({
-          prev: { label: "查看全年流程", attrs: 'data-page="roadmap"' },
-          next: { label: "确认年度范围", attrs: 'data-page="products"' },
-          hint: "先确认产品、工厂与进口商，再生成监测计划与 Q1 任务。",
-        });
-      }
-      if (state.uploadAdded && !state.factConfirmed) {
-        return stepFlowFooter({
-          prev: { label: "返回数据收集", attrs: 'data-page="data"' },
-          next: { label: "核对提取结果", attrs: 'data-page="data"' },
-          hint: "确认前不会写入正式核算，也不会覆盖历史记录。",
-        });
-      }
-      if (!state.uploadAdded) {
-        return stepFlowFooter({
-          prev: { label: "查看产品范围", attrs: 'data-page="products"' },
-          next: { label: "上传当期账单", attrs: 'data-action="mock-upload"' },
-          hint: `当前阻塞项：补齐 ${state.quarter} 天然气账单。`,
-        });
-      }
-      return stepFlowFooter({
-        prev: { label: "返回数据", attrs: 'data-page="data"' },
-        next: { label: "处理数据路径", attrs: 'data-page="results"' },
-        hint: "已确认的事实可进入成本比较与路径决策。",
-      });
-    }
-    if (page === "data") {
-      if (state.uploadAdded && !state.factConfirmed) {
-        return stepFlowFooter({
-          prev: { label: "返回当前工作", attrs: 'data-page="work"' },
-          next: { label: "确认提取结果", attrs: 'data-action="confirm-fact"' },
-          hint: "核对用量、账期与设施后才会产生新计算版本。",
-        });
-      }
-      return stepFlowFooter({
-        prev: { label: "返回当前工作", attrs: 'data-page="work"' },
-        next: state.uploadAdded
-          ? { label: "查看计算结果", attrs: 'data-page="results"' }
-          : { label: "上传本季度材料", attrs: 'data-action="mock-upload"' },
-        hint: state.uploadAdded ? "提取已确认时可进入结果与路径决策。" : "上传后由 Agent 提取，再由你确认。",
-      });
-    }
-    return "";
-  }
-
   function showForbiddenPage(pageId) {
     $("#main").innerHTML = systemStatePanel({
       code: "forbidden",
@@ -668,17 +615,32 @@
     return customerHasEnterableServices() ? "workbench" : "services-hub";
   }
 
+  /** 一级入口进入跨服务页时，二级筛选回到第一项。 */
+  function resetSecondaryDefaults(page) {
+    if (page === "shared-tasks") state.taskTab = "open";
+    else if (page === "shared-files") state.assetFacet = "attention";
+    else if (page === "shared-deliverables") state.delivFilter = "all";
+    else if (page === "org-settings") state.settingsSection = settingsNavItems[0]?.[0] || "org";
+  }
+
+  function firstServicePage(serviceId) {
+    return activeServiceNav(serviceId)[0]?.[0] || null;
+  }
+
   function setCustomerDestination(serviceId, page) {
     if (globalCustomerPages.has(page)) {
       state.currentService = null;
       state.page = page;
+      resetSecondaryDefaults(page);
       return;
     }
     const validService = serviceRegistry[serviceId]?.roles.includes(state.role) ? serviceId : null;
     state.currentService = validService;
-    state.page = validService && activeServiceNav(validService).some(([id]) => id === page)
+    const nav = validService ? activeServiceNav(validService) : [];
+    /* 一级服务轨点击（无 page / 无效 page）一律落到该服务二级导航第一项 */
+    state.page = validService && page && nav.some(([id]) => id === page)
       ? page
-      : validService ? activeServiceNav(validService)[0][0] : "services-hub";
+      : (firstServicePage(validService) || "services-hub");
   }
 
   function syncCustomerUrl() {
@@ -803,9 +765,10 @@
         badge: badge || "",
       })).join("")
         + `<div class="rail-divider" aria-hidden="true"></div>`
-        + services.map((service) => railButton(service.entryPage, service.code, service.name, {
+        + services.map((service) => railButton(firstServicePage(service.id) || service.entryPage, service.code, service.name, {
           service: service.id,
-          pageTarget: service.entryPage,
+          /* 一级服务轨：不带具体 page，进入后固定选中二级第一项 */
+          pageTarget: "",
           active: state.currentService === service.id,
           code: service.code,
           short: service.code,
@@ -1070,6 +1033,29 @@
             </footer>
           </div>`];
       })(),
+      "extract-energy": (() => {
+        const rows = [
+          ["7 月 购入电力", "电力账单 7 月 · 第 1 页", "4,120 MWh", false],
+          ["8 月 购入电力", "电力账单 8 月 · 第 1 页", "4,260 MWh", false],
+          ["9 月 购入电力", "电力账单 9 月 · 含 8 月补抄", "4,100 MWh", true],
+          ["Q3 天然气", "天然气计量表 · 汇总行", "1.86 百万 m³", false],
+        ].map(([k, src, v, flag]) => `
+          <li class="cbam-extract__row ${flag ? "is-warn" : ""}">
+            <span><strong>${safe(k)}</strong><small>${safe(src)}</small></span>
+            <b>${safe(v)}</b>
+            <button class="text-button" type="button" data-action="demo-fix-field" data-field="${safe(k)}">修正</button>
+          </li>`).join("");
+        return ["CBAM · 能源确认", "核对 Q3 能源用量", `
+          <div class="drawer-detail" data-template="T3">
+            <p class="drawer-lead">Agent 从你上传的文件中提取了以下用量。逐项核对，有误的点“修正”。</p>
+            <ul class="cbam-extract">${rows}</ul>
+            <p class="drawer-note">确认后生成企业事实新版本，并用于 Q3 计算；依赖旧版本的计算会标记为需要重算。</p>
+            <footer class="drawer-actions">
+              <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
+              <button class="button button--primary" type="button" data-action="confirm-fact">确认提取结果</button>
+            </footer>
+          </div>`];
+      })(),
       "extract-output": (() => {
         const rows = [
           ["热轧非合金钢卷 · Q3 产量", "生产月报 7–9 月.xlsx · 汇总表", "38,400 t"],
@@ -1089,6 +1075,27 @@
             <footer class="drawer-actions">
               <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
               <button class="button button--primary" type="button" data-action="confirm-output">确认提取结果</button>
+            </footer>
+          </div>`];
+      })(),
+      "cbam-data-item": (() => {
+        const item = cbamDataItemDetail(context.itemId || "out-cn");
+        const fields = item.fields.map(([k, v]) => `<div><dt>${safe(k)}</dt><dd>${safe(v)}</dd></div>`).join("");
+        const history = item.history.map((h) => `
+          <li class="cbam-data-history__row">
+            <b>${safe(h.v)}</b>
+            <span>${safe(h.t)}</span>
+            <small>${safe(h.d)}</small>
+          </li>`).join("");
+        return [`CBAM · ${item.cat}`, item.name, `
+          <div class="drawer-detail" data-template="T3">
+            <dl class="drawer-kv">${fields}</dl>
+            <section class="drawer-shell__block"><span>版本记录</span>
+              <ul class="cbam-data-history">${history}</ul>
+            </section>
+            <p class="drawer-note">${safe(item.note)}</p>
+            <footer class="drawer-actions">
+              <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
             </footer>
           </div>`];
       })(),
@@ -1141,6 +1148,67 @@
       })(),
     };
     return templates[id] || templates["record-detail"];
+  }
+
+  function cbamDataItemDetail(itemId) {
+    const catalog = {
+      "out-qty": {
+        cat: "产量", name: "热轧非合金钢卷 · Q3 产量",
+        fields: [["Q3 数值", state.outputConfirmed ? "38,400 t" : "38,400 t（待确认）"], ["来源", "生产月报 7–9 月.xlsx"], ["确认人", state.outputConfirmed ? "周岚 · 今天" : "—"], ["被谁使用", "Q3 计算 · NordWerk 数据包"]],
+        history: [{ v: "v1", t: state.outputConfirmed ? "Agent 提取，周岚确认" : "Agent 已提取，待确认", d: "今天" }],
+      },
+      "out-cn": {
+        cat: "产量", name: "产品 CN Code",
+        fields: [["Q3 数值", "7208 39 00"], ["来源", "产品主档 v2"], ["确认人", "周岚 · 10 月 12 日"], ["被谁使用", "Q3 计算 · NordWerk 数据包"]],
+        history: [{ v: "v2", t: "关务确认 CN Code", d: "10 月 12 日" }, { v: "v1", t: "Agent 建议候选", d: "9 月 20 日" }],
+      },
+      "en-power": {
+        cat: "能源", name: "购入电力",
+        fields: [["Q3 数值", state.factConfirmed ? "12,480 MWh" : "—"], ["来源", state.uploadAdded ? "电力账单 7–9 月" : "未上传"], ["确认人", state.factConfirmed ? "周岚 · 今天" : "—"], ["被谁使用", "Q3 计算间接排放"]],
+        history: state.factConfirmed
+          ? [{ v: "v3", t: "企业已确认", d: "今天" }, { v: "v2", t: "中期预估", d: "10 月 15 日" }]
+          : [{ v: "—", t: "等待上传或确认", d: "—" }],
+      },
+      "en-gas": {
+        cat: "能源", name: "天然气",
+        fields: [["Q3 数值", state.factConfirmed ? "1.86 百万 m³" : "—"], ["来源", state.uploadAdded ? "天然气计量表" : "未上传"], ["确认人", state.factConfirmed ? "周岚 · 今天" : "—"], ["被谁使用", "Q3 计算直接排放"]],
+        history: state.factConfirmed
+          ? [{ v: "v1", t: "企业已确认", d: "今天" }]
+          : [{ v: "—", t: "等待上传或确认", d: "—" }],
+      },
+      "en-diesel": {
+        cat: "能源", name: "厂内运输柴油",
+        fields: [["Q3 数值", state.dieselDone ? "6.2 t" : "—"], ["来源", state.dieselDone ? "叉车柴油台账 Q3" : "未提供"], ["确认人", state.dieselDone ? "周岚" : "—"], ["被谁使用", "可选 · 直接排放 / PCF 可引用"]],
+        history: [{ v: "—", t: "可选数据，不阻塞 Q3 计算", d: "—" }],
+      },
+      "ship-nord": {
+        cat: "发运", name: "发往 NordWerk GmbH",
+        fields: [["Q3 数值", "12,000 t"], ["来源", "发运台账 Q3"], ["确认人", "周岚 · 10 月 12 日"], ["被谁使用", "Q3 计算 · 出口隐含排放"]],
+        history: [{ v: "v1", t: "Agent 提取，周岚确认", d: "10 月 12 日" }],
+      },
+      "ship-docs": {
+        cat: "发运", name: "报关与提单",
+        fields: [["Q3 数值", "3 份"], ["来源", "报关单 / 提单 PDF"], ["确认人", "周岚 · 10 月 12 日"], ["被谁使用", "NordWerk 数据包附件"]],
+        history: [{ v: "v1", t: "材料已归档", d: "10 月 12 日" }],
+      },
+      "pre-emiss": {
+        cat: "前体", name: "钢坯实测排放 · 北方特钢",
+        fields: [["Q3 数值", state.findingResolved ? "1.85 tCO₂e/t" : "—"], ["来源", state.findingResolved ? "EU 默认值表 3" : "北方特钢 · 未提供"], ["确认人", state.findingResolved ? "周岚 · 路径已选定" : "—"], ["被谁使用", "Q3 计算前体排放"]],
+        history: state.findingResolved
+          ? [{ v: "默认", t: "受控默认值 · 专家复核中", d: "今天" }]
+          : [{ v: "—", t: "缺口未处理", d: "已逾期 3 天" }],
+      },
+      "pre-qty": {
+        cat: "前体", name: "钢坯采购量",
+        fields: [["Q3 数值", "41,000 t"], ["来源", "采购台账 Q3"], ["确认人", "周岚 · 10 月 12 日"], ["被谁使用", "Q3 计算前体分配"]],
+        history: [{ v: "v1", t: "Agent 提取，周岚确认", d: "10 月 12 日" }],
+      },
+    };
+    const item = catalog[itemId] || catalog["out-cn"];
+    return {
+      ...item,
+      note: "已确认数据只能通过新版本修改；修改后依赖它的计算会标记为需要重算。",
+    };
   }
 
   function cbamCalcSnapshot() {

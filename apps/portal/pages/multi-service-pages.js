@@ -625,18 +625,26 @@
     const productLabel = ctx.product ? `${ctx.product.name}` : "热轧非合金钢卷";
     const evidenceId = ctx.evidence?.id || "EVD-HX-POWER-2026Q3";
     const evidenceName = pack?.metadata?.filename || template.filename || ctx.evidence?.payload?.fileName || "企业电力证据";
+    const energyValue = ctx.value && ctx.value !== "—"
+      ? `购入电力 ${ctx.value} ${ctx.unit || "MWh"}`
+      : "";
     const ledger = window.LuminoPcfInventory
       ? window.LuminoPcfInventory.buildDomainLedger({
         declaration: item?.metadata?.declaration,
         boundary: item?.metadata?.boundary,
         template,
         bindings: [ctx.powerBinding, ctx.evidenceBinding].filter(Boolean),
+        valueHints: {
+          energy: energyValue || undefined,
+          output: item?.metadata?.declaration?.referenceFlow || undefined,
+        },
       })
       : { rows: [], summary: { ready: 0, total: 0 } };
     const domainHtml = (ledger.rows || []).map((row) => `<article class="pcf-domain-row">
       <span class="pcf-domain-number">${safe(row.number)}</span><div class="pcf-domain-name"><strong>${safe(row.name)}</strong><small>${safe(row.description)}</small></div>
-      <div class="pcf-domain-owner"><span>责任</span><strong>${safe(row.owner)}</strong></div><div class="pcf-domain-count"><span>记录</span><strong>${safe(row.count)}</strong></div>
-      <span class="pcf-domain-status pcf-domain-status--${safe(row.tone)}">${safe(row.status)}</span><button class="text-button" type="button" ${row.action === "pcf-boundary" ? 'data-page="pcf-boundary"' : row.action === "pcf-upload" ? 'data-drawer="pcf-upload"' : `data-drawer="record-detail" data-drawer-label="${safe(ctx.power?.name || "能源与过程数据")}" data-drawer-object="${safe(ctx.power?.versionId || "REC-HX-POWER-2026Q3")}" data-drawer-status="${factConfirmed ? "PCF 已确认使用" : "1 项待确认"}" data-drawer-description="核对购入电力的期间、数值、单位、产品用途与证据引用。资产版本 ${safe(ctx.power?.versionId || "")}；证据 ${safe(evidenceId)}。"`}>${safe(row.label)} →</button>
+      <div class="pcf-domain-value"><span>关键数值</span><strong title="${safe(row.value || "—")}">${safe(row.value || "—")}</strong><small>${safe(row.count)} 项</small></div>
+      <div class="pcf-domain-owner"><span>责任</span><strong>${safe(row.owner)}</strong></div>
+      <span class="pcf-domain-status pcf-domain-status--${safe(row.tone)}">${safe(row.status)}</span><button class="text-button" type="button" ${row.action === "pcf-boundary" ? 'data-page="pcf-boundary"' : row.action === "pcf-upload" ? 'data-drawer="pcf-upload"' : `data-drawer="record-detail" data-drawer-label="${safe(ctx.power?.name || "能源与过程数据")}" data-drawer-object="${safe(ctx.power?.versionId || "REC-HX-POWER-2026Q3")}" data-drawer-status="${factConfirmed ? "PCF 已确认使用" : "1 项待确认"}" data-drawer-description="核对购入电力的期间、数值、单位、产品用途与证据引用。资产版本 ${safe(ctx.power?.versionId || "")}；证据 ${safe(evidenceId)}。当前数值：${safe(row.value || "—")}。"`}>${safe(row.label)} →</button>
     </article>`).join("");
     const declarationReady = Boolean(item?.metadata?.declaration?.confirmed) || (item && !["NOT_STARTED", "SCOPING"].includes(item.status));
     const boundaryReady = Boolean(item?.metadata?.boundary?.confirmed) || item?.metadata?.boundary?.status === "CONFIRMED";

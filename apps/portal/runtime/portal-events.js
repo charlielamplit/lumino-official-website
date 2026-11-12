@@ -174,9 +174,8 @@
     if (item.dataset.accountAction === "settings") {
       closeAccountMenu();
       if (!canManageOrganization()) { toast("只有企业管理员可以打开企业设置。"); return; }
-      state.currentService = null;
-      state.page = "org-settings";
-      state.settingsSection = item.dataset.settingsSection || "members";
+      setCustomerDestination(null, "org-settings");
+      if (item.dataset.settingsSection) state.settingsSection = item.dataset.settingsSection;
       render();
     }
   });
@@ -191,8 +190,8 @@
         label,
         hay: id,
         run: () => {
-          if (globalCustomerPages.has(id)) { state.currentService = null; state.page = id; }
-          else { state.page = id; }
+          if (globalCustomerPages.has(id)) setCustomerDestination(null, id);
+          else state.page = id;
           render();
         },
       }))
@@ -402,7 +401,15 @@
         assetId: drawerTrigger.dataset.assetId,
         runId: drawerTrigger.dataset.runId,
         delivId: drawerTrigger.dataset.delivId,
+        itemId: drawerTrigger.dataset.itemId,
       });
+      return;
+    }
+    const dataCat = event.target.closest("[data-data-cat]");
+    if (dataCat) {
+      state.dataCat = dataCat.dataset.dataCat || "all";
+      persistPortalState();
+      render();
       return;
     }
     const facetButton = event.target.closest("[data-asset-facet]");
@@ -443,8 +450,12 @@
         toast("当前角色或服务范围无权进入该页面。");
         return;
       }
-      if (globalCustomerPages.has(page)) state.currentService = null;
-      state.page = page;
+      if (globalCustomerPages.has(page)) {
+        /* 一级全局轨：进入跨服务页时二级筛选回到第一项 */
+        setCustomerDestination(null, page);
+      } else {
+        state.page = page;
+      }
       if (page === "leads") state.leadsHydrated = false;
       if (page === "knowledge") state.knowledgeHydrated = false;
       persistPortalState(); render(); closeDrawer();
@@ -1005,7 +1016,7 @@
           const runId = `RUN-05-${state.year}-${state.quarter}`;
           ensureWorkflowObject({ id: runId, type: "calculationRun", status: "QUEUED", owner: "王晨", year: state.year, quarter: state.quarter, dependsOn: [factId], metadata: { rulepack: `EU-CBAM-${state.year}.1`, activityAssetId: gasAssetId } });
           moveWorkflow(runId, ["RUNNING", "SUCCEEDED", "CURRENT"], "以已确认事实创建新计算版本");
-          state.factConfirmed = true; persistPortalState(); render(); toast("提取结果已写入企业资产池并确认；旧计算版本已失效，Run 05 成为当前版本。");
+          state.factConfirmed = true; persistPortalState(); closeDrawer(); render(); toast("Q3 能源用量已确认", "生成企业事实 v1 · 下一步：确认 Q3 产量");
         } catch (error) { toast(error.message); }
       }
       if (action === "resolve-finding") { state.findingChoiceOpen = true; render(); document.querySelector(".decision-panel")?.scrollIntoView({ behavior: "smooth", block: "center" }); }

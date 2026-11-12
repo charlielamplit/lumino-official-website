@@ -6,12 +6,12 @@
   <title>关于我们 · Lumino</title>
   <meta name="description" content="上海铄垣环保科技有限公司运营 Lumino 平台，为出口企业提供 CBAM、ESG 与产品碳足迹服务。">
   <link rel="icon" href="/favicon.svg">
-  <link rel="stylesheet" href="/apps/site/site/site-v3.css">
+  <link rel="stylesheet" href="/apps/site/site/site-v3.css?v=20261112-about-align">
   <script defer src="/apps/site/site/i18n.js"></script>
   <script defer src="/apps/site/site/site-shell.js"></script>
   <script defer src="/apps/site/site/float-tools.js"></script>
 </head>
-<body>
+<body class="page-about">
 <lumino-header current="about"></lumino-header>
 <main id="main">
   <section class="m-page-hero m-page-hero--compact">
@@ -77,26 +77,89 @@
           <span data-i18n-zh="核算引擎、数据与权限架构、交付工具" data-i18n-en="Calculation engines, data and access architecture, delivery tools"></span>
         </article>
       </div>
-    </div>
-  </section>
-
-  <section class="m-section">
-    <div class="wrap">
-      <div class="pf-shots">
-        <figure>
-          <div class="pf-shot pf-shot--photo">
-            <img src="/apps/site/site/assets/about/evidence-archive.png" alt="" width="1600" height="1000" loading="lazy" decoding="async">
+      <div class="pf-diagrams">
+        <figure class="pf-diagram">
+          <div class="pf-diagram__canvas" role="img" aria-label="证据与版本">
+            <div class="pf-flow">
+              <header class="pf-diagram__bar">
+                <span class="mono">EVIDENCE</span>
+                <strong data-i18n-zh="证据与版本" data-i18n-en="Evidence & versions"></strong>
+                <em data-i18n-zh="归档 · 可追溯 · 可复核" data-i18n-en="Archive · trace · review"></em>
+              </header>
+              <div class="pf-flow__lane pf-flow__lane--4">
+                <div class="pf-flow__node">
+                  <span class="mono">01</span>
+                  <strong data-i18n-zh="上传原件" data-i18n-en="Upload original"></strong>
+                  <em data-i18n-zh="首版留存" data-i18n-en="Keep v1"></em>
+                </div>
+                <span class="pf-flow__arrow" aria-hidden="true"></span>
+                <div class="pf-flow__node">
+                  <span class="mono">02</span>
+                  <strong data-i18n-zh="更正修订" data-i18n-en="Correct & revise"></strong>
+                  <em data-i18n-zh="不覆盖原件" data-i18n-en="No overwrite"></em>
+                </div>
+                <span class="pf-flow__arrow" aria-hidden="true"></span>
+                <div class="pf-flow__node">
+                  <span class="mono">03</span>
+                  <strong data-i18n-zh="绑定版本" data-i18n-en="Bind version"></strong>
+                  <em data-i18n-zh="用哪一版说清" data-i18n-en="Cite the id"></em>
+                </div>
+                <span class="pf-flow__arrow" aria-hidden="true"></span>
+                <div class="pf-flow__node">
+                  <span class="mono">04</span>
+                  <strong data-i18n-zh="交付可回看" data-i18n-en="Reviewable delivery"></strong>
+                  <em data-i18n-zh="证据随包导出" data-i18n-en="Export with pack"></em>
+                </div>
+              </div>
+              <p class="pf-flow__base" data-i18n-zh="每个数字都能追到原始材料、确认人和规则版本" data-i18n-en="Every figure traces to source files, confirmer and rule version"></p>
+            </div>
           </div>
-          <figcaption data-i18n-zh="证据与版本：资料归档、可追溯、可复核——我们交付的底层能力" data-i18n-en="Evidence and versions: archived, traceable, reviewable—the base of how we deliver"></figcaption>
+          <figcaption>
+            <strong data-i18n-zh="证据与版本" data-i18n-en="Evidence and versions"></strong>
+            <span data-i18n-zh="资料归档、可追溯、可复核——我们交付的底层能力" data-i18n-en="Archived, traceable, reviewable—the base of how we deliver"></span>
+          </figcaption>
         </figure>
-        <figure>
-          <div class="pf-shot pf-shot--photo">
-            <picture>
-              <source type="image/webp" srcset="/apps/site/site/assets/cases/steel-mill.webp">
-              <img src="/apps/site/site/assets/cases/steel-mill.png" alt="" width="1600" height="1000" loading="lazy" decoding="async">
-            </picture>
+
+        <figure class="pf-diagram">
+          <div class="pf-diagram__canvas" role="img" aria-label="产线与合规同源">
+            <div class="pf-flow">
+              <header class="pf-diagram__bar">
+                <span class="mono">PLANT</span>
+                <strong data-i18n-zh="产线与合规同源" data-i18n-en="Plant & compliance, one source"></strong>
+                <em data-i18n-zh="一次整理 · 多季复用" data-i18n-en="Prepare once · reuse quarters"></em>
+              </header>
+              <div class="pf-flow__lane pf-flow__lane--4">
+                <div class="pf-flow__node">
+                  <span class="mono">01</span>
+                  <strong data-i18n-zh="产线台账" data-i18n-en="Plant ledgers"></strong>
+                  <em data-i18n-zh="产量 · 能耗 · 发运" data-i18n-en="Output · energy · shipments"></em>
+                </div>
+                <span class="pf-flow__arrow" aria-hidden="true"></span>
+                <div class="pf-flow__node pf-flow__node--ai">
+                  <span class="mono">02</span>
+                  <strong data-i18n-zh="同源整理" data-i18n-en="Shared organise"></strong>
+                  <em data-i18n-zh="对齐口径与缺口" data-i18n-en="Align scope & gaps"></em>
+                </div>
+                <span class="pf-flow__arrow" aria-hidden="true"></span>
+                <div class="pf-flow__node">
+                  <span class="mono">03</span>
+                  <strong data-i18n-zh="季度复用" data-i18n-en="Quarterly reuse"></strong>
+                  <em data-i18n-zh="下季少从零拼" data-i18n-en="Less rebuild each quarter"></em>
+                </div>
+                <span class="pf-flow__arrow" aria-hidden="true"></span>
+                <div class="pf-flow__node">
+                  <span class="mono">04</span>
+                  <strong data-i18n-zh="年度核查" data-i18n-en="Annual review"></strong>
+                  <em data-i18n-zh="同一底座可对账" data-i18n-en="One base to reconcile"></em>
+                </div>
+              </div>
+              <p class="pf-flow__base" data-i18n-zh="产线数据与合规要求在同一处对齐，支撑季度交付与年度核查" data-i18n-en="Plant data and compliance asks stay aligned—ready for quarterly delivery and annual review"></p>
+            </div>
           </div>
-          <figcaption data-i18n-zh="产线与合规数据同源整理，支撑季度复用与年度核查" data-i18n-en="Plant and compliance data kept in one place—ready for quarterly reuse and annual review"></figcaption>
+          <figcaption>
+            <strong data-i18n-zh="产线与合规同源" data-i18n-en="Plant and compliance, one source"></strong>
+            <span data-i18n-zh="产线与合规数据同源整理，支撑季度复用与年度核查" data-i18n-en="Plant and compliance data kept in one place—ready for quarterly reuse and annual review"></span>
+          </figcaption>
         </figure>
       </div>
     </div>
