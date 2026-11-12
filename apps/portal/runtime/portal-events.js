@@ -698,7 +698,7 @@
       }
       if (action === "cbam-review-calculation") {
         try {
-          cbamGoldenPath.command("p07", "review", workflowActor());
+          cbamGoldenPath.command("p07", "review", { name: roleConfig[state.role].name, role: state.role });
           render();
           toast("RUN-CBAM-2026Q3-001 已由李娜复核；接下来等待赵海峰处理 AP-2026-014。");
         } catch (error) { toast(error.recovery || error.message); }

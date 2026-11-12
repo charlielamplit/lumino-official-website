@@ -178,7 +178,7 @@
     };
   }
 
-  async function requestOpenAnswer(q) {
+  async function requestOpenAnswer(q, options = {}) {
     if (activeQuestionAbort) activeQuestionAbort.abort();
     const controller = new AbortController();
     activeQuestionAbort = controller;
@@ -188,7 +188,7 @@
       const response = await fetch("/api/advisor", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ text: q, lang: "zh", asOf: "2026-11-12", history }),
+        body: JSON.stringify({ text: q, lang: "zh", asOf: "2026-11-12", history, taskMode: options.mode || "ask" }),
         signal: controller.signal,
       });
       if (!response.ok) return localQuestionFallback(`http_${response.status}`);
@@ -208,35 +208,75 @@
     state.agentLog = [[k, t], ...(state.agentLog || [])].slice(0, 40);
   }
 
-  async function agentAsk(raw) {
+  async function agentAsk(raw, options = {}) {
     const q = String(raw || "").trim();
     if (!q) return;
+    const mode = options.mode || "ask";
+    const displayText = String(options.displayText || q).trim();
     const sequence = ++questionSequence;
     if (activeQuestionAbort) activeQuestionAbort.abort();
     ensureAgentState();
     state.agentPb = "chat";
-    state.agentMsgs = [...state.agentMsgs, { me: true, text: q }];
+    state.agentMsgs = [...state.agentMsgs, { me: true, text: displayText, mode }];
     state.agentInput = "";
     state.agentBusy = true;
     if (typeof persistPortalState === "function") persistPortalState();
     renderAgentRuntime();
-    const fixed = resolveReply(q);
+    const fixed = mode === "ask" ? resolveReply(q) : null;
     const reply = fixed
       ? await new Promise((resolve) => window.setTimeout(() => resolve({ ...fixed, sourceLabel: "预置回答 · 未执行工作流" }), 1000 + Math.floor(Math.random() * 3001)))
-      : await requestOpenAnswer(q);
+      : await requestOpenAnswer(q, { mode });
     if (sequence !== questionSequence) return;
     state.agentBusy = false;
     state.agentMsgs = [...state.agentMsgs, {
       me: false,
       text: reply.text,
       tools: reply.tools || [],
-      sourceLabel: reply.sourceLabel || "Agent",
+      sourceLabel: mode === "draft" ? `可编辑草稿 · ${reply.sourceLabel || "Agent"}` : reply.sourceLabel || "Agent",
       prop: reply.prop || null,
       done: null,
     }];
-    pushLog("问答", `${q} · ${reply.sourceLabel || "Agent"}`);
+    pushLog(mode === "draft" ? "起草" : "问答", `${displayText} · ${reply.sourceLabel || "Agent"}`);
     if (typeof persistPortalState === "function") persistPortalState();
     renderAgentRuntime();
+  }
+
+  function draftComposerReply(raw) {
+    const request = String(raw || "").trim();
+    if (!request) {
+      if (typeof toast === "function") toast("请先说明需要起草的内容。");
+      return;
+    }
+    const prompt = `请只生成可编辑草稿，不执行工作流、不写入数据、不声称已发送或已提交。\n\n起草要求：${request}`;
+    agentAsk(prompt, { mode: "draft", displayText: request });
+  }
+
+  function runComposerTask(raw) {
+    const pb = state.agentPb !== "chat" ? PBM()[state.agentPb] : null;
+    if (!pb) {
+      state.agentMsgs = [...(state.agentMsgs || []), {
+        me: false,
+        text: "执行模式需要先选择一个 CBAM 阶段。请从话题目录选择阶段，我会显示前置门禁、将执行的步骤和需要人工确认的位置。",
+        sourceLabel: "本地运行时 · 未执行工作流",
+      }];
+      if (typeof persistPortalState === "function") persistPortalState();
+      renderAgentRuntime();
+      return;
+    }
+    if (playbookDone(pb.id)) {
+      if (typeof toast === "function") toast(`${pb.title}已完成；未重复执行。`);
+      return;
+    }
+    if (!state.rtStarted[pb.id]) {
+      if (String(raw || "").trim()) pushLog("任务说明", String(raw).trim());
+      startPlaybook(pb.id);
+      return;
+    }
+    runAutoSteps(pb.id);
+    const current = pb.steps[state.rtCur[pb.id] ?? 0];
+    if (current?.k === "ask" || current?.k === "ap") {
+      if (typeof toast === "function") toast(current.k === "ask" ? "请回答当前问题后继续。" : "当前步骤等待具名处理人确认。");
+    }
   }
 
   function advancePlaybook(pbId) {
@@ -462,7 +502,7 @@
       </div>
       ${!(state.agentMsgs || []).length ? `<div class="rt-sug-list">${sugs}</div>` : ""}
       <div class="rt-msg-list">${msgs}</div>
-      ${state.agentBusy ? '<div class="rt-busy" aria-live="polite">运行中…</div>' : ""}`;
+      <div class="rt-busy" role="status" aria-live="polite">${state.agentBusy ? "运行中…" : ""}</div>`;
   }
 
   function renderPlaybookCenter(pb) {
@@ -541,6 +581,37 @@
     return `${intro}${steps}${doneBar}`;
   }
 
+  function resolveSource(raw) {
+    if (!raw || typeof raw === "string") {
+      return { label: String(raw || "未命名依据"), available: false, meta: "尚未绑定到当前演示对象" };
+    }
+    if (raw.assetId) {
+      const asset = typeof assetViews !== "undefined"
+        ? assetViews.accessibleAsset(raw.assetId, { role: state.role, serviceId: "cbam" })
+        : null;
+      const version = asset?.versionId || raw.version || "版本未知";
+      return {
+        label: raw.label || asset?.name || raw.assetId,
+        available: Boolean(asset),
+        kind: "asset",
+        id: raw.assetId,
+        meta: asset ? `${raw.assetId} · ${version}${raw.locator ? ` · ${raw.locator}` : ""}` : `${raw.assetId} · 当前角色不可见或对象不存在`,
+      };
+    }
+    if (raw.workflowId) {
+      const object = typeof workflowEngine !== "undefined" ? workflowEngine.get(raw.workflowId) : null;
+      const version = object?.version ? `v${object.version}` : raw.version || "版本未知";
+      return {
+        label: raw.label || object?.scope || raw.workflowId,
+        available: Boolean(object),
+        kind: "workflow",
+        id: raw.workflowId,
+        meta: object ? `${raw.workflowId} · ${version} · ${object.status}${raw.locator ? ` · ${raw.locator}` : ""}` : `${raw.workflowId} · 对象尚未生成`,
+      };
+    }
+    return { label: raw.label || "未命名依据", available: false, meta: "尚未绑定到当前演示对象" };
+  }
+
   function renderRight(pb) {
     const tabs = [
       ["art", "产物", null],
@@ -580,9 +651,15 @@
       }).join("") || `<p class="rt-right__hint">尚无变更。</p>`;
       body = `<p class="rt-right__hint">Agent 不直接写入。以下改动在对应确认步骤通过后提交，并记录为「确认人 · Agent 提议」。</p><div class="rt-chg">${list}</div>`;
     } else if (state.agentTab === "src") {
-      const list = (pb?.sources || []).map((t) => `<span class="rt-src-row"><span aria-hidden="true">▢</span>${safe(t)}</span>`).join("")
+      const list = (pb?.sources || []).map((raw) => {
+        const source = resolveSource(raw);
+        const content = `<span class="rt-src-row__icon" aria-hidden="true">${source.available ? "↗" : "▢"}</span><span><strong>${safe(source.label)}</strong><small>${safe(source.meta)}</small></span>`;
+        return source.available
+          ? `<button type="button" class="rt-src-row is-openable" data-agent-action="open-source" data-agent-source-kind="${safe(source.kind)}" data-agent-source-id="${safe(source.id)}">${content}<em>可打开</em></button>`
+          : `<span class="rt-src-row">${content}<em>未绑定</em></span>`;
+      }).join("")
         || `<p class="rt-right__hint">选择阶段后显示证据来源。</p>`;
-      body = `<p class="rt-right__hint">Agent 的每个结论都链接到这些来源。原文件只读，保存为证据。</p><div class="rt-src">${list}</div>`;
+      body = `<p class="rt-right__hint">只有标记为「可打开」的依据才已绑定到当前演示对象；未绑定项不作可追溯性声明。</p><div class="rt-src">${list}</div>`;
     } else {
       const logs = (state.agentLog || []).map(([k, t]) => `<span class="rt-log-row"><b>${safe(k)}</b><span>${safe(t)}</span></span>`).join("")
         || `<span class="rt-log-row"><b>就绪</b><span>等待你选择阶段或提问</span></span>`;
@@ -721,7 +798,8 @@
     if (!state.agentOpen || state.agentDock || event.key !== "Tab") return false;
     const dialog = document.querySelector("#agentRuntimeLayer .rt-dialog");
     if (!dialog) return false;
-    const nodes = [...dialog.querySelectorAll('button:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+    const nodes = [...dialog.querySelectorAll('button:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+      .filter((node) => !node.closest("[hidden]") && node.getClientRects().length > 0 && getComputedStyle(node).visibility !== "hidden");
     if (!nodes.length) return false;
     const first = nodes[0];
     const last = nodes[nodes.length - 1];
@@ -802,6 +880,21 @@
       if (typeof toast === "function") toast("原型中可先在页面上传材料；Agent 会引用已上传证据。");
       return true;
     }
+    if (action === "open-source") {
+      const id = el.dataset.agentSourceId;
+      if (el.dataset.agentSourceKind === "asset") {
+        openDrawer("asset-detail", { assetId: id, title: id });
+      } else {
+        const object = typeof workflowEngine !== "undefined" ? workflowEngine.get(id) : null;
+        if (object) openDrawer("record-detail", {
+          title: object.scope || object.type || id,
+          object: id,
+          status: `${object.status} · v${object.version || 1}`,
+          description: "该依据来自当前演示 WorkflowEngine；打开内容与 Agent 状态使用同一对象。",
+        });
+      }
+      return true;
+    }
     if (action === "go-page") {
       goPlaybookPage(PBM()[el.dataset.agentPb]);
       return true;
@@ -823,7 +916,10 @@
 
   function sendComposer() {
     const input = document.getElementById("agentInput");
-    agentAsk(input ? input.value : state.agentInput);
+    const value = input ? input.value : state.agentInput;
+    if (state.agentMode === "run") runComposerTask(value);
+    else if (state.agentMode === "draft") draftComposerReply(value);
+    else agentAsk(value, { mode: "ask" });
   }
 
   window.LuminoAgentRuntime = {

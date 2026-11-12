@@ -355,8 +355,14 @@ Implemented:
 Verification:
 
 - JavaScript syntax checks: pass;
-- `node --test tests/*.test.cjs tests/*.test.mjs packages/agent/tests/*.test.cjs`: **158/158 pass**;
+- `node --test tests/*.test.cjs tests/*.test.mjs packages/agent/tests/*.test.cjs`: **160/160 pass**;
 - `git diff --check`: pass;
 - local Portal route: controller and Runtime assets served successfully;
 - local configured Agent API: `general_model`, tier `sol`, `ui_state: ok` after routing open questions away from a truncating hidden-reasoning Luna path;
-- visual browser acceptance: **pending** because the browser access host/CDP endpoint was unavailable in this environment. Issue #69 must remain open until the 390/768/1440 sequence in Task 8 is completed.
+- visual browser acceptance: **pass** at 390/768/1440 using `scripts/check-cbam-agent-runtime.mjs`;
+- all three widths completed p06→p07→independent review→customer approval→p08 and ended at `PACKAGE_READY`;
+- focus entry/trap/return passed at every width; mobile-primary controls are at least 44px and no viewport has horizontal overflow;
+- p06/p08 source rows resolve real asset/workflow objects, open their detail drawer and no longer claim that every conclusion is linked;
+- screenshots and the machine-readable report are stored under `outputs/review/cbam-agent-*`.
+
+Browser QA also found and fixed a real integration defect that static tests missed: the reviewer page passed `{ actor, role }` while the controller requires `{ name, role }`, which had blocked review, approval and p08 in the rendered application. The responsive pass additionally compacted the Portal topbar so it no longer expands the 390/768 document width.
