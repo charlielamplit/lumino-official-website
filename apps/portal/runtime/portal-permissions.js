@@ -19,6 +19,10 @@
     "pcf-run-calculation": Object.freeze(["customer_admin", "customer_owner"]),
     "pcf-complete-review": Object.freeze(["reviewer"]),
     "workflow-approval": Object.freeze(["customer_approver"]),
+    "cbam-confirm-quarter-data": Object.freeze(["customer_admin", "customer_owner"]),
+    "cbam-run-calculation": Object.freeze(["system"]),
+    "cbam-review-calculation": Object.freeze(["reviewer"]),
+    "cbam-build-package": Object.freeze(["customer_admin", "customer_owner"]),
   });
 
   function allowedRoles(action) {
@@ -33,6 +37,7 @@
   function denialMessage(action) {
     if (action === "pcf-complete-review") return "该操作仅由独立复核员执行；客户可查看草稿和复核状态。";
     if (action === "workflow-approval") return "该操作需要内部审批人权限。";
+    if (action === "cbam-review-calculation") return "该操作只能由指定复核员执行。";
     return "当前角色没有执行此操作的权限。";
   }
 

@@ -7,6 +7,7 @@
   "exports": {
     "./data-asset-engine": "./domain/data-asset-engine.js",
     "./workflow-engine": "./domain/workflow-engine.js",
+    "./cbam-golden-path": "./domain/cbam-golden-path.js",
     "./stage-gates": "./domain/stage-gates.js",
     "./capability-catalog": "./runtime/capability-catalog.js",
     "./agent-task-engine": "./runtime/agent-task-engine.js",

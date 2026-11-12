@@ -129,8 +129,9 @@ async function callResponsesApi({ model, key, lang, text, sourcesBlock, signal, 
   const body = {
     model: model.id,
     temperature: 0.2,
-    // Claude via gateway may spend completion budget on hidden reasoning.
-    max_output_tokens: 1200,
+    // Compatible gateways may count hidden reasoning against this budget;
+    // leave enough room for the required JSON object after deliberation.
+    max_output_tokens: 2400,
     text: {
       format: {
         type: "json_schema",
@@ -174,8 +175,9 @@ async function callChatCompletionsApi({ model, key, lang, text, sourcesBlock, si
     body: JSON.stringify({
       model: model.id,
       temperature: 0.2,
-      // Claude via gateway may spend completion budget on hidden reasoning.
-      max_tokens: 1200,
+      // Compatible gateways may count hidden reasoning against this budget;
+      // 1200 previously truncated valid JSON before the closing quote/brace.
+      max_tokens: 2400,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: systemPrompt(lang, grounded) },
@@ -348,7 +350,10 @@ export async function generateGroundedAnswer({ text, lang, hits, signal }) {
 
 export async function generateGeneralAnswer({ text, lang, signal }) {
   if (!modelConfigured()) return null;
-  const primary = chooseModel({ text, hits: [] });
+  // Open questions may require a direct regulatory explanation and a complete
+  // structured result. Use the capable fast Sol route instead of a Luna model
+  // that some compatible gateways run with hidden reasoning until finish=length.
+  const primary = { id: SOL, tier: "sol" };
   const key = apiKey();
   const mode = apiMode();
   const policy = storagePolicy();
@@ -370,8 +375,7 @@ export async function generateGeneralAnswer({ text, lang, signal }) {
       grounded: false,
     });
   } catch (error) {
-    const canFallback = primary.tier === "sol"
-      && LUNA
+    const canFallback = LUNA
       && LUNA !== primary.id
       && isTimeoutError(error);
     if (!canFallback) throw error;

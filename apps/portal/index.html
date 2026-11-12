@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;600&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/apps/portal/styles.css?v=20261111-drawer-btn">
+  <link rel="stylesheet" href="/apps/portal/styles.css?v=20261112-agent1">
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -145,6 +145,7 @@
         <span class="project-period__chevron" aria-hidden="true"></span>
       </div>
       <div class="topbar-actions">
+        <span id="agentTopbarSlot"></span>
         <button class="icon-button" type="button" aria-label="通知" id="notifButton"><i class="topbar-icon topbar-icon--bell" aria-hidden="true"></i><span class="notification-dot" aria-hidden="true">3</span></button>
         <button class="icon-button" type="button" data-drawer="resources" data-drawer-label="资源中心" aria-label="帮助"><i class="topbar-icon topbar-icon--help" aria-hidden="true"></i></button>
         <div class="account-menu">
@@ -219,8 +220,10 @@
     </aside>
   </div>
 
+  <div class="agent-runtime-layer" id="agentRuntimeLayer" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <script src="../../packages/agent/domain/workflow-engine.js?v=20261027-5" defer></script>
+  <script src="../../packages/agent/domain/cbam-golden-path.js?v=20261112-1" defer></script>
   <script src="../../packages/agent/domain/data-asset-engine.js?v=20261027-5" defer></script>
   <script src="../../packages/agent/domain/stage-gates.js?v=20261028-4" defer></script>
   <script src="../../packages/agent/domain/pcf-declaration.js?v=20261028-4" defer></script>
@@ -239,14 +242,16 @@
   <script src="../../packages/shared/leads-client.js?v=20261030-1" defer></script>
   <script src="../../packages/shared/knowledge-client.js?v=20261030-1" defer></script>
   <script src="/apps/portal/runtime/portal-permissions.js?v=20261028-9" defer></script>
-  <script src="/apps/portal/runtime/portal-config.js?v=20261110-nav1" defer></script>
+  <script src="/apps/portal/runtime/portal-config.js?v=20261112-agent1" defer></script>
   <script src="/apps/portal/runtime/asset-view-model.js?v=20261109-shared1" defer></script>
   <script src="/apps/portal/runtime/shared-center-view-model.js?v=20261109-shared1" defer></script>
-  <script src="/apps/portal/runtime/portal-core.js?v=20261110-nav1" defer></script>
+  <script src="/apps/portal/runtime/portal-core.js?v=20261112-agent1" defer></script>
+  <script src="/apps/portal/runtime/agent-catalog.js?v=20261112-agent1" defer></script>
+  <script src="/apps/portal/runtime/agent-runtime.js?v=20261112-agent2" defer></script>
   <script src="/apps/portal/pages/multi-service-pages.js?v=20261110-pcfval1" defer></script>
-  <script src="/apps/portal/pages/customer-pages.js?v=20261110-data1" defer></script>
+  <script src="/apps/portal/pages/customer-pages.js?v=20261112-agent1" defer></script>
   <script src="/apps/portal/pages/role-pages.js?v=20261109-fw5" defer></script>
-  <script src="/apps/portal/runtime/portal-events.js?v=20261110-nav1" defer></script>
+  <script src="/apps/portal/runtime/portal-events.js?v=20261112-agent1" defer></script>
   <script src="/apps/portal/app.js?v=20261027-4" defer></script>
 </body>
 </html>

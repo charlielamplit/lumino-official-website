@@ -247,8 +247,9 @@
     { id: "SO-2026-018-R2", type: "serviceOrder", status: "ACTIVE", owner: "林晓", year: "2026", scope: "华星钢铁 CBAM 全流程服务" },
     { id: "WP-CALC-026", type: "workPackage", status: "IN_PROGRESS", owner: "王晨", year: "2026", scope: "计算与报告制备" },
     { id: "HO-2026-043", type: "handoff", status: "SENT", owner: "林晓", year: "2026", scope: "商务 → 运营" },
-    { id: "AP-2026-014", type: "approval", status: "IN_REVIEW", owner: "赵海峰", year: "2026", scope: "默认值并行路径" },
+    { id: "AP-2026-014", type: "approval", status: "IN_REVIEW", owner: "赵海峰", year: "2026", scope: "2026 Q3 CBAM 季度包" },
   ].map((object) => ({ ...object, metadata: { serviceId: "cbam", ...(object.metadata || {}) } })));
+  const cbamGoldenPath = new window.LuminoCbamGoldenPath.CbamGoldenPath({ workflow: workflowEngine });
   workflowEngine.seed([
     { id: "PCF-2026-001", type: "serviceCase", status: "SCOPING", owner: "周岚", year: "2026", scope: "热轧非合金钢卷 · 从摇篮到大门", metadata: {
       serviceId: "pcf",
@@ -453,6 +454,14 @@
     importedTrial, uploadAdded: false, factConfirmed: false, outputConfirmed: false, findingResolved: false,
     yearCreated: false, deliveryExpanded: null, productAdded: false,
     configurationAdded: false, orgEditing: false, selectedProduct: "hrc",
+    /* roadStage: null = follow current stage; 0–4 = user-selected stage on 全年流程 */
+    roadStage: null,
+    /* prodDec: { p1|p2|p3: "in"|"out" } — 产品与工厂年度范围判定 */
+    prodDec: {},
+    /* Agent Runtime（原型 v3）— UI 态可恢复，业务完成状态始终从 WorkflowEngine 派生 */
+    agentOpen: false, agentDock: false, agentPb: "chat", agentAs: "client",
+    agentTab: "art", agentMode: "ask", agentMsgs: [], agentInput: "",
+    agentBusy: false, rtBusy: null, rtCur: {}, rtAns: {}, rtDone: {}, rtStarted: {}, agentLog: [],
     productYears: [], productCnCodes: [], questionHelpOpen: false, findingChoiceOpen: false, dataPathChoice: null,
     drawer: null, assetFacet: "attention", taskTab: "open", delivFilter: "all", dataCat: "all", dieselDone: false, settingsSection: "members", periodData: {}, productOverrides: {}, configurationDrafts: {}, facilities: [], invitedMembers: [], consultationRequests: [], publicLeads: [], selectedLeadId: null, leadsSource: "local", knowledgeArticles: [], selectedKnowledgeId: null, knowledgeSource: "local", knowledgeHydrated: false, actionBusy: false,
     pcfCalculationFailed: incoming.get("scenario") === "pcf-calculation-failed",

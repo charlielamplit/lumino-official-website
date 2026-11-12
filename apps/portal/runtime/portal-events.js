@@ -292,6 +292,17 @@
       event.preventDefault();
       closeCmdk();
     }
+    if (event.key === "Enter" && !event.shiftKey && event.target?.id === "agentInput") {
+      event.preventDefault();
+      window.LuminoAgentRuntime?.sendComposer?.();
+    }
+  });
+
+  document.addEventListener("input", (event) => {
+    if (event.target?.id === "agentInput") state.agentInput = event.target.value;
+  });
+  document.addEventListener("change", (event) => {
+    window.LuminoAgentRuntime?.handleAgentChange?.(event);
   });
 
   $("#settingsButton")?.addEventListener("click", () => {
@@ -328,6 +339,7 @@
     savePeriodState();
     state.year = event.target.value;
     state.quarter = annualProfile().defaultQuarter;
+    state.roadStage = null;
     loadPeriodState(); syncUiFromWorkflow();
     render();
     toast(`已切换到 ${state.year} 年度，页面数据与版本已整体切换。`);
@@ -347,6 +359,12 @@
   $("#drawerClose").addEventListener("click", closeDrawer);
   $("#drawerBackdrop").addEventListener("click", closeDrawer);
   document.addEventListener("keydown", (event) => {
+    if (window.LuminoAgentRuntime?.trapFocus?.(event)) return;
+    if (event.key === "Escape" && state.agentOpen && window.LuminoAgentRuntime) {
+      event.preventDefault();
+      window.LuminoAgentRuntime.closeAgent();
+      return;
+    }
     if (event.key === "Escape"
       && $("#drawerLayer").hidden
       && $("#cmdkLayer").hidden
@@ -367,6 +385,7 @@
     }
   });
   document.addEventListener("click", (event) => {
+    if (window.LuminoAgentRuntime?.handleAgentEvent?.(event)) return;
     const overviewAction = event.target.closest("[data-service-overview]");
     if (overviewAction) {
       setServiceOverviewMode(overviewAction.dataset.serviceOverview);
@@ -570,8 +589,79 @@
     if (delivery) { state.deliveryExpanded = state.deliveryExpanded === delivery.dataset.delivery ? null : delivery.dataset.delivery; render(); return; }
     const product = event.target.closest("[data-product]");
     if (product) { state.selectedProduct = product.dataset.product; state.configurationAdded = false; render(); return; }
+    const prodDecide = event.target.closest("[data-prod-decide]");
+    if (prodDecide) {
+      if (isLockedYear()) { toast("锁定年度为不可变快照；请通过更正申请创建新修订版。"); return; }
+      const id = prodDecide.dataset.prodId;
+      const decision = prodDecide.dataset.prodDecide;
+      if (id && (decision === "in" || decision === "out")) {
+        state.prodDec = { ...(state.prodDec || {}), [id]: decision };
+        persistPortalState();
+        render();
+        toast(decision === "in"
+          ? "已纳入年度范围，并标记为待专家确认生产配置。"
+          : "已记录不纳入，理由将写入审计记录。");
+      }
+      return;
+    }
+    const prodAction = event.target.closest("[data-prod-action]");
+    if (prodAction) {
+      const action = prodAction.dataset.prodAction;
+      if (action === "facilities") {
+        if (canManageOrganization()) {
+          state.currentService = null;
+          state.page = "org-settings";
+          state.settingsSection = "facilities";
+          persistPortalState();
+          render();
+        } else {
+          openDrawer("record-detail", {
+            eyebrow: "设施主档",
+            title: "上海一厂 · 无锡二厂",
+            object: "跨服务共用 · FAC-HX-SH01 / FAC-HX-WX02",
+            status: "只读摘要",
+            description: "上海一厂（热轧、酸洗冷轧、热镀锌）在 CBAM 范围内；无锡二厂（精整与仓储）不在范围。完整增删改由企业管理员在「企业设置 → 设施」维护。",
+          });
+        }
+        return;
+      }
+    }
+    const prodScroll = event.target.closest("[data-prod-scroll]");
+    if (prodScroll) {
+      const pending = document.querySelector(".prod-row.is-pending");
+      if (pending) pending.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    const roadStageBtn = event.target.closest("[data-road-stage]");
+    if (roadStageBtn) {
+      const idx = Number(roadStageBtn.dataset.roadStage);
+      if (Number.isInteger(idx) && idx >= 0 && idx <= 4) {
+        state.roadStage = idx;
+        persistPortalState();
+        render();
+      }
+      return;
+    }
+    const roadAction = event.target.closest("[data-road-action]");
+    if (roadAction) {
+      const action = roadAction.dataset.roadAction;
+      if (action === "plan-toast") {
+        toast(`监测计划 MP-${state.year}：原型中暂不展开；包含数据源分工与默认值使用规则。`);
+        return;
+      }
+    }
     const quarter = event.target.closest("[data-quarter]");
-    if (quarter) { savePeriodState(); state.quarter = quarter.dataset.quarter; loadPeriodState(); syncUiFromWorkflow(); render(); toast(`正在查看 ${state.year} ${state.quarter} 数据包。`); return; }
+    if (quarter) {
+      savePeriodState();
+      state.quarter = quarter.dataset.quarter;
+      const targetPage = quarter.dataset.pageTarget || quarter.dataset.page;
+      if (targetPage) state.page = targetPage;
+      loadPeriodState();
+      syncUiFromWorkflow();
+      render();
+      toast(`正在查看 ${state.year} ${state.quarter} 数据包。`);
+      return;
+    }
     const workflowTransition = event.target.closest("[data-workflow-transition]");
     if (workflowTransition) {
       if (!canPerformPortalAction("workflow-approval")) {
@@ -581,6 +671,10 @@
       try {
         const target = workflowTransition.dataset.workflowTransition;
         const objectId = workflowTransition.dataset.objectId;
+        if (objectId === "AP-2026-014" && target === "APPROVED" && cbamGoldenPath.stage("p07").code === "REVIEW_REQUIRED") {
+          toast("需要由李娜先完成 RUN-CBAM-2026Q3-001 独立复核。");
+          return;
+        }
         workflowEngine.transition(objectId, target, { ...workflowActor(), reason: target === "APPROVED" ? "内部审批人同意默认值并行路径" : "退回项目协调人补充判断依据" });
         render();
         toast(`AP-2026-014 已更新为“${workflowStateLabel(target)}”，审计事件已记录。`);
@@ -601,6 +695,20 @@
           openDrawer("asset-detail", { assetId });
           toast("企业事实已确认；依赖此资产的服务绑定不会自动改变。");
         } catch (error) { toast(error.message); }
+      }
+      if (action === "cbam-review-calculation") {
+        try {
+          cbamGoldenPath.command("p07", "review", workflowActor());
+          render();
+          toast("RUN-CBAM-2026Q3-001 已由李娜复核；接下来等待赵海峰处理 AP-2026-014。");
+        } catch (error) { toast(error.recovery || error.message); }
+      }
+      if (action === "cbam-reset-demo") {
+        const accepted = window.confirm("将清除本浏览器中的 Portal 演示工作流、Agent 任务与界面草稿，然后恢复固定 Q3 场景。继续吗？");
+        if (!accepted) return;
+        ["lumino-multiservice-workflow-v2", "lumino-agent-tasks-v1", "lumino-multiservice-portal-ui-v2"].forEach((key) => window.localStorage.removeItem(key));
+        window.location.reload();
+        return;
       }
       if (action === "asset-revise-confirm") {
         try {

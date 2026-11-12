@@ -298,7 +298,7 @@
           <li><span>✓</span><div><strong>证据血缘完整</strong><small>42 条事实可回溯至 28 份材料</small></div></li>
           <li><span>!</span><div><strong>供应商数据仍使用默认值</strong><small>客户已批准保守路径，Finding 保持开放</small></div></li>`,
         approveLabel: "复核通过",
-        approveAttrs: 'data-staff-action="复核通过并进入锁定队列"',
+        approveAttrs: 'data-action="cbam-review-calculation"',
         rejectLabel: "退回修改",
         rejectAttrs: 'data-staff-action="退回复核件并要求制备人修改"',
       });

@@ -70,9 +70,13 @@
       facilities: state.facilities, invitedMembers: state.invitedMembers, organization: state.organization,
       productYears: state.productYears, productCnCodes: state.productCnCodes, productAdded: state.productAdded,
       configurationAdded: state.configurationAdded, yearCreated: state.yearCreated, selectedProduct: state.selectedProduct,
+      prodDec: state.prodDec || {},
       currentService: state.currentService, page: state.page, settingsSection: state.settingsSection,
       consultationRequests: state.consultationRequests, assetFacet: state.assetFacet,
       taskTab: state.taskTab, delivFilter: state.delivFilter,
+      agentPb: state.agentPb, agentAs: state.agentAs, agentTab: state.agentTab, agentMode: state.agentMode,
+      agentMsgs: state.agentMsgs, rtCur: state.rtCur, rtAns: state.rtAns, rtDone: state.rtDone,
+      rtStarted: state.rtStarted, agentLog: state.agentLog,
     };
     window.localStorage.setItem(portalStateStorageKey, JSON.stringify(persisted));
   }
@@ -713,6 +717,12 @@
 
   function syncShell() {
     const config = roleConfig[state.role];
+    const agentSlot = $("#agentTopbarSlot");
+    if (agentSlot) {
+      agentSlot.innerHTML = (isCustomer() && state.loggedIn && window.LuminoAgentRuntime?.agentBtnHtml)
+        ? window.LuminoAgentRuntime.agentBtnHtml()
+        : "";
+    }
     const crossYearPage = ["programs", "team", "org-settings", "annual-setup", ...globalCustomerPages].includes(state.page);
     const hideSecondary = isCustomer() && !state.currentService && overviewPages.has(state.page)
       && state.page !== "org-settings";
@@ -890,6 +900,7 @@
     if (["support", "platform_admin"].includes(state.role)) renderPlatformRole();
     if (isCustomer()) syncCustomerUrl();
     if (typeof syncServiceOverview === "function") syncServiceOverview();
+    if (window.LuminoAgentRuntime?.renderAgentRuntime) window.LuminoAgentRuntime.renderAgentRuntime();
     const settingsLabel = state.page === "org-settings"
       ? settingsNavItems.find(([id]) => id === state.settingsSection)?.[1]
       : null;
