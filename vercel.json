@@ -39,6 +39,18 @@
       "destination": "/apps/site/calculator/:path*"
     },
     {
+      "source": "/apps/calculator",
+      "destination": "/apps/site/calculator/index.html"
+    },
+    {
+      "source": "/apps/calculator/",
+      "destination": "/apps/site/calculator/index.html"
+    },
+    {
+      "source": "/apps/calculator/:path*",
+      "destination": "/apps/site/calculator/:path*"
+    },
+    {
       "source": "/knowledge",
       "destination": "/apps/site/knowledge/index.html"
     },
