@@ -83,6 +83,52 @@ test("p08 文案和页面状态停在待共享", () => {
   assert.match(pages, /本原型不执行对外发送/);
 });
 
+test("p01-p05 使用同一 controller，并落地年度项目与监测计划页", () => {
+  const runtime = read("apps/portal/runtime/agent-runtime.js");
+  const pages = read("apps/portal/pages/customer-pages.js");
+  const events = read("apps/portal/runtime/portal-events.js");
+  const config = read("apps/portal/runtime/portal-config.js");
+  assert.match(runtime, /new Set\(\["p01", "p02", "p03", "p04", "p05", "p06", "p07", "p08"\]\)/);
+  assert.match(runtime, /cbamGoldenPath\.command\("p02", "create"/);
+  assert.match(runtime, /cbamGoldenPath\.command\("p04", "sign"/);
+  assert.match(pages, /function renderCbamOnboarding\(/);
+  assert.match(pages, /function renderMonitoringPlan\(/);
+  assert.match(pages, /5 步 · 可保存草稿/);
+  assert.match(events, /cbamGoldenPath\.command\("p03", "confirm"/);
+  assert.match(events, /data\.getAll\("products"\)/);
+  assert.match(events, /if \(currentStep === 2\)/);
+  assert.match(events, /if \(currentStep === 3\) payload\.products/);
+  assert.match(events, /form\.reportValidity\(\)/);
+  assert.match(events, /请至少选择一个产品候选/);
+  assert.doesNotMatch(events, /products: data\.getAll\("products"\)/);
+  assert.match(pages, /const selectedProducts = Array\.isArray\(draft\.products\)/);
+  assert.match(config, /id: "MP-CBAM-2027-R1"/);
+});
+
+test("Agent 审批按具名人员授权，显示视角不能代替王晨、李娜或周岚", () => {
+  const runtime = read("apps/portal/runtime/agent-runtime.js");
+  const catalog = read("apps/portal/runtime/agent-catalog.js");
+  assert.match(runtime, /roleConfig\[state\.role\]\?\.name === st\.who/);
+  assert.doesNotMatch(runtime, /st\.by === "expert" \? !needExpert/);
+  assert.doesNotMatch(runtime, /state\.agentAs === "client"/);
+  assert.match(catalog, /by: "reviewer", who: "李娜"/);
+});
+
+test("p05 只生成邀请草稿，不宣称已外发或开通", () => {
+  const catalog = read("apps/portal/runtime/agent-catalog.js");
+  const domain = read("packages/agent/domain/cbam-golden-path.js");
+  const pages = read("apps/portal/pages/customer-pages.js");
+  assert.match(catalog, /本原型不发送邮件、不开通账号/);
+  assert.match(catalog, /已生成 3 份待执行草稿/);
+  assert.match(catalog, /title: "准备贡献者与供应商邀请"[\s\S]*?page: "org-settings"/);
+  assert.match(read("apps/portal/pages/multi-service-pages.js"), /待执行的邀请草稿/);
+  assert.doesNotMatch(catalog, /toast: \["已发送 3 份邀请"/);
+  assert.match(domain, /externalSent: false/);
+  assert.match(domain, /deliveryState: "DRAFT_ONLY"/);
+  assert.match(pages, /草稿 · 未发送/);
+  assert.match(pages, /草稿不是已发送邀请或已开通账号/);
+});
+
 test("Q3 演示可明确重置工作流、Agent 任务与 UI 草稿", () => {
   const events = read("apps/portal/runtime/portal-events.js");
   ["lumino-multiservice-workflow-v2", "lumino-agent-tasks-v1", "lumino-multiservice-portal-ui-v2"].forEach((key) => assert.match(events, new RegExp(key)));

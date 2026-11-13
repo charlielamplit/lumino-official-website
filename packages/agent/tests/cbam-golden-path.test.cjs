@@ -13,6 +13,18 @@ function fixture() {
   return { workflow, controller: new CbamGoldenPath({ workflow }) };
 }
 
+function onboardingFixture() {
+  let time = Date.parse("2026-11-13T00:00:00Z");
+  const workflow = new WorkflowEngine({ storage: createMemoryStorage(), clock: () => (time += 1000) });
+  workflow.seed([
+    { id: IDS.onboardingOrder, type: "serviceOrder", status: "ACTIVE", owner: "周岚", year: "2027", scope: "CBAM 2027 开通期演示" },
+    { id: IDS.annualCase, type: "serviceCase", status: "SCOPING", owner: "周岚", year: "2027", scope: "CBAM 2027 年度项目" },
+    { id: IDS.annualScope, type: "annualInclusion", status: "PROPOSED", owner: "周岚", year: "2027", scope: "2027 年度范围" },
+    { id: IDS.monitoringPlan, type: "formalArtifact", status: "DRAFT", owner: "王晨", year: "2027", scope: "2027 年度监测计划" },
+  ]);
+  return { workflow, controller: new CbamGoldenPath({ workflow }) };
+}
+
 const owner = { name: "周岚", role: "customer_owner" };
 const approver = { name: "赵海峰", role: "customer_approver" };
 const reviewer = { name: "李娜", role: "reviewer" };
@@ -69,4 +81,58 @@ test("客户所有者不能代替审批或复核，显示视角也不授权", ()
 test("命名经办人不能被同角色其他用户代替", () => {
   const { controller } = fixture();
   assert.throws(() => controller.command("p06", "confirm", { name: "陈欣", role: "customer_owner" }), { code: "ASSIGNEE_MISMATCH" });
+});
+
+test("p01-p05 开通期按年度项目、范围和监测计划顺序门禁", () => {
+  const { controller } = onboardingFixture();
+  assert.equal(controller.stage("p01").state, "done");
+  assert.equal(controller.stage("p02").state, "in_progress");
+  assert.equal(controller.stage("p03").code, "P02_REQUIRED");
+  assert.equal(controller.stage("p04").code, "P03_REQUIRED");
+  assert.equal(controller.stage("p05").code, "P04_REQUIRED");
+});
+
+test("年度项目向导草稿可恢复，完成后解锁年度范围", () => {
+  const { workflow, controller } = onboardingFixture();
+  controller.command("p02", "save-draft", owner, { step: 3, cadence: "quarterly", importer: "NordWerk GmbH" });
+  assert.equal(workflow.get(IDS.annualCase).metadata.wizardStep, 3);
+  assert.equal(controller.stage("p03").state, "blocked");
+  controller.command("p02", "create", owner, { importer: "NordWerk GmbH", products: ["HRC", "HDG"] });
+  assert.equal(controller.stage("p02").state, "done");
+  assert.equal(controller.stage("p03").state, "not_started");
+});
+
+test("监测计划保持王晨制备、李娜复核、周岚签收职责分离", () => {
+  const { workflow, controller } = onboardingFixture();
+  controller.command("p02", "create", owner, { importer: "NordWerk GmbH" });
+  controller.command("p03", "confirm", owner, { included: ["HRC", "HDG"], excluded: ["CRC"] });
+  assert.equal(controller.stage("p04").state, "not_started");
+  assert.throws(() => controller.command("p04", "prepare", owner), { code: "FORBIDDEN" });
+  controller.command("p04", "prepare", { name: "王晨", role: "expert" });
+  assert.equal(controller.stage("p04").assignee, "李娜");
+  assert.throws(() => controller.command("p04", "review", { name: "王晨", role: "expert" }), { code: "FORBIDDEN" });
+  controller.command("p04", "review", reviewer);
+  assert.equal(controller.stage("p04").assignee, "周岚");
+  const result = controller.command("p04", "sign", owner);
+  assert.equal(result.object.status, "APPROVED");
+  assert.equal(controller.stage("p04").state, "done");
+  assert.equal(workflow.list({ type: "workPackage" }).filter((item) => item.id.startsWith(IDS.materialRequestPrefix)).length, 8);
+});
+
+test("签收和邀请草稿重复执行保持幂等，p05 不产生外发事件", () => {
+  const { workflow, controller } = onboardingFixture();
+  controller.command("p02", "create", owner);
+  controller.command("p03", "confirm", owner);
+  controller.command("p04", "prepare", { name: "王晨", role: "expert" });
+  controller.command("p04", "review", reviewer);
+  controller.command("p04", "sign", owner);
+  const before = workflow.events().length;
+  controller.command("p04", "sign", owner);
+  controller.command("p05", "draft-invitations", owner, { people: ["孙悦", "刘倩", "北方特钢 刘明"] });
+  controller.command("p05", "draft-invitations", owner);
+  assert.equal(controller.stage("p05").state, "done");
+  assert.equal(workflow.list({ type: "handoff" }).filter((item) => item.id === IDS.invitationDraft).length, 1);
+  assert.equal(workflow.events({ objectId: IDS.invitationDraft }).some((event) => ["SENT", "DELIVERED", "ACKNOWLEDGED"].includes(event.to)), false);
+  assert.equal(workflow.get(IDS.invitationDraft).metadata.externalSent, false);
+  assert.equal(workflow.events().length, before + 1);
 });

@@ -176,5 +176,7 @@ const server = http.createServer(async (request, response) => {
 
 server.listen(port, "127.0.0.1", () => {
   console.log(`Lumino local preview: http://127.0.0.1:${port}/site`);
+  console.log(`Calculator:           http://127.0.0.1:${port}/calculator/`);
+  console.log(`Portal:               http://127.0.0.1:${port}/portal/`);
   console.log(`Advisor API:          http://127.0.0.1:${port}/api/advisor`);
 });

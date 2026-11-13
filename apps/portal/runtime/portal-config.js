@@ -24,11 +24,11 @@
     },
     expert: {
       name: "王晨", initial: "王", title: "CBAM 制备专家", company: "Lumino 服务团队",
-      nav: [["queue", "◉", "判断队列", "12"], ["case-workspace", "▣", "案件工作台"], ["findings", "!", "Findings", "7"]]
+      nav: [["queue", "◉", "判断队列", "12"], ["monitoring-plan", "✓", "监测计划", "1"], ["case-workspace", "▣", "案件工作台"], ["findings", "!", "Findings", "7"]]
     },
     reviewer: {
       name: "李娜", initial: "李", title: "独立复核专家", company: "Lumino 复核中心",
-      nav: [["review", "✓", "复核与锁定", "3"]]
+      nav: [["review", "✓", "复核与锁定", "3"], ["monitoring-plan", "□", "监测计划", "1"]]
     },
     ops: {
       name: "林晓", initial: "林", title: "客户运营", company: "Lumino 项目中心",
@@ -82,7 +82,7 @@
       entryPage: "work", roles: ["customer_admin", "customer_owner", "customer_contrib", "customer_approver"],
       primaryAction: { default: "继续当前工作", customer_contrib: "查看分配给我", customer_approver: "处理待审批事项" }, consultation: { enabled: false },
       nav: [
-        ["work", "◉", "当前工作", "1"], ["roadmap", "→", "全年流程"], ["products", "◇", "产品与工厂"],
+        ["work", "◉", "当前工作", "1"], ["roadmap", "→", "全年流程"], ["onboarding", "○", "年度项目"], ["products", "◇", "产品与工厂"], ["monitoring-plan", "✓", "监测计划"],
         ["data", "▦", "季度数据", "2"], ["results", "∿", "计算与成本", "2"], ["deliverables", "□", "报告与交付"],
       ],
     },
@@ -233,6 +233,10 @@
 
   const workflowEngine = new window.LuminoWorkflow.WorkflowEngine({ storage: window.localStorage });
   workflowEngine.seed([
+    { id: "SO-CBAM-2027-ONBOARDING", type: "serviceOrder", status: "ACTIVE", owner: "周岚", year: "2027", scope: "CBAM 2027 开通期演示", metadata: { serviceId: "cbam", prototypeOnly: true } },
+    { id: "CASE-CBAM-2027", type: "serviceCase", status: "SCOPING", owner: "周岚", year: "2027", scope: "CBAM 2027 年度项目", metadata: { serviceId: "cbam", wizardStep: 1, prototypeOnly: true } },
+    { id: "SCOPE-CBAM-2027", type: "annualInclusion", status: "PROPOSED", owner: "周岚", year: "2027", scope: "2027 年度范围", metadata: { serviceId: "cbam", prototypeOnly: true } },
+    { id: "MP-CBAM-2027-R1", type: "formalArtifact", status: "DRAFT", owner: "王晨", year: "2027", scope: "2027 年度监测计划", metadata: { serviceId: "cbam", artifactType: "MONITORING_PLAN", prototypeOnly: true } },
     { id: "PRD-HRC-01", type: "productMaster", status: "ACTIVE", owner: "周岚", scope: "热轧非合金钢卷" },
     { id: "CN-HRC-72083900", type: "cnDecision", status: "UNDER_REVIEW", owner: "关务负责人", scope: "PRD-HRC-01" },
     { id: "SHP-2026-Q3-EUROFAB", type: "shipment", status: "NEEDS_REVIEW", owner: "外贸负责人", year: "2026", quarter: "Q3", scope: "EuroFab S.r.l." },

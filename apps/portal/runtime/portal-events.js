@@ -461,6 +461,61 @@
       $("#main").focus({ preventScroll: true });
       return;
     }
+    const onboardingAction = event.target.closest("[data-onboarding-action]");
+    if (onboardingAction) {
+      const action = onboardingAction.dataset.onboardingAction;
+      const actor = { name: roleConfig[state.role].name, role: state.role };
+      try {
+        if (action === "confirm-scope") {
+          if (!canPerformPortalAction("cbam-confirm-annual-scope")) { toast(portalActionDenial("cbam-confirm-annual-scope")); return; }
+          cbamGoldenPath.command("p03", "confirm", actor, { included: ["HRC", "HDG"], excluded: ["CRC"], exclusionReason: "2027 年尚无出口欧盟计划" });
+          render(); toast("2027 年度范围已确认；王晨可开始制备监测计划。"); return;
+        }
+        const form = document.querySelector("#cbamOnboardingForm");
+        const currentStep = Number(form?.dataset.step) || 1;
+        const data = form ? new FormData(form) : new FormData();
+        if (["next", "create"].includes(action) && form && !form.reportValidity()) return;
+        if (action === "next" && currentStep === 3 && data.getAll("products").length === 0) {
+          toast("请至少选择一个产品候选，再继续下一步。");
+          return;
+        }
+        const payload = { step: currentStep };
+        if (currentStep === 1) payload.startingPoint = data.get("startingPoint") || "new";
+        if (currentStep === 2) {
+          payload.cadence = data.get("cadence") || "quarterly";
+          payload.importer = data.get("importer") || "";
+          payload.firstDeadline = data.get("firstDeadline") || "";
+        }
+        if (currentStep === 3) payload.products = data.getAll("products");
+        if (action === "create") {
+          if (!canPerformPortalAction("cbam-create-annual-project")) { toast(portalActionDenial("cbam-create-annual-project")); return; }
+          cbamGoldenPath.command("p02", "create", actor, payload);
+          render(); toast("CBAM 2027 年度项目已创建；下一步确认年度范围。"); return;
+        }
+        const targetStep = action === "prev" ? currentStep - 1 : action === "next" ? currentStep + 1 : currentStep;
+        cbamGoldenPath.command("p02", "save-draft", actor, { ...payload, step: targetStep });
+        if (action === "save-exit") state.page = "work";
+        render();
+        if (action === "save-exit") toast("年度项目草稿已保存。");
+      } catch (error) { toast(error.recovery || error.message); }
+      return;
+    }
+    const monitoringAction = event.target.closest("[data-monitoring-action]");
+    if (monitoringAction) {
+      const action = monitoringAction.dataset.monitoringAction;
+      const actor = { name: roleConfig[state.role].name, role: state.role };
+      const permission = action === "prepare" ? "cbam-prepare-monitoring-plan" : action === "review" ? "cbam-review-monitoring-plan" : action === "sign" ? "cbam-sign-monitoring-plan" : "cbam-draft-invitations";
+      if (!canPerformPortalAction(permission)) { toast(portalActionDenial(permission)); return; }
+      try {
+        if (action === "prepare") cbamGoldenPath.command("p04", "prepare", actor);
+        if (action === "review") cbamGoldenPath.command("p04", "review", actor);
+        if (action === "sign") cbamGoldenPath.command("p04", "sign", actor);
+        if (action === "draft-invitations") cbamGoldenPath.command("p05", "draft-invitations", actor);
+        render();
+        toast(action === "prepare" ? "制备确认完成；等待李娜独立复核。" : action === "review" ? "独立复核完成；已发布客户审阅版。" : action === "sign" ? "监测计划已签收；已幂等生成 8 项 Q1 材料请求。" : "邀请草稿已生成；未发送、未开通账号。");
+      } catch (error) { toast(error.recovery || error.message); }
+      return;
+    }
     const nav = event.target.closest("[data-page]");
     if (nav) {
       const page = nav.dataset.page;
@@ -646,7 +701,8 @@
     if (roadAction) {
       const action = roadAction.dataset.roadAction;
       if (action === "plan-toast") {
-        toast(`监测计划 MP-${state.year}：原型中暂不展开；包含数据源分工与默认值使用规则。`);
+        state.page = "monitoring-plan";
+        render();
         return;
       }
     }
@@ -704,7 +760,7 @@
         } catch (error) { toast(error.recovery || error.message); }
       }
       if (action === "cbam-reset-demo") {
-        const accepted = window.confirm("将清除本浏览器中的 Portal 演示工作流、Agent 任务与界面草稿，然后恢复固定 Q3 场景。继续吗？");
+        const accepted = window.confirm("将清除本浏览器中的 Portal 演示工作流、Agent 任务与界面草稿，然后恢复 2027 开通期与固定 Q3 场景。继续吗？");
         if (!accepted) return;
         ["lumino-multiservice-workflow-v2", "lumino-agent-tasks-v1", "lumino-multiservice-portal-ui-v2"].forEach((key) => window.localStorage.removeItem(key));
         window.location.reload();

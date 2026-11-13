@@ -13,7 +13,7 @@
   const AG_REPLY = () => catalog().AG_REPLY || {};
   const PAGE_PLAYBOOK = () => catalog().PAGE_PLAYBOOK || {};
   const GRP_LABELS = () => catalog().GRP_LABELS || ["开通期 · 只做一次", "季度循环 · 每季度", "年度 · 每年一次"];
-  const goldenIds = new Set(["p06", "p07", "p08"]);
+  const goldenIds = new Set(["p01", "p02", "p03", "p04", "p05", "p06", "p07", "p08"]);
   const goldenStage = (pbId) => goldenIds.has(pbId) && typeof cbamGoldenPath !== "undefined" ? cbamGoldenPath.stage(pbId) : null;
   const playbookDone = (pbId) => {
     const stage = goldenStage(pbId);
@@ -47,10 +47,13 @@
       services: "服务目录",
       work: state.year === "2026" ? `CBAM · ${state.year} ${state.quarter} 当前工作` : `CBAM · ${state.year} 当前工作`,
       roadmap: `CBAM · ${state.year} 全年流程`,
+      onboarding: "CBAM · 2027 年度项目",
       products: "CBAM · 产品与工厂",
+      "monitoring-plan": "CBAM · 2027 监测计划",
       data: `CBAM · ${state.year} ${state.quarter} 季度数据`,
       results: `CBAM · ${state.year} ${state.quarter} 计算与成本`,
       deliverables: "CBAM · 报告与交付",
+      team: "企业与项目团队",
       "org-settings": "企业设置",
     };
     return map[state.page] || `当前页 · ${state.page}`;
@@ -61,11 +64,13 @@
     if (state.page === "deliverables") return "p08";
     if (state.page === "data") return "p06";
     if (state.page === "products") return "p03";
+    if (state.page === "onboarding") return "p02";
+    if (state.page === "monitoring-plan") return "p04";
     if (state.page === "results") return "p07";
     if (state.page === "roadmap") return "p10";
     if (state.page === "work") return "p02";
     if (state.page === "services" || state.page === "services-hub") return "p01";
-    if (state.page === "org-settings") return "p05";
+    if (state.page === "team" || state.page === "org-settings") return "p05";
     return map[state.page] || null;
   }
 
@@ -83,8 +88,8 @@
     if (state.rtBusy === pb.id) return { t: `执行中 · ${cur + 1}/${pb.steps.length}`, tone: "ok" };
     if (step.k === "ask") return { t: "等你回答", tone: "warn" };
     if (step.k === "ap") {
-      const needExpert = step.by === "expert" && state.agentAs === "client";
-      return needExpert
+      const needsNamedActor = Boolean(step.who) && roleConfig[state.role]?.name !== step.who;
+      return needsNamedActor
         ? { t: `等待 ${step.who}`, tone: "warn" }
         : { t: "等你确认", tone: "warn" };
     }
@@ -370,6 +375,12 @@
     const cur = state.rtCur[pbId] ?? 0;
     const step = pb.steps[cur];
     try {
+      if (pbId === "p02") cbamGoldenPath.command("p02", "create", currentActor(), { importer: "NordWerk GmbH", products: ["HRC", "HDG"] });
+      if (pbId === "p03") cbamGoldenPath.command("p03", "confirm", currentActor(), { included: ["HRC", "HDG"], excluded: ["CRC"] });
+      if (pbId === "p04" && step?.who === "王晨") cbamGoldenPath.command("p04", "prepare", currentActor());
+      if (pbId === "p04" && step?.who === "李娜") cbamGoldenPath.command("p04", "review", currentActor());
+      if (pbId === "p04" && step?.by === "client") cbamGoldenPath.command("p04", "sign", currentActor());
+      if (pbId === "p05") cbamGoldenPath.command("p05", "draft-invitations", currentActor());
       if (pbId === "p06") cbamGoldenPath.command("p06", "confirm", currentActor());
       if (pbId === "p07" && step?.by === "expert") cbamGoldenPath.command("p07", "review", currentActor());
       if (pbId === "p07" && step?.by === "client") {
@@ -420,6 +431,7 @@
     if (["products", "data", "results", "deliverables", "roadmap", "work"].includes(pb.page)) {
       state.currentService = "cbam";
     }
+    if (pb.page === "team") state.currentService = null;
     if (pb.page === "org-settings") {
       state.currentService = null;
       state.settingsSection = "members";
@@ -536,9 +548,8 @@
       if (busy) mark = "";
       const askOpen = current && st.k === "ask" && !ans;
       const apOpen = current && st.k === "ap";
-      const needExpert = st.by === "expert" && state.role !== "reviewer";
-      const namedClient = st.by !== "expert" && roleConfig[state.role]?.name === st.who;
-      const canAp = apOpen && (st.by === "expert" ? !needExpert : namedClient);
+      const isNamedActor = roleConfig[state.role]?.name === st.who;
+      const canAp = apOpen && isNamedActor;
       const cantAp = apOpen && !canAp;
       return `
         <div class="rt-step${current ? " is-current" : ""}${past ? " is-past" : ""}${future ? " is-future" : ""}">

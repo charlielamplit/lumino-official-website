@@ -891,9 +891,10 @@
   function render() {
     syncShell();
     $("#main").classList.toggle("workspace--pcf", isCustomer() && state.currentService === "pcf");
-    if (isCustomer()) renderCustomer();
-    if (state.role === "expert") renderExpert();
-    if (state.role === "reviewer") renderStaffSecondary("reviewer");
+    if (state.page === "monitoring-plan" && ["customer_admin", "customer_owner", "expert", "reviewer"].includes(state.role)) renderMonitoringPlan();
+    else if (isCustomer()) renderCustomer();
+    else if (state.role === "expert") renderExpert();
+    else if (state.role === "reviewer") renderStaffSecondary("reviewer");
     if (state.role === "ops") renderOps();
     if (state.role === "sales") renderSales();
     if (["importer", "verifier", "supplier"].includes(state.role)) renderExternalRole();

@@ -379,6 +379,11 @@
   function renderSharedOrganization() {
     if (canManageOrganization()) { renderOrganizationSettings(); return; }
     const scope = state.role === "customer_contrib" ? "仅分配给我的任务与材料" : state.role === "customer_approver" ? "待审批对象与受控交付物" : "当前企业已开通服务与项目对象";
+    const invitationDraft = cbamGoldenPath.snapshot().invitationDraft;
+    const draftRows = (invitationDraft?.metadata?.people || []).map((person) => {
+      const supplier = person.includes("北方特钢");
+      return `<tr><td><strong>${safe(person)}</strong><small>${supplier ? "供应商共享空间提议" : "待补充并核对邮箱"}</small></td><td>${supplier ? "供应商" : "数据贡献者"}</td><td>${supplier ? "北方特钢 · 前体请求" : "上海一厂 · 分配给自己的请求"}</td><td><span class="record-state warn">草稿 · 未发送</span></td></tr>`;
+    }).join("");
     $("#main").innerHTML = `<div class="portal-shell">
       ${pageHeader("只显示你当前可见的范围", "企业与权限", statusChip("只读", "locked"))}
       <section class="permission-self ds-card">
@@ -390,6 +395,7 @@
           <div><dt>可进入服务</dt><dd>CBAM、产品碳足迹 PCF</dd></div>
         </dl>
       </section>
+      ${draftRows ? `<section class="panel wide-panel"><div class="panel-head"><div><h2>待执行的邀请草稿</h2><span>p05 · 只读预览</span></div><span class="status-chip warn">${invitationDraft.metadata.people.length} 份 · 未发送</span></div><p class="settings-shell__hint">这些记录只是最小权限建议，不表示邮件已发送或账号已开通；企业管理员执行前仍需核对邮箱和范围。</p><table class="data-table"><thead><tr><th>人员</th><th>角色</th><th>建议范围</th><th>状态</th></tr></thead><tbody>${draftRows}</tbody></table></section>` : ""}
     </div>`;
   }
 

@@ -93,6 +93,25 @@
   function cbamWorkNext(profile, openCount) {
     if (profile.mode === "archived") return "";
     if (profile.mode === "planned") {
+      const p02 = cbamGoldenPath.stage("p02");
+      const p03 = cbamGoldenPath.stage("p03");
+      const p04 = cbamGoldenPath.stage("p04");
+      if (p02.state !== "done") return `<section class="next-action" aria-label="下一步">
+        <div class="next-action__copy">
+          <small class="next-action__kicker">第一步 · 2027 年度项目</small>
+          <strong>用 5 步向导建立年度项目</strong>
+          <span>确认起点、交付节奏、进口商、产品候选与项目角色；可保存草稿后继续。</span>
+        </div>
+        <button class="button button--primary" type="button" data-page="onboarding">开始创建<span aria-hidden="true">→</span></button>
+      </section>`;
+      if (p03.state !== "done") return `<section class="next-action" aria-label="下一步">
+        <div class="next-action__copy"><small class="next-action__kicker">第二步 · 年度范围</small><strong>确认 2027 年的产品、工厂与进口商</strong><span>年度项目已建立，现在确认从长期主档引用的范围。</span></div>
+        <button class="button button--primary" type="button" data-page="products">确认年度范围<span aria-hidden="true">→</span></button>
+      </section>`;
+      if (p04.state !== "done") return `<section class="next-action" aria-label="下一步">
+        <div class="next-action__copy"><small class="next-action__kicker">第三步 · 监测计划</small><strong>进入制备、复核与签收工作区</strong><span>年度范围已确认；监测计划必须按具名角色顺序完成。</span></div>
+        <button class="button button--primary" type="button" data-page="monitoring-plan">查看监测计划<span aria-hidden="true">→</span></button>
+      </section>`;
       return `<section class="next-action" aria-label="下一步">
         <div class="next-action__copy">
           <small class="next-action__kicker">下一步 · 年度准备</small>
@@ -232,6 +251,8 @@
     if (state.page === "contributor-work") return renderContributorWork();
     if (state.page === "approvals") return renderApprovals();
     if (state.page === "roadmap") return renderRoadmap();
+    if (state.page === "onboarding") return renderCbamOnboarding();
+    if (state.page === "monitoring-plan") return renderMonitoringPlan();
     if (state.page === "products") return renderProducts();
     if (state.page === "data") return renderData();
     if (state.page === "results") return renderResults();
@@ -240,6 +261,63 @@
     if (state.page === "annual-setup") return renderAnnualSetup();
     if (state.page === "org-settings") return renderOrganizationSettings();
     if (state.page === "workflow-governance") return renderWorkflowGovernance();
+  }
+
+  function renderCbamOnboarding() {
+    const stage = cbamGoldenPath.stage("p02");
+    const annualCase = cbamGoldenPath.snapshot().annualCase;
+    if (stage.state === "done") {
+      $("#main").innerHTML = `
+        ${pageHeader("华星钢铁有限公司 / CBAM", "2027 年度项目", statusChip("已创建"))}
+        <section class="onboarding-complete ds-card" role="status"><small>CASE-CBAM-2027 · Rev ${annualCase?.revision || 1}</small><h2>年度项目已创建</h2><p>项目已保留交付节奏、进口商、产品候选和角色草稿。下一步是确认年度范围，尚未生成季度数据或对外交付。</p><div><button class="button button--secondary" type="button" data-page="work">返回当前工作</button><button class="button button--primary" type="button" data-page="products">确认年度范围 →</button></div></section>`;
+      return;
+    }
+    const draft = annualCase?.metadata?.wizardDraft || {};
+    const step = Math.min(5, Math.max(1, Number(annualCase?.metadata?.wizardStep) || 1));
+    const selectedProducts = Array.isArray(draft.products) ? draft.products : ["HRC", "HDG"];
+    const productChecked = (code) => selectedProducts.includes(code) ? " checked" : "";
+    const labels = ["起点", "交付与进口商", "产品候选", "项目角色", "确认创建"];
+    const progress = labels.map((label, index) => `<li class="${index + 1 === step ? "is-current" : index + 1 < step ? "is-done" : ""}"><span>${String(index + 1).padStart(2, "0")}</span><strong>${safe(label)}</strong></li>`).join("");
+    const panels = {
+      1: `<fieldset><legend>从哪里开始？</legend><label class="onboarding-choice"><input type="radio" name="startingPoint" value="new" checked><span><strong>从零开始</strong><small>首次建立 2027 年度项目；不复制 2026 的年度数值。</small></span></label><label class="onboarding-choice is-disabled"><input type="radio" disabled><span><strong>继承上一年度</strong><small>本次可用结构将在 p10 继承闭环中处理。</small></span></label></fieldset>`,
+      2: `<div class="onboarding-fields"><label><span>交付节奏</span><select name="cadence"><option value="quarterly" ${draft.cadence === "annual" ? "" : "selected"}>季度数据包 + 年度报告</option><option value="annual" ${draft.cadence === "annual" ? "selected" : ""}>年度交付</option></select></label><label><span>主要欧盟进口商</span><input name="importer" value="${safe(draft.importer || "NordWerk GmbH")}" required></label><label><span>第一交付期</span><input name="firstDeadline" value="${safe(draft.firstDeadline || "2027-04-30")}" type="date" required></label></div>`,
+      3: `<fieldset><legend>哪些产品进入候选？</legend><div class="onboarding-product-list"><label><input type="checkbox" name="products" value="HRC"${productChecked("HRC")}><span><strong>热轧非合金钢卷</strong><small>CN 7208 39 00 · 上海一厂</small></span></label><label><input type="checkbox" name="products" value="HDG"${productChecked("HDG")}><span><strong>热镀锌板</strong><small>CN 7210 49 00 · 生产配置待确认</small></span></label><label><input type="checkbox" name="products" value="CRC"${productChecked("CRC")}><span><strong>冷轧薄板</strong><small>2027 年尚无出口欧盟计划</small></span></label></div></fieldset>`,
+      4: `<div class="onboarding-role-grid"><article><small>项目协调</small><strong>周岚</strong><span>客户确认与签收</span></article><article><small>制备专家</small><strong>王晨</strong><span>监测计划与方法</span></article><article><small>独立复核</small><strong>李娜</strong><span>不可由制备人替代</span></article><article><small>客户成功</small><strong>林晓</strong><span>启动与进度协调</span></article></div>`,
+      5: `<div class="onboarding-summary"><p>确认后仅创建年度项目和产品候选，不会生成季度数据、计算结果或外发交付。</p><dl><div><dt>年度</dt><dd>2027</dd></div><div><dt>进口商</dt><dd>${safe(draft.importer || "NordWerk GmbH")}</dd></div><div><dt>候选产品</dt><dd>${safe((draft.products || ["HRC", "HDG"]).join(" / "))}</dd></div><div><dt>下一步</dt><dd>确认年度范围</dd></div></dl></div>`,
+    };
+    $("#main").innerHTML = `
+      ${pageHeader("华星钢铁有限公司 / CBAM", "创建 2027 年度项目", statusChip(`第 ${step} / 5 步`, "warn"))}
+        <section class="onboarding-shell"><ol class="onboarding-progress" aria-label="年度项目向导进度">${progress}</ol><form id="cbamOnboardingForm" class="onboarding-panel" data-step="${step}"><header><small>5 步 · 可保存草稿</small><h2>${safe(labels[step - 1])}</h2><p>你负责确认业务事实；监测方法由 Lumino 专家制备和独立复核。</p></header>${panels[step]}<footer><button class="button button--secondary" type="button" data-onboarding-action="save-exit">保存并返回</button><span></span>${step > 1 ? '<button class="button button--secondary" type="button" data-onboarding-action="prev">上一步</button>' : ""}<button class="button button--primary" type="button" data-onboarding-action="${step === 5 ? "create" : "next"}">${step === 5 ? "确认创建项目" : "保存并继续"}</button></footer></form></section>`;
+  }
+
+  function renderMonitoringPlan() {
+    const snapshot = cbamGoldenPath.snapshot();
+    const stage = cbamGoldenPath.stage("p04");
+    const invitationStage = cbamGoldenPath.stage("p05");
+    const plan = snapshot.monitoringPlan;
+    const stateLabels = { DRAFT: "草稿 · 待制备", GENERATED: "制备完成 · 待复核", VALIDATED: "复核中", INTERNAL_REVIEW: "待客户签收", APPROVED: "已签收" };
+    const items = [
+      ["E-01", "外购电力", "月度电费单 + 电表读数", "孙悦", "按实测"],
+      ["E-02", "天然气", "计量表 + 结算单", "孙悦", "按实测"],
+      ["P-01", "产量", "生产月报 + 发运对账", "刘倩", "按实测"],
+      ["C-01", "焦炭消耗", "领用台账 + 碳含量", "王晨", "专家判断"],
+      ["PR-01", "外购钢坯前体", "供应商数据或受控默认值", "王晨", "专家判断"],
+      ["S-01", "发运数量", "报关单 + 发运台账", "刘倩", "对账"],
+      ["F-01", "设施边界", "上海一厂生产配置", "周岚", "年度确认"],
+      ["D-01", "默认值使用记录", "使用理由 + 复核意见", "李娜", "受控路径"],
+    ];
+    const rows = items.map((item) => `<tr><td><code>${item[0]}</code></td><td><strong>${item[1]}</strong></td><td>${item[2]}</td><td>${item[3]}</td><td>${item[4]}</td></tr>`).join("");
+    let action = `<span class="status-chip locked">等待 ${safe(stage.assignee || "前置步骤")}</span>`;
+    if (plan?.status === "DRAFT" && state.role === "expert") action = '<button class="button button--primary" type="button" data-monitoring-action="prepare">王晨 · 制备确认 8 项</button>';
+    if (plan?.status === "GENERATED" && state.role === "reviewer") action = '<button class="button button--primary" type="button" data-monitoring-action="review">李娜 · 独立复核并发布</button>';
+    if (plan?.status === "INTERNAL_REVIEW" && ["customer_owner", "customer_admin"].includes(state.role)) action = '<button class="button button--primary" type="button" data-monitoring-action="sign">周岚 · 签收监测计划</button>';
+    if (stage.state === "done") action = `<span class="status-chip">已签收 · Q1 材料请求 ${snapshot.materialRequests.length} 项</span>`;
+    $("#main").innerHTML = `
+      ${pageHeader("华星钢铁有限公司 / CBAM", "监测计划", `<div class="head-actions">${window.LuminoAgentRuntime?.agentPageAction?.() || ""}${statusChip(stateLabels[plan?.status] || stage.state, ["DRAFT", "GENERATED", "VALIDATED", "INTERNAL_REVIEW"].includes(plan?.status) ? "warn" : "")}</div>`)}
+      <section class="monitoring-status ds-card" role="status"><div><small>MP-CBAM-2027-R1 · Rev ${plan?.revision || 1}</small><strong>王晨制备 → 李娜独立复核 → 周岚签收</strong><span>显示视角不会取得他人的确认权限。</span></div>${action}</section>
+      <section class="panel monitoring-plan"><div class="panel-head"><div><h2>3 · 数据项与监测方法</h2><span>8 项 · 2 项需专家判断 · 1 项客户批注</span></div></div><div class="monitoring-table-wrap"><table class="data-table"><thead><tr><th>编号</th><th>数据项</th><th>来源与证据</th><th>负责人</th><th>方法</th></tr></thead><tbody>${rows}</tbody></table></div></section>
+      <section class="monitoring-comment"><strong>客户批注 · 周岚</strong><p>北方特钢如无法提供实测前体数据，请在计划中明确默认值使用条件和需保留的书面记录。</p></section>
+      ${stage.state === "done" ? `<section class="next-action"><div class="next-action__copy"><small class="next-action__kicker">开通设置 · 最后一步</small><strong>${invitationStage.state === "done" ? "邀请草稿已生成" : "生成成员与供应商邀请草稿"}</strong><span>本原型只生成待人工执行的草稿，不发送邮件、不开通账号。</span></div>${invitationStage.state === "done" ? '<button class="button button--secondary" type="button" data-page="org-settings">查看待执行草稿 →</button>' : '<button class="button button--primary" type="button" data-monitoring-action="draft-invitations">生成邀请草稿 →</button>'}</section>` : ""}`;
   }
 
   function renderWorkflowGovernance() {
@@ -979,8 +1057,16 @@
       ? `<div class="prod-agent" role="note"><b>AGENT</b><span>${safe(model.agentNote)}</span></div>`
       : "";
 
+    const onboardingP02 = state.year === "2027" ? cbamGoldenPath.stage("p02") : null;
+    const onboardingP03 = state.year === "2027" ? cbamGoldenPath.stage("p03") : null;
     const next = model.locked
       ? ""
+      : onboardingP02 && onboardingP02.state !== "done"
+        ? nextAction("当前任务 · 年度项目", "先完成 5 步年度项目向导", "年度项目创建后才能确认本年引用的产品与设施。", "继续创建", 'data-page="onboarding"', "primary")
+      : onboardingP03 && onboardingP03.state !== "done"
+        ? nextAction("当前任务 · 2027 年度范围", "确认产品、设施与排除理由", "将热轧卷和热镀锌板纳入候选，冷轧薄板保留排除理由。", "确认年度范围", 'data-onboarding-action="confirm-scope"', "primary")
+      : state.year === "2027"
+        ? nextAction("下一步 · 监测计划", "年度范围已确认", "王晨制备、李娜独立复核后，由周岚签收。", "查看监测计划", 'data-page="monitoring-plan"', "secondary")
       : model.nextPending
         ? nextAction(
           "当前任务 · 产品范围",
@@ -1276,16 +1362,22 @@
 
   function renderTeam() {
     const admin = state.role === "customer_admin";
+    const invitationDraft = cbamGoldenPath.snapshot().invitationDraft;
+    const draftPeople = invitationDraft?.metadata?.people || [];
+    const draftRows = draftPeople.map((person) => {
+      const supplier = person.includes("北方特钢");
+      return `<tr><td><strong>${safe(person)}</strong><small>${supplier ? "供应商共享空间提议" : "待补充并核对邮箱"}</small></td><td>${supplier ? "供应商" : "数据贡献者"}</td><td>${supplier ? "北方特钢 · 前体请求" : "2027 · 上海一厂 · 分配给自己的请求"}</td><td>p05 最小权限草稿</td><td><span class="record-state warn">草稿 · 未发送</span></td></tr>`;
+    }).join("");
     const invitedRows = state.invitedMembers.map((member) => `<tr><td><strong>${safe(member.email.split("@")[0])}</strong><small>${safe(member.email)}</small></td><td>${safe(member.role)}</td><td>${safe(member.scope)}</td><td>企业管理员邀请</td><td><span class="record-state warn">等待接受 · ${safe(member.expiresAt)}</span></td></tr>`).join("");
     $("#main").innerHTML = `
       ${pageHeader("ORGANIZATION & ACCESS", admin ? "成员与授权" : "团队与权限", admin ? actionButton("邀请成员", "primary", 'data-action="invite-member"') : statusChip("项目范围只读"))}
-      <div class="permission-summary"><div><small>企业成员</small><strong>${12 + state.invitedMembers.length}</strong></div><div><small>Lumino 服务团队</small><strong>3</strong></div><div><small>待接受邀请</small><strong>${state.invitedMembers.length}</strong></div><p>权限按企业、年度、设施和数据敏感级别共同计算。Agent 不会扩大成员已有权限。</p></div>
+      <div class="permission-summary"><div><small>企业成员</small><strong>${12 + state.invitedMembers.length}</strong></div><div><small>待执行草稿</small><strong>${draftPeople.length}</strong></div><div><small>待接受邀请</small><strong>${state.invitedMembers.length}</strong></div><p>权限按企业、年度、设施和数据敏感级别共同计算。草稿未发送、未开通账号。</p></div>
       <section class="panel wide-panel"><div class="panel-head"><h2>项目成员</h2><button class="text-button" type="button" data-drawer="permission-audit">查看权限审计</button></div><table class="data-table"><thead><tr><th>成员</th><th>角色</th><th>数据范围</th><th>授权来源</th><th>状态</th></tr></thead><tbody>
         <tr><td><strong>周岚</strong><small>zhou.lan@huaxing.cn</small></td><td>企业管理员 / 协调人</td><td>全部年度 · 全部设施</td><td>企业级角色</td><td><span class="record-state ok">有效</span></td></tr>
         <tr><td><strong>陈浩</strong><small>生产部</small></td><td>数据贡献者</td><td>2026 · 上海一厂</td><td>任务 + 设施范围</td><td><span class="record-state warn">2 项待办</span></td></tr>
         <tr><td><strong>王晨</strong><small>Lumino 制备专家</small></td><td>制备专家</td><td>SO-2026-018 · 2026</td><td>服务订单授权</td><td><span class="record-state ok">2027-03 到期</span></td></tr>
         <tr><td><strong>李娜</strong><small>Lumino 复核中心</small></td><td>独立复核专家</td><td>待复核快照</td><td>工作包 WP-REV-03</td><td><span class="record-state ok">有效</span></td></tr>
-        <tr><td><strong>NordWerk GmbH</strong><small>欧盟进口商</small></td><td>外部接收方</td><td>2025 · 已分享产品范围</td><td>交付分享授权</td><td><span class="record-state">只读</span></td></tr>${invitedRows}
+        <tr><td><strong>NordWerk GmbH</strong><small>欧盟进口商</small></td><td>外部接收方</td><td>2025 · 已分享产品范围</td><td>交付分享授权</td><td><span class="record-state">只读</span></td></tr>${draftRows}${invitedRows}
       </tbody></table></section>
       <div class="security-note"><strong>最小权限原则</strong><p>商务和运营默认看不到 BOM、供应商价格与原始凭证；管理员临时访问客户内容必须说明原因并写入审计。</p><button class="text-button" type="button" data-drawer="permission-audit">查看权限矩阵 →</button></div>`;
   }
@@ -1310,6 +1402,12 @@
     }));
     const facilities = [...seededFacilities, ...state.facilities];
     const facilityRows = facilities.map((facility) => `<article class="record"><span class="record-code">${safe(facility.code)}</span><div><strong>${safe(facility.name)}</strong><p>${safe(facility.activity || "生产活动待补充")}${facility.assetId ? ` · ${safe(facility.assetId)}` : ""}</p></div><button class="record-state ${facility.status === "在用" ? "ok" : "warn"}" type="button" data-drawer="record-detail" data-drawer-label="${safe(facility.name)}" data-drawer-object="${safe(facility.versionId || `设施 ${facility.code}`)}" data-drawer-status="${safe(facility.status)}" data-drawer-description="查看设施版本、生产活动、年度引用和数据源。">查看</button></article>`).join("");
+    const invitationDraft = cbamGoldenPath.snapshot().invitationDraft;
+    const draftPeople = invitationDraft?.metadata?.people || [];
+    const draftRows = draftPeople.map((person) => {
+      const supplier = person.includes("北方特钢");
+      return `<tr><td><strong>${safe(person)}</strong><small>${supplier ? "供应商共享空间提议" : "待补充并核对邮箱"}</small></td><td>${supplier ? "供应商" : "数据贡献者"}</td><td>${supplier ? "北方特钢 · 前体请求" : "上海一厂 · 分配给自己的请求"}</td><td><span class="record-state warn">草稿 · 未发送</span></td></tr>`;
+    }).join("");
     const invitedRows = state.invitedMembers.map((member) => `<tr><td><strong>${safe(member.email.split("@")[0])}</strong><small>${safe(member.email)}</small></td><td>${safe(member.role)}</td><td>${safe(member.scope)}</td><td><span class="record-state warn">邀请中 · ${safe(member.expiresAt)}</span></td></tr>`).join("");
     const orgAsset = assetRegistry.get("ORG-HX-001");
     const titles = {
@@ -1339,14 +1437,14 @@
           <div class="record-list">${facilityRows || systemStatePanel({ code: "empty", title: "还没有设施", reason: "新建设施后，才能纳入年度范围与材料请求。", primary: { label: "新建设施", attrs: 'data-drawer="new-facility"' } })}</div>
         </article>`,
       members: `
-        <div class="permission-summary"><div><small>企业成员</small><strong>${12 + state.invitedMembers.length}</strong></div><div><small>待接受邀请</small><strong>${state.invitedMembers.length}</strong></div><div><small>可见范围</small><strong>按角色</strong></div><p>「可见范围」列对应邀请激活时的说明；Agent 不会扩大成员已有权限。</p></div>
+        <div class="permission-summary"><div><small>企业成员</small><strong>${12 + state.invitedMembers.length}</strong></div><div><small>待执行草稿</small><strong>${draftPeople.length}</strong></div><div><small>待接受邀请</small><strong>${state.invitedMembers.length}</strong></div><p>草稿不是已发送邀请或已开通账号；实际执行前仍需核对邮箱和最小权限范围。</p></div>
         <section class="panel wide-panel"><div class="panel-head"><h2>成员与角色</h2><button class="text-button" type="button" data-drawer="permission-audit">查看权限审计</button></div>
           <table class="data-table"><thead><tr><th>成员</th><th>角色</th><th>可见范围</th><th>状态</th></tr></thead><tbody>
             <tr><td><strong>周岚</strong><small>zhoulan@huaxing-steel.cn</small></td><td>企业管理员</td><td>全部服务与设置</td><td><span class="record-state ok">已启用</span></td></tr>
             <tr><td><strong>赵海峰</strong><small>zhaohf@huaxing-steel.cn</small></td><td>内部审批人</td><td>待审批报告与结果摘要</td><td><span class="record-state ok">已启用</span></td></tr>
             <tr><td><strong>陈浩</strong><small>chenhao@huaxing-steel.cn</small></td><td>数据贡献者</td><td>CBAM · 上海一厂材料请求</td><td><span class="record-state ok">已启用</span></td></tr>
             <tr><td><strong>王晨</strong><small>Lumino 制备专家</small></td><td>服务团队</td><td>SO-2026-018 · 制备范围</td><td><span class="record-state ok">订单授权</span></td></tr>
-            ${invitedRows}
+            ${draftRows}${invitedRows}
           </tbody></table>
         </section>`,
       services: `
