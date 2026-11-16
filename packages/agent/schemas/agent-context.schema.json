@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumino.example/schemas/agent-context/1.0.0",
+  "title": "Lumino Agent Authoritative Context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contextVersion", "serviceId", "tenantId", "annualProjectId", "serviceYear", "workstream", "objectRef", "period"],
+  "properties": {
+    "contextVersion": { "const": "1.0.0" },
+    "serviceId": { "type": "string", "minLength": 1 },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "annualProjectId": { "type": "string", "minLength": 1 },
+    "serviceYear": { "type": "string", "pattern": "^[0-9]{4}$" },
+    "workstream": { "type": "string", "minLength": 1 },
+    "objectRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "revision"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "revision": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "period": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "quarter": { "type": "string", "enum": ["Q1", "Q2", "Q3", "Q4"] }
+      }
+    }
+  }
+}
