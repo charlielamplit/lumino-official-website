@@ -142,7 +142,7 @@ Portal / API Client
 QUEUED → PROCESSING → VALIDATING → SUCCEEDED
                     ↘ FAILED → QUEUED（创建新 attempt，保留同一 taskId）
 QUEUED / PROCESSING → CANCELLED
-SUCCEEDED → SUPERSEDED（源对象或输入版本已变化）
+PROCESSING / VALIDATING / SUCCEEDED → SUPERSEDED（源对象或输入版本已变化）
 ```
 
 竞态规则：
@@ -187,7 +187,7 @@ hash(tenantId + annualProjectId + operationType + objectId + objectRevision + no
 DRAFT → VALIDATING → READY_FOR_REVIEW → CONFIRMED → APPLIED
                      ↘ VALIDATION_FAILED
 READY_FOR_REVIEW → REJECTED
-DRAFT / READY_FOR_REVIEW → SUPERSEDED
+DRAFT / VALIDATING / READY_FOR_REVIEW → SUPERSEDED
 CONFIRMED → APPLY_FAILED → CONFIRMED（修复后重试领域命令）
 ```
 
@@ -347,3 +347,15 @@ POST   /api/agent/candidates/:resultId/reject
 5. 用文件解析 / 字段候选完成 #74 端到端参考实现并独立验收。
 6. 分别建票接入数据检查、CN Code、计算和报告草稿。
 7. 最后开放任何可能产生正式业务对象的 Agent 动作。
+
+## 11. Phase 0 实施状态
+
+契约基线已完成，待提交与评审（分支：`feature/agent-production-contracts`）：
+
+- 已建立 Context、Execution、Conversation、Audit、Task、Validation 和 Candidate 的 JSON Schema v1；
+- 已建立状态机、稳定错误码、SemVer 兼容与幂等材料模块；
+- 已建立生产契约说明与 ADR-0001，明确 #25 / #26 / #73 / #74 所有权；
+- 已增加 Schema 引用、枚举一致性、状态迁移、错误目录和幂等材料契约测试；
+- 已经独立读者复核并修正终态非空约束、attempt 级来源追溯、自动执行审计主体、条件重试与错误目录缺口；
+- 本地完整回归 `190/190` 通过，语法、JSON 解析与 `git diff --check` 通过；
+- 尚未接数据库、队列、Provider、模型或正式领域命令，不能作为生产能力声明。

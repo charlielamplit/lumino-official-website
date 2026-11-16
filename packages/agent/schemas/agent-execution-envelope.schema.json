@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumino.example/schemas/agent-execution-envelope/1.0.0",
+  "title": "Lumino Agent Execution Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "executionId", "requestId", "correlationId", "attempt", "actor", "agent", "context", "inputRefs", "fileRefs", "startedAt", "status"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "executionId": { "type": "string", "minLength": 1 },
+    "requestId": { "type": "string", "minLength": 1 },
+    "correlationId": { "type": "string", "minLength": 1 },
+    "conversationId": { "type": ["string", "null"] },
+    "taskId": { "type": ["string", "null"] },
+    "attempt": { "type": "integer", "minimum": 1 },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["userId", "tenantId", "roles"],
+      "properties": {
+        "userId": { "type": "string", "minLength": 1 },
+        "tenantId": { "type": "string", "minLength": 1 },
+        "roles": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capability"],
+      "properties": {
+        "capability": { "type": "string", "minLength": 1 },
+        "provider": { "type": ["string", "null"] },
+        "model": { "type": ["string", "null"] },
+        "promptVersion": { "type": ["string", "null"] },
+        "toolVersions": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "context": { "$ref": "https://lumino.example/schemas/agent-context/1.0.0" },
+    "inputRefs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "fileRefs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "finishedAt": { "type": ["string", "null"], "format": "date-time" },
+    "durationMs": { "type": ["integer", "null"], "minimum": 0 },
+    "tokenUsage": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["input", "output", "total"],
+      "properties": {
+        "input": { "type": "integer", "minimum": 0 },
+        "output": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "status": { "type": "string", "enum": ["REQUESTED", "RUNNING", "SUCCEEDED", "FAILED", "CANCELLED"] },
+    "error": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["code", "message", "retryable"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "retryable": { "type": "boolean" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["SUCCEEDED", "FAILED", "CANCELLED"] } } },
+      "then": {
+        "required": ["finishedAt", "durationMs"],
+        "properties": {
+          "finishedAt": { "type": "string", "format": "date-time" },
+          "durationMs": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "FAILED" } } },
+      "then": {
+        "required": ["error"],
+        "properties": { "error": { "type": "object" } }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "SUCCEEDED" } } },
+      "then": { "properties": { "error": { "type": "null" } } }
+    }
+  ]
+}

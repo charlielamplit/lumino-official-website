@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumino.example/schemas/agent-audit-event/1.0.0",
+  "title": "Lumino Agent Append-only Audit Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "eventId", "eventType", "occurredAt", "actor", "context", "correlationId", "outcome", "dataClass", "detail"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "eventId": { "type": "string", "minLength": 1 },
+    "eventType": { "type": "string", "enum": ["CONVERSATION_CREATED", "MESSAGE_RECORDED", "EXECUTION_STARTED", "EXECUTION_FINISHED", "TASK_TRANSITIONED", "CANDIDATE_CREATED", "CANDIDATE_TRANSITIONED", "VALIDATION_STARTED", "VALIDATION_FINISHED", "CANDIDATE_REVIEWED", "DOMAIN_COMMAND_REQUESTED", "DOMAIN_COMMAND_FINISHED"] },
+    "occurredAt": { "type": "string", "format": "date-time" },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actorType", "actorId", "tenantId", "roles"],
+      "properties": {
+        "actorType": { "type": "string", "enum": ["USER", "SYSTEM", "WORKER", "SERVICE_PRINCIPAL"] },
+        "actorId": { "type": "string", "minLength": 1 },
+        "tenantId": { "type": "string", "minLength": 1 },
+        "roles": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+      }
+    },
+    "context": { "$ref": "https://lumino.example/schemas/agent-context/1.0.0" },
+    "correlationId": { "type": "string", "minLength": 1 },
+    "requestId": { "type": ["string", "null"] },
+    "executionId": { "type": ["string", "null"] },
+    "conversationId": { "type": ["string", "null"] },
+    "taskId": { "type": ["string", "null"] },
+    "candidateId": { "type": ["string", "null"] },
+    "domainCommandId": { "type": ["string", "null"] },
+    "outcome": { "type": "string", "enum": ["PENDING", "SUCCEEDED", "FAILED", "DENIED", "CANCELLED"] },
+    "dataClass": { "type": "string", "enum": ["AUDIT_LONG", "OPERATIONAL_SHORT", "SENSITIVE_REFERENCE_ONLY"] },
+    "detail": { "type": "object" },
+    "previousEventHash": { "type": ["string", "null"] },
+    "eventHash": { "type": ["string", "null"] }
+  }
+}

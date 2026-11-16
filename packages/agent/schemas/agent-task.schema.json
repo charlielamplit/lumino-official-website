@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumino.example/schemas/agent-task/1.0.0",
+  "title": "Lumino Agent Task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "taskId", "idempotencyKey", "operationType", "context", "inputSnapshotRef", "status", "attempt", "maxAttempts", "correlationId", "createdBy", "createdAt", "retryable"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "taskId": { "type": "string", "minLength": 1 },
+    "idempotencyKey": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "operationType": { "type": "string", "minLength": 1 },
+    "context": { "$ref": "https://lumino.example/schemas/agent-context/1.0.0" },
+    "inputSnapshotRef": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["QUEUED", "PROCESSING", "VALIDATING", "SUCCEEDED", "FAILED", "CANCELLED", "SUPERSEDED"] },
+    "attempt": { "type": "integer", "minimum": 1 },
+    "maxAttempts": { "type": "integer", "minimum": 1 },
+    "retryable": { "type": "boolean" },
+    "resultRef": { "type": ["string", "null"] },
+    "validationResultRef": { "type": ["string", "null"] },
+    "correlationId": { "type": "string", "minLength": 1 },
+    "createdBy": { "type": "string", "minLength": 1 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "startedAt": { "type": ["string", "null"], "format": "date-time" },
+    "finishedAt": { "type": ["string", "null"], "format": "date-time" },
+    "error": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["SUCCEEDED", "FAILED", "CANCELLED", "SUPERSEDED"] } } },
+      "then": {
+        "required": ["finishedAt"],
+        "properties": { "finishedAt": { "type": "string", "format": "date-time" } }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "FAILED" } } },
+      "then": {
+        "required": ["error"],
+        "properties": { "error": { "type": "object" } }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "SUCCEEDED" } } },
+      "then": {
+        "required": ["resultRef", "validationResultRef"],
+        "properties": {
+          "resultRef": { "type": "string", "minLength": 1 },
+          "validationResultRef": { "type": "string", "minLength": 1 },
+          "error": { "type": "null" }
+        }
+      }
+    }
+  ]
+}
