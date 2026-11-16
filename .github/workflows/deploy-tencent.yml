@@ -1,0 +1,84 @@
+name: Deploy Tencent Lighthouse
+
+on:
+  push:
+    branches: [server]
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type deploy to confirm manual production deploy"
+        required: true
+        default: ""
+
+concurrency:
+  group: deploy-tencent-lighthouse
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Pre-deploy quality gates
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 20
+
+      - name: Check JavaScript syntax
+        run: |
+          search_paths=()
+          for directory in api apps calculator packages portal scripts services site tests; do
+            if [ -d "$directory" ]; then
+              search_paths+=("$directory")
+            fi
+          done
+          find "${search_paths[@]}" -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' \) -print0 | xargs -0 -n1 node --check
+
+      - name: Run deterministic tests
+        run: |
+          shopt -s nullglob
+          test_files=(tests/*.test.* packages/agent/tests/*.test.* packages/advisor/tests/*.test.*)
+          if [ "${#test_files[@]}" -eq 0 ]; then
+            echo "No deterministic tests found"
+            exit 1
+          fi
+          node --test "${test_files[@]}"
+
+  deploy:
+    name: Deploy to Lighthouse
+    needs: quality
+    runs-on: ubuntu-24.04
+    environment: tencent-lighthouse
+    if: github.event_name == 'push' || github.event.inputs.confirm == 'deploy'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install rsync
+        run: sudo apt-get update -y && sudo apt-get install -y rsync
+
+      - name: Deploy over SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_DIR: ${{ secrets.DEPLOY_DIR }}
+          DEPLOY_SERVICE: ${{ secrets.DEPLOY_SERVICE }}
+          PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL }}
+        run: |
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$DEPLOY_HOST"
+          export DEPLOY_USER="${DEPLOY_USER:-ubuntu}"
+          export DEPLOY_DIR="${DEPLOY_DIR:-/var/www/lumino}"
+          export DEPLOY_SERVICE="${DEPLOY_SERVICE:-lumino-site}"
+          export PUBLIC_SITE_URL="${PUBLIC_SITE_URL:-http://${DEPLOY_HOST}}"
+          chmod +x scripts/deploy-tencent.sh
+          ./scripts/deploy-tencent.sh
