@@ -32,7 +32,15 @@ TARGET="${USER_NAME}@${HOST}"
 STAGE="$(mktemp -d)"
 
 echo "==> Build scoped deploy bundle"
-mkdir -p "$STAGE/scripts" "$STAGE/data"
+mkdir -p \
+  "$STAGE/apps/site" \
+  "$STAGE/apps/portal" \
+  "$STAGE/api" \
+  "$STAGE/packages/shared" \
+  "$STAGE/packages/advisor" \
+  "$STAGE/packages/agent" \
+  "$STAGE/scripts" \
+  "$STAGE/data"
 
 # Runtime surfaces
 rsync -a "$ROOT/apps/site/" "$STAGE/apps/site/"
