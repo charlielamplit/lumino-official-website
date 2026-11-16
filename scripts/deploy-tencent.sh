@@ -28,6 +28,14 @@ else
 fi
 trap cleanup EXIT
 
+# Trust host key for CI runners (first connect).
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+ssh-keyscan -T 10 -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || {
+  echo "ssh-keyscan failed for ${HOST}" >&2
+  exit 1
+}
+
 TARGET="${USER_NAME}@${HOST}"
 STAGE="$(mktemp -d)"
 
