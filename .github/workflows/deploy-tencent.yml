@@ -1,5 +1,6 @@
 name: Deploy Tencent Lighthouse
 
+# Scoped production: marketing site + calculator + portal leads inbox only.
 on:
   push:
     branches: [server]
