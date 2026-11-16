@@ -7,6 +7,7 @@
   "use strict";
 
   const IDS = Object.freeze({
+    activation: "AUTH-CBAM-2027-001",
     onboardingOrder: "SO-CBAM-2027-ONBOARDING",
     annualCase: "CASE-CBAM-2027",
     annualScope: "SCOPE-CBAM-2027",
@@ -62,12 +63,13 @@
 
     snapshot() {
       return {
+        activation: this.workflow.get(IDS.activation),
         onboardingOrder: this.workflow.get(IDS.onboardingOrder),
         annualCase: this.workflow.get(IDS.annualCase),
         annualScope: this.workflow.get(IDS.annualScope),
         monitoringPlan: this.workflow.get(IDS.monitoringPlan),
         invitationDraft: this.workflow.get(IDS.invitationDraft),
-        materialRequests: this.workflow.list({ type: "workPackage" }).filter((item) => item.id.startsWith(IDS.materialRequestPrefix)),
+        materialRequests: this.workflow.list({ type: "workPackage" }).filter((item) => item.metadata?.annualCaseId === IDS.annualCase || item.id.startsWith(IDS.materialRequestPrefix)),
         package: this.workflow.get(IDS.package),
         run: this.workflow.get(IDS.run),
         approval: this.workflow.get(IDS.approval),
@@ -76,15 +78,15 @@
 
     stage(playbookId) {
       const snapshot = this.snapshot();
-      const { onboardingOrder, annualCase, annualScope, monitoringPlan, invitationDraft, package: pkg, run, approval } = snapshot;
+      const { activation, onboardingOrder, annualCase, annualScope, monitoringPlan, invitationDraft, package: pkg, run, approval } = snapshot;
 
       if (playbookId === "p01") {
-        if (onboardingOrder?.status === "ACTIVE") return { state: "done", object: onboardingOrder };
-        return { state: "blocked", code: "P01_REQUIRED", recovery: "先确认 CBAM 适用性与演示服务范围。", object: onboardingOrder };
+        if (activation?.status === "ACTIVE" && onboardingOrder?.status === "ACTIVE") return { state: "done", object: activation };
+        return { state: "blocked", code: "P01_REQUIRED", recovery: "先完成 2027 CBAM 服务启动授权与客户线上确认。", object: activation || onboardingOrder };
       }
 
       if (playbookId === "p02") {
-        if (onboardingOrder?.status !== "ACTIVE") return { state: "blocked", code: "P01_REQUIRED", recovery: "先完成 p01 适用性确认。" };
+        if (this.stage("p01").state !== "done") return { state: "blocked", code: "P01_REQUIRED", recovery: "先完成 2027 CBAM 服务启动授权与客户线上确认。" };
         if (!annualCase) return { state: "failed", code: "ONBOARDING_SCENARIO_MISSING", recovery: "重置 2027 开通期演示。" };
         if (annualCase.status === "SCOPING") return { state: "in_progress", object: annualCase };
         return { state: "done", object: annualCase };
@@ -98,7 +100,7 @@
       }
 
       if (playbookId === "p04") {
-        if (this.stage("p03").state !== "done") return { state: "blocked", code: "P03_REQUIRED", recovery: "先确认 2027 年度范围。" };
+        if (this.stage("p02").state !== "done") return { state: "blocked", code: "P02_REQUIRED", recovery: "先创建 2027 年度项目并启动收资。" };
         if (!monitoringPlan) return { state: "failed", code: "MONITORING_PLAN_MISSING", recovery: "重置 2027 开通期演示。" };
         if (["APPROVED", "LOCKED", "SHARED", "DELIVERED", "ACKNOWLEDGED"].includes(monitoringPlan.status)) return { state: "done", object: monitoringPlan };
         if (monitoringPlan.status === "DRAFT") return { state: "not_started", assignee: ACTORS.preparer.name, object: monitoringPlan };
@@ -108,7 +110,7 @@
       }
 
       if (playbookId === "p05") {
-        if (this.stage("p04").state !== "done") return { state: "blocked", code: "P04_REQUIRED", recovery: "先完成监测计划复核与客户签收。" };
+        if (this.stage("p02").state !== "done") return { state: "blocked", code: "P02_REQUIRED", recovery: "先创建 2027 年度项目并启动收资。" };
         if (invitationDraft?.status === "PROPOSED" && invitationDraft.metadata?.externalSent === false) return { state: "done", object: invitationDraft };
         return { state: "not_started" };
       }
@@ -176,14 +178,29 @@
       return { idempotent: false, object };
     }
 
+    ensureMaterialRequests(actor) {
+      const annualCase = this.workflow.get(IDS.annualCase);
+      const monitoringPlan = this.workflow.get(IDS.monitoringPlan);
+      const year = annualCase?.year || "2027";
+      const period = annualCase?.metadata?.currentPeriod || monitoringPlan?.metadata?.collectionPeriod || "Q1";
+      const dataItems = monitoringPlan?.metadata?.dataItems || [];
+      dataItems.forEach((item, offset) => {
+        const index = offset + 1;
+        const id = `MR-CBAM-${year}-${period}-${String(index).padStart(2, "0")}`;
+        if (this.workflow.get(id)) return;
+        this.workflow.create({ id, type: "workPackage", status: "READY", owner: item.owner || annualCase?.owner || actor.name, year, quarter: period, scope: `${item.code || String(index).padStart(2, "0")} · ${item.name || "材料请求"}`, dependsOn: [IDS.annualCase, IDS.monitoringPlan], actor: actor.name, role: actor.role, reason: "年度项目启动收资后生成首轮材料请求", eventMetadata: { correlationId: `CBAM-${year}:p02:material-requests`, monitoringPlanId: IDS.monitoringPlan }, metadata: { basis: "annual_scope_and_monitoring_draft", annualCaseId: IDS.annualCase, monitoringPlanId: IDS.monitoringPlan, dataItemCode: item.code || null, provisional: true } });
+      });
+      return this.snapshot().materialRequests;
+    }
+
     createAnnualProject(actor, payload = {}) {
       ensureActor(actor, ACTORS.owner);
       const gate = this.stage("p02");
       if (gate.state === "blocked" || gate.state === "failed") fail("PREREQUISITE_REQUIRED", "年度项目尚不能创建。", gate.recovery);
       const annualCase = this.workflow.get(IDS.annualCase);
       if (annualCase.status !== "SCOPING") return { idempotent: true, object: annualCase };
-      const object = this.workflow.transition(IDS.annualCase, "COLLECTING", { actor: actor.name, role: actor.role, reason: "创建 CBAM 2027 年度项目", correlationId: "CBAM-2027:p02:create", metadata: { wizardStep: 5, createdBy: actor.name, projectCreated: true, wizardDraft: { ...(annualCase.metadata?.wizardDraft || {}), ...payload, step: 5 } } });
-      return { idempotent: false, object };
+      const object = this.workflow.transition(IDS.annualCase, "COLLECTING", { actor: actor.name, role: actor.role, reason: "创建 CBAM 2027 年度项目并启动收资", correlationId: "CBAM-2027:p02:create", metadata: { wizardStep: 5, createdBy: actor.name, projectCreated: true, collectionStarted: true, collectionStartedBy: actor.name, wizardDraft: { ...(annualCase.metadata?.wizardDraft || {}), ...payload, step: 5 } } });
+      return { idempotent: false, object, materialRequests: this.ensureMaterialRequests(actor) };
     }
 
     confirmAnnualScope(actor, payload = {}) {
@@ -225,11 +242,6 @@
       if (["APPROVED", "LOCKED", "SHARED", "DELIVERED", "ACKNOWLEDGED"].includes(plan.status)) return { idempotent: true, object: plan, materialRequests: this.snapshot().materialRequests };
       if (plan.status !== "INTERNAL_REVIEW") fail("INVALID_STAGE", "监测计划需先完成独立复核。", "请由李娜复核并发布客户审阅版。");
       const object = this.workflow.transition(IDS.monitoringPlan, "APPROVED", { actor: actor.name, role: actor.role, reason: "客户签收 2027 监测计划", correlationId: "CBAM-2027:p04:sign", metadata: { signedBy: actor.name, signed: true, deliveryState: "CUSTOMER_ACCEPTED" } });
-      for (let index = 1; index <= 8; index += 1) {
-        const id = `${IDS.materialRequestPrefix}${String(index).padStart(2, "0")}`;
-        if (this.workflow.get(id)) continue;
-        this.workflow.create({ id, type: "workPackage", status: "READY", owner: index <= 2 ? "孙悦" : index <= 4 ? "刘倩" : "周岚", year: "2027", quarter: "Q1", scope: `2027 Q1 材料请求 ${String(index).padStart(2, "0")}`, dependsOn: [IDS.monitoringPlan], actor: actor.name, role: actor.role, reason: "根据已签收监测计划生成 Q1 材料请求", eventMetadata: { correlationId: "CBAM-2027:p04:material-requests", monitoringPlanId: IDS.monitoringPlan } });
-      }
       return { idempotent: false, object, materialRequests: this.snapshot().materialRequests };
     }
 
@@ -239,6 +251,7 @@
       if (gate.state === "blocked" || gate.state === "failed") fail("PREREQUISITE_REQUIRED", "邀请草稿尚不能生成。", gate.recovery);
       const existing = this.workflow.get(IDS.invitationDraft);
       if (existing) return { idempotent: true, object: existing };
+      this.ensureMaterialRequests(actor);
       const object = this.workflow.create({ id: IDS.invitationDraft, type: "handoff", status: "PROPOSED", owner: actor.name, year: "2027", scope: "成员与供应商邀请草稿", dependsOn: [IDS.monitoringPlan], actor: actor.name, role: actor.role, reason: "生成待人工执行的邀请草稿", eventMetadata: { correlationId: "CBAM-2027:p05:draft" }, metadata: { people: payload.people || ["孙悦", "刘倩", "北方特钢 刘明"], leastPrivilege: true, externalSent: false, deliveryState: "DRAFT_ONLY" } });
       return { idempotent: false, object };
     }

@@ -1,0 +1,109 @@
+{
+  "generatedAt": "2026-11-16T13:48:49.234Z",
+  "origin": "http://127.0.0.1:4174",
+  "annual": {
+    "contextVersion": "1.0.0",
+    "serviceId": "cbam",
+    "tenantId": "TNT-0018",
+    "annualProjectId": "CASE-CBAM-2026",
+    "serviceYear": "2026",
+    "workstream": "annual_project",
+    "objectRef": {
+      "type": "serviceCase",
+      "id": "CASE-CBAM-2026",
+      "revision": 1
+    },
+    "period": {
+      "quarter": "Q3"
+    },
+    "pageId": "annual-project",
+    "conversationId": "agent:CASE-CBAM-2026:annual_project:CASE-CBAM-2026:Q3",
+    "correlationId": "ctx:CASE-CBAM-2026:annual_project:CASE-CBAM-2026:Q3"
+  },
+  "products": {
+    "contextVersion": "1.0.0",
+    "serviceId": "cbam",
+    "tenantId": "TNT-0018",
+    "annualProjectId": "CASE-CBAM-2026",
+    "serviceYear": "2026",
+    "workstream": "scope_master_data",
+    "objectRef": {
+      "type": "annualInclusion",
+      "id": "SCOPE-CBAM-2026",
+      "revision": 3
+    },
+    "period": {
+      "quarter": "Q3"
+    },
+    "pageId": "products",
+    "conversationId": "agent:CASE-CBAM-2026:scope_master_data:SCOPE-CBAM-2026:Q3",
+    "correlationId": "ctx:CASE-CBAM-2026:scope_master_data:SCOPE-CBAM-2026:Q3"
+  },
+  "data": {
+    "contextVersion": "1.0.0",
+    "serviceId": "cbam",
+    "tenantId": "TNT-0018",
+    "annualProjectId": "CASE-CBAM-2026",
+    "serviceYear": "2026",
+    "workstream": "data_collection",
+    "objectRef": {
+      "type": "quarterlyPackage",
+      "id": "PKG-2026-Q3-NORDWERK",
+      "revision": 1
+    },
+    "period": {
+      "quarter": "Q3"
+    },
+    "pageId": "data-calculation",
+    "conversationId": "agent:CASE-CBAM-2026:data_collection:PKG-2026-Q3-NORDWERK:Q3",
+    "correlationId": "ctx:CASE-CBAM-2026:data_collection:PKG-2026-Q3-NORDWERK:Q3"
+  },
+  "calculation": {
+    "contextVersion": "1.0.0",
+    "serviceId": "cbam",
+    "tenantId": "TNT-0018",
+    "annualProjectId": "CASE-CBAM-2026",
+    "serviceYear": "2026",
+    "workstream": "calculation",
+    "objectRef": {
+      "type": "calculationRun",
+      "id": "RUN-04",
+      "revision": 1
+    },
+    "period": {
+      "quarter": "Q3"
+    },
+    "pageId": "data-calculation",
+    "conversationId": "agent:CASE-CBAM-2026:calculation:RUN-04:Q3",
+    "correlationId": "ctx:CASE-CBAM-2026:calculation:RUN-04:Q3"
+  },
+  "nextYear": {
+    "contextVersion": "1.0.0",
+    "serviceId": "cbam",
+    "tenantId": "TNT-0018",
+    "annualProjectId": "CASE-CBAM-2027",
+    "serviceYear": "2027",
+    "workstream": "current_work",
+    "objectRef": {
+      "type": "serviceCase",
+      "id": "CASE-CBAM-2027",
+      "revision": 1
+    },
+    "period": {
+      "quarter": "Q1"
+    },
+    "pageId": "service-start",
+    "conversationId": "agent:CASE-CBAM-2027:current_work:CASE-CBAM-2027:Q1",
+    "correlationId": "ctx:CASE-CBAM-2027:current_work:CASE-CBAM-2027:Q1"
+  },
+  "nextYearAvailable": false,
+  "checks": {
+    "annualProject": true,
+    "products": true,
+    "data": true,
+    "calculation": true,
+    "isolatedYear": true,
+    "unstartedHidden": true
+  },
+  "issues": []
+}

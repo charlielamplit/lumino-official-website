@@ -40,8 +40,43 @@
     return domain === "huaxing-steel.cn";
   }
 
+  function isStaffEmail(email) {
+    const domain = String(email || "").split("@")[1]?.toLowerCase() || "";
+    return domain === "lumino.tech" || domain === "esgai.cn";
+  }
+
   function isValidWorkEmail(email) {
     return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(email || "").trim());
+  }
+
+  function clearStaffSession() {
+    try { sessionStorage.removeItem("lumino-leads-staff-key"); } catch (_) {}
+    try { sessionStorage.removeItem("lumino-staff-profile"); } catch (_) {}
+  }
+
+  function saveStaffSession(payload) {
+    if (!payload?.staffKey) return;
+    try { sessionStorage.setItem("lumino-leads-staff-key", payload.staffKey); } catch (_) {}
+    try {
+      sessionStorage.setItem("lumino-staff-profile", JSON.stringify({
+        email: payload.email,
+        name: payload.name,
+        role: payload.role,
+      }));
+    } catch (_) {}
+  }
+
+  async function staffPasswordLogin(email, password) {
+    const response = await fetch("/api/staff-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || "登录失败");
+    }
+    return data;
   }
 
   function updateLoginEmailHint(email) {
@@ -63,6 +98,8 @@
     }
     if (loginUsesSso(value)) {
       hint.textContent = "huaxing-steel.cn 已启用企业 SSO，继续后跳转到企业登录";
+    } else if (isStaffEmail(value)) {
+      hint.textContent = "Lumino 员工账号：继续后输入密码，登录后可查看真实线索";
     } else {
       hint.textContent = "继续后输入密码";
       hint.classList.add("is-muted");
@@ -94,7 +131,7 @@
   }
 
   $("#loginEmail")?.addEventListener("input", (event) => updateLoginEmailHint(event.target.value));
-  $("#loginForm").addEventListener("submit", (event) => {
+  $("#loginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const step = $("#loginForm").dataset.step || "email";
     const email = ($("#loginEmail")?.value || "").trim();
@@ -107,6 +144,23 @@
     if (step === "password") {
       const password = $("#loginPassword")?.value || "";
       if (password.length < 6) { toast("请输入至少 6 位密码"); return; }
+      if (isStaffEmail(email)) {
+        const submit = $("#loginForm")?.querySelector('[data-step-panel="password"] button[type="submit"]');
+        const original = submit?.textContent || "登录";
+        try {
+          if (submit) { submit.disabled = true; submit.textContent = "登录中…"; }
+          const profile = await staffPasswordLogin(email, password);
+          saveStaffSession(profile);
+          login(profile.role);
+          toast(`已登录 ${profile.name || profile.email}，可查看线索收件箱`);
+        } catch (error) {
+          clearStaffSession();
+          toast(error.message || "员工登录失败");
+        } finally {
+          if (submit) { submit.disabled = false; submit.textContent = original; }
+        }
+        return;
+      }
       setLoginStep("workspace");
       return;
     }
@@ -132,6 +186,9 @@
   $("#demoRoleSelect")?.addEventListener("change", (event) => {
     const role = event.target.value;
     if (!role) return;
+    if (["sales", "ops"].includes(role) && !sessionStorage.getItem("lumino-leads-staff-key")) {
+      toast("演示角色可进面板；查看真实线索请用 ops@lumino.tech / sales@lumino.tech 登录");
+    }
     login(role);
     event.target.value = "";
   });
@@ -163,7 +220,7 @@
   $("#accountMenu")?.addEventListener("click", (event) => {
     const item = event.target.closest("[data-account-action], #logoutButton");
     if (!item) return;
-    if (item.id === "logoutButton") { closeAccountMenu(); logout(); setLoginStep("email"); return; }
+    if (item.id === "logoutButton") { closeAccountMenu(); clearStaffSession(); logout(); setLoginStep("email"); return; }
     if (item.dataset.accountAction === "workspace") {
       closeAccountMenu();
       logout();
@@ -340,6 +397,8 @@
     state.year = event.target.value;
     state.quarter = annualProfile().defaultQuarter;
     state.roadStage = null;
+    if (state.currentService === "cbam" && state.year === "2027" && workflowEngine.get("AUTH-CBAM-2027-001")?.status !== "ACTIVE") state.page = "service-start";
+    else if (state.page === "service-start") state.page = "work";
     loadPeriodState(); syncUiFromWorkflow();
     render();
     toast(`已切换到 ${state.year} 年度，页面数据与版本已整体切换。`);
@@ -490,7 +549,7 @@
         if (action === "create") {
           if (!canPerformPortalAction("cbam-create-annual-project")) { toast(portalActionDenial("cbam-create-annual-project")); return; }
           cbamGoldenPath.command("p02", "create", actor, payload);
-          render(); toast("CBAM 2027 年度项目已创建；下一步确认年度范围。"); return;
+          render(); toast("CBAM 2027 年度项目已创建并启动收资；Agent 现可协助整理本年度材料。"); return;
         }
         const targetStep = action === "prev" ? currentStep - 1 : action === "next" ? currentStep + 1 : currentStep;
         cbamGoldenPath.command("p02", "save-draft", actor, { ...payload, step: targetStep });
@@ -512,8 +571,47 @@
         if (action === "sign") cbamGoldenPath.command("p04", "sign", actor);
         if (action === "draft-invitations") cbamGoldenPath.command("p05", "draft-invitations", actor);
         render();
-        toast(action === "prepare" ? "制备确认完成；等待李娜独立复核。" : action === "review" ? "独立复核完成；已发布客户审阅版。" : action === "sign" ? "监测计划已签收；已幂等生成 8 项 Q1 材料请求。" : "邀请草稿已生成；未发送、未开通账号。");
+        toast(action === "prepare" ? "制备确认完成；等待李娜独立复核。" : action === "review" ? "独立复核完成；已发布客户审阅版。" : action === "sign" ? "监测计划已签收；材料清单继续按当前版本同步维护。" : "邀请草稿已生成；未发送、未开通账号。");
       } catch (error) { toast(error.recovery || error.message); }
+      return;
+    }
+    const activationAction = event.target.closest("[data-activation-action]");
+    if (activationAction) {
+      if (activationAction.dataset.activationAction === "continue") {
+        state.cbamEntryMode = "annual-project";
+        state.page = "annual-project";
+        render();
+        return;
+      }
+      const activation = workflowEngine.get("AUTH-CBAM-2027-001");
+      if (!activation || activation.status !== "PENDING_CUSTOMER_CONFIRMATION") { toast("当前启动单不在客户确认阶段。"); return; }
+      if (!["customer_owner", "customer_admin"].includes(state.role) || roleConfig[state.role].name !== activation.owner) { toast(`该启动单需由 ${activation.owner} 线上确认。`); return; }
+      try {
+        workflowEngine.transition(activation.id, "ACTIVE", { actor: roleConfig[state.role].name, role: state.role, reason: "客户企业管理员线上确认 2027 CBAM 服务启动", metadata: { customerConfirmedBy: roleConfig[state.role].name, customerConfirmedAt: new Date().toISOString() } });
+        state.cbamEntryMode = "annual-project";
+        state.page = "annual-project";
+        render();
+        toast("2027 CBAM 服务已启动；下一步创建年度项目。");
+      } catch (error) { toast(error.message); }
+      return;
+    }
+    const cbamSection = event.target.closest("[data-cbam-section]");
+    if (cbamSection) {
+      const section = cbamSection.dataset.cbamSection;
+      if (["products", "facilities", "changes"].includes(section)) {
+        state.cbamProductView = section;
+        state.page = "products";
+      } else {
+        state.cbamDataView = section;
+        state.page = "data-calculation";
+      }
+      persistPortalState();
+      render();
+      return;
+    }
+    const productImport = event.target.closest("[data-product-import]");
+    if (productImport) {
+      toast("原型已展示最近一次导入差异；正式版本会先校验模板并生成逐字段提案。");
       return;
     }
     const nav = event.target.closest("[data-page]");

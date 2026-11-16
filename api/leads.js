@@ -35,19 +35,93 @@ function normalizeServices(body) {
   return raw.split(/[,，\s]+/).map((s) => s.trim()).filter(Boolean);
 }
 
+function isWecomWebhook(url) {
+  try {
+    const host = new URL(url).host;
+    return host === "qyapi.weixin.qq.com" || host.endsWith(".weixin.qq.com");
+  } catch {
+    return false;
+  }
+}
+
+function leadNotifyLines(lead) {
+  return [
+    `新线索 ${lead.id}`,
+    `公司：${lead.company}`,
+    `联系人：${lead.name}`,
+    `手机：${lead.phone || "—"}`,
+    `邮箱：${lead.email || "—"}`,
+    `服务：${(lead.services || []).join(", ") || "—"}`,
+    `行业：${lead.industry || "—"}`,
+    `说明：${lead.note || "—"}`,
+    `来源：${lead.source}`,
+    `时间：${lead.createdAt}`,
+  ];
+}
+
+function buildWecomMarkdown(lead) {
+  const portalBase = String(process.env.PUBLIC_SITE_URL || "http://175.24.226.76").replace(/\/$/, "");
+  const services = (lead.services || []).join("、") || "—";
+  return [
+    `## 新线索 <font color="warning">${lead.id}</font>`,
+    `>公司：<font color="comment">${lead.company}</font>`,
+    `>联系人：<font color="comment">${lead.name}</font>`,
+    `>电话：<font color="comment">${lead.phone || "—"}</font>`,
+    `>邮箱：<font color="comment">${lead.email || "—"}</font>`,
+    `>服务：<font color="comment">${services}</font>`,
+    `>来源：<font color="comment">${lead.source || "—"}</font>`,
+    `>说明：${String(lead.note || "—").slice(0, 400)}`,
+    `[打开线索收件箱](${portalBase}/portal/)`,
+  ].join("\n");
+}
+
+async function postWebhook(url, body) {
+  const upstream = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(8000),
+  });
+  const text = await upstream.text().catch(() => "");
+  let parsed = null;
+  try { parsed = text ? JSON.parse(text) : null; } catch (_) { /* non-json */ }
+  // WeCom returns HTTP 200 with errcode != 0 on logical failure.
+  const wecomFail = parsed && typeof parsed.errcode === "number" && parsed.errcode !== 0;
+  if (!upstream.ok || wecomFail) {
+    const detail = wecomFail ? `errcode_${parsed.errcode}` : `status_${upstream.status}`;
+    return { ok: false, detail, body: text.slice(0, 300) };
+  }
+  return { ok: true, detail: "ok" };
+}
+
 async function notifyLead(lead) {
-  const results = { webhook: null, email: null };
-  const webhook = process.env.LEAD_WEBHOOK_URL;
-  if (webhook) {
+  const results = { wecom: null, webhook: null, email: null };
+  const wecomUrl = String(process.env.WECOM_WEBHOOK_URL || "").trim();
+  const genericUrl = String(process.env.LEAD_WEBHOOK_URL || "").trim();
+
+  // Prefer dedicated WeCom URL; also auto-detect WeCom if only LEAD_WEBHOOK_URL is set.
+  const wecomTarget = wecomUrl || (genericUrl && isWecomWebhook(genericUrl) ? genericUrl : "");
+  const genericTarget = genericUrl && !isWecomWebhook(genericUrl) ? genericUrl : "";
+
+  if (wecomTarget) {
     try {
-      const upstream = await fetch(webhook, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(lead),
-        signal: AbortSignal.timeout(8000),
+      const sent = await postWebhook(wecomTarget, {
+        msgtype: "markdown",
+        markdown: { content: buildWecomMarkdown(lead) },
       });
-      results.webhook = upstream.ok ? "ok" : `status_${upstream.status}`;
-      if (!upstream.ok) console.error("[lumino-lead] webhook failed", upstream.status, lead.id);
+      results.wecom = sent.ok ? "ok" : sent.detail;
+      if (!sent.ok) console.error("[lumino-lead] wecom failed", sent.detail, sent.body, lead.id);
+    } catch (error) {
+      results.wecom = "error";
+      console.error("[lumino-lead] wecom error", error, lead.id);
+    }
+  }
+
+  if (genericTarget) {
+    try {
+      const sent = await postWebhook(genericTarget, lead);
+      results.webhook = sent.ok ? "ok" : sent.detail;
+      if (!sent.ok) console.error("[lumino-lead] webhook failed", sent.detail, lead.id);
     } catch (error) {
       results.webhook = "error";
       console.error("[lumino-lead] webhook error", error, lead.id);
@@ -59,18 +133,7 @@ async function notifyLead(lead) {
   if (notifyEmail && resendKey) {
     try {
       const from = process.env.LEAD_NOTIFY_FROM || "Lumino Leads <onboarding@resend.dev>";
-      const text = [
-        `新线索 ${lead.id}`,
-        `公司：${lead.company}`,
-        `联系人：${lead.name}`,
-        `手机：${lead.phone || "—"}`,
-        `邮箱：${lead.email || "—"}`,
-        `服务：${(lead.services || []).join(", ") || "—"}`,
-        `行业：${lead.industry || "—"}`,
-        `说明：${lead.note || "—"}`,
-        `来源：${lead.source}`,
-        `时间：${lead.createdAt}`,
-      ].join("\n");
+      const text = leadNotifyLines(lead).join("\n");
       const upstream = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
@@ -93,8 +156,8 @@ async function notifyLead(lead) {
     }
   }
 
-  const notified = results.webhook === "ok" || results.email === "ok";
-  const configured = Boolean(webhook || (notifyEmail && resendKey));
+  const notified = results.wecom === "ok" || results.webhook === "ok" || results.email === "ok";
+  const configured = Boolean(wecomTarget || genericTarget || (notifyEmail && resendKey));
   return { notified, configured, results };
 }
 
@@ -194,7 +257,7 @@ export default async function handler(request, response) {
 
   const notify = await notifyLead(created.lead);
   if (!notify.configured) {
-    console.warn("[lumino-lead] no LEAD_WEBHOOK_URL / Resend configured; inbox-only", created.lead.id);
+    console.warn("[lumino-lead] no WECOM_WEBHOOK_URL / LEAD_WEBHOOK_URL / Resend configured; inbox-only", created.lead.id);
   }
 
   return json(response, 200, {

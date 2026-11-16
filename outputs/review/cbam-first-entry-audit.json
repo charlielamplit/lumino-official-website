@@ -1,0 +1,163 @@
+{
+  "generatedAt": "2026-11-16T13:48:55.568Z",
+  "origin": "http://127.0.0.1:4174",
+  "widths": {
+    "390": {
+      "start": {
+        "title": "服务启动",
+        "nav": [
+          "○服务启动1"
+        ],
+        "status": "PENDING_CUSTOMER_CONFIRMATION",
+        "agentAvailable": false,
+        "overflow": false
+      },
+      "annual": {
+        "title": "创建 2027 年度项目",
+        "nav": [
+          "◉当前工作1",
+          "○年度项目",
+          "◇产品与设施",
+          "▦数据与核算2",
+          "□报告与交付"
+        ],
+        "status": "ACTIVE",
+        "agentAvailable": false,
+        "overflow": false
+      },
+      "products": {
+        "title": "产品与设施",
+        "tabs": [
+          {
+            "label": "产品与 CN 编码",
+            "active": false
+          },
+          {
+            "label": "设施与生产路线",
+            "active": false
+          },
+          {
+            "label": "导入与变更记录",
+            "active": true
+          }
+        ],
+        "diffRows": 3,
+        "overflow": false
+      },
+      "data": {
+        "title": "数据与核算",
+        "tabs": [
+          "材料与数据",
+          "计算结果",
+          "成本情景"
+        ],
+        "overflow": false
+      }
+    },
+    "768": {
+      "start": {
+        "title": "服务启动",
+        "nav": [
+          "○服务启动1"
+        ],
+        "status": "PENDING_CUSTOMER_CONFIRMATION",
+        "agentAvailable": false,
+        "overflow": false
+      },
+      "annual": {
+        "title": "创建 2027 年度项目",
+        "nav": [
+          "◉当前工作1",
+          "○年度项目",
+          "◇产品与设施",
+          "▦数据与核算2",
+          "□报告与交付"
+        ],
+        "status": "ACTIVE",
+        "agentAvailable": false,
+        "overflow": false
+      },
+      "products": {
+        "title": "产品与设施",
+        "tabs": [
+          {
+            "label": "产品与 CN 编码",
+            "active": false
+          },
+          {
+            "label": "设施与生产路线",
+            "active": false
+          },
+          {
+            "label": "导入与变更记录",
+            "active": true
+          }
+        ],
+        "diffRows": 3,
+        "overflow": false
+      },
+      "data": {
+        "title": "数据与核算",
+        "tabs": [
+          "材料与数据",
+          "计算结果",
+          "成本情景"
+        ],
+        "overflow": false
+      }
+    },
+    "1440": {
+      "start": {
+        "title": "服务启动",
+        "nav": [
+          "○服务启动1"
+        ],
+        "status": "PENDING_CUSTOMER_CONFIRMATION",
+        "agentAvailable": false,
+        "overflow": false
+      },
+      "annual": {
+        "title": "创建 2027 年度项目",
+        "nav": [
+          "◉当前工作1",
+          "○年度项目",
+          "◇产品与设施",
+          "▦数据与核算2",
+          "□报告与交付"
+        ],
+        "status": "ACTIVE",
+        "agentAvailable": false,
+        "overflow": false
+      },
+      "products": {
+        "title": "产品与设施",
+        "tabs": [
+          {
+            "label": "产品与 CN 编码",
+            "active": false
+          },
+          {
+            "label": "设施与生产路线",
+            "active": false
+          },
+          {
+            "label": "导入与变更记录",
+            "active": true
+          }
+        ],
+        "diffRows": 3,
+        "overflow": false
+      },
+      "data": {
+        "title": "数据与核算",
+        "tabs": [
+          "材料与数据",
+          "计算结果",
+          "成本情景"
+        ],
+        "overflow": false
+      }
+    }
+  },
+  "issues": []
+}

@@ -10,6 +10,21 @@ test("Portal 在配置前加载 CBAM 黄金路径控制器", () => {
   const html = read("apps/portal/index.html");
   assert.ok(html.indexOf("cbam-golden-path.js") > html.indexOf("workflow-engine.js"));
   assert.ok(html.indexOf("cbam-golden-path.js") < html.indexOf("portal-config.js"));
+  assert.ok(html.indexOf("agent-context.js") > html.indexOf("workflow-engine.js"));
+  assert.ok(html.indexOf("agent-context.js") < html.indexOf("portal-config.js"));
+});
+
+test("Agent 使用年度项目对象上下文并按 context key 隔离会话", () => {
+  const runtime = read("apps/portal/runtime/agent-runtime.js");
+  const core = read("apps/portal/runtime/portal-core.js");
+  assert.match(runtime, /LuminoAgentContext/);
+  assert.match(runtime, /annualProjectId/);
+  assert.match(runtime, /contextApi\(\)\.contextKey\(context\)/);
+  assert.match(runtime, /agentSessions\[previousKey\] = sessionSnapshot\(\)/);
+  assert.match(runtime, /context: state\.agentContext \|\| syncAgentContext\(\)/);
+  assert.match(runtime, /correlationId: context\.correlationId/);
+  assert.match(core, /agentSessions: state\.agentSessions/);
+  assert.match(core, /LuminoAgentRuntime\?\.syncAgentContext/);
 });
 
 test("Agent p06-p08 从领域状态派生完成并使用具名操作者", () => {

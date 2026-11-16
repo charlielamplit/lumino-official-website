@@ -50,6 +50,8 @@ const apiRoutes = {
   "/api/advisor-metrics": "api/advisor-metrics.js",
   "/api/advisor-ping": "api/advisor-ping.js",
   "/api/knowledge": "api/knowledge.js",
+  "/api/leads": "api/leads.js",
+  "/api/staff-login": "api/staff-login.js",
 };
 
 const vercelConfig = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));

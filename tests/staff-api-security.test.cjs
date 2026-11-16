@@ -67,6 +67,61 @@ test("knowledge staff API fails closed when staff keys are missing", async () =>
   }
 });
 
+test("staff login fails closed when credentials or shared key are not configured", async () => {
+  const previousUsers = process.env.STAFF_USERS;
+  const previousKey = process.env.LEADS_STAFF_KEY;
+  delete process.env.STAFF_USERS;
+  delete process.env.LEADS_STAFF_KEY;
+  try {
+    const handler = await loadHandler("api/staff-login.js");
+    const statusResponse = mockResponse();
+    await handler({ method: "GET", headers: {}, query: {}, body: {} }, statusResponse);
+    assert.equal(statusResponse.statusCode, 200);
+    assert.equal(JSON.parse(statusResponse.body).configured, false);
+
+    const loginResponse = mockResponse();
+    await handler({ method: "POST", headers: {}, query: {}, body: { email: "ops@example.com", password: "secret" } }, loginResponse);
+    assert.equal(loginResponse.statusCode, 503);
+    assert.match(loginResponse.body, /尚未配置/);
+  } finally {
+    if (previousUsers === undefined) delete process.env.STAFF_USERS;
+    else process.env.STAFF_USERS = previousUsers;
+    if (previousKey === undefined) delete process.env.LEADS_STAFF_KEY;
+    else process.env.LEADS_STAFF_KEY = previousKey;
+  }
+});
+
+test("staff login rejects invalid credentials and returns the configured key for a valid demo user", async () => {
+  const previousUsers = process.env.STAFF_USERS;
+  const previousKey = process.env.LEADS_STAFF_KEY;
+  process.env.STAFF_USERS = "ops@example.com:secret:ops:林晓";
+  process.env.LEADS_STAFF_KEY = "test-staff-key";
+  try {
+    const handler = await loadHandler("api/staff-login.js");
+    const invalidResponse = mockResponse();
+    await handler({ method: "POST", headers: {}, query: {}, body: { email: "ops@example.com", password: "wrong" } }, invalidResponse);
+    assert.equal(invalidResponse.statusCode, 401);
+    assert.match(invalidResponse.body, /邮箱或密码错误/);
+
+    const validResponse = mockResponse();
+    await handler({ method: "POST", headers: {}, query: {}, body: { email: "OPS@example.com", password: "secret" } }, validResponse);
+    assert.equal(validResponse.statusCode, 200);
+    assert.deepEqual(JSON.parse(validResponse.body), {
+      ok: true,
+      email: "ops@example.com",
+      name: "林晓",
+      role: "ops",
+      staffKey: "test-staff-key",
+      expiresInHours: 12,
+    });
+  } finally {
+    if (previousUsers === undefined) delete process.env.STAFF_USERS;
+    else process.env.STAFF_USERS = previousUsers;
+    if (previousKey === undefined) delete process.env.LEADS_STAFF_KEY;
+    else process.env.LEADS_STAFF_KEY = previousKey;
+  }
+});
+
 test("public lead copy does not claim formal database delivery", () => {
   const fs = require("node:fs");
   const contact = fs.readFileSync(path.join(__dirname, "../apps/site/site/contact.js"), "utf8");

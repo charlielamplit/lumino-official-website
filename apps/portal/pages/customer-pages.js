@@ -231,6 +231,7 @@
           <p>${safe(progressNote)}</p>
           <ul class="cbam-work__quarters">${quarterRows}</ul>
           ${stageGatePanelHtml("cbam", { variant: "rail" })}
+          <button class="text-button cbam-work__flow-link" type="button" data-page="roadmap">查看完整全年流程 →</button>
         </aside>
       </div>`;
 
@@ -251,11 +252,14 @@
     if (state.page === "contributor-work") return renderContributorWork();
     if (state.page === "approvals") return renderApprovals();
     if (state.page === "roadmap") return renderRoadmap();
-    if (state.page === "onboarding") return renderCbamOnboarding();
+    if (state.page === "service-start") return renderServiceStart();
+    if (state.page === "annual-project") return renderAnnualProject();
+    if (state.page === "data-calculation") return renderDataCalculation();
+    if (state.page === "onboarding") { state.page = "annual-project"; return renderAnnualProject(); }
     if (state.page === "monitoring-plan") return renderMonitoringPlan();
     if (state.page === "products") return renderProducts();
-    if (state.page === "data") return renderData();
-    if (state.page === "results") return renderResults();
+    if (state.page === "data") { state.cbamDataView = "data"; state.page = "data-calculation"; return renderDataCalculation(); }
+    if (state.page === "results") { state.cbamDataView = "results"; state.page = "data-calculation"; return renderDataCalculation(); }
     if (state.page === "deliverables") return renderDeliverables();
     if (state.page === "team") return renderTeam();
     if (state.page === "annual-setup") return renderAnnualSetup();
@@ -263,13 +267,163 @@
     if (state.page === "workflow-governance") return renderWorkflowGovernance();
   }
 
+  function renderServiceStart() {
+    const activation = workflowEngine.get("AUTH-CBAM-2027-001");
+    const status = activation?.status || "DRAFT";
+    const order = ["DRAFT", "PENDING_LUMINO_APPROVAL", "PENDING_CUSTOMER_CONFIRMATION", "ACTIVE"];
+    const current = Math.max(0, order.indexOf(status));
+    const labels = ["启动单已创建", "Lumino 服务授权", "客户线上确认", "服务已启动"];
+    const steps = labels.map((label, index) => `<li class="${index < current ? "is-done" : index === current ? "is-current" : ""}"><span>${index < current ? "✓" : String(index + 1).padStart(2, "0")}</span><strong>${safe(label)}</strong></li>`).join("");
+    const canConfirm = ["customer_owner", "customer_admin"].includes(state.role) && roleConfig[state.role].name === activation?.owner;
+    const action = status === "PENDING_CUSTOMER_CONFIRMATION" && canConfirm
+      ? '<button class="button button--primary" type="button" data-activation-action="confirm">周岚 · 确认并启动 2027 服务</button>'
+      : status === "PENDING_CUSTOMER_CONFIRMATION"
+        ? '<span class="status-chip warn">等待周岚线上确认</span>'
+      : status === "ACTIVE"
+        ? '<button class="button button--primary" type="button" data-activation-action="continue">创建 2027 年度项目 →</button>'
+        : '<span class="status-chip warn">等待 Lumino 处理</span>';
+    $("#main").innerHTML = `
+      ${pageHeader("华星钢铁有限公司 / CBAM", "服务启动", statusChip(status === "ACTIVE" ? "已启动" : "待客户确认", status === "ACTIVE" ? "" : "warn"))}
+      <section class="activation-shell" aria-label="CBAM 服务启动授权">
+        <ol class="activation-steps" aria-label="服务启动进度">${steps}</ol>
+        <div class="activation-layout">
+          <article class="activation-scope ds-card">
+            <header><div><small>AUTH-CBAM-2027-001 · Rev ${activation?.revision || 1}</small><h2>确认允许系统开展的年度与范围</h2></div>${statusChip("Lumino 已授权")}</header>
+            <dl>
+              <div><dt>客户主体</dt><dd>华星钢铁有限公司</dd></div>
+              <div><dt>服务年度</dt><dd>2027</dd></div>
+              <div><dt>服务范围</dt><dd>年度范围、季度数据、计算与报告</dd></div>
+              <div><dt>客户负责人</dt><dd>周岚 · 企业管理员</dd></div>
+              <div><dt>Lumino 负责人</dt><dd>林晓 · 客户成功</dd></div>
+              <div><dt>授权用途</dt><dd>允许创建年度项目并启动本年度收资</dd></div>
+            </dl>
+            <p class="activation-scope__note">合同签署不等于系统激活。只有完成本次线上确认后，系统才允许创建 2027 年度项目。</p>
+            <footer>${action}</footer>
+          </article>
+        </div>
+      </section>`;
+  }
+
+  function renderAnnualProject() {
+    if (state.year !== "2027") return renderEstablishedAnnualProject();
+    if (cbamGoldenPath.stage("p01").state !== "done") return renderServiceStart();
+    const stage = cbamGoldenPath.stage("p02");
+    if (stage.state !== "done") return renderCbamOnboarding();
+    const snapshot = cbamGoldenPath.snapshot();
+    const annual = window.LuminoAnnualProjectView.buildAnnualProjectView({ workflow: workflowEngine, year: state.year, quarter: state.quarter, organizationName: state.organization.name });
+    const scopeStage = cbamGoldenPath.stage("p03");
+    const planStage = cbamGoldenPath.stage("p04");
+    const scopeLabel = scopeStage.state === "done" ? "已确认" : "待确认";
+    const planLabel = planStage.state === "done" ? "已签收" : planStage.state === "waiting_human" ? `等待 ${planStage.assignee}` : "待制备";
+    const requestLabel = annual.materialRequests.count ? `${annual.materialRequests.count} 项首轮材料` : "待生成首轮清单";
+    $("#main").innerHTML = `
+      ${pageHeader(`${safe(annual.organizationName)} / CBAM`, `${safe(annual.year)} 年度项目`, `<div class="head-actions">${window.LuminoAgentRuntime?.agentPageAction?.("协助本年度收资") || ""}${statusChip(annual.project.statusLabel)}</div>`)}
+      <section class="annual-project-shell annual-started">
+        <header class="annual-project-summary ds-card"><div><small>${safe(annual.project.id)} · Rev ${annual.project.revision}</small><h2>年度项目已建立，三项工作同步推进</h2><p>产品和 CN Code 年度确认、监测方法制备与首轮材料采集可以并行；正式计算和交付前再完成受控确认。</p></div><button class="button button--secondary" type="button" data-page="roadmap">查看完整全年流程 →</button></header>
+        <section class="annual-parallel ds-card" aria-label="本年度并行工作">
+          <header><div><small>本年度并行工作</small><h2>先收集事实，再逐步收敛范围与方法</h2></div><span>目标封存：${safe(annual.targetCloseLabel)}</span></header>
+          <div class="annual-parallel__rows">
+            <article><div><small>年度主档确认</small><strong>产品、CN Code 与设施范围</strong><p>引用上一年度受控版本，仅确认新增、停用和变化。</p></div><span class="status-chip ${scopeStage.state === "done" ? "" : "warn"}">${scopeLabel}</span><button class="text-button" type="button" data-page="products">处理年度变化 →</button></article>
+            <article><div><small>监测方法</small><strong>${safe(annual.monitoringPlan.id)} · Rev ${annual.monitoringPlan.revision}</strong><p>与数据采集同步维护；数据发现可以触发方法修订。</p></div><span class="status-chip ${planStage.state === "done" ? "" : "warn"}">${safe(planLabel)}</span><button class="text-button" type="button" data-page="monitoring-plan">查看监测计划 →</button></article>
+            <article><div><small>首轮材料与协作</small><strong>${safe(annual.materialRequests.period)} 数据与证明材料</strong><p>Agent 从本节点开始协助生成清单、提取数据和追踪缺项。</p></div><span class="status-chip ${annual.materialRequests.count ? "" : "warn"}">${safe(requestLabel)}</span><button class="text-button" type="button" data-page="data-calculation">进入材料与数据 →</button></article>
+          </div>
+        </section>
+        <p class="annual-crossyear-note">${safe(annual.year)} 申报年度通常在 ${safe(annual.closeYear)} 年完成全年关账、报告、核查与整改；年度归属不会因自然年切换而改变。${annual.importer ? ` 首个计划交付对象：${safe(annual.importer)}。` : ""}</p>
+      </section>`;
+  }
+
+  function renderEstablishedAnnualProject() {
+    const annual = window.LuminoAnnualProjectView.buildAnnualProjectView({ workflow: workflowEngine, year: state.year, quarter: state.quarter, organizationName: state.organization.name });
+    const locked = annual.project.locked;
+    const status = annual.project.statusLabel;
+    const tone = locked ? "locked" : "";
+    const scopeText = locked ? "年度范围已随快照锁定" : `${annual.scope.includedCount} 项纳入 · ${annual.scope.excludedCount} 项排除`;
+    const planText = `${annual.monitoringPlan.id} · Rev ${annual.monitoringPlan.revision}`;
+    const quarterLabel = locked ? "Q1–Q4 已完成" : annual.project.status === "COLLECTING" ? `${annual.currentPeriod} 数据采集中` : annual.project.statusLabel;
+    const scopeStatusLabel = locked ? "已锁定" : `Rev ${annual.scope.revision} · ${annual.scope.status === "IN_SCOPE" ? "已确认" : "待确认"}`;
+    const planStatusLabel = ({ DRAFT: "草稿", GENERATED: "待复核", VALIDATED: "复核中", INTERNAL_REVIEW: "待签收", APPROVED: "当前适用", LOCKED: "已锁定", AMENDMENT_REQUIRED: "待修订" })[annual.monitoringPlan.status] || annual.monitoringPlan.status;
+    const planTone = ["DRAFT", "GENERATED", "VALIDATED", "INTERNAL_REVIEW", "AMENDMENT_REQUIRED"].includes(annual.monitoringPlan.status) ? "warn" : tone;
+    const lifecycle = annual.lifecycle.map((item) => `<li class="is-${item.state}"><span></span><div><strong>${safe(item.label)}</strong><small>${safe(item.timing)}</small></div></li>`).join("");
+    const statusControl = locked
+      ? statusChip(status, tone)
+      : `<details class="annual-status">
+          <summary class="status-chip">${safe(status)}<span aria-hidden="true">⌄</span></summary>
+          <div class="annual-status__popover" role="status">
+            <header><strong>${safe(annual.year)} 申报年度</strong><small>目标封存：${safe(annual.targetCloseLabel)}</small></header>
+            <ol>${lifecycle}</ol>
+          </div>
+        </details>`;
+    $("#main").innerHTML = `
+      ${pageHeader(`${safe(annual.organizationName)} / CBAM`, `${safe(annual.year)} 年度项目`, statusControl)}
+      <section class="annual-project-shell annual-established">
+        <header class="annual-est-overview ds-card">
+          <div class="annual-est-overview__lead">
+            <div><small>${safe(annual.project.id)} · Rev ${annual.project.revision}</small>${statusChip(locked ? "只读快照" : "年度执行上下文", tone)}</div>
+            <h2>${locked ? "年度资料已封存，可追溯查看" : "季度收资与监测方法同步推进"}</h2>
+            <p>${locked ? "范围、监测方法和交付记录保持原版本，不会被后续年度修改。" : "产品范围、CN Code 与监测计划按变化持续确认；数据发现可以触发方法修订，正式结果在关账后形成。"}</p>
+          </div>
+          <div class="annual-est-overview__actions">
+            ${locked ? '<button class="button button--secondary" type="button" data-page="deliverables">查看封存交付物</button>' : '<button class="button button--primary" type="button" data-page="work">进入当前工作 →</button>'}
+            <button class="text-button" type="button" data-page="roadmap">查看完整全年流程</button>
+          </div>
+          <dl class="annual-est-overview__facts">
+            <div><dt>申报年度</dt><dd>${safe(annual.year)}</dd></div>
+            <div><dt>当前工作</dt><dd>${safe(quarterLabel)}</dd></div>
+            <div><dt>${locked ? "封存时间" : "目标封存"}</dt><dd>${safe(annual.targetCloseLabel)}</dd></div>
+            <div><dt>${locked ? "交付状态" : "下一里程碑"}</dt><dd>${safe(annual.nextMilestone)}</dd></div>
+          </dl>
+        </header>
+
+        ${locked ? "" : `<p class="annual-crossyear-note"><strong>跨年度执行：</strong>${safe(annual.year)} 年数据在 ${safe(annual.closeYear)} 年关账并形成年度材料包；核查 Finding 可能要求补证、重算和修订交付，项目不会在 ${safe(annual.year)} 年 12 月 31 日自动结束。</p>`}
+
+        <div class="annual-established__body">
+          <article class="annual-scope ds-card">
+            <header><div><small>产品与年度范围</small><h2>${scopeText}</h2></div>${statusChip(scopeStatusLabel, tone)}</header>
+            <div class="annual-scope__metrics">
+              <div><strong>${annual.scope.includedCount}</strong><span>纳入产品</span></div>
+              <div><strong>${annual.scope.excludedCount}</strong><span>排除产品</span></div>
+              <div><strong>${annual.scope.facilityCount}</strong><span>生产设施</span></div>
+            </div>
+            <div class="annual-scope__version"><div><small>引用的受控版本</small><strong>产品、CN Code、设施与生产路线 · Rev ${annual.scope.revision}</strong></div><span>${locked ? "快照保持不变" : "变更需先预览影响"}</span></div>
+            <footer><p>${locked ? "该年度引用的主档版本保持不变。" : "产品与 CN Code 引用受控版本；年度内按变化确认，不阻断首轮材料采集。"}</p><button class="text-button" type="button" data-page="products">查看产品与范围 →</button></footer>
+          </article>
+
+          <aside class="annual-foundation ds-card">
+            <section class="annual-plan">
+              <header><div><small>监测计划</small><h2>${planText}</h2></div>${statusChip(planStatusLabel, planTone)}</header>
+              <p>${locked ? "数据项、来源、责任人与受控默认值路径。" : "与数据采集同步维护；数据异常和新证据可以触发受控修订。"}</p>
+              <button class="text-button" type="button" data-drawer="record-detail" data-drawer-label="${safe(annual.year)} 年度监测计划" data-drawer-status="${safe(planStatusLabel)}" data-drawer-description="该计划是年度项目的基础文件；完整受控文件同时可在报告与交付中查看。">查看监测计划 →</button>
+            </section>
+            <section class="annual-team">
+              <header><small>项目团队</small><strong>职责已分离</strong></header>
+              <ul>${annual.members.map((member) => `<li><span>${safe(member.name.slice(0, 1))}</span><div><strong>${safe(member.name)}</strong><small>${safe(member.role)}</small></div></li>`).join("")}</ul>
+            </section>
+          </aside>
+        </div>
+      </section>`;
+  }
+
+  function cbamSectionTabs(items, current, label) {
+    return `<nav class="cbam-section-tabs" aria-label="${safe(label)}">${items.map(([id, text]) => `<button type="button" class="${current === id ? "is-active" : ""}" data-cbam-section="${id}" aria-current="${current === id ? "page" : "false"}">${safe(text)}</button>`).join("")}</nav>`;
+  }
+
+  function renderDataCalculation() {
+    const view = ["data", "results", "cost"].includes(state.cbamDataView) ? state.cbamDataView : "data";
+    if (view === "data") renderData();
+    else renderResults();
+    const title = $("#main .page-head h1");
+    if (title) title.textContent = "数据与核算";
+    const head = $("#main .page-head");
+    head?.insertAdjacentHTML("afterend", cbamSectionTabs([["data", "材料与数据"], ["results", "计算结果"], ["cost", "成本情景"]], view, "数据与核算内部页面"));
+  }
+
   function renderCbamOnboarding() {
     const stage = cbamGoldenPath.stage("p02");
     const annualCase = cbamGoldenPath.snapshot().annualCase;
     if (stage.state === "done") {
       $("#main").innerHTML = `
-        ${pageHeader("华星钢铁有限公司 / CBAM", "2027 年度项目", statusChip("已创建"))}
-        <section class="onboarding-complete ds-card" role="status"><small>CASE-CBAM-2027 · Rev ${annualCase?.revision || 1}</small><h2>年度项目已创建</h2><p>项目已保留交付节奏、进口商、产品候选和角色草稿。下一步是确认年度范围，尚未生成季度数据或对外交付。</p><div><button class="button button--secondary" type="button" data-page="work">返回当前工作</button><button class="button button--primary" type="button" data-page="products">确认年度范围 →</button></div></section>`;
+        ${pageHeader(`${safe(state.organization.name)} / CBAM`, `${safe(annualCase?.year || state.year)} 年度项目`, statusChip("已创建"))}
+        <section class="onboarding-complete ds-card" role="status"><small>${safe(annualCase?.id || `CASE-CBAM-${state.year}`)} · Rev ${annualCase?.revision || 1}</small><h2>年度项目与收资工作已启动</h2><p>产品范围、监测计划和首轮材料将并行推进；尚未形成正式计算结果或对外交付。</p><div><button class="button button--secondary" type="button" data-page="annual-project">查看年度项目</button><button class="button button--primary" type="button" data-page="products">处理年度变化 →</button></div></section>`;
       return;
     }
     const draft = annualCase?.metadata?.wizardDraft || {};
@@ -282,12 +436,12 @@
       1: `<fieldset><legend>从哪里开始？</legend><label class="onboarding-choice"><input type="radio" name="startingPoint" value="new" checked><span><strong>从零开始</strong><small>首次建立 2027 年度项目；不复制 2026 的年度数值。</small></span></label><label class="onboarding-choice is-disabled"><input type="radio" disabled><span><strong>继承上一年度</strong><small>本次可用结构将在 p10 继承闭环中处理。</small></span></label></fieldset>`,
       2: `<div class="onboarding-fields"><label><span>交付节奏</span><select name="cadence"><option value="quarterly" ${draft.cadence === "annual" ? "" : "selected"}>季度数据包 + 年度报告</option><option value="annual" ${draft.cadence === "annual" ? "selected" : ""}>年度交付</option></select></label><label><span>主要欧盟进口商</span><input name="importer" value="${safe(draft.importer || "NordWerk GmbH")}" required></label><label><span>第一交付期</span><input name="firstDeadline" value="${safe(draft.firstDeadline || "2027-04-30")}" type="date" required></label></div>`,
       3: `<fieldset><legend>哪些产品进入候选？</legend><div class="onboarding-product-list"><label><input type="checkbox" name="products" value="HRC"${productChecked("HRC")}><span><strong>热轧非合金钢卷</strong><small>CN 7208 39 00 · 上海一厂</small></span></label><label><input type="checkbox" name="products" value="HDG"${productChecked("HDG")}><span><strong>热镀锌板</strong><small>CN 7210 49 00 · 生产配置待确认</small></span></label><label><input type="checkbox" name="products" value="CRC"${productChecked("CRC")}><span><strong>冷轧薄板</strong><small>2027 年尚无出口欧盟计划</small></span></label></div></fieldset>`,
-      4: `<div class="onboarding-role-grid"><article><small>项目协调</small><strong>周岚</strong><span>客户确认与签收</span></article><article><small>制备专家</small><strong>王晨</strong><span>监测计划与方法</span></article><article><small>独立复核</small><strong>李娜</strong><span>不可由制备人替代</span></article><article><small>客户成功</small><strong>林晓</strong><span>启动与进度协调</span></article></div>`,
-      5: `<div class="onboarding-summary"><p>确认后仅创建年度项目和产品候选，不会生成季度数据、计算结果或外发交付。</p><dl><div><dt>年度</dt><dd>2027</dd></div><div><dt>进口商</dt><dd>${safe(draft.importer || "NordWerk GmbH")}</dd></div><div><dt>候选产品</dt><dd>${safe((draft.products || ["HRC", "HDG"]).join(" / "))}</dd></div><div><dt>下一步</dt><dd>确认年度范围</dd></div></dl></div>`,
+      4: `<div class="onboarding-role-grid"><article><small>项目协调</small><strong>${safe(roleConfig.customer_owner.name)}</strong><span>客户确认与签收</span></article><article><small>制备专家</small><strong>${safe(roleConfig.expert.name)}</strong><span>监测计划与方法</span></article><article><small>独立复核</small><strong>${safe(roleConfig.reviewer.name)}</strong><span>不可由制备人替代</span></article><article><small>客户成功</small><strong>${safe(roleConfig.ops.name)}</strong><span>启动与进度协调</span></article></div>`,
+      5: `<div class="onboarding-summary"><p>确认后将创建年度项目、启动首轮材料收集并启用 Agent；不会生成正式计算结果或外发交付。</p><dl><div><dt>年度</dt><dd>${safe(annualCase?.year || state.year)}</dd></div><div><dt>进口商</dt><dd>${safe(draft.importer || "NordWerk GmbH")}</dd></div><div><dt>候选产品</dt><dd>${safe((draft.products || ["HRC", "HDG"]).join(" / "))}</dd></div><div><dt>后续工作</dt><dd>范围、监测计划与数据采集并行</dd></div></dl></div>`,
     };
     $("#main").innerHTML = `
-      ${pageHeader("华星钢铁有限公司 / CBAM", "创建 2027 年度项目", statusChip(`第 ${step} / 5 步`, "warn"))}
-        <section class="onboarding-shell"><ol class="onboarding-progress" aria-label="年度项目向导进度">${progress}</ol><form id="cbamOnboardingForm" class="onboarding-panel" data-step="${step}"><header><small>5 步 · 可保存草稿</small><h2>${safe(labels[step - 1])}</h2><p>你负责确认业务事实；监测方法由 Lumino 专家制备和独立复核。</p></header>${panels[step]}<footer><button class="button button--secondary" type="button" data-onboarding-action="save-exit">保存并返回</button><span></span>${step > 1 ? '<button class="button button--secondary" type="button" data-onboarding-action="prev">上一步</button>' : ""}<button class="button button--primary" type="button" data-onboarding-action="${step === 5 ? "create" : "next"}">${step === 5 ? "确认创建项目" : "保存并继续"}</button></footer></form></section>`;
+      ${pageHeader(`${safe(state.organization.name)} / CBAM`, `创建 ${safe(annualCase?.year || state.year)} 年度项目`, statusChip(`第 ${step} / 5 步`, "warn"))}
+        <section class="onboarding-shell"><ol class="onboarding-progress" aria-label="年度项目向导进度">${progress}</ol><form id="cbamOnboardingForm" class="onboarding-panel" data-step="${step}"><header><small>5 步 · 可保存草稿</small><h2>${safe(labels[step - 1])}</h2><p>你负责确认业务事实；监测方法由 Lumino 专家制备和独立复核。</p></header>${panels[step]}<footer><button class="button button--secondary" type="button" data-onboarding-action="save-exit">保存并返回</button><span></span>${step > 1 ? '<button class="button button--secondary" type="button" data-onboarding-action="prev">上一步</button>' : ""}<button class="button button--primary" type="button" data-onboarding-action="${step === 5 ? "create" : "next"}">${step === 5 ? "创建项目并启动收资" : "保存并继续"}</button></footer></form></section>`;
   }
 
   function renderMonitoringPlan() {
@@ -311,7 +465,7 @@
     if (plan?.status === "DRAFT" && state.role === "expert") action = '<button class="button button--primary" type="button" data-monitoring-action="prepare">王晨 · 制备确认 8 项</button>';
     if (plan?.status === "GENERATED" && state.role === "reviewer") action = '<button class="button button--primary" type="button" data-monitoring-action="review">李娜 · 独立复核并发布</button>';
     if (plan?.status === "INTERNAL_REVIEW" && ["customer_owner", "customer_admin"].includes(state.role)) action = '<button class="button button--primary" type="button" data-monitoring-action="sign">周岚 · 签收监测计划</button>';
-    if (stage.state === "done") action = `<span class="status-chip">已签收 · Q1 材料请求 ${snapshot.materialRequests.length} 项</span>`;
+    if (stage.state === "done") action = `<span class="status-chip">已签收 · 与收资同步维护</span>`;
     $("#main").innerHTML = `
       ${pageHeader("华星钢铁有限公司 / CBAM", "监测计划", `<div class="head-actions">${window.LuminoAgentRuntime?.agentPageAction?.() || ""}${statusChip(stateLabels[plan?.status] || stage.state, ["DRAFT", "GENERATED", "VALIDATED", "INTERNAL_REVIEW"].includes(plan?.status) ? "warn" : "")}</div>`)}
       <section class="monitoring-status ds-card" role="status"><div><small>MP-CBAM-2027-R1 · Rev ${plan?.revision || 1}</small><strong>王晨制备 → 李娜独立复核 → 周岚签收</strong><span>显示视角不会取得他人的确认权限。</span></div>${action}</section>
@@ -994,6 +1148,7 @@
 
   function renderProducts() {
     const model = cbamProductsModel();
+    const productView = ["products", "facilities", "changes"].includes(state.cbamProductView) ? state.cbamProductView : "products";
     const org = state.organization?.name || "华星钢铁有限公司";
     const chip = statusChip(
       years[state.year]?.short || `${state.year}`,
@@ -1086,14 +1241,15 @@
         );
 
     $("#main").innerHTML = `
-      ${pageHeader(`${safe(org)} / CBAM`, "产品与工厂", `<div class="head-actions">${window.LuminoAgentRuntime?.agentPageAction?.() || ""}${chip}</div>`)}
-      <section class="prod-page" aria-label="产品与工厂">
+      ${pageHeader(`${safe(org)} / CBAM`, "产品与设施", `<div class="head-actions">${window.LuminoAgentRuntime?.agentPageAction?.() || ""}${chip}</div>`)}
+      ${cbamSectionTabs([["products", "产品与 CN 编码"], ["facilities", "设施与生产路线"], ["changes", "导入与变更记录"]], productView, "产品与设施内部页面")}
+      <section class="prod-page" aria-label="产品与设施">
         <p class="prod-intro">${safe(model.intro)}</p>
 
-        <section class="panel prod-table">
+        <section class="panel prod-table" ${productView === "products" ? "" : "hidden"}>
           <div class="panel-head">
-            <h2>出口欧盟的产品</h2>
-            <small>${safe(model.prodCount)}</small>
+            <div><h2>出口欧盟的产品与 CN 编码</h2><small>Agent 建议和已确认值分开显示；确认后才进入受控版本。</small></div>
+            <button class="button button--secondary" type="button" data-cbam-section="changes">导入 Excel</button>
           </div>
           <div class="prod-table__head" aria-hidden="true">
             <span>产品 · 近 12 月出口欧盟</span>
@@ -1105,7 +1261,7 @@
           ${agentBar}
         </section>
 
-        <div class="prod-split">
+        <div class="prod-split" ${productView === "facilities" ? "" : "hidden"}>
           <section class="panel prod-routes">
             <div class="panel-head">
               <h2>生产配置 · 上海一厂</h2>
@@ -1121,6 +1277,22 @@
             ${facBlocks}
           </section>
         </div>
+        <section class="product-change-shell" ${productView === "changes" ? "" : "hidden"}>
+          <article class="product-import ds-card">
+            <header><div><small>Excel 导入 · 先比对后写入</small><h2>产品与 CN Code 批量维护</h2></div><button class="button button--primary" type="button" data-product-import>选择 Excel 文件</button></header>
+            <p>支持产品内部编号、产品名称、CN Code、设施和生产路线。导入不会直接覆盖主档，而是先生成逐字段差异。</p>
+            <div class="product-import__rules"><span>模板版本：CBAM-PRODUCT-v2</span><span>确认权限：关务负责人 / 企业管理员</span><span>锁定年度：不追溯改写</span></div>
+          </article>
+          <article class="product-diff ds-card">
+            <header><div><small>IMP-CBAM-2027-004 · 待确认</small><h2>最近一次导入差异</h2></div>${statusChip("3 项待确认", "warn")}</header>
+            <div class="product-diff__head"><span>产品</span><span>当前受控值</span><span>导入/Agent 提议</span><span>影响</span></div>
+            <div class="product-diff__row"><strong>热镀锌板</strong><span>产品名称：热镀锌板</span><span>名称：连续热镀锌钢板</span><em>显示名称变更</em></div>
+            <div class="product-diff__row"><strong>热镀锌板</strong><span>CN 7210 49 00</span><span>Agent 候选：7210 49 00<small>依据：报关品名与镀层说明</small></span><em>不改变已锁定年度</em></div>
+            <div class="product-diff__row"><strong>冷轧薄板</strong><span>设施待确认</span><span>上海一厂 · 冷轧路线</span><em>影响 2027 范围门禁</em></div>
+            <footer><button class="button button--secondary" type="button" data-drawer="record-detail" data-drawer-label="导入差异与影响预览" data-drawer-status="待具名确认" data-drawer-description="正式确认会生成新的受控产品版本；2025 和 2026 锁定快照不会被改写。">查看完整影响</button><button class="button button--primary" type="button" data-product-confirm disabled>由关务负责人确认 3 项</button></footer>
+          </article>
+          <p class="product-change-note">Agent 可以提出 CN Code 候选与依据，但不能替代具名关务人员或企业管理员确认。</p>
+        </section>
         ${next}
       </section>`;
   }

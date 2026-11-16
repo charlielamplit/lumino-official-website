@@ -93,7 +93,7 @@
             <h2>输入密码</h2>
             <label>密码<input id="loginPassword" type="password" value="lumino-demo" autocomplete="current-password" minlength="6" placeholder="至少 12 位"></label>
             <div class="login-options"><label class="check"><input type="checkbox" checked> 在此设备保持登录</label><button class="link-button" type="button" id="forgotPasswordInline">忘记密码</button></div>
-            <p class="login-email-hint login-email-hint--muted">演示密码：任意 6 位以上</p>
+            <p class="login-email-hint login-email-hint--muted">员工账号用发放的密码；客户演示可用任意 6 位以上密码</p>
             <button class="button button--primary button--large login-continue" type="submit">登录</button>
           </div>
           <div class="login-step" data-step-panel="workspace" hidden>
@@ -223,6 +223,8 @@
   <div class="agent-runtime-layer" id="agentRuntimeLayer" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <script src="../../packages/agent/domain/workflow-engine.js?v=20261027-5" defer></script>
+  <script src="../../packages/agent/domain/annual-project-view-model.js?v=20261116-1" defer></script>
+  <script src="../../packages/agent/domain/agent-context.js?v=20261116-1" defer></script>
   <script src="../../packages/agent/domain/cbam-golden-path.js?v=20261112-1" defer></script>
   <script src="../../packages/agent/domain/data-asset-engine.js?v=20261027-5" defer></script>
   <script src="../../packages/agent/domain/stage-gates.js?v=20261028-4" defer></script>
@@ -251,7 +253,7 @@
   <script src="/apps/portal/pages/multi-service-pages.js?v=20261110-pcfval1" defer></script>
   <script src="/apps/portal/pages/customer-pages.js?v=20261112-agent1" defer></script>
   <script src="/apps/portal/pages/role-pages.js?v=20261109-fw5" defer></script>
-  <script src="/apps/portal/runtime/portal-events.js?v=20261112-agent1" defer></script>
+  <script src="/apps/portal/runtime/portal-events.js?v=20261116-staff1" defer></script>
   <script src="/apps/portal/app.js?v=20261027-4" defer></script>
 </body>
 </html>

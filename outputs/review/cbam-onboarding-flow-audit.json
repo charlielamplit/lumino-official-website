@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-11-13T07:40:00.923Z",
-  "origin": "http://127.0.0.1:4190",
+  "generatedAt": "2026-11-16T04:06:54.493Z",
+  "origin": "http://127.0.0.1:4174",
   "widths": {
     "390": {
       "stages": {
@@ -82,7 +82,13 @@
         "signedIdempotent": true,
         "draftedIdempotent": true
       },
-      "draftRows": 3
+      "draftRows": 3,
+      "afterProjectStart": {
+        "agentAvailable": true,
+        "parallelWorkstreams": 3,
+        "materialRequests": 8,
+        "annualCaseStatus": "COLLECTING"
+      }
     },
     "768": {
       "stages": {
@@ -164,7 +170,13 @@
         "signedIdempotent": true,
         "draftedIdempotent": true
       },
-      "draftRows": 3
+      "draftRows": 3,
+      "afterProjectStart": {
+        "agentAvailable": true,
+        "parallelWorkstreams": 3,
+        "materialRequests": 8,
+        "annualCaseStatus": "COLLECTING"
+      }
     },
     "1440": {
       "stages": {
@@ -197,7 +209,13 @@
         "signedIdempotent": true,
         "draftedIdempotent": true
       },
-      "draftRows": 3
+      "draftRows": 3,
+      "afterProjectStart": {
+        "agentAvailable": true,
+        "parallelWorkstreams": 3,
+        "materialRequests": 8,
+        "annualCaseStatus": "COLLECTING"
+      }
     }
   },
   "issues": []

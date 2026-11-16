@@ -1,5 +1,7 @@
 # CBAM Portal v3 开通期闭环执行 Plan
 
+> 历史方案说明（2026-11-16）：本文保留首次进入与服务授权的设计背景，但“先完成监测计划再开始收资”的线性顺序已经过期。当前规则是：系统完成年度与服务范围授权后，创建年度项目并立即启动收资；年度范围确认、监测计划和数据采集并行，正式计算与交付再执行受控门禁。当前实施以 `2026-11-16-cbam-cross-year-agent-plan.md` 和最新审计增量复核为准。
+
 日期：2026-11-13
 跟踪：GitHub Issue #70
 依据：`docs/reviews/0006_portal-v3-cbam-agent-implementation-audit.md` P2-1，以及 `Lumino Portal 原型 v3.dc.html` 中的年度项目向导和监测计划工作区。

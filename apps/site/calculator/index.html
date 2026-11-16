@@ -52,6 +52,7 @@
           </label>
         </div>
         <p class="privacy-line">基础试算在浏览器内完成，不上传企业参数。</p>
+        <p class="data-version" id="dataVersion">默认值依据：（EU）2025/2621，经（EU）2026/1740 校正 · Excel 2026-08-10</p>
       </form>
       </aside>
 
@@ -63,7 +64,7 @@
         </div>
         <div id="resultState" hidden>
           <section class="summary-card result-summary">
-            <div class="summary-total"><p>预计 CBAM 成本 <span>· 缺省值</span></p><strong id="totalCost">—</strong><small id="assumption"></small></div>
+            <div class="summary-total"><p>预计 CBAM 成本 <span>· 默认值（含加价）</span></p><strong id="totalCost">—</strong><small id="assumption"></small></div>
             <div class="summary-metric"><span>需清缴证书</span><strong><b id="certificates">—</b> 张</strong></div>
             <div class="summary-metric"><span>免费配额扣减</span><strong><b id="freeQuota">—</b> 张</strong></div>
             <div class="summary-metric accent"><span>单位成本</span><strong id="unitCost">—</strong></div>
@@ -84,7 +85,11 @@
             <section class="chart-card"><header><h3>单位成本年度趋势</h3><span>¥ / 吨</span></header><div class="line-chart" id="yearTrendChart"></div></section>
           </div>
 
-          <div class="result-notes"><p class="scope-notice" id="scopeNotice" hidden></p><p class="scope-notice warning" id="exemptNotice" hidden>当前数量低于模型的最小起征参考阈值；实际豁免资格需按进口方全年累计情况判定。</p></div>
+          <div class="result-notes">
+            <p class="scope-notice" id="dataCite">默认值数据包 v2 · 欧委会实施条例（EU）2025/2621，经（EU）2026/1740 校正；信息用 Excel 发布日 2026-08-10。具有法律约束力的数值以实施条例为准。</p>
+            <p class="scope-notice" id="scopeNotice" hidden></p>
+            <p class="scope-notice warning" id="exemptNotice" hidden>当前数量低于模型的最小起征参考阈值；实际豁免资格需按进口方全年累计情况判定。</p>
+          </div>
           <section class="unlocked" id="unlockedComparison" hidden><div><span>实测参考成本</span><strong id="actualCost"></strong></div><div><span>潜在成本差额</span><strong id="potentialSaving"></strong></div><p>此处为行业参考估算，不是企业法定实测值。顾问将根据你的产品及供应链说明下一步要取哪些数。</p></section>
           <a class="project-cta" id="projectCta" href="/apps/portal?source=calculator">
             <span><small>需要形成正式申报材料？</small><strong>进入客户门户建立年度 CBAM 项目</strong></span><b aria-hidden="true">→</b>

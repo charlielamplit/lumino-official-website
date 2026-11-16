@@ -71,7 +71,8 @@ async function waitFor(selector, timeout = 6000) {
     if (ready) return;
     await sleep(100);
   }
-  throw new Error(`Timed out waiting for ${selector}`);
+  const context = await evaluate(`(() => ({ url: location.href, title: document.querySelector('.page-head h1')?.textContent, main: document.querySelector('#main')?.innerText.slice(0, 500) }))()`);
+  throw new Error(`Timed out waiting for ${selector}: ${JSON.stringify(context)}`);
 }
 
 async function click(selector) {
@@ -97,6 +98,8 @@ async function runFlow(width) {
   await navigate(portalUrl("customer_owner", "onboarding"));
   await evaluate("localStorage.clear(); sessionStorage.clear()");
   await navigate(portalUrl("customer_owner", "onboarding"));
+  await evaluate(`(() => { const auth = workflowEngine.get('AUTH-CBAM-2027-001'); if (auth?.status === 'PENDING_CUSTOMER_CONFIRMATION') workflowEngine.transition(auth.id, 'ACTIVE', { actor: '周岚', role: 'customer_owner', reason: '浏览器回归：完成客户线上确认' }); })()`);
+  await navigate(portalUrl("customer_owner", "onboarding"));
   await closeServiceOverview();
 
   await click('[data-onboarding-action="next"]');
@@ -109,6 +112,12 @@ async function runFlow(width) {
   await closeServiceOverview();
   const recoveredDraft = await evaluate(`(() => { const item = cbamGoldenPath.snapshot().annualCase; return { step: item?.metadata?.wizardStep, importer: item?.metadata?.wizardDraft?.importer, products: item?.metadata?.wizardDraft?.products }; })()`);
   await click('[data-onboarding-action="create"]');
+  const afterProjectStart = await evaluate(`(() => ({
+    agentAvailable: Boolean(document.querySelector('#agentTopbarBtn')),
+    parallelWorkstreams: document.querySelectorAll('.annual-parallel__rows article').length,
+    materialRequests: cbamGoldenPath.snapshot().materialRequests.length,
+    annualCaseStatus: cbamGoldenPath.snapshot().annualCase?.status
+  }))()`);
 
   await navigate(portalUrl("customer_owner", "products"));
   await closeServiceOverview();
@@ -157,7 +166,7 @@ async function runFlow(width) {
       minPrimaryControlHeight: controls.length ? Math.min(...controls.map((el) => Math.round(el.getBoundingClientRect().height))) : null,
       overflowOffenders: [...document.querySelectorAll('body *')].filter(visible).filter((el) => !el.closest('.sidebar:not(.open)')).filter((el) => { const rect = el.getBoundingClientRect(); return rect.right > root.clientWidth + 1 || rect.left < -1; }).slice(0, 8).map((el) => ({ tag: el.tagName, className: String(el.className || ''), left: Math.round(el.getBoundingClientRect().left), right: Math.round(el.getBoundingClientRect().right) })),
     };
-  })()`).then((result) => ({ ...result, primaryControlHeight, recoveredDraft, repeated, draftRows }));
+  })()`).then((result) => ({ ...result, primaryControlHeight, recoveredDraft, repeated, draftRows, afterProjectStart }));
 }
 
 const report = { generatedAt: new Date().toISOString(), origin, widths: {}, issues: browserIssues };

@@ -1,7 +1,7 @@
 # Lumino CBAM Portal 前端模块说明
 
-> 更新日期：2026-10-27
-> 适用范围：`Demo/lumino-cbam-site/apps/portal/`（内核在 `packages/agent/`）
+> 更新日期：2026-11-16
+> 适用范围：`Demo/lumino-site/apps/portal/`（内核在 `packages/agent/`）
 
 ## 1. 当前结构
 
@@ -10,6 +10,9 @@
 | 文件 | 职责 | 不应包含 |
 |---|---|---|
 | `packages/agent/domain/workflow-engine.js` | 业务对象状态、合法迁移、审计事件、年度聚合 | 页面文案与 DOM |
+| `packages/agent/domain/annual-project-view-model.js` | 年度项目、范围、计划、角色、季度状态 → 年度页动态投影 | DOM、写命令与固定客户数据 |
+| `packages/agent/domain/agent-context.js` | 年度项目、工作流、期间和对象引用 → Agent Context Contract | 授权判断、DOM 与模型调用 |
+| `packages/agent/domain/cbam-golden-path.js` | p06–p08 的门禁、权限、幂等与领域对象回读 | 页面私有完成状态 |
 | `packages/agent/domain/data-asset-engine.js` | 企业数据资产版本、确认、服务绑定、血缘、Snapshot / Transformation / CalculationRun、STALE 传播 | 页面文案与 DOM |
 | `packages/agent/domain/stage-gates.js` | CBAM／PCF 分步校验门禁 | 页面文案与 DOM |
 | `packages/agent/runtime/capability-catalog.js` | businessType ↔ stage／prompt 版本 | 模型调用 |
@@ -34,20 +37,25 @@
 1. `../../packages/agent/domain/workflow-engine.js`
 2. `../../packages/agent/domain/data-asset-engine.js`
 3. `../../packages/agent/domain/stage-gates.js`
-4. `../../packages/agent/runtime/capability-catalog.js`
-5. `../../packages/agent/runtime/agent-task-engine.js`
-6. `../../packages/agent/runtime/proposal-bridge.js`
-7. `../../packages/shared/service-contract.js`
-8. `runtime/portal-permissions.js`
-9. `runtime/portal-config.js`（创建 `assetRegistry` 与 `agentTaskEngine`）
-10. `runtime/asset-view-model.js`
-11. `runtime/shared-center-view-model.js`
-12. `runtime/portal-core.js`
-13. `pages/multi-service-pages.js`
-14. `pages/customer-pages.js`
-15. `pages/role-pages.js`
-16. `runtime/portal-events.js`
-17. `app.js`
+4. `../../packages/agent/domain/annual-project-view-model.js`
+5. `../../packages/agent/domain/agent-context.js`
+6. `../../packages/agent/domain/cbam-golden-path.js`
+7. `../../packages/agent/runtime/capability-catalog.js`
+8. `../../packages/agent/runtime/agent-task-engine.js`
+9. `../../packages/agent/runtime/proposal-bridge.js`
+10. `../../packages/shared/service-contract.js`
+11. `runtime/portal-permissions.js`
+12. `runtime/portal-config.js`（创建 `assetRegistry` 与 `agentTaskEngine`）
+13. `runtime/asset-view-model.js`
+14. `runtime/shared-center-view-model.js`
+15. `runtime/portal-core.js`
+16. `pages/multi-service-pages.js`
+17. `pages/customer-pages.js`
+18. `pages/role-pages.js`
+19. `runtime/portal-events.js`
+20. `app.js`
+21. `runtime/agent-catalog.js`
+22. `runtime/agent-runtime.js`
 
 当前文件使用经典 `defer` 脚本共享同一个全局词法环境。若未来改为 ES Modules，需要一次性显式导出/导入依赖，不得混用两种依赖方式。
 
@@ -67,6 +75,8 @@
 - 企业主档、年度管理和团队权限属于跨年度上下文，不显示年度/季度选择器。
 - 宽表格在较窄桌面中只允许面板内部横向滚动，工作区本身不得横向溢出。
 - 工作流详情中的状态路径必须来自 `LuminoWorkflow.definitions`，页面不得另造不完整状态集合。
+- 年度项目页必须通过 `LuminoAnnualProjectView.buildAnnualProjectView()` 生成项目、范围、计划、角色、周期和里程碑文案；模板中不得固定企业、年度、数量、版本或责任人。
+- 服务启动授权和未完成年度项目创建阶段不得展示 Agent；项目启动收资后，Agent 应绑定年度项目与工作对象，不能只以页面 ID 作为业务上下文。
 
 ## 5. 新增页面的最低验收
 

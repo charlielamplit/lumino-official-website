@@ -13,6 +13,7 @@
   const AG_REPLY = () => catalog().AG_REPLY || {};
   const PAGE_PLAYBOOK = () => catalog().PAGE_PLAYBOOK || {};
   const GRP_LABELS = () => catalog().GRP_LABELS || ["开通期 · 只做一次", "季度循环 · 每季度", "年度 · 每年一次"];
+  const contextApi = () => window.LuminoAgentContext || null;
   const goldenIds = new Set(["p01", "p02", "p03", "p04", "p05", "p06", "p07", "p08"]);
   const goldenStage = (pbId) => goldenIds.has(pbId) && typeof cbamGoldenPath !== "undefined" ? cbamGoldenPath.stage(pbId) : null;
   const playbookDone = (pbId) => {
@@ -20,6 +21,65 @@
     return stage ? ["done", "done_external"].includes(stage.state) : Boolean(state.rtDone[pbId]);
   };
   const currentActor = () => ({ name: roleConfig[state.role]?.name || "未知用户", role: state.role, perspective: state.agentAs });
+
+  function buildAgentContext() {
+    const api = contextApi();
+    if (!api || state.currentService !== "cbam") return null;
+    return api.build({ workflow: workflowEngine, state, tenantId: "TNT-0018", serviceId: "cbam" });
+  }
+
+  function sessionSnapshot() {
+    return {
+      agentPb: state.agentPb || "chat",
+      agentTab: state.agentTab || "art",
+      agentMode: state.agentMode || "ask",
+      agentMsgs: Array.isArray(state.agentMsgs) ? state.agentMsgs : [],
+      agentInput: typeof state.agentInput === "string" ? state.agentInput : "",
+      rtCur: state.rtCur || {}, rtAns: state.rtAns || {}, rtDone: state.rtDone || {}, rtStarted: state.rtStarted || {},
+      agentLog: Array.isArray(state.agentLog) ? state.agentLog : [],
+    };
+  }
+
+  function loadSession(session, context) {
+    const preferred = contextApi()?.preferredPlaybook(context) || "chat";
+    const next = session || {};
+    state.agentPb = next.agentPb || preferred;
+    state.agentTab = next.agentTab || "art";
+    state.agentMode = next.agentMode || "ask";
+    state.agentMsgs = Array.isArray(next.agentMsgs) ? next.agentMsgs : [];
+    state.agentInput = typeof next.agentInput === "string" ? next.agentInput : "";
+    state.rtCur = next.rtCur || {};
+    state.rtAns = next.rtAns || {};
+    state.rtDone = next.rtDone || {};
+    state.rtStarted = next.rtStarted || {};
+    state.agentLog = Array.isArray(next.agentLog) ? next.agentLog : [];
+    state.rtBusy = null;
+    state.agentBusy = false;
+  }
+
+  function syncAgentContext() {
+    const context = buildAgentContext();
+    if (!context) {
+      state.agentContext = null;
+      return null;
+    }
+    if (!state.agentSessions || typeof state.agentSessions !== "object") state.agentSessions = {};
+    const key = contextApi().contextKey(context);
+    const previousKey = state.agentContextKey;
+    if (!previousKey) {
+      if (state.agentSessions[key]) loadSession(state.agentSessions[key], context);
+      else state.agentSessions[key] = sessionSnapshot();
+    } else if (previousKey !== key) {
+      state.agentSessions[previousKey] = sessionSnapshot();
+      questionSequence += 1;
+      if (activeQuestionAbort) activeQuestionAbort.abort();
+      loadSession(state.agentSessions[key], context);
+    }
+    state.agentContext = context;
+    state.agentContextKey = key;
+    state.agentSessions[key] = sessionSnapshot();
+    return context;
+  }
 
   function ensureAgentState() {
     if (!state.agentOpen) state.agentOpen = false;
@@ -36,9 +96,17 @@
     if (!state.rtStarted) state.rtStarted = {};
     if (!Array.isArray(state.agentLog)) state.agentLog = [];
     if (!state.agentMobileView) state.agentMobileView = "conversation";
+    if (!state.agentSessions || typeof state.agentSessions !== "object") state.agentSessions = {};
+    syncAgentContext();
   }
 
   function agentCtxLabel() {
+    const context = state.agentContext || syncAgentContext();
+    if (context?.annualProjectId) {
+      const object = context.objectRef?.id ? ` · ${context.objectRef.id}` : "";
+      const quarter = context.period?.quarter ? ` · ${context.period.quarter}` : "";
+      return `${context.annualProjectId} · ${context.workstream}${quarter}${object}`;
+    }
     const map = {
       workbench: "工作台 · 所有服务",
       tasks: "我的任务 · 跨服务",
@@ -48,10 +116,16 @@
       work: state.year === "2026" ? `CBAM · ${state.year} ${state.quarter} 当前工作` : `CBAM · ${state.year} 当前工作`,
       roadmap: `CBAM · ${state.year} 全年流程`,
       onboarding: "CBAM · 2027 年度项目",
-      products: "CBAM · 产品与工厂",
+      "annual-project": `CBAM · ${state.year} 年度项目 · 收资执行`,
+      products: `CBAM · ${state.year} 产品与设施`,
       "monitoring-plan": "CBAM · 2027 监测计划",
       data: `CBAM · ${state.year} ${state.quarter} 季度数据`,
       results: `CBAM · ${state.year} ${state.quarter} 计算与成本`,
+      "data-calculation": state.cbamDataView === "data"
+        ? `CBAM · ${state.year} ${state.quarter} 材料与数据`
+        : state.cbamDataView === "cost"
+          ? `CBAM · ${state.year} ${state.quarter} 成本情景`
+          : `CBAM · ${state.year} ${state.quarter} 计算结果`,
       deliverables: "CBAM · 报告与交付",
       team: "企业与项目团队",
       "org-settings": "企业设置",
@@ -60,11 +134,15 @@
   }
 
   function preferredPlaybookId() {
+    const contextual = contextApi()?.preferredPlaybook(state.agentContext || syncAgentContext());
+    if (contextual) return contextual;
     const map = PAGE_PLAYBOOK();
     if (state.page === "deliverables") return "p08";
     if (state.page === "data") return "p06";
+    if (state.page === "data-calculation") return state.cbamDataView === "data" ? "p06" : "p07";
     if (state.page === "products") return "p03";
     if (state.page === "onboarding") return "p02";
+    if (state.page === "annual-project") return "p03";
     if (state.page === "monitoring-plan") return "p04";
     if (state.page === "results") return "p07";
     if (state.page === "roadmap") return "p10";
@@ -72,6 +150,14 @@
     if (state.page === "services" || state.page === "services-hub") return "p01";
     if (state.page === "team" || state.page === "org-settings") return "p05";
     return map[state.page] || null;
+  }
+
+  function agentAvailable() {
+    if (!isCustomer()) return false;
+    if (state.currentService !== "cbam") return true;
+    if (state.page === "service-start") return false;
+    const context = state.agentContext || syncAgentContext();
+    return Boolean(context && contextApi()?.projectStarted(context, workflowEngine));
   }
 
   function agentStatusChip(pb) {
@@ -116,6 +202,7 @@
 
   function openAgent(opts = {}) {
     ensureAgentState();
+    if (!agentAvailable()) return;
     const pbId = opts.playbookId || (opts.chat ? "chat" : preferredPlaybookId()) || "chat";
     state.agentOpen = true;
     returnFocus = document.activeElement;
@@ -156,6 +243,7 @@
 
   function agentBtnHtml() {
     ensureAgentState();
+    if (!agentAvailable()) return "";
     const live = Boolean(state.rtBusy || state.agentBusy);
     return `<button type="button" class="agent-topbar-btn${state.agentOpen ? " is-open" : ""}${live ? " is-live" : ""}" id="agentTopbarBtn" data-agent-action="toggle" aria-pressed="${state.agentOpen ? "true" : "false"}" title="Lumino Agent">
       <span class="agent-topbar-btn__icon" aria-hidden="true">✦</span>Agent${live ? '<span class="agent-topbar-btn__dot" aria-hidden="true"></span>' : ""}
@@ -163,6 +251,7 @@
   }
 
   function agentPageAction(label = "用 Agent 完成") {
+    if (!agentAvailable()) return "";
     const pbId = preferredPlaybookId();
     if (!pbId) return "";
     const pb = PBM()[pbId];
@@ -193,7 +282,7 @@
       const response = await fetch("/api/advisor", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ text: q, lang: "zh", asOf: "2026-11-12", history, taskMode: options.mode || "ask" }),
+        body: JSON.stringify({ text: q, lang: "zh", asOf: "2026-11-16", history, taskMode: options.mode || "ask", context: state.agentContext || syncAgentContext() }),
         signal: controller.signal,
       });
       if (!response.ok) return localQuestionFallback(`http_${response.status}`);
@@ -210,7 +299,9 @@
   }
 
   function pushLog(k, t) {
-    state.agentLog = [[k, t], ...(state.agentLog || [])].slice(0, 40);
+    const context = state.agentContext || syncAgentContext();
+    const trace = context ? { correlationId: context.correlationId, annualProjectId: context.annualProjectId, workstream: context.workstream, objectRef: context.objectRef } : null;
+    state.agentLog = [[k, t, trace], ...(state.agentLog || [])].slice(0, 40);
   }
 
   async function agentAsk(raw, options = {}) {
@@ -672,7 +763,7 @@
         || `<p class="rt-right__hint">选择阶段后显示证据来源。</p>`;
       body = `<p class="rt-right__hint">只有标记为「可打开」的依据才已绑定到当前演示对象；未绑定项不作可追溯性声明。</p><div class="rt-src">${list}</div>`;
     } else {
-      const logs = (state.agentLog || []).map(([k, t]) => `<span class="rt-log-row"><b>${safe(k)}</b><span>${safe(t)}</span></span>`).join("")
+      const logs = (state.agentLog || []).map(([k, t, trace]) => `<span class="rt-log-row"><b>${safe(k)}</b><span>${safe(t)}${trace?.correlationId ? `<small>${safe(trace.correlationId)}</small>` : ""}</span></span>`).join("")
         || `<span class="rt-log-row"><b>就绪</b><span>等待你选择阶段或提问</span></span>`;
       body = `<div class="rt-log">${logs}</div>
         <div class="rt-wont">
@@ -739,7 +830,7 @@
     ensureAgentState();
     const layer = document.getElementById("agentRuntimeLayer");
     if (!layer) return;
-    if (!state.loggedIn || !state.agentOpen || !isCustomer()) {
+    if (!state.loggedIn || !state.agentOpen || !agentAvailable()) {
       layer.hidden = true;
       layer.innerHTML = "";
       syncAgentTopbar();
@@ -750,6 +841,7 @@
     const status = agentStatusChip(pb);
     const dock = Boolean(state.agentDock);
     const title = pb ? `${pb.n} · ${pb.title}` : "自由对话";
+    const contextLabel = agentCtxLabel();
     const asOpts = [
       ["client", "客户 · 周岚"],
       ["expert", "专家 · 王晨"],
@@ -767,6 +859,7 @@
           <span class="rt-head__sep" aria-hidden="true"></span>
           <strong class="rt-head__title">${safe(title)}</strong>
           <span class="status-chip ${status.tone === "ok" ? "" : status.tone === "warn" ? "warn" : "locked"}">${safe(status.t)}</span>
+          <span class="rt-head__context" title="${safe(contextLabel)}">${safe(contextLabel)}</span>
           <span class="rt-spacer"></span>
           ${dock ? `<button type="button" class="button button--secondary button--sm" data-agent-action="panel-swap">${state.agentTab === "art" ? "产物 · 变更集" : "回到对话"}</button>` : ""}
           ${!dock ? `<span class="rt-as" role="radiogroup" aria-label="演示视角"><small>演示视角</small>${asOpts}</span>` : ""}
@@ -944,6 +1037,9 @@
     agentBtnHtml,
     agentPageAction,
     preferredPlaybookId,
+    agentAvailable,
+    buildAgentContext,
+    syncAgentContext,
     syncAgentTopbar,
     ensureAgentState,
     sendComposer,
