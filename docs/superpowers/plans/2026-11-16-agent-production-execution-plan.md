@@ -359,3 +359,12 @@ POST   /api/agent/candidates/:resultId/reject
 - 已经独立读者复核并修正终态非空约束、attempt 级来源追溯、自动执行审计主体、条件重试与错误目录缺口；
 - 本地完整回归 `190/190` 通过，语法、JSON 解析与 `git diff --check` 通过；
 - 尚未接数据库、队列、Provider、模型或正式领域命令，不能作为生产能力声明。
+
+## 12. Phase 1 前置门禁进展
+
+#25 第一切片已在 `feature/platform-authority-boundary` 建立服务端 Authority Boundary：
+
+- Identity Provider、成员关系、租户作用域年度项目、租户/项目作用域对象、能力策略和授权审计采用可替换接口；
+- 客户端 tenant、role、year、workstream 与对象属性只作为 hint，不进入权威 actor/context；
+- 跨租户项目/对象不可枚举，旧 revision 与无权 capability 失败关闭；
+- 当前仅是接口契约和测试夹具，尚无真实 IdP、数据库、对象存储或生产审计，因此 Phase 1 尚未解锁。
