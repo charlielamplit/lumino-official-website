@@ -37,7 +37,7 @@ test("advisor widget exposes public-beta boundary and preliminary labels", () =>
 });
 
 test("homepage soft Ask Lumino entry starts hidden until beta confirmed", () => {
-  const source = read("apps/site/Lumino 官网.dc.html");
+  const source = read("apps/site/home.html");
   assert.match(source, /m-hero__actions[\s\S]*data-open-advisor[^>]*hidden/);
   assert.match(source, /data-open-advisor[^>]*hidden/);
   assert.match(source, /问 Lumino/);

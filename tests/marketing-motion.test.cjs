@@ -23,7 +23,7 @@ test("marketing chrome uses short editorial scroll reveal with reduced-motion fa
 
 test("audit fixes remove side stripes and low-signal REUSE label", () => {
   const css = read("apps/site/site/site-v3.css");
-  const home = read("apps/site/Lumino 官网.dc.html");
+  const home = read("apps/site/home.html");
   assert.match(css, /\.svc-more-note\s*\{[\s\S]*?border:\s*1px solid/);
   assert.doesNotMatch(css, /\.svc-more-note\s*\{[^}]*border-left:\s*[2-9]px/);
   assert.doesNotMatch(css, /svc-nav__item\[aria-current="page"\]\s*\{[^}]*inset 3px/);

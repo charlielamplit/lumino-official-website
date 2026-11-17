@@ -6,9 +6,9 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
 
-const privacy = read('apps/site/Lumino 隐私与数据处理.dc.html');
-const cookies = read('apps/site/Lumino Cookie 与本地存储.dc.html');
-const licence = read('apps/site/Lumino 用户内容与数据许可.dc.html');
+const privacy = read('apps/site/legal/privacy.html');
+const cookies = read('apps/site/legal/cookies.html');
+const licence = read('apps/site/legal/content-licence.html');
 const shell = read('apps/site/site/site-shell.js');
 
 test('privacy page identifies the operator, data scope, rights and contact channel', () => {
@@ -31,9 +31,9 @@ test('content licence preserves customer ownership and excludes general model tr
 });
 
 test('public footer links all three legal pages', () => {
-  assert.match(shell, /Lumino%20隐私与数据处理\.dc\.html/);
-  assert.match(shell, /Lumino%20Cookie%20与本地存储\.dc\.html/);
-  assert.match(shell, /Lumino%20用户内容与数据许可\.dc\.html/);
+  assert.match(shell, /\/apps\/site\/legal\/privacy\.html/);
+  assert.match(shell, /\/apps\/site\/legal\/cookies\.html/);
+  assert.match(shell, /\/apps\/site\/legal\/content-licence\.html/);
 });
 
 test('published legal pages contain no draft placeholders or dead hash links', () => {

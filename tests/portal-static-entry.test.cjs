@@ -19,7 +19,7 @@ test("public portal links use the canonical no-slash deployment URL", () => {
   const sources = [
     read("portal/index.html"),
     read("apps/site/site/site-shell.js"),
-    read("apps/site/Lumino 官网.dc.html"),
+    read("apps/site/home.html"),
     read("apps/site/calculator/index.html"),
     read("apps/site/calculator/app.js"),
   ].join("\n");

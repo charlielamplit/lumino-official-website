@@ -9,9 +9,9 @@
   const pendingScriptCancels = new Set();
   const tools = [
     { zh: "CBAM 成本计算器", en: "CBAM cost calculator", href: "/calculator" },
-    { zh: "申请产品碳足迹初步估算", en: "Request a footprint estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=pcf&source=tool-float" },
-    { zh: "申请企业排放初步估算", en: "Request an emissions estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=inventory&source=tool-float" },
-    { zh: "申请绿电需求测算", en: "Request a renewable-power estimate", href: "/apps/site/Lumino%20联系.dc.html?serviceId=assets&source=tool-float" },
+    { zh: "申请产品碳足迹初步估算", en: "Request a footprint estimate", href: "/apps/site/contact.html?serviceId=pcf&source=tool-float" },
+    { zh: "申请企业排放初步估算", en: "Request an emissions estimate", href: "/apps/site/contact.html?serviceId=inventory&source=tool-float" },
+    { zh: "申请绿电需求测算", en: "Request a renewable-power estimate", href: "/apps/site/contact.html?serviceId=assets&source=tool-float" },
   ];
   const ICONS = {
     ask: '<svg class="tool-float__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M4 3a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h1v3.2a.8.8 0 0 0 1.3.62L11.1 17H20a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H4z"/></svg>',
@@ -28,8 +28,7 @@
     const path = decodeURIComponent(window.location.pathname || "/").replace(/\/+$/, "") || "/";
     return path === "/"
       || path === "/site"
-      || path === "/apps/site/Lumino 官网.dc.html"
-      || path === "/Lumino 官网.dc.html";
+      || path === "/apps/site/home.html";
   }
 
   function loadStyle(href) {
@@ -212,7 +211,7 @@
     shell.classList.add("is-error");
     shell.querySelector(".advisor-bootstrap__body").innerHTML = `<strong>${copy.failed}</strong><p>${copy.hint}</p>
       <div class="advisor-bootstrap__actions"><button type="button" class="button button--sm" data-advisor-load-retry>${copy.retry}</button>
-      <a class="button button--outline button--sm" href="/apps/site/Lumino%20联系.dc.html?source=homepage-advisor-load-error">${copy.contact}</a></div>`;
+      <a class="button button--outline button--sm" href="/apps/site/contact.html?source=homepage-advisor-load-error">${copy.contact}</a></div>`;
     shell.querySelector("[data-advisor-load-retry]").addEventListener("click", () => {
       shell.remove();
       trigger?.click?.();

@@ -59,7 +59,7 @@
       deliverables: ["规划中：议题与指标结构", "规划中：数据缺口、责任人与证据索引", "规划中：报告草稿、审批和发布版本"],
       process: ["咨询并确认报告目标", "拟定议题、指标和责任范围", "收集数据与证据", "质量检查和内容编制", "复核、审批和版本发布"],
       assets: ["组织、设施与责任人", "年度指标、政策、证据与披露内容", "CBAM、PCF 和碳盘查已确认数据的受控引用"],
-      boundaries: ["服务尚未开放，当前不创建工作空间", "适用披露框架必须在正式项目中确认", "当前页面仅用于说明计划与收集需求"], ctaHref: "/Lumino%20联系.dc.html?serviceId=esg&source=service-page"
+      boundaries: ["服务尚未开放，当前不创建工作空间", "适用披露框架必须在正式项目中确认", "当前页面仅用于说明计划与收集需求"], ctaHref: "/contact.html?serviceId=esg&source=service-page"
     }),
     inventory: withBase("inventory", {
       code: "GHG", claimState: "PLANNED", promise: "计划将组织边界、排放源和年度记录建立为可更新的企业碳盘查底座。",
@@ -69,7 +69,7 @@
       deliverables: ["规划中：组织边界与排放源清单", "规划中：分类计算、数据质量与年度变化说明", "规划中：盘查报告与证据索引"],
       process: ["咨询并界定组织与运营边界", "识别排放源与数据责任人", "采集、确认与质量检查", "计算、差异分析与复核", "报告和年度版本管理"],
       assets: ["组织、设施、活动与责任人", "能源、排放源、计量记录与因子引用", "年度快照、更正和证据"],
-      boundaries: ["服务尚未开放，页面不表示已可正式核算", "组织边界、基准年和因子口径须在项目中确认", "不代替第三方核查或认证"], ctaHref: "/Lumino%20联系.dc.html?serviceId=inventory&source=service-page"
+      boundaries: ["服务尚未开放，页面不表示已可正式核算", "组织边界、基准年和因子口径须在项目中确认", "不代替第三方核查或认证"], ctaHref: "/contact.html?serviceId=inventory&source=service-page"
     }),
     assets: withBase("assets", {
       code: "EAC", claimState: "PLANNED", promise: "计划把绿电、绿证与相关凭证纳入可追溯的需求、持有与履约记录。",
@@ -79,7 +79,7 @@
       deliverables: ["规划中：需求与可用性清单", "规划中：凭证、期间、设施与用途匹配记录", "规划中：履约证据包与历史版本"],
       process: ["咨询并确认需求和用途", "整理持有、合同与凭证", "检查时间、地域、设施和用途匹配", "记录分配、使用和核销", "组织履约证据"],
       assets: ["设施、期间和能源消费记录", "凭证、合同、签发方和有效期", "分配、核销、用途和证据版本"],
-      boundaries: ["服务尚未开放", "不提供交易撮合、交易执行或收益承诺", "凭证的适用性须按目标市场与用途核对"], ctaHref: "/Lumino%20联系.dc.html?serviceId=assets&source=service-page"
+      boundaries: ["服务尚未开放", "不提供交易撮合、交易执行或收益承诺", "凭证的适用性须按目标市场与用途核对"], ctaHref: "/contact.html?serviceId=assets&source=service-page"
     }),
     export: withBase("export", {
       code: "TRADE", claimState: "PLANNED", promise: "计划将目标市场要求、产品对象、证据和交付版本组织成可维护的出口合规路径。",
@@ -89,7 +89,7 @@
       deliverables: ["规划中：市场—产品—要求矩阵", "规划中：证据缺口、任务与责任人", "规划中：受控交付包、回执和历史版本"],
       process: ["咨询并确认市场与产品范围", "建立要求与证据矩阵", "分配缺口任务与责任人", "复核文件和版本", "组织客户交付与后续更正"],
       assets: ["企业、产品、市场与客户关系", "法规要求、证书、测试和技术文件", "任务、审批、交付、回执与更正历史"],
-      boundaries: ["服务尚未开放", "不声称覆盖所有国家、行业或法规", "具体适用性需由项目专家按时点和目标市场确认"], ctaHref: "/Lumino%20联系.dc.html?serviceId=export&source=service-page"
+      boundaries: ["服务尚未开放", "不声称覆盖所有国家、行业或法规", "具体适用性需由项目专家按时点和目标市场确认"], ctaHref: "/contact.html?serviceId=export&source=service-page"
     })
   });
 });

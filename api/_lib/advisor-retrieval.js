@@ -6,7 +6,7 @@ import path from "node:path";
 const ROOT = process.cwd();
 const CATALOG_PATH = path.join(ROOT, "apps/site/knowledge/catalog.json");
 const REVIEW_CYCLE_DAYS = 180;
-const CONTACT_URL = "/apps/site/Lumino%20联系.dc.html";
+const CONTACT_URL = "/apps/site/contact.html";
 
 let cache = null;
 

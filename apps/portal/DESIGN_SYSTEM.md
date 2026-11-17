@@ -20,7 +20,7 @@
 
 ## 2. Token 层级
 
-`styles.css` 的 `:root` 直接继承 `Lumino 官网.dc.html` 与 `Lumino 设计系统.dc.html` 的公开站 token，分为四层：
+`styles.css` 的 `:root` 直接继承 `home.html` 与 `Lumino 设计系统.dc.html` 的公开站 token，分为四层：
 
 | 层级 | 代表 Token | 使用方式 |
 |---|---|---|
