@@ -337,7 +337,7 @@ async function submitLead(event) {
       unlockComparison();
       return;
     }
-    status.innerHTML = `${escapeHtml(error.message || "提交失败")} <a href="../Lumino%20联系.dc.html">改用预约诊断 →</a>`;
+    status.innerHTML = `${escapeHtml(error.message || "提交失败")} <a href="../contact.html">改用预约诊断 →</a>`;
     status.classList.add("error");
     button.disabled = false;
     button.textContent = "解锁实测对比";

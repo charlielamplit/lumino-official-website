@@ -557,12 +557,12 @@ Footer 建议补充：
 
 ## 14. 关键证据位置
 
-- 首页案例占位：`apps/site/Lumino 官网.dc.html`
+- 首页案例占位：`apps/site/home.html`
 - 服务页公共模板：`apps/site/site/service-page.js`
 - 两套服务内容源：`apps/site/site/service-registry.js`、`apps/site/site/services-catalog.js`
 - 知识库死链接：`apps/site/knowledge/index.html`
-- 旧 CBAM 指南：`apps/site/Lumino CBAM 指南.dc.html`
-- 联系表单：`apps/site/Lumino 联系.dc.html`、`apps/site/site/contact.js`
+- 旧 CBAM 指南：`apps/site/guides/cbam.html`
+- 联系表单：`apps/site/contact.html`、`apps/site/site/contact.js`
 - CBAM 计算器：`apps/site/calculator/index.html`、`apps/site/calculator/styles.css`
 - 公共 Header 与 Footer：`apps/site/site/site-shell.js`
 - 图片资产：`apps/site/site/assets/`
@@ -683,7 +683,7 @@ Footer 建议补充：
 
 ##### [P0] 关键公开能力声明缺少可追溯证据登记
 
-- **位置**：`apps/site/Lumino 平台.dc.html`；`apps/site/Lumino 关于.dc.html:30-53,108-124`
+- **位置**：`apps/site/platform.html`；`apps/site/about.html:30-53,108-124`
 - **类别**：内容真实性
 - **影响**：权限隔离、版本血缘、独立复核、国际合作等声明若不能由生产能力或内部凭证支持，会形成采购和合规风险。
 - **标准**：Gate A。

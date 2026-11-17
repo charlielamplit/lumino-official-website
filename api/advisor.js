@@ -13,7 +13,7 @@ import { getPublicFlags, publicBetaEnabled } from "./_lib/advisor-flags.js";
 import { recordAdvisorMetric } from "./_lib/advisor-metrics-store.js";
 import { ADVISOR_SSE_CHUNK_CHARS, clientTimeoutMs, modelTimeoutMs } from "./_lib/advisor-timing.js";
 
-const CONTACT_URL = "/apps/site/Lumino%20联系.dc.html";
+const CONTACT_URL = "/apps/site/contact.html";
 
 function json(response, status, body, extraHeaders = {}) {
   response.status(status);

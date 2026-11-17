@@ -24,7 +24,7 @@
     </div>
     <div class="ind-page-hero__mask" aria-hidden="true"></div>
     <div class="wrap ind-page-hero__copy">
-      <p class="crumb"><a href="/apps/site/Lumino%20官网.dc.html" data-i18n-zh="首页" data-i18n-en="Home"></a> / <span data-i18n-zh="解决方案" data-i18n-en="Industries"></span></p>
+      <p class="crumb"><a href="/apps/site/home.html" data-i18n-zh="首页" data-i18n-en="Home"></a> / <span data-i18n-zh="解决方案" data-i18n-en="Industries"></span></p>
       <h1 data-i18n-zh="按行业看清，下一步该做什么" data-i18n-en="See what to do next—by industry"></h1>
       <p data-i18n-zh="不同行业的法规、客户要求和常见卡点并不一样。选择你的行业，查看关键挑战、我们能帮你做到什么，以及建议优先推进的事项。" data-i18n-en="Rules, customer asks and blockers differ by industry. Pick yours to see the key challenges, what we can help you deliver, and what to advance first."></p>
     </div>
@@ -45,7 +45,7 @@
         <p data-i18n-zh="按你的行业与客户要求，我们给出优先顺序、资料清单与交付范围。" data-i18n-en="Based on your industry and buyer asks, we set priorities, the document list and the delivery scope."></p>
       </div>
       <div class="m-closing__actions">
-        <a class="button button--on-dark button--sm" id="ind-cta" href="/apps/site/Lumino%20联系.dc.html" data-i18n-zh="预约咨询" data-i18n-en="Book a consultation"></a>
+        <a class="button button--on-dark button--sm" id="ind-cta" href="/apps/site/contact.html" data-i18n-zh="预约咨询" data-i18n-en="Book a consultation"></a>
       </div>
     </div>
   </section>
@@ -221,7 +221,7 @@ document.addEventListener("DOMContentLoaded", function () {
         </div>
       </section>`;
 
-    if (cta) cta.href = `/apps/site/Lumino%20联系.dc.html?industry=${encodeURIComponent(item.id)}`;
+    if (cta) cta.href = `/apps/site/contact.html?industry=${encodeURIComponent(item.id)}`;
     if (i18n) i18n.applyDataI18n(document);
     if (window.LuminoEnhanceChrome) window.LuminoEnhanceChrome(detail);
   }

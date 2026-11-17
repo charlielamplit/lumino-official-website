@@ -41,7 +41,7 @@ test("public tool menu loads the deterministic advisor without embedding model s
 });
 
 test("homepage applies advisor CSS and preloads the single advisor bundle", () => {
-  const html = read("apps/site/Lumino 官网.dc.html");
+  const html = read("apps/site/home.html");
   assert.match(html, /rel="stylesheet"[^>]+advisor-widget\.css\?v=20261110-bundle1/);
   assert.match(html, /rel="preload"[^>]+advisor-bundle\.js\?v=20261110-bundle1/);
   assert.doesNotMatch(html, /rel="preload"[^>]+advisor-widget\.css/);

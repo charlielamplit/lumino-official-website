@@ -17,4 +17,4 @@
 
 ## 本地
 
-仓库根目录静态托管后访问 `/` 或 `/apps/site/Lumino%20官网.dc.html`。
+仓库根目录静态托管后访问 `/` 或 `/apps/site/home.html`。

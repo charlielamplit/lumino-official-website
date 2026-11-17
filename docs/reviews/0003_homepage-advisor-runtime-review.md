@@ -3,7 +3,7 @@
 - Date: 2026-11-02
 - Feature: F08-02
 - Branch: `feat/f08-02-advisor-widget`
-- Page: `/apps/site/Lumino%20官网.dc.html`
+- Page: `/apps/site/home.html`
 
 ## Result
 

@@ -41,12 +41,12 @@
 
 | 页面 | 文件 |
 |---|---|
-| 首页 | `Lumino 官网.dc.html` |
-| 平台 | `Lumino 平台.dc.html` |
-| CBAM 指南 | `Lumino CBAM 指南.dc.html` |
-| 指南文章 | `Lumino 指南文章.dc.html` |
-| 关于 | `Lumino 关于.dc.html` |
-| 联系 | `Lumino 联系.dc.html` |
+| 首页 | `home.html` |
+| 平台 | `platform.html` |
+| CBAM 指南 | `guides/cbam.html` |
+| 指南文章 | `guides/article.html` |
+| 关于 | `about.html` |
+| 联系 | `contact.html` |
 
 行业知识库位于 `knowledge/index.html`。公开服务页使用同一服务内容契约，并与 Portal 服务注册表执行契约测试：
 

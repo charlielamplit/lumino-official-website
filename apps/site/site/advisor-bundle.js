@@ -13,7 +13,7 @@
   const source = (id, zh, en, url) => Object.freeze({ id, title: L(zh, en), url });
 
   const sources = Object.freeze({
-    services: source("services-catalog", "Lumino 服务目录", "Lumino service catalog", "/apps/site/Lumino%20官网.dc.html#services"),
+    services: source("services-catalog", "Lumino 服务目录", "Lumino service catalog", "/apps/site/home.html#services"),
     cbamCodes: source("cbam-hs-cn-codes", "HS / CN / TARIC 编码核对指南", "HS / CN / TARIC code guide", "/knowledge/article?id=cbam-hs-cn-codes"),
     cbamData: source("cbam-importer-data", "CBAM 进口商数据准备", "Preparing CBAM importer data", "/knowledge/article?id=cbam-importer-data"),
     cbamPcf: source("cbam-vs-pcf", "CBAM 与产品碳足迹的区别", "CBAM vs product carbon footprint", "/knowledge/article?id=cbam-vs-pcf"),
@@ -174,7 +174,7 @@
       suggestedReplies: [reply("eu-importer", "欧盟进口商", "EU importer"), reply("customer", "客户或品牌", "Customer or brand"), reply("regulator", "监管或市场准入", "Regulator or market access"), reply("internal", "公司内部", "Internal team"), reply("unknown", "不确定", "Not sure")],
       serviceId: null,
       sourceIds: ["services-catalog"],
-      cta: { type: "contact", label: L("查看全部服务", "View all services"), url: "/apps/site/Lumino%20官网.dc.html#services" }
+      cta: { type: "contact", label: L("查看全部服务", "View all services"), url: "/apps/site/home.html#services" }
     }
   ]);
 
@@ -253,7 +253,7 @@
       links: [
         { type: "tool", label: L("进入 CBAM 试算器", "Open the CBAM calculator"), url: "/calculator" },
         { type: "knowledge", label: L("查看编码核对指南", "View the code-checking guide"), url: "/knowledge/article?id=cbam-hs-cn-codes" },
-        { type: "contact", label: L("需要归类复核", "Request classification review"), url: "/apps/site/Lumino%20联系.dc.html?serviceId=cbam&source=homepage-advisor&topic=cn-code" }
+        { type: "contact", label: L("需要归类复核", "Request classification review"), url: "/apps/site/contact.html?serviceId=cbam&source=homepage-advisor&topic=cn-code" }
       ],
       sourceIds: ["cbam-hs-cn-codes"]
     }
@@ -436,8 +436,8 @@
       next_question: lang === "en" ? "Who is asking, what do they expect, and when is it due?" : "是谁提出要求、希望收到什么、什么时候要？",
       suggested_replies: catalog.topics.slice(0, 5).map((item) => ({ id: item.id, label: text(item.label, lang) })),
       sources: [],
-      links: [{ type: "contact", label: lang === "en" ? "Contact Lumino" : "联系 Lumino", url: "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor&topic=unresolved" }],
-      cta: { type: "contact", label: lang === "en" ? "Contact Lumino" : "联系 Lumino", url: "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor&topic=unresolved" },
+      links: [{ type: "contact", label: lang === "en" ? "Contact Lumino" : "联系 Lumino", url: "/apps/site/contact.html?source=homepage-advisor&topic=unresolved" }],
+      cta: { type: "contact", label: lang === "en" ? "Contact Lumino" : "联系 Lumino", url: "/apps/site/contact.html?source=homepage-advisor&topic=unresolved" },
       handoff: "contact"
     };
     assertValid(response);
@@ -756,7 +756,7 @@
     response.links = [{
       type: "contact",
       label: label("联系 Lumino", "Contact Lumino"),
-      url: "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor&topic=unavailable",
+      url: "/apps/site/contact.html?source=homepage-advisor&topic=unavailable",
     }];
     response.cta = response.links[0];
     response.runtime = { source: "client_fallback", ui_state: "unavailable", degradation_reason: reason };
@@ -1074,7 +1074,7 @@
       <button class="advisor-widget__stop" type="button" hidden>${label("停止", "Stop")}</button>
       <button class="advisor-widget__send" type="submit">${label("发送", "Send")}</button>
     </form>
-    <footer class="advisor-widget__foot">${label("需要更有针对性的服务？", "Need more tailored support?")} <a class="advisor-widget__foot-link" href="/apps/site/Lumino%20联系.dc.html?source=advisor-foot">${label("联系我们", "Contact us")}</a></footer>
+    <footer class="advisor-widget__foot">${label("需要更有针对性的服务？", "Need more tailored support?")} <a class="advisor-widget__foot-link" href="/apps/site/contact.html?source=advisor-foot">${label("联系我们", "Contact us")}</a></footer>
     <div class="advisor-widget__status" aria-live="polite" aria-atomic="true"></div>`;
     document.body.appendChild(panel);
 

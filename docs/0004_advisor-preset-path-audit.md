@@ -249,7 +249,7 @@ flowchart LR
 - 一级默认答案：可以先不选服务。最有效的做法是确认「谁提出要求、要什么交付物、什么时候要」。我们会据此推荐一项主服务，必要时附一项关联服务。
 - 追问：是谁向你提出了要求？
 - 资料：`services-catalog`
-- CTA：查看全部服务（`/apps/site/Lumino%20官网.dc.html#services`）
+- CTA：查看全部服务（`/apps/site/home.html#services`）
 - 继承规则：下列每条二级答案均使用本节资料与 CTA。
 
 | 用户选择 | Reply ID | 对应默认答案 |
@@ -267,7 +267,7 @@ flowchart LR
 
 - 内部路由键：`cn_code_lookup`
 - 默认答案：可以先使用现有合规工具。CBAM 试算器可从已支持的 CN Code 列表选择产品并进行成本试算；编码指南用于理解 HS、CN 和 TARIC 的关系与核对顺序。这些入口不替代正式海关归类或专家复核。
-- 三个入口：合规工具：进入 CBAM 试算器（`/calculator`）；知识指南：查看编码核对指南（`/knowledge/article?id=cbam-hs-cn-codes`）；人工复核：需要归类复核（`/apps/site/Lumino%20联系.dc.html?serviceId=cbam&source=homepage-advisor&topic=cn-code`）
+- 三个入口：合规工具：进入 CBAM 试算器（`/calculator`）；知识指南：查看编码核对指南（`/knowledge/article?id=cbam-hs-cn-codes`）；人工复核：需要归类复核（`/apps/site/contact.html?serviceId=cbam&source=homepage-advisor&topic=cn-code`）
 - 资料：`cbam-hs-cn-codes`
 
 ## 当前审计结果

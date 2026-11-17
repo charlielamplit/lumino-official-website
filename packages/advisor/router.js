@@ -133,8 +133,8 @@
       next_question: lang === "en" ? "Who is asking, what do they expect, and when is it due?" : "是谁提出要求、希望收到什么、什么时候要？",
       suggested_replies: catalog.topics.slice(0, 5).map((item) => ({ id: item.id, label: text(item.label, lang) })),
       sources: [],
-      links: [{ type: "contact", label: lang === "en" ? "Contact Lumino" : "联系 Lumino", url: "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor&topic=unresolved" }],
-      cta: { type: "contact", label: lang === "en" ? "Contact Lumino" : "联系 Lumino", url: "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor&topic=unresolved" },
+      links: [{ type: "contact", label: lang === "en" ? "Contact Lumino" : "联系 Lumino", url: "/apps/site/contact.html?source=homepage-advisor&topic=unresolved" }],
+      cta: { type: "contact", label: lang === "en" ? "Contact Lumino" : "联系 Lumino", url: "/apps/site/contact.html?source=homepage-advisor&topic=unresolved" },
       handoff: "contact"
     };
     assertValid(response);

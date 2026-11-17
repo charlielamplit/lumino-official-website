@@ -71,11 +71,11 @@ async function screenshot(name,path,width,height,fullPage=true){
 await screenshot('portal-service-overview','/apps/portal/?demoRole=customer_owner',1280,800,false);
 
 const pages=[
-  ['home','/apps/site/Lumino%20%E5%AE%98%E7%BD%91.dc.html'],
-  ['platform','/apps/site/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html'],
+  ['home','/apps/site/home.html'],
+  ['platform','/apps/site/platform.html'],
   ['cbam','/apps/site/services/cbam/'],['pcf','/apps/site/services/pcf/'],['esg','/apps/site/services/esg/'],
   ['ghg-inventory','/apps/site/services/ghg-inventory/'],['carbon-assets','/apps/site/services/carbon-assets/'],['export-compliance','/apps/site/services/export-compliance/'],
-  ['about','/apps/site/Lumino%20%E5%85%B3%E4%BA%8E.dc.html'],['contact','/apps/site/Lumino%20%E8%81%94%E7%B3%BB.dc.html?serviceId=pcf&source=review'],['knowledge','/apps/site/knowledge/'],
+  ['about','/apps/site/about.html'],['contact','/apps/site/contact.html?serviceId=pcf&source=review'],['knowledge','/apps/site/knowledge/'],
   ['portal','/apps/portal/?demoRole=customer_owner'],
   ['portal-assets-owner','/apps/portal/?demoRole=customer_owner&page=shared-files'],
   ['portal-assets-contributor','/apps/portal/?demoRole=customer_contrib&page=shared-files'],
@@ -91,9 +91,9 @@ for(const width of [390,768,1440]){
   for(const [name,path] of pages)report[width][name]=await audit(name,path,width);
 }
 
-await screenshot('home-desktop','/apps/site/Lumino%20%E5%AE%98%E7%BD%91.dc.html',1440,1000);
-await screenshot('home-mobile','/apps/site/Lumino%20%E5%AE%98%E7%BD%91.dc.html',390,844);
-await screenshot('platform-desktop','/apps/site/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html',1440,1000);
+await screenshot('home-desktop','/apps/site/home.html',1440,1000);
+await screenshot('home-mobile','/apps/site/home.html',390,844);
+await screenshot('platform-desktop','/apps/site/platform.html',1440,1000);
 await screenshot('cbam-desktop','/apps/site/services/cbam/',1440,1000);
 await screenshot('cbam-mobile','/apps/site/services/cbam/',390,844);
 await screenshot('pcf-desktop','/apps/site/services/pcf/',1440,1000);

@@ -270,7 +270,7 @@
     response.links = [{
       type: "contact",
       label: label("联系 Lumino", "Contact Lumino"),
-      url: "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor&topic=unavailable",
+      url: "/apps/site/contact.html?source=homepage-advisor&topic=unavailable",
     }];
     response.cta = response.links[0];
     response.runtime = { source: "client_fallback", ui_state: "unavailable", degradation_reason: reason };
@@ -588,7 +588,7 @@
       <button class="advisor-widget__stop" type="button" hidden>${label("停止", "Stop")}</button>
       <button class="advisor-widget__send" type="submit">${label("发送", "Send")}</button>
     </form>
-    <footer class="advisor-widget__foot">${label("需要更有针对性的服务？", "Need more tailored support?")} <a class="advisor-widget__foot-link" href="/apps/site/Lumino%20联系.dc.html?source=advisor-foot">${label("联系我们", "Contact us")}</a></footer>
+    <footer class="advisor-widget__foot">${label("需要更有针对性的服务？", "Need more tailored support?")} <a class="advisor-widget__foot-link" href="/apps/site/contact.html?source=advisor-foot">${label("联系我们", "Contact us")}</a></footer>
     <div class="advisor-widget__status" aria-live="polite" aria-atomic="true"></div>`;
     document.body.appendChild(panel);
 

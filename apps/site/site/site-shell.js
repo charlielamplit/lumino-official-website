@@ -14,13 +14,13 @@
   };
 
   const navDef = [
-    { id: "services", href: "/apps/site/Lumino%20官网.dc.html#services", zh: "我们的服务", en: "Services" },
-    { id: "platform", href: "/apps/site/Lumino%20平台.dc.html", zh: "我们的平台", en: "Platform" },
+    { id: "services", href: "/apps/site/home.html#services", zh: "我们的服务", en: "Services" },
+    { id: "platform", href: "/apps/site/platform.html", zh: "我们的平台", en: "Platform" },
     { id: "industries", href: "/apps/site/industries/", zh: "解决方案", en: "Industries" },
     { id: "tools", href: "/apps/site/tools/", zh: "合规工具", en: "Compliance tools" },
     { id: "knowledge", href: "/apps/site/knowledge/", zh: "行业知识库", en: "Insights" },
-    { id: "about", href: "/apps/site/Lumino%20关于.dc.html", zh: "关于我们", en: "About" },
-    { id: "contact", href: "/apps/site/Lumino%20联系.dc.html", zh: "联系我们", en: "Contact" },
+    { id: "about", href: "/apps/site/about.html", zh: "关于我们", en: "About" },
+    { id: "contact", href: "/apps/site/contact.html", zh: "联系我们", en: "Contact" },
   ];
 
   function lang() { return i18n.detectLang(); }
@@ -51,7 +51,7 @@
       this.innerHTML = `<a class="skip" href="#main" style="position:absolute;left:-9999px">${L === "en" ? "Skip to content" : "跳到主要内容"}</a>
         <header class="site-header">
           <div class="site-header__row">
-            <a class="brand-lockup" href="${withLang("/apps/site/Lumino%20官网.dc.html")}" aria-label="铄垣 Lumino">
+            <a class="brand-lockup" href="${withLang("/apps/site/home.html")}" aria-label="铄垣 Lumino">
               <picture>
                 <source type="image/webp" srcset="/apps/site/site/assets/brand/mark-128.webp">
                 <img class="brand-mark" src="/apps/site/site/assets/brand/mark-128.png" width="88" height="64" alt="">
@@ -67,14 +67,14 @@
                 <a href="#" data-lang="en" aria-current="${L === "en"}">EN</a>
               </div>
               <a class="portal-entry" href="/apps/portal"><span>${portal}</span><b aria-hidden="true">↗</b></a>
-              <a class="header-cta" href="${withLang("/apps/site/Lumino%20联系.dc.html")}">${consult}</a>
+              <a class="header-cta" href="${withLang("/apps/site/contact.html")}">${consult}</a>
               <button class="menu-button" type="button" aria-label="${menu}" aria-expanded="false" aria-controls="site-mobile-nav">
                 <span class="menu-button__icon" aria-hidden="true"><i></i><i></i><i></i></span>
               </button>
             </div>
           </div>
           <div class="mobile-nav-shell" data-open="false">
-            <nav id="site-mobile-nav" class="mobile-nav" aria-label="Mobile">${links}<a href="/apps/portal">${portal} ↗</a><a href="${withLang("/apps/site/Lumino%20联系.dc.html")}">${consult}</a></nav>
+            <nav id="site-mobile-nav" class="mobile-nav" aria-label="Mobile">${links}<a href="/apps/portal">${portal} ↗</a><a href="${withLang("/apps/site/contact.html")}">${consult}</a></nav>
           </div>
         </header>`;
 
@@ -109,18 +109,18 @@
         { zh: "出口合规服务", en: "Export compliance", href: "/apps/site/services/export-compliance/" },
       ];
       const resource = [
-        { zh: "我们的平台", en: "Platform", href: "/apps/site/Lumino%20平台.dc.html" },
+        { zh: "我们的平台", en: "Platform", href: "/apps/site/platform.html" },
         { zh: "解决方案", en: "Industries", href: "/apps/site/industries/" },
         { zh: "项目案例", en: "Project cases", href: "/apps/site/cases/" },
         { zh: "合规工具", en: "Compliance tools", href: "/apps/site/tools/" },
         { zh: "行业知识库", en: "Insights", href: "/apps/site/knowledge/" },
       ];
       const company = [
-        { zh: "关于我们", en: "About", href: "/apps/site/Lumino%20关于.dc.html" },
-        { zh: "联系我们", en: "Contact", href: "/apps/site/Lumino%20联系.dc.html" },
-        { zh: "隐私与数据处理", en: "Privacy & data", href: "/apps/site/Lumino%20隐私与数据处理.dc.html" },
-        { zh: "Cookie 与本地存储", en: "Cookies & storage", href: "/apps/site/Lumino%20Cookie%20与本地存储.dc.html" },
-        { zh: "用户内容与数据许可", en: "Content & data licence", href: "/apps/site/Lumino%20用户内容与数据许可.dc.html" },
+        { zh: "关于我们", en: "About", href: "/apps/site/about.html" },
+        { zh: "联系我们", en: "Contact", href: "/apps/site/contact.html" },
+        { zh: "隐私与数据处理", en: "Privacy & data", href: "/apps/site/legal/privacy.html" },
+        { zh: "Cookie 与本地存储", en: "Cookies & storage", href: "/apps/site/legal/cookies.html" },
+        { zh: "用户内容与数据许可", en: "Content & data licence", href: "/apps/site/legal/content-licence.html" },
         { zh: "客户门户 ↗", en: "Client portal ↗", href: "/apps/portal" },
       ];
       const col = (titleZh, titleEn, items) =>
@@ -128,7 +128,7 @@
 
       this.innerHTML = `<footer class="site-footer"><div class="site-footer__inner">
         <div class="footer-brand">
-          <a class="footer-brand__link" href="${withLang("/apps/site/Lumino%20官网.dc.html")}" aria-label="Lumino">
+          <a class="footer-brand__link" href="${withLang("/apps/site/home.html")}" aria-label="Lumino">
             <picture>
               <source type="image/webp" srcset="/apps/site/site/assets/brand/lockup-1200.webp">
               <img class="brand-lockup-img" src="/apps/site/site/assets/brand/lockup-1200.png" width="280" height="70" alt="上海铄垣环保科技 · Lumino Environmental Technology" loading="lazy" decoding="async">

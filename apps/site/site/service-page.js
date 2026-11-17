@@ -34,8 +34,8 @@
     cta: L === "en" ? "Book a consultation" : "预约咨询",
   };
 
-  const home = "/apps/site/Lumino%20官网.dc.html";
-  const contact = `/apps/site/Lumino%20联系.dc.html?serviceId=${encodeURIComponent(svc.id)}`;
+  const home = "/apps/site/home.html";
+  const contact = `/apps/site/contact.html?serviceId=${encodeURIComponent(svc.id)}`;
   document.title = `${t(svc.name)} · Lumino`;
   let meta = document.querySelector('meta[name="description"]');
   if (!meta) {

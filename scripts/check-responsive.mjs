@@ -38,8 +38,8 @@ await call('Emulation.setDeviceMetricsOverride', {
 });
 
 const pages = [
-  ['home', `${origin}/Lumino%20%E5%AE%98%E7%BD%91.dc.html`],
-  ['platform', `${origin}/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html`]
+  ['home', `${origin}/apps/site/home.html`],
+  ['platform', `${origin}/apps/site/platform.html`]
 ];
 const report = {};
 

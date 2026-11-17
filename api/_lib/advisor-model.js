@@ -14,7 +14,7 @@ import {
 const LUNA = process.env.ADVISOR_MODEL_LUNA || "gpt-4.1-mini";
 // Prefer a fast Sol by default; slow Sol models cause Beta No-Go under client budget.
 const SOL = process.env.ADVISOR_MODEL_SOL || "deepseek/deepseek-v4-flash";
-const CONTACT_URL = "/apps/site/Lumino%20联系.dc.html";
+const CONTACT_URL = "/apps/site/contact.html";
 
 function apiKey() {
   return process.env.ADVISOR_OPENAI_API_KEY || process.env.OPENAI_API_KEY || "";

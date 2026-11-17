@@ -9,7 +9,7 @@
 |---|---|---|---|
 | 运营主体 | 上海铄垣环保科技有限公司 | 官网关于页、隐私页 | 已确认名称；地址待公司确认 |
 | 隐私联系 | `contact@lumino.tech` | 隐私页、联系页 | 需确认邮箱已配置并有人负责 |
-| 官网咨询字段 | 姓名、公司、邮箱、电话/微信、行业、服务、时间、说明、来源 | `apps/site/Lumino 联系.dc.html`、`site/contact.js` | 已确认 |
+| 官网咨询字段 | 姓名、公司、邮箱、电话/微信、行业、服务、时间、说明、来源 | `apps/site/contact.html`、`site/contact.js` | 已确认 |
 | 试算线索字段 | 公司、姓名、手机、邮箱、同意、试算摘要 | `apps/site/calculator/index.html`、`calculator/app.js` | 已确认 |
 | 线索服务端存储 | 内存 + `data/leads.json` 或 `/tmp/lumino-leads.json` | `api/_lib/leads-store.js` | 原型实现；不适合作为正式持久化方案 |
 | 线索通知 | 可选 Webhook；可选 Resend 邮件 | `api/leads.js`、`.env.example` | 实际生产配置待确认 |
