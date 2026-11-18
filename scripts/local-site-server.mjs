@@ -51,6 +51,7 @@ const apiRoutes = {
   "/api/advisor-ping": "api/advisor-ping.js",
   "/api/knowledge": "api/knowledge.js",
   "/api/leads": "api/leads.js",
+  "/api/release": "api/release.js",
   "/api/staff-login": "api/staff-login.js",
 };
 
