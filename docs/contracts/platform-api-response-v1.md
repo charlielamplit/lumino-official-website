@@ -83,6 +83,9 @@ Portal、Agent Gateway 和后台 Worker 不应通过中文错误文案、数据�
 
 ## 6. 采用顺序
 
+> 接入状态更新：staff-login / leads 已接入契约信封；Portal 客户端改读 `code/recovery` 另轨。
+
+
 1. 后端入口生成或接收受信任的 `requestId`，将领域异常映射为本契约。
 2. `/api/staff-login`、`/api/leads` 先完成契约测试，再替换旧 `{ error: string }` 响应。
 3. Portal client 只按 `code/recovery` 决定流程，`messageKey` 决定文案。
