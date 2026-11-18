@@ -1,0 +1,156 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: "Full main commit SHA to redeploy"
+        required: true
+
+concurrency:
+  group: production-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Validate immutable release
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: lumino
+          POSTGRES_PASSWORD: lumino
+          POSTGRES_DB: lumino_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lumino -d lumino_platform"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://lumino:lumino@127.0.0.1:5432/lumino_platform
+    outputs:
+      release_sha: ${{ steps.release.outputs.sha }}
+    steps:
+      - name: Checkout main history
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Resolve release SHA
+        id: release
+        env:
+          REQUESTED_SHA: ${{ github.event.inputs.release_sha }}
+          PUSH_SHA: ${{ github.sha }}
+        run: |
+          sha="${REQUESTED_SHA:-$PUSH_SHA}"
+          if ! printf '%s' "$sha" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "A full lowercase Git SHA is required" >&2
+            exit 1
+          fi
+          git fetch origin main
+          git merge-base --is-ancestor "$sha" origin/main || {
+            echo "Release SHA must belong to main" >&2
+            exit 1
+          }
+          git checkout --detach "$sha"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Validate Roadmap manifest
+        run: node scripts/github-roadmap-sync.mjs --check
+
+      - name: Check JavaScript syntax
+        run: |
+          search_paths=()
+          for directory in api apps calculator packages portal scripts services site tests; do
+            if [ -d "$directory" ]; then
+              search_paths+=("$directory")
+            fi
+          done
+          find "${search_paths[@]}" -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' \) -print0 | xargs -0 -n1 node --check
+
+      - name: Run deterministic tests
+        run: |
+          shopt -s nullglob
+          test_files=(tests/*.test.* packages/agent/tests/*.test.* packages/advisor/tests/*.test.* packages/platform/tests/*.test.*)
+          node --test "${test_files[@]}"
+
+      - name: Check release diff
+        run: git show --check --format=fuller HEAD
+
+  wait-for-vercel:
+    name: Confirm Vercel production SHA
+    needs: quality
+    runs-on: ubuntu-24.04
+    env:
+      RELEASE_SHA: ${{ needs.quality.outputs.release_sha }}
+      VERCEL_PRODUCTION_URL: ${{ vars.VERCEL_PRODUCTION_URL || 'https://lumino-official-website.vercel.app' }}
+    steps:
+      - name: Wait for Vercel production
+        run: |
+          base="${VERCEL_PRODUCTION_URL%/}"
+          for attempt in $(seq 1 60); do
+            response="$(curl -fsS --connect-timeout 10 --max-time 20 "$base/api/release" || true)"
+            if [[ "$response" == *"\"releaseSha\":\"$RELEASE_SHA\""* ]]; then
+              echo "Vercel is serving $RELEASE_SHA"
+              exit 0
+            fi
+            echo "Waiting for Vercel production ($attempt/60)"
+            sleep 10
+          done
+          echo "Vercel did not publish $RELEASE_SHA within 10 minutes" >&2
+          exit 1
+
+  deploy-tencent:
+    name: Deploy the same SHA to Tencent
+    needs: [quality, wait-for-vercel]
+    runs-on: ubuntu-24.04
+    environment: tencent-lighthouse
+    env:
+      RELEASE_SHA: ${{ needs.quality.outputs.release_sha }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_DIR: ${{ vars.DEPLOY_DIR }}
+      DEPLOY_SERVICE: ${{ vars.DEPLOY_SERVICE }}
+      PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL }}
+    steps:
+      - name: Checkout exact release
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.quality.outputs.release_sha }}
+
+      - name: Install rsync
+        run: sudo apt-get update -y && sudo apt-get install -y rsync
+
+      - name: Deploy atomic Tencent release
+        run: |
+          chmod +x scripts/deploy-tencent.sh scripts/tencent-activate-release.sh
+          ./scripts/deploy-tencent.sh
+
+      - name: Compare production release SHAs
+        env:
+          VERCEL_PRODUCTION_URL: ${{ vars.VERCEL_PRODUCTION_URL || 'https://lumino-official-website.vercel.app' }}
+        run: |
+          vercel="$(curl -fsS "${VERCEL_PRODUCTION_URL%/}/api/release")"
+          tencent="$(curl -fsS "${PUBLIC_SITE_URL%/}/api/release")"
+          [[ "$vercel" == *"\"releaseSha\":\"$RELEASE_SHA\""* ]]
+          [[ "$tencent" == *"\"releaseSha\":\"$RELEASE_SHA\""* ]]
+          echo "Vercel and Tencent are both serving $RELEASE_SHA"

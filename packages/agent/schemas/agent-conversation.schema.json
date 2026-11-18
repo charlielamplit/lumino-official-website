@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumino.example/schemas/agent-conversation/1.0.0",
+  "title": "Lumino Agent Conversation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "conversationId", "context", "contextKey", "status", "revision", "createdBy", "createdAt", "updatedAt"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "conversationId": { "type": "string", "minLength": 1 },
+    "context": { "$ref": "https://lumino.example/schemas/agent-context/1.0.0" },
+    "contextKey": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["ACTIVE", "CLOSED"] },
+    "revision": { "type": "integer", "minimum": 1 },
+    "createdBy": { "type": "string", "minLength": 1 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "latestMessageAt": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

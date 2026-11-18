@@ -20,12 +20,12 @@
 
     const serviceLinks = item.services
       .map((sid) => {
-        const s = svcMap[sid] || { zh: sid, en: sid, href: "/apps/site/Lumino%20联系.dc.html" };
+        const s = svcMap[sid] || { zh: sid, en: sid, href: "/apps/site/contact.html" };
         return `<a class="m-link" href="${s.href}">${L === "en" ? s.en : s.zh}</a>`;
       })
       .join(" · ");
 
-    const home = "/apps/site/Lumino%20官网.dc.html";
+    const home = "/apps/site/home.html";
     const industries = "/apps/site/industries/";
     const imgById = {
       steel: "/apps/site/site/assets/industries/steel.png",
@@ -72,7 +72,7 @@
             <h2>${L === "en" ? "Related insights" : "相关知识"}</h2>
             <p><a class="m-link" href="/apps/site/knowledge/?industry=${item.id}">${L === "en" ? "Browse insights →" : "查看知识库 →"}</a></p>
           </article>
-          <p><a class="button button--primary" href="/apps/site/Lumino%20联系.dc.html?industry=${item.id}">${L === "en" ? "Book a consultation" : "预约咨询"}</a></p>
+          <p><a class="button button--primary" href="/apps/site/contact.html?industry=${item.id}">${L === "en" ? "Book a consultation" : "预约咨询"}</a></p>
         </div>
       </section>`;
     if (i18n) i18n.applyDataI18n(document);

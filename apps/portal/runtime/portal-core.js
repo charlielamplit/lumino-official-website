@@ -65,14 +65,21 @@
 
   function persistPortalState() {
     savePeriodState();
+    if (window.LuminoAgentRuntime?.syncAgentContext) window.LuminoAgentRuntime.syncAgentContext();
     const persisted = {
       periodData: state.periodData, productOverrides: state.productOverrides, configurationDrafts: state.configurationDrafts,
       facilities: state.facilities, invitedMembers: state.invitedMembers, organization: state.organization,
       productYears: state.productYears, productCnCodes: state.productCnCodes, productAdded: state.productAdded,
       configurationAdded: state.configurationAdded, yearCreated: state.yearCreated, selectedProduct: state.selectedProduct,
+      prodDec: state.prodDec || {},
+      cbamProductView: state.cbamProductView, cbamDataView: state.cbamDataView,
       currentService: state.currentService, page: state.page, settingsSection: state.settingsSection,
       consultationRequests: state.consultationRequests, assetFacet: state.assetFacet,
       taskTab: state.taskTab, delivFilter: state.delivFilter,
+      agentPb: state.agentPb, agentAs: state.agentAs, agentTab: state.agentTab, agentMode: state.agentMode,
+      agentMsgs: state.agentMsgs, rtCur: state.rtCur, rtAns: state.rtAns, rtDone: state.rtDone,
+      rtStarted: state.rtStarted, agentLog: state.agentLog,
+      agentSessions: state.agentSessions || {}, agentContext: state.agentContext || null, agentContextKey: state.agentContextKey || null,
     };
     window.localStorage.setItem(portalStateStorageKey, JSON.stringify(persisted));
   }
@@ -587,6 +594,8 @@
   }
 
   function activeServiceNav(serviceId = state.currentService, role = state.role) {
+    const activationPending = serviceId === "cbam" && state.year === "2027" && workflowEngine.get("AUTH-CBAM-2027-001")?.status !== "ACTIVE";
+    if (serviceId === "cbam" && (state.cbamEntryMode === "activation" || activationPending)) return [["service-start", "○", "服务启动", "1"]];
     if (serviceId === "cbam" && ["customer_contrib", "customer_approver"].includes(role)) return roleConfig[role].nav;
     if (serviceId === "pcf" && role === "customer_contrib") return serviceRegistry.pcf.nav.filter(([id]) => id === "pcf-data");
     if (serviceId === "pcf" && role === "customer_approver") return serviceRegistry.pcf.nav.filter(([id]) => id === "pcf-report");
@@ -595,6 +604,8 @@
 
   function isValidCustomerDestination(serviceId, page, role = state.role) {
     if (globalCustomerPages.has(page)) return !serviceId;
+    const cbamLegacyPages = new Set(["roadmap", "onboarding", "monitoring-plan", "data", "results"]);
+    if (serviceId === "cbam" && cbamLegacyPages.has(page)) return serviceRegistry.cbam.roles.includes(role);
     return Boolean(serviceRegistry[serviceId]?.roles.includes(role) && activeServiceNav(serviceId, role).some(([id]) => id === page));
   }
 
@@ -624,6 +635,8 @@
   }
 
   function firstServicePage(serviceId) {
+    if (serviceId === "cbam" && (state.cbamEntryMode === "activation" || (state.year === "2027" && workflowEngine.get("AUTH-CBAM-2027-001")?.status !== "ACTIVE"))) return "service-start";
+    if (serviceId === "cbam" && state.cbamEntryMode === "annual-project") return "annual-project";
     return activeServiceNav(serviceId)[0]?.[0] || null;
   }
 
@@ -638,7 +651,7 @@
     state.currentService = validService;
     const nav = validService ? activeServiceNav(validService) : [];
     /* 一级服务轨点击（无 page / 无效 page）一律落到该服务二级导航第一项 */
-    state.page = validService && page && nav.some(([id]) => id === page)
+    state.page = validService && page && isValidCustomerDestination(validService, page)
       ? page
       : (firstServicePage(validService) || "services-hub");
   }
@@ -713,6 +726,12 @@
 
   function syncShell() {
     const config = roleConfig[state.role];
+    const agentSlot = $("#agentTopbarSlot");
+    if (agentSlot) {
+      agentSlot.innerHTML = (isCustomer() && state.loggedIn && window.LuminoAgentRuntime?.agentBtnHtml)
+        ? window.LuminoAgentRuntime.agentBtnHtml()
+        : "";
+    }
     const crossYearPage = ["programs", "team", "org-settings", "annual-setup", ...globalCustomerPages].includes(state.page);
     const hideSecondary = isCustomer() && !state.currentService && overviewPages.has(state.page)
       && state.page !== "org-settings";
@@ -881,15 +900,17 @@
   function render() {
     syncShell();
     $("#main").classList.toggle("workspace--pcf", isCustomer() && state.currentService === "pcf");
-    if (isCustomer()) renderCustomer();
-    if (state.role === "expert") renderExpert();
-    if (state.role === "reviewer") renderStaffSecondary("reviewer");
+    if (state.page === "monitoring-plan" && ["customer_admin", "customer_owner", "expert", "reviewer"].includes(state.role)) renderMonitoringPlan();
+    else if (isCustomer()) renderCustomer();
+    else if (state.role === "expert") renderExpert();
+    else if (state.role === "reviewer") renderStaffSecondary("reviewer");
     if (state.role === "ops") renderOps();
     if (state.role === "sales") renderSales();
     if (["importer", "verifier", "supplier"].includes(state.role)) renderExternalRole();
     if (["support", "platform_admin"].includes(state.role)) renderPlatformRole();
     if (isCustomer()) syncCustomerUrl();
     if (typeof syncServiceOverview === "function") syncServiceOverview();
+    if (window.LuminoAgentRuntime?.renderAgentRuntime) window.LuminoAgentRuntime.renderAgentRuntime();
     const settingsLabel = state.page === "org-settings"
       ? settingsNavItems.find(([id]) => id === state.settingsSection)?.[1]
       : null;

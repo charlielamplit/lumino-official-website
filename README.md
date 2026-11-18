@@ -41,12 +41,12 @@
 
 | 页面 | 文件 |
 |---|---|
-| 首页 | `Lumino 官网.dc.html` |
-| 平台 | `Lumino 平台.dc.html` |
-| CBAM 指南 | `Lumino CBAM 指南.dc.html` |
-| 指南文章 | `Lumino 指南文章.dc.html` |
-| 关于 | `Lumino 关于.dc.html` |
-| 联系 | `Lumino 联系.dc.html` |
+| 首页 | `home.html` |
+| 平台 | `platform.html` |
+| CBAM 指南 | `guides/cbam.html` |
+| 指南文章 | `guides/article.html` |
+| 关于 | `about.html` |
+| 联系 | `contact.html` |
 
 行业知识库位于 `knowledge/index.html`。公开服务页使用同一服务内容契约，并与 Portal 服务注册表执行契约测试：
 
@@ -75,18 +75,21 @@
 
 ## 本地预览
 
-`.dc.html` 需要经 HTTP 提供（`file://` 下 `fetch` 会被 CORS 拦截）：
+`.dc.html` 需要经 HTTP 提供（`file://` 下 `fetch` 会被 CORS 拦截）。普通静态文件可使用 Python：
 
 ```bash
 python3 -m http.server 4173 --bind 127.0.0.1
 # 打开 http://127.0.0.1:4173/
+# Calculator 的原始文件路径为 http://127.0.0.1:4173/apps/site/calculator/
 ```
 
-需要同时验证 Advisor、知识库等 Serverless API 时，使用仓库内的本地预览服务器：
+需要验证 `/calculator`、`/portal` 等短路径或 Advisor、知识库等 Serverless API 时，必须使用仓库内的本地预览服务器。普通 Python 静态服务器不会读取 `vercel.json`，访问 `/calculator/` 只会显示目录列表：
 
 ```bash
 node scripts/local-site-server.mjs 4174
 # 打开 http://127.0.0.1:4174/site
+# Calculator: http://127.0.0.1:4174/calculator/
+# Portal:     http://127.0.0.1:4174/portal/
 ```
 
 该服务器只监听 `127.0.0.1`，会读取本地 `.env` 供 API 使用，但不会把隐藏文件作为静态资源公开。

@@ -148,6 +148,6 @@ Lumino 面向企业和专业用户，不以未成年人为目标。请勿通过�
 个人信息处理主体：上海铄垣环保科技有限公司  
 产品：Lumino  
 邮箱：contact@lumino.tech  
-官网联系页：`/apps/site/Lumino 联系.dc.html`
+官网联系页：`/apps/site/contact.html`
 
 公司注册地址、办公地址和适用的投诉渠道应在正式发布前由公司确认，并纳入对外版本。

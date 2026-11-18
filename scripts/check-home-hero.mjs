@@ -1,6 +1,6 @@
 const cdpPort = process.argv[2] || '9223';
 const origin = process.argv[3] || 'http://127.0.0.1:4173';
-const path = '/apps/site/Lumino%20%E5%AE%98%E7%BD%91.dc.html';
+const path = '/apps/site/home.html';
 
 const target = await fetch(`http://127.0.0.1:${cdpPort}/json/new?about:blank`, { method: 'PUT' }).then(response => response.json());
 const socket = new WebSocket(target.webSocketDebuggerUrl);

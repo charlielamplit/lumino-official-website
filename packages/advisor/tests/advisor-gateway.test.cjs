@@ -148,6 +148,7 @@ test("generateGroundedAnswer maps gateway 401/429/500 and does not send store:fa
     mode: process.env.ADVISOR_OPENAI_API_MODE,
     luna: process.env.ADVISOR_MODEL_LUNA,
     sol: process.env.ADVISOR_MODEL_SOL,
+    sol: process.env.ADVISOR_MODEL_SOL,
     enabled: process.env.ADVISOR_MODEL_ENABLED,
   };
   process.env.ADVISOR_OPENAI_API_KEY = "sk-test";
@@ -271,13 +272,15 @@ test("generateGeneralAnswer uses model capability when no published source match
   process.env.ADVISOR_OPENAI_BASE_URL = "https://aiberm.com/v1";
   process.env.ADVISOR_OPENAI_API_MODE = "chat";
   process.env.ADVISOR_MODEL_LUNA = "luna-general-mock";
+  process.env.ADVISOR_MODEL_SOL = "sol-general-mock";
   process.env.ADVISOR_MODEL_ENABLED = "1";
   const originalFetch = globalThis.fetch;
   try {
     globalThis.fetch = async (_url, init) => {
       const body = JSON.parse(init.body);
-      assert.equal(body.model, "luna-general-mock");
+      assert.equal(body.model, "sol-general-mock");
       assert.equal(body.store, undefined);
+      assert.equal(body.max_tokens, 2400);
       const system = body.messages[0].content;
       const user = body.messages[1].content;
       assert.match(system, /运用自身能力直接回答/);
@@ -311,7 +314,7 @@ test("generateGeneralAnswer uses model capability when no published source match
     });
     assert.equal(output.answer_mode, "general_model");
     assert.equal(output.sources.length, 0);
-    assert.equal(output.runtime_model.id, "luna-general-mock");
+    assert.equal(output.runtime_model.id, "sol-general-mock");
     assert.equal(output.service_matches[0]?.service_id, "cbam");
     assert.match(output.answer, /2026-11-09/);
   } finally {
@@ -321,6 +324,7 @@ test("generateGeneralAnswer uses model capability when no published source match
       ADVISOR_OPENAI_BASE_URL: previous.base,
       ADVISOR_OPENAI_API_MODE: previous.mode,
       ADVISOR_MODEL_LUNA: previous.luna,
+      ADVISOR_MODEL_SOL: previous.sol,
       ADVISOR_MODEL_ENABLED: previous.enabled,
     })) {
       if (value == null) delete process.env[key];

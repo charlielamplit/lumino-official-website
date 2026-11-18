@@ -1,0 +1,279 @@
+{
+  "generatedAt": "2026-11-12T17:17:09.138Z",
+  "origin": "http://127.0.0.1:4174",
+  "widths": {
+    "390": {
+      "focus": {
+        "focusEntered": true,
+        "focusTrapped": true,
+        "focusReturned": true,
+        "width": 390
+      },
+      "workflow": {
+        "p06": "done",
+        "p07": "done",
+        "p08": "done",
+        "packageStatus": "PACKAGE_READY",
+        "runStatus": "CURRENT",
+        "approvalStatus": "APPROVED",
+        "reviewStatus": "REVIEWED",
+        "horizontalOverflow": false,
+        "viewportWidth": 390,
+        "scrollWidth": 390,
+        "overflowOffenders": [
+          {
+            "tag": "ASIDE",
+            "className": "sidebar",
+            "left": -273,
+            "right": -13,
+            "width": 260
+          },
+          {
+            "tag": "DIV",
+            "className": "sidebar-channel",
+            "left": -261,
+            "right": -26,
+            "width": 235
+          },
+          {
+            "tag": "P",
+            "className": "sidebar-channel__eyebrow",
+            "left": -251,
+            "right": -36,
+            "width": 215
+          },
+          {
+            "tag": "STRONG",
+            "className": "",
+            "left": -251,
+            "right": -36,
+            "width": 215
+          },
+          {
+            "tag": "NAV",
+            "className": "",
+            "left": -261,
+            "right": -26,
+            "width": 235
+          },
+          {
+            "tag": "BUTTON",
+            "className": "nav-item ",
+            "left": -261,
+            "right": -26,
+            "width": 235
+          },
+          {
+            "tag": "SPAN",
+            "className": "nav-icon",
+            "left": -249,
+            "right": -233,
+            "width": 16
+          },
+          {
+            "tag": "SPAN",
+            "className": "",
+            "left": -223,
+            "right": -167,
+            "width": 56
+          },
+          {
+            "tag": "SPAN",
+            "className": "nav-badge",
+            "left": -58,
+            "right": -38,
+            "width": 20
+          },
+          {
+            "tag": "BUTTON",
+            "className": "nav-item ",
+            "left": -261,
+            "right": -26,
+            "width": 235
+          },
+          {
+            "tag": "SPAN",
+            "className": "nav-icon",
+            "left": -249,
+            "right": -233,
+            "width": 16
+          },
+          {
+            "tag": "SPAN",
+            "className": "",
+            "left": -223,
+            "right": -167,
+            "width": 56
+          }
+        ],
+        "minTouchTarget": 44,
+        "p06Sources": {
+          "available": 3,
+          "unbound": 0,
+          "overclaim": false,
+          "drawerOpened": true
+        },
+        "p08Sources": {
+          "available": 3,
+          "unbound": 0,
+          "overclaim": false,
+          "drawerOpened": true
+        }
+      }
+    },
+    "768": {
+      "focus": {
+        "focusEntered": true,
+        "focusTrapped": true,
+        "focusReturned": true,
+        "width": 768
+      },
+      "workflow": {
+        "p06": "done",
+        "p07": "done",
+        "p08": "done",
+        "packageStatus": "PACKAGE_READY",
+        "runStatus": "CURRENT",
+        "approvalStatus": "APPROVED",
+        "reviewStatus": "REVIEWED",
+        "horizontalOverflow": false,
+        "viewportWidth": 768,
+        "scrollWidth": 768,
+        "overflowOffenders": [
+          {
+            "tag": "ASIDE",
+            "className": "sidebar",
+            "left": -273,
+            "right": -13,
+            "width": 260
+          },
+          {
+            "tag": "DIV",
+            "className": "sidebar-channel",
+            "left": -261,
+            "right": -26,
+            "width": 235
+          },
+          {
+            "tag": "P",
+            "className": "sidebar-channel__eyebrow",
+            "left": -251,
+            "right": -36,
+            "width": 215
+          },
+          {
+            "tag": "STRONG",
+            "className": "",
+            "left": -251,
+            "right": -36,
+            "width": 215
+          },
+          {
+            "tag": "NAV",
+            "className": "",
+            "left": -261,
+            "right": -26,
+            "width": 235
+          },
+          {
+            "tag": "BUTTON",
+            "className": "nav-item ",
+            "left": -261,
+            "right": -26,
+            "width": 235
+          },
+          {
+            "tag": "SPAN",
+            "className": "nav-icon",
+            "left": -249,
+            "right": -233,
+            "width": 16
+          },
+          {
+            "tag": "SPAN",
+            "className": "",
+            "left": -223,
+            "right": -167,
+            "width": 56
+          },
+          {
+            "tag": "SPAN",
+            "className": "nav-badge",
+            "left": -58,
+            "right": -38,
+            "width": 20
+          },
+          {
+            "tag": "BUTTON",
+            "className": "nav-item ",
+            "left": -261,
+            "right": -26,
+            "width": 235
+          },
+          {
+            "tag": "SPAN",
+            "className": "nav-icon",
+            "left": -249,
+            "right": -233,
+            "width": 16
+          },
+          {
+            "tag": "SPAN",
+            "className": "",
+            "left": -223,
+            "right": -167,
+            "width": 56
+          }
+        ],
+        "minTouchTarget": 44,
+        "p06Sources": {
+          "available": 3,
+          "unbound": 0,
+          "overclaim": false,
+          "drawerOpened": true
+        },
+        "p08Sources": {
+          "available": 3,
+          "unbound": 0,
+          "overclaim": false,
+          "drawerOpened": true
+        }
+      }
+    },
+    "1440": {
+      "focus": {
+        "focusEntered": true,
+        "focusTrapped": true,
+        "focusReturned": true,
+        "width": 1440
+      },
+      "workflow": {
+        "p06": "done",
+        "p07": "done",
+        "p08": "done",
+        "packageStatus": "PACKAGE_READY",
+        "runStatus": "CURRENT",
+        "approvalStatus": "APPROVED",
+        "reviewStatus": "REVIEWED",
+        "horizontalOverflow": false,
+        "viewportWidth": 1440,
+        "scrollWidth": 1440,
+        "overflowOffenders": [],
+        "minTouchTarget": 26,
+        "p06Sources": {
+          "available": 3,
+          "unbound": 0,
+          "overclaim": false,
+          "drawerOpened": true
+        },
+        "p08Sources": {
+          "available": 3,
+          "unbound": 0,
+          "overclaim": false,
+          "drawerOpened": true
+        }
+      }
+    }
+  },
+  "issues": []
+}

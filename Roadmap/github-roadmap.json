@@ -469,7 +469,7 @@
       "labels": [
         "Roadmap",
         "type/feature",
-        "status/ready",
+        "status/in-progress",
         "priority/P0",
         "area/data-assets",
         "area/platform",
@@ -790,7 +790,7 @@
       "labels": [
         "Roadmap",
         "type/epic",
-        "status/backlog",
+        "status/in-progress",
         "priority/P1",
         "area/platform",
         "scope/production"
@@ -819,7 +819,7 @@
       "labels": [
         "Roadmap",
         "type/feature",
-        "status/backlog",
+        "status/in-progress",
         "priority/P1",
         "area/platform",
         "scope/production"
@@ -836,7 +836,8 @@
         "审计记录覆盖登录、授权和敏感读取"
       ],
       "references": [
-        "docs/portal-next-phase-plan.md"
+        "docs/portal-next-phase-plan.md",
+        "docs/contracts/platform-authority-boundary-v1.md"
       ]
     },
     {

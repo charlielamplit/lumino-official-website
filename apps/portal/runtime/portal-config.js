@@ -24,11 +24,11 @@
     },
     expert: {
       name: "王晨", initial: "王", title: "CBAM 制备专家", company: "Lumino 服务团队",
-      nav: [["queue", "◉", "判断队列", "12"], ["case-workspace", "▣", "案件工作台"], ["findings", "!", "Findings", "7"]]
+      nav: [["queue", "◉", "判断队列", "12"], ["monitoring-plan", "✓", "监测计划", "1"], ["case-workspace", "▣", "案件工作台"], ["findings", "!", "Findings", "7"]]
     },
     reviewer: {
       name: "李娜", initial: "李", title: "独立复核专家", company: "Lumino 复核中心",
-      nav: [["review", "✓", "复核与锁定", "3"]]
+      nav: [["review", "✓", "复核与锁定", "3"], ["monitoring-plan", "□", "监测计划", "1"]]
     },
     ops: {
       name: "林晓", initial: "林", title: "客户运营", company: "Lumino 项目中心",
@@ -82,8 +82,8 @@
       entryPage: "work", roles: ["customer_admin", "customer_owner", "customer_contrib", "customer_approver"],
       primaryAction: { default: "继续当前工作", customer_contrib: "查看分配给我", customer_approver: "处理待审批事项" }, consultation: { enabled: false },
       nav: [
-        ["work", "◉", "当前工作", "1"], ["roadmap", "→", "全年流程"], ["products", "◇", "产品与工厂"],
-        ["data", "▦", "季度数据", "2"], ["results", "∿", "计算与成本", "2"], ["deliverables", "□", "报告与交付"],
+        ["work", "◉", "当前工作", "1"], ["annual-project", "○", "年度项目"], ["products", "◇", "产品与设施"],
+        ["data-calculation", "▦", "数据与核算", "2"], ["deliverables", "□", "报告与交付"],
       ],
     },
     pcf: {
@@ -233,22 +233,34 @@
 
   const workflowEngine = new window.LuminoWorkflow.WorkflowEngine({ storage: window.localStorage });
   workflowEngine.seed([
+    { id: "AUTH-CBAM-2027-001", type: "serviceActivation", status: "PENDING_CUSTOMER_CONFIRMATION", owner: "周岚", year: "2027", scope: "华星钢铁 CBAM 2027 服务启动", metadata: { serviceId: "cbam", legalEntity: "华星钢铁有限公司", modules: ["年度范围", "季度数据", "计算与报告"], customerOwner: "周岚", luminoOwner: "林晓", luminoApprovedBy: "王晨", luminoApprovedAt: "2026-11-13T09:30:00+08:00", prototypeOnly: true } },
+    { id: "SO-CBAM-2027-ONBOARDING", type: "serviceOrder", status: "ACTIVE", owner: "周岚", year: "2027", scope: "CBAM 2027 开通期演示", metadata: { serviceId: "cbam", prototypeOnly: true } },
+    { id: "CASE-CBAM-2027", type: "serviceCase", status: "SCOPING", owner: "周岚", year: "2027", scope: "CBAM 2027 年度项目", metadata: { serviceId: "cbam", wizardStep: 1, targetCloseDate: "2028-03-31", reviewer: "李娜", prototypeOnly: true } },
+    { id: "SCOPE-CBAM-2027", type: "annualInclusion", status: "PROPOSED", owner: "周岚", year: "2027", scope: "2027 年度范围", metadata: { serviceId: "cbam", facilityIds: ["FAC-SH-01", "FAC-JS-02"], prototypeOnly: true } },
+    { id: "MP-CBAM-2027-R1", type: "formalArtifact", status: "DRAFT", owner: "王晨", year: "2027", scope: "2027 年度监测计划", metadata: { serviceId: "cbam", artifactType: "MONITORING_PLAN", collectionPeriod: "Q1", dataItems: [{ code: "E-01", name: "外购电力", owner: "孙悦" }, { code: "E-02", name: "天然气", owner: "孙悦" }, { code: "P-01", name: "产量", owner: "刘倩" }, { code: "C-01", name: "焦炭消耗", owner: "刘倩" }, { code: "PR-01", name: "外购钢坯前体", owner: "周岚" }, { code: "S-01", name: "发运数量", owner: "周岚" }, { code: "F-01", name: "设施边界", owner: "周岚" }, { code: "D-01", name: "默认值使用记录", owner: "周岚" }], prototypeOnly: true } },
     { id: "PRD-HRC-01", type: "productMaster", status: "ACTIVE", owner: "周岚", scope: "热轧非合金钢卷" },
     { id: "CN-HRC-72083900", type: "cnDecision", status: "UNDER_REVIEW", owner: "关务负责人", scope: "PRD-HRC-01" },
+    { id: "CASE-CBAM-2026", type: "serviceCase", status: "COLLECTING", owner: "周岚", year: "2026", scope: "CBAM 2026 年度项目", metadata: { serviceId: "cbam", targetCloseDate: "2027-03-31", currentPeriod: "Q3", reviewer: "李娜", members: [{ name: "周岚", role: "客户确认" }, { name: "王晨", role: "专家制备" }, { name: "李娜", role: "独立复核" }, { name: "林晓", role: "服务协调" }] } },
+    { id: "SCOPE-CBAM-2026", type: "annualInclusion", status: "IN_SCOPE", owner: "周岚", year: "2026", scope: "2026 年度范围", revision: 3, metadata: { serviceId: "cbam", included: ["HRC", "HDG"], excluded: ["CRC"], facilityIds: ["FAC-SH-01", "FAC-JS-02"], masterDataRevision: 3 } },
+    { id: "MP-CBAM-2026-R3", type: "formalArtifact", status: "APPROVED", owner: "王晨", year: "2026", scope: "2026 年度监测计划", revision: 3, metadata: { serviceId: "cbam", artifactType: "MONITORING_PLAN" } },
+    { id: "CASE-CBAM-2025", type: "serviceCase", status: "CLOSED", owner: "周岚", year: "2025", scope: "CBAM 2025 年度项目", metadata: { serviceId: "cbam", targetCloseDate: "2026-03-28", currentPeriod: "Q4", deliveryStatusLabel: "年度交付已回执", members: [{ name: "周岚", role: "客户确认" }, { name: "王晨", role: "专家制备" }, { name: "李娜", role: "独立复核" }, { name: "林晓", role: "服务协调" }] } },
+    { id: "SCOPE-CBAM-2025", type: "annualInclusion", status: "LOCKED", owner: "周岚", year: "2025", scope: "2025 年度范围", revision: 4, metadata: { serviceId: "cbam", included: ["HRC", "HDG"], excluded: ["CRC"], facilityIds: ["FAC-SH-01", "FAC-JS-02"], masterDataRevision: 4 } },
+    { id: "MP-CBAM-2025-R4", type: "formalArtifact", status: "LOCKED", owner: "王晨", year: "2025", scope: "2025 年度监测计划", revision: 4, metadata: { serviceId: "cbam", artifactType: "MONITORING_PLAN" } },
     { id: "SHP-2026-Q3-EUROFAB", type: "shipment", status: "NEEDS_REVIEW", owner: "外贸负责人", year: "2026", quarter: "Q3", scope: "EuroFab S.r.l." },
     { id: "EVD-HX-POWER-2026Q3", type: "evidence", status: "ACCEPTED", owner: "周岚", year: "2026", quarter: "Q3", scope: "上海一厂电力账单", metadata: { assetId: "EVD-HX-POWER-2026Q3", activityAssetId: "REC-HX-POWER-2026Q3" } },
     { id: "FACT-2026-Q3-GAS", type: "fact", status: "MISSING", owner: "周岚", year: "2026", quarter: "Q3", scope: "江苏二厂天然气用量", metadata: { facilityAssetId: "FAC-JS-02" } },
     { id: "RUN-04", type: "calculationRun", status: "CURRENT", owner: "王晨", year: "2026", quarter: "Q3", dependsOn: ["FACT-2026-Q3-GAS"], metadata: { rulepack: "EU-CBAM-2026.3" } },
     { id: "FND-PRE-004", type: "finding", status: "OPEN", owner: "王晨", year: "2026", quarter: "Q3", metadata: { source: "INTERNAL", severity: "HIGH" } },
-    { id: "PKG-2026-Q3-NORDWERK", type: "quarterlyPackage", status: "COLLECTING", owner: "周岚", year: "2026", quarter: "Q3", scope: "NordWerk GmbH" },
+    { id: "PKG-2026-Q3-NORDWERK", type: "quarterlyPackage", status: "COLLECTING", owner: "周岚", year: "2026", quarter: "Q3", scope: "NordWerk GmbH", metadata: { deadline: "2026-10-31" } },
     { id: "OER-2026-SH01-R1", type: "formalArtifact", status: "DRAFT", owner: "王晨", year: "2026", scope: "上海一厂", metadata: { artifactType: "OPERATOR_EMISSIONS_REPORT", facilityAssetId: "FAC-SH-01" } },
     { id: "VER-2026-SH01", type: "verification", status: "NOT_STARTED", owner: "Veritas Climate GmbH", year: "2026", scope: "上海一厂", metadata: { facilityAssetId: "FAC-SH-01" } },
     { id: "IDS-2026-NORDWERK-R1", type: "formalArtifact", status: "DRAFT", owner: "林晓", year: "2026", scope: "NordWerk GmbH", metadata: { artifactType: "IMPORTER_DECLARATION_SUPPORT" } },
     { id: "SO-2026-018-R2", type: "serviceOrder", status: "ACTIVE", owner: "林晓", year: "2026", scope: "华星钢铁 CBAM 全流程服务" },
     { id: "WP-CALC-026", type: "workPackage", status: "IN_PROGRESS", owner: "王晨", year: "2026", scope: "计算与报告制备" },
     { id: "HO-2026-043", type: "handoff", status: "SENT", owner: "林晓", year: "2026", scope: "商务 → 运营" },
-    { id: "AP-2026-014", type: "approval", status: "IN_REVIEW", owner: "赵海峰", year: "2026", scope: "默认值并行路径" },
+    { id: "AP-2026-014", type: "approval", status: "IN_REVIEW", owner: "赵海峰", year: "2026", scope: "2026 Q3 CBAM 季度包" },
   ].map((object) => ({ ...object, metadata: { serviceId: "cbam", ...(object.metadata || {}) } })));
+  const cbamGoldenPath = new window.LuminoCbamGoldenPath.CbamGoldenPath({ workflow: workflowEngine });
   workflowEngine.seed([
     { id: "PCF-2026-001", type: "serviceCase", status: "SCOPING", owner: "周岚", year: "2026", scope: "热轧非合金钢卷 · 从摇篮到大门", metadata: {
       serviceId: "pcf",
@@ -453,6 +465,17 @@
     importedTrial, uploadAdded: false, factConfirmed: false, outputConfirmed: false, findingResolved: false,
     yearCreated: false, deliveryExpanded: null, productAdded: false,
     configurationAdded: false, orgEditing: false, selectedProduct: "hrc",
+    /* roadStage: null = follow current stage; 0–4 = user-selected stage on 全年流程 */
+    roadStage: null,
+    /* prodDec: { p1|p2|p3: "in"|"out" } — 产品与工厂年度范围判定 */
+    prodDec: {},
+    cbamEntryMode: incoming.get("demoState") === "activation" ? "activation" : incoming.get("demoState") === "annual-project" ? "annual-project" : "active",
+    cbamProductView: "products", cbamDataView: "data",
+    /* Agent Runtime（原型 v3）— UI 态可恢复，业务完成状态始终从 WorkflowEngine 派生 */
+    agentOpen: false, agentDock: false, agentPb: "chat", agentAs: "client",
+    agentTab: "art", agentMode: "ask", agentMsgs: [], agentInput: "",
+    agentBusy: false, rtBusy: null, rtCur: {}, rtAns: {}, rtDone: {}, rtStarted: {}, agentLog: [],
+    agentSessions: {}, agentContext: null, agentContextKey: null,
     productYears: [], productCnCodes: [], questionHelpOpen: false, findingChoiceOpen: false, dataPathChoice: null,
     drawer: null, assetFacet: "attention", taskTab: "open", delivFilter: "all", dataCat: "all", dieselDone: false, settingsSection: "members", periodData: {}, productOverrides: {}, configurationDrafts: {}, facilities: [], invitedMembers: [], consultationRequests: [], publicLeads: [], selectedLeadId: null, leadsSource: "local", knowledgeArticles: [], selectedKnowledgeId: null, knowledgeSource: "local", knowledgeHydrated: false, actionBusy: false,
     pcfCalculationFailed: incoming.get("scenario") === "pcf-calculation-failed",

@@ -42,7 +42,7 @@ test("CN Code questions route to tools and never claim formal classification", (
     assert.deepEqual(response.links.map((item) => item.url), [
       "/calculator",
       "/knowledge/article?id=cbam-hs-cn-codes",
-      "/apps/site/Lumino%20联系.dc.html?serviceId=cbam&source=homepage-advisor&topic=cn-code"
+      "/apps/site/contact.html?serviceId=cbam&source=homepage-advisor&topic=cn-code"
     ]);
     assert.doesNotMatch(response.answer, /已确定|正式认定|你的编码是/);
   }

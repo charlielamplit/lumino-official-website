@@ -1,422 +1,2862 @@
 [
   {
-    "en": "Agglomerated iron ores and\nconcentrates, other than roasted iron pyrites",
-    "zh": "烧结铁矿及精矿（焙烧黄铁矿除外）"
+    "cnCode": "76011010",
+    "en": "Unwrought aluminium — Aluminium, not alloyed — Slabs",
+    "zh": "未锻轧铝；非合金铝；板坯"
   },
   {
-    "en": "Aluminium casks, drums, cans, boxes and similar containers (including rigid or collapsible tubular containers), for any material (other than compressed or liquefied gas), of a capacity not exceeding 300 litres, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment",
-    "zh": "铝制桶、罐、听、盒及类似容器（含刚性或可折叠管状容器），盛装除压缩或液化气体外的任何物料，容积不超过300升，不论是否衬里或隔热，未装机械或热力设备"
+    "cnCode": "76011090",
+    "en": "Unwrought aluminium — Aluminium, not alloyed — Other",
+    "zh": "未锻轧铝；非合金铝"
   },
   {
-    "en": "Aluminium containers for compressed or liquefied gas",
-    "zh": "盛装压缩或液化气体的铝制容器"
+    "cnCode": "76012030",
+    "en": "Unwrought aluminium — Aluminium alloys — Slabs",
+    "zh": "未锻轧铝；铝合金；板坯"
   },
   {
-    "en": "Aluminium foil (whether or not printed or backed with paper, paperboard, plastics or similar backing materials) of a thickness (excluding any backing) not exceeding 0,2 mm",
-    "zh": "铝箔（不论是否印刷或以纸、纸板、塑料等类似材料衬背），厚度（不含衬背）不超过0.2毫米"
+    "cnCode": "76012040",
+    "en": "Unwrought aluminium — Aluminium alloys — Billets",
+    "zh": "未锻轧铝；铝合金；方坯"
   },
   {
-    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm",
-    "zh": "铝板、片、带，厚度超过0.2毫米"
+    "cnCode": "76012080",
+    "en": "Unwrought aluminium — Aluminium alloys — Other",
+    "zh": "未锻轧铝；铝合金"
   },
   {
-    "en": "Aluminium powders and flakes",
-    "zh": "铝粉及铝片"
+    "cnCode": "76031000",
+    "en": "Aluminium powders and flakes — Powders of non-lamellar structure",
+    "zh": "铝粉及铝片；非片状粉末"
   },
   {
+    "cnCode": "76032000",
+    "en": "Aluminium powders and flakes — Powders of lamellar structure; flakes",
+    "zh": "铝粉及铝片；片状粉末及铝片"
+  },
+  {
+    "cnCode": "76041010",
+    "en": "Aluminium bars, rods and profiles — Of aluminium, not alloyed — Bars and rods — Other",
+    "zh": "铝条、杆及型材；非合金铝；条、杆"
+  },
+  {
+    "cnCode": "76041090",
+    "en": "Aluminium bars, rods and profiles — Of aluminium, not alloyed — Profiles — Other",
+    "zh": "铝条、杆及型材；非合金铝；型材"
+  },
+  {
+    "cnCode": "76042100",
+    "en": "Aluminium bars, rods and profiles — Of aluminium alloys — Hollow profiles",
+    "zh": "铝条、杆及型材；铝合金；空心型材"
+  },
+  {
+    "cnCode": "76042910",
+    "en": "Aluminium bars, rods and profiles — Of aluminium alloys — Other — Bars and rods",
+    "zh": "铝条、杆及型材；铝合金；条、杆"
+  },
+  {
+    "cnCode": "76042990",
+    "en": "Aluminium bars, rods and profiles — Of aluminium alloys — Other — Profiles — Other",
+    "zh": "铝条、杆及型材；铝合金；型材"
+  },
+  {
+    "cnCode": "76051100",
+    "en": "Aluminium wire — Of aluminium, not alloyed — Of which the maximum cross-sectional dimension exceeds 7 mm",
+    "zh": "铝丝；非合金铝；最大截面尺寸＞7mm"
+  },
+  {
+    "cnCode": "76051900",
+    "en": "Aluminium wire — Of aluminium, not alloyed — Other",
+    "zh": "铝丝；非合金铝"
+  },
+  {
+    "cnCode": "76052100",
+    "en": "Aluminium wire — Of aluminium alloys — Of which the maximum cross-sectional dimension exceeds 7 mm — Other",
+    "zh": "铝丝；铝合金；最大截面尺寸＞7mm"
+  },
+  {
+    "cnCode": "76052900",
+    "en": "Aluminium wire — Of aluminium alloys — Other",
+    "zh": "铝丝；铝合金"
+  },
+  {
+    "cnCode": "76061130",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Rectangular (including square) — Of aluminium, not alloyed — Aluminium Composite Panel",
+    "zh": "铝板、片及带，厚度＞0.2mm；矩形（含正方形）；非合金铝（76061130）"
+  },
+  {
+    "cnCode": "76061150",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Rectangular (including square) — Of aluminium, not alloyed — Other — Painted, varnished or coated with plastics — Other",
+    "zh": "铝板、片及带，厚度＞0.2mm；矩形（含正方形）；非合金铝（76061150）"
+  },
+  {
+    "cnCode": "76061191",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Rectangular (including square) — Of aluminium, not alloyed — Other — Other, of a thickness of — Less than 3 mm — Other",
+    "zh": "铝板、片及带，厚度＞0.2mm；矩形（含正方形）；非合金铝（76061191）"
+  },
+  {
+    "cnCode": "76061193",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Rectangular (including square) — Of aluminium, not alloyed — Other — Other, of a thickness of — Not less than 3 mm but less than 6 mm — Other",
+    "zh": "铝板、片及带，厚度＞0.2mm；矩形（含正方形）；非合金铝（76061193）"
+  },
+  {
+    "cnCode": "76061199",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Rectangular (including square) — Of aluminium, not alloyed — Other — Other, of a thickness of — Not less than 6 mm — Other",
+    "zh": "铝板、片及带，厚度＞0.2mm；矩形（含正方形）；非合金铝（76061199）"
+  },
+  {
+    "cnCode": "76061211",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Rectangular (including square) — Of aluminium alloys — Beverage can body stock, end stock and tab stock — Beverage can body stock",
+    "zh": "铝板、片及带，厚度＞0.2mm；矩形（含正方形）；铝合金（76061211）"
+  },
+  {
+    "cnCode": "76061219",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Rectangular (including square) — Of aluminium alloys — Beverage can body stock, end stock and tab stock — Beverage can end stock and tab stock",
+    "zh": "铝板、片及带，厚度＞0.2mm；矩形（含正方形）；铝合金（76061219）"
+  },
+  {
+    "cnCode": "76061230",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Rectangular (including square) — Of aluminium alloys — Aluminium Composite Panel",
+    "zh": "铝板、片及带，厚度＞0.2mm；矩形（含正方形）；铝合金（76061230）"
+  },
+  {
+    "cnCode": "76061250",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Rectangular (including square) — Of aluminium alloys — Other — Painted, varnished or coated with plastics — Other — Not backed, without internal layers of other material — Other",
+    "zh": "铝板、片及带，厚度＞0.2mm；矩形（含正方形）；铝合金（76061250）"
+  },
+  {
+    "cnCode": "76061292",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Rectangular (including square) — Of aluminium alloys — Other — Other, of a thickness of — Less than 3 mm — Other — Not backed, without internal layers of other material — Other",
+    "zh": "铝板、片及带，厚度＞0.2mm；矩形（含正方形）；铝合金（76061292）"
+  },
+  {
+    "cnCode": "76061293",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Rectangular (including square) — Of aluminium alloys — Other — Other, of a thickness of — Not less than 3 mm but less than 6 mm — Other — Not backed, without internal layers of other material — Other",
+    "zh": "铝板、片及带，厚度＞0.2mm；矩形（含正方形）；铝合金（76061293）"
+  },
+  {
+    "cnCode": "76061299",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Rectangular (including square) — Of aluminium alloys — Other — Other, of a thickness of — Not less than 6 mm — Other — Not backed, without internal layers of other material — Other",
+    "zh": "铝板、片及带，厚度＞0.2mm；矩形（含正方形）；铝合金（76061299）"
+  },
+  {
+    "cnCode": "76069100",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Other — Of aluminium, not alloyed — Other",
+    "zh": "铝板、片及带，厚度＞0.2mm；非合金铝"
+  },
+  {
+    "cnCode": "76069200",
+    "en": "Aluminium plates, sheets and strip, of a thickness exceeding 0,2 mm — Other — Of aluminium alloys — Other — Not backed, without internal layers of other material,- in coils or in coiled strips, in cut-to-length sheets, or in the form of circles; of a thickness exceeding 0,2 mm but not exceeding 6 mm;- in plates, of a thickness exceeding 6 mm — Other",
+    "zh": "铝板、片及带，厚度＞0.2mm；铝合金"
+  },
+  {
+    "cnCode": "76071111",
+    "en": "Aluminium foil (whether or not printed or backed with paper, paperboard, plastics or similar backing materials) of a thickness (excluding any backing) not exceeding 0,2 mm — Not backed — Rolled but not further worked — Of a thickness of less than 0,021 mm — In rolls of a weight not exceeding 10 kg — Of a thickness of 0,007 mm or more but less than 0,021 mm — Other",
+    "zh": "铝箔，厚度≤0.2mm；其他（76071111）"
+  },
+  {
+    "cnCode": "76071119",
+    "en": "Aluminium foil (whether or not printed or backed with paper, paperboard, plastics or similar backing materials) of a thickness (excluding any backing) not exceeding 0,2 mm — Not backed — Rolled but not further worked — Of a thickness of less than 0,021 mm — Other",
+    "zh": "铝箔，厚度≤0.2mm；其他（76071119）"
+  },
+  {
+    "cnCode": "76071190",
+    "en": "Aluminium foil (whether or not printed or backed with paper, paperboard, plastics or similar backing materials) of a thickness (excluding any backing) not exceeding 0,2 mm — Not backed — Rolled but not further worked — Of a thickness of not less than 0,021 mm but not more than 0,2 mm — Other — Of a thickness of 0.2 mm, in coils or in coiled strips, in cut-to-length sheets, or in the form of circles — Without internal layers of other material — Other",
+    "zh": "铝箔，厚度≤0.2mm；其他（76071190）"
+  },
+  {
+    "cnCode": "76071910",
+    "en": "Aluminium foil (whether or not printed or backed with paper, paperboard, plastics or similar backing materials) of a thickness (excluding any backing) not exceeding 0,2 mm — Not backed — Other — Of a thickness of less than 0,021 mm — Of a thickness of 0,007 mm or more but less than 0,021 mm, in rolls of a weight not exceeding 10 kg, not further worked than rolled, embossed — Other",
+    "zh": "铝箔，厚度≤0.2mm；其他（76071910）"
+  },
+  {
+    "cnCode": "76071990",
+    "en": "Aluminium foil (whether or not printed or backed with paper, paperboard, plastics or similar backing materials) of a thickness (excluding any backing) not exceeding 0,2 mm — Not backed — Other — Of a thickness of not less than 0,021 mm but not more than 0,2 mm — Of a thickness of 0.2 mm, in coils or in coiled strips, in cut-to-length sheets, or in the form of circles — Without internal layers of other material — Other",
+    "zh": "铝箔，厚度≤0.2mm；其他（76071990）"
+  },
+  {
+    "cnCode": "76072010",
+    "en": "Aluminium foil (whether or not printed or backed with paper, paperboard, plastics or similar backing materials) of a thickness (excluding any backing) not exceeding 0,2 mm — Backed — Of a thickness (excluding any backing) of less than 0,021 mm",
+    "zh": "铝箔，厚度≤0.2mm（76072010）"
+  },
+  {
+    "cnCode": "76072091",
+    "en": "Aluminium foil (whether or not printed or backed with paper, paperboard, plastics or similar backing materials) of a thickness (excluding any backing) not exceeding 0,2 mm — Backed — Of a thickness (excluding any backing) of not less than 0,021 mm but not more than 0,2 mm — Aluminium Composite Panel",
+    "zh": "铝箔，厚度≤0.2mm（76072091）"
+  },
+  {
+    "cnCode": "76072099",
+    "en": "Aluminium foil (whether or not printed or backed with paper, paperboard, plastics or similar backing materials) of a thickness (excluding any backing) not exceeding 0,2 mm — Backed — Of a thickness (excluding any backing) of not less than 0,021 mm but not more than 0,2 mm — Other",
+    "zh": "铝箔，厚度≤0.2mm；其他（76072099）"
+  },
+  {
+    "cnCode": "76081000",
+    "en": "Aluminium tubes and pipes — Of aluminium, not alloyed — Other",
+    "zh": "铝管；非合金铝"
+  },
+  {
+    "cnCode": "76082020",
+    "en": "Aluminium tubes and pipes — Of aluminium alloys — Welded — Other",
+    "zh": "铝管；铝合金；焊接"
+  },
+  {
+    "cnCode": "76082081",
+    "en": "Aluminium tubes and pipes — Of aluminium alloys — Other — Not further worked than extruded — Other",
+    "zh": "铝管；铝合金（76082081）"
+  },
+  {
+    "cnCode": "76082089",
+    "en": "Aluminium tubes and pipes — Of aluminium alloys — Other",
+    "zh": "铝管；铝合金（76082089）"
+  },
+  {
+    "cnCode": "76090000",
+    "en": "Aluminium tube or pipe fittings (for example, couplings, elbows, sleeves) — Other",
+    "zh": "铝制管子附件；其他"
+  },
+  {
+    "cnCode": "76101000",
+    "en": "Aluminium structures (excluding prefabricated buildings of heading 9406) and parts of structures (for example, bridges and bridge-sections, towers, lattice masts, roofs, roofing frameworks, doors and windows and their frames and thresholds for doors, balustrades, pillars and columns); aluminium plates, rods, profiles, tubes and the like, prepared for use in structures — Doors, windows and their frames and thresholds for doors",
+    "zh": "铝制结构体及其部件"
+  },
+  {
+    "cnCode": "76109010",
+    "en": "Aluminium structures (excluding prefabricated buildings of heading 9406) and parts of structures (for example, bridges and bridge-sections, towers, lattice masts, roofs, roofing frameworks, doors and windows and their frames and thresholds for doors, balustrades, pillars and columns); aluminium plates, rods, profiles, tubes and the like, prepared for use in structures — Other — Bridges and bridge-sections, towers and lattice masts",
+    "zh": "铝制结构体及其部件；其他（76109010）"
+  },
+  {
+    "cnCode": "76109090",
+    "en": "Aluminium structures (excluding prefabricated buildings of heading 9406) and parts of structures (for example, bridges and bridge-sections, towers, lattice masts, roofs, roofing frameworks, doors and windows and their frames and thresholds for doors, balustrades, pillars and columns); aluminium plates, rods, profiles, tubes and the like, prepared for use in structures — Other",
+    "zh": "铝制结构体及其部件；其他（76109090）"
+  },
+  {
+    "cnCode": "76110000",
     "en": "Aluminium reservoirs, tanks, vats and similar containers, for any material (other than compressed or liquefied gas), of a capacity exceeding 300 litres, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment",
-    "zh": "铝制贮器、罐、桶及类似容器，盛装除压缩或液化气体外的任何物料，容积超过300升，不论是否衬里或隔热，未装机械或热力设备"
+    "zh": "铝制贮罐（容积＞300升）"
   },
   {
-    "en": "Aluminium tube or pipe fittings (for example, couplings, elbows, sleeves)",
-    "zh": "铝制管子附件（例如接头、弯头、套筒）"
+    "cnCode": "76121000",
+    "en": "Aluminium casks, drums, cans, boxes and similar containers (including rigid or collapsible tubular containers), for any material (other than compressed or liquefied gas), of a capacity not exceeding 300 litres, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — Collapsible tubular containers",
+    "zh": "铝制容器（容积≤300升）"
   },
   {
-    "en": "Aluminium tubes and pipes",
-    "zh": "铝管"
+    "cnCode": "76129020",
+    "en": "Aluminium casks, drums, cans, boxes and similar containers (including rigid or collapsible tubular containers), for any material (other than compressed or liquefied gas), of a capacity not exceeding 300 litres, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — Other — Containers of a kind used for aerosols",
+    "zh": "铝制容器（容积≤300升）；其他（76129020）"
   },
   {
-    "en": "Aluminium wire",
-    "zh": "铝丝"
+    "cnCode": "76129030",
+    "en": "Aluminium casks, drums, cans, boxes and similar containers (including rigid or collapsible tubular containers), for any material (other than compressed or liquefied gas), of a capacity not exceeding 300 litres, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — Other — Manufactured from foil of a thickness not exceeding 0,2 mm",
+    "zh": "铝制容器（容积≤300升）；其他（76129030）"
   },
   {
-    "en": "Aluminous cement",
-    "zh": "矾土水泥"
+    "cnCode": "76129080",
+    "en": "Aluminium casks, drums, cans, boxes and similar containers (including rigid or collapsible tubular containers), for any material (other than compressed or liquefied gas), of a capacity not exceeding 300 litres, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — Other",
+    "zh": "铝制容器（容积≤300升）；其他（76129080）"
   },
   {
-    "en": "Ammonia, anhydrous or in aqueous solution",
-    "zh": "氨，无水或氨水溶液"
+    "cnCode": "76130000",
+    "en": "Aluminium containers for compressed or liquefied gas — Other",
+    "zh": "铝制气体容器；其他"
   },
   {
-    "en": "Ammonium dihydrogenorthophosphate (monoammonium phosphate) and mixtures thereof with diammonium hydrogenorthophosphate (diammonium phosphate)",
-    "zh": "磷酸二氢铵（磷酸一铵）及其与磷酸氢二铵（磷酸二铵）的混合物"
+    "cnCode": "76141000",
+    "en": "Stranded wire, cables, plaited bands and the like, of aluminium, not electrically insulated — With steel core",
+    "zh": "铝制绞股线、缆、编带等"
   },
   {
-    "en": "Ammonium nitrate, whether or not in aqueous solution",
-    "zh": "硝酸铵，不论是否水溶液"
+    "cnCode": "76149000",
+    "en": "Stranded wire, cables, plaited bands and the like, of aluminium, not electrically insulated — Other",
+    "zh": "铝制绞股线、缆、编带等；其他"
   },
   {
-    "en": "Ammonium sulphate",
-    "zh": "硫酸铵"
+    "cnCode": "76161000",
+    "en": "Other articles of aluminium — Nails, tacks, staples (other than those of heading 8305), screws, bolts, nuts, screw hooks, rivets, cotters, cotter pins, washers and similar articles — Other",
+    "zh": "其他铝制品；其他（76161000）"
   },
   {
-    "en": "Articles of iron or steel wire",
-    "zh": "钢铁丝制品"
+    "cnCode": "76169100",
+    "en": "Other articles of aluminium — Other — Cloth, grill, netting and fencing, of aluminium wire",
+    "zh": "其他铝制品；其他（76169100）"
   },
   {
-    "en": "Bars and rods",
-    "zh": "条、杆"
+    "cnCode": "76169910",
+    "en": "Other articles of aluminium — Other — Cast — Other",
+    "zh": "其他铝制品；其他（76169910）"
   },
   {
-    "en": "Bars, rods, and other long products",
-    "zh": "条、杆及其他长材"
+    "cnCode": "76169990",
+    "en": "Other articles of aluminium — Other",
+    "zh": "其他铝制品；其他（76169990）"
   },
   {
-    "en": "Beams, billets, rails and tubes",
-    "zh": "梁、钢坯、轨及管"
+    "cnCode": "2507008080",
+    "en": "Kaolin and other kaolinic clays, whether or not calcined — Other kaolinic clays — Other",
+    "zh": "煅烧黏土"
   },
   {
-    "en": "Beams, billets, rails and tubes -- alloying elements group 0",
-    "zh": "梁、钢坯、轨及管——合金元素组0"
+    "cnCode": "2523100010",
+    "en": "Portland cement, aluminous cement, slag cement, supersulphate cement and similar hydraulic cements, whether or not coloured or in the form of clinkers — Cement clinkers — White clinker",
+    "zh": "白熟料"
   },
   {
-    "en": "Beams, billets, rails and tubes -- alloying elements group 1",
-    "zh": "梁、钢坯、轨及管——合金元素组1"
+    "cnCode": "2523100090",
+    "en": "Portland cement, aluminous cement, slag cement, supersulphate cement and similar hydraulic cements, whether or not coloured or in the form of clinkers — Cement clinkers — Other clinker including grey clinker",
+    "zh": "其他熟料（含灰熟料）"
   },
   {
-    "en": "Beams, billets, rails and tubes -- alloying elements group 2",
-    "zh": "梁、钢坯、轨及管——合金元素组2"
+    "cnCode": "25232100",
+    "en": "Portland cement, aluminous cement, slag cement, supersulphate cement and similar hydraulic cements, whether or not coloured or in the form of clinkers — Portland cement — White cement, whether or not artificially coloured",
+    "zh": "硅酸盐水泥、矾土水泥、矿渣水泥等水硬性水泥"
   },
   {
-    "en": "Beams, billets, rails and tubes -- alloying elements group 3",
-    "zh": "梁、钢坯、轨及管——合金元素组3"
+    "cnCode": "25232900",
+    "en": "Portland cement, aluminous cement, slag cement, supersulphate cement and similar hydraulic cements, whether or not coloured or in the form of clinkers — Portland cement — Other",
+    "zh": "硅酸盐水泥、矾土水泥、矿渣水泥等水硬性水泥；其他"
   },
   {
-    "en": "Beams, billets, rails and tubes -- alloying elements group 4",
-    "zh": "梁、钢坯、轨及管——合金元素组4"
+    "cnCode": "25233000",
+    "en": "Portland cement, aluminous cement, slag cement, supersulphate cement and similar hydraulic cements, whether or not coloured or in the form of clinkers — Aluminous cement",
+    "zh": "硅酸盐水泥、矾土水泥、矿渣水泥等水硬性水泥；矾土水泥"
   },
   {
-    "en": "Beams, billets, rails and tubes -- alloying elements group 5",
-    "zh": "梁、钢坯、轨及管——合金元素组5"
+    "cnCode": "2523900010",
+    "en": "Portland cement, aluminous cement, slag cement, supersulphate cement and similar hydraulic cements, whether or not coloured or in the form of clinkers — Other hydraulic cements — White hydraulic cement",
+    "zh": "白色水硬性水泥"
   },
   {
-    "en": "Beams, billets, rails and tubes -- of stainless steel",
-    "zh": "梁、钢坯、轨及管——不锈钢制"
+    "cnCode": "2523900090",
+    "en": "Portland cement, aluminous cement, slag cement, supersulphate cement and similar hydraulic cements, whether or not coloured or in the form of clinkers — Other hydraulic cements — Other hydraulic cements including grey hydraulic cements",
+    "zh": "其他水硬性水泥（含灰色）"
   },
   {
-    "en": "Bridges and bridge-sections, towers and lattice masts",
-    "zh": "桥梁及桥段、塔楼及格构式桅杆"
+    "cnCode": "28080000",
+    "en": "Nitric acid; sulphonitric acids",
+    "zh": "硝酸；磺硝酸"
   },
   {
-    "en": "CEM I grey",
-    "zh": "CEM I 型灰水泥"
+    "cnCode": "28141000",
+    "en": "Ammonia, anhydrous or in aqueous solution — Anhydrous ammonia",
+    "zh": "氨；无水氨"
   },
   {
-    "en": "CEM I white",
-    "zh": "CEM I 型白水泥"
+    "cnCode": "28142000",
+    "en": "Ammonia, anhydrous or in aqueous solution — Ammonia in aqueous solution",
+    "zh": "氨；氨水"
   },
   {
-    "en": "Calcined clay",
-    "zh": "煅烧粘土"
-  },
-  {
-    "en": "Cast",
-    "zh": "铸件"
-  },
-  {
-    "en": "Cloth, grill, netting and fencing, of aluminium wire",
-    "zh": "铝丝制的网、格栅、网眼织物及围篱"
-  },
-  {
-    "en": "Coach screws; other wood screws; screw hooks and screw rings; self-tapping screws; other threaded articles; spring washers and other lock washers; cotters and cotter pins; other non-threaded articles - of iron or steel",
-    "zh": "方头木螺钉；其他木螺钉；钩头螺钉及吊环螺钉；自攻螺钉；其他螺纹制品；弹簧垫圈及其他锁紧垫圈；开口销及销钉；其他非螺纹制品——钢铁制"
-  },
-  {
-    "en": "Cold-rolled and annealed flat products",
-    "zh": "冷轧并退火的扁平材"
-  },
-  {
-    "en": "Cold-rolled and annealed flat products -- alloying elements group 0",
-    "zh": "冷轧并退火的扁平材——合金元素组0"
-  },
-  {
-    "en": "Cold-rolled and annealed flat products -- alloying elements group 1",
-    "zh": "冷轧并退火的扁平材——合金元素组1"
-  },
-  {
-    "en": "Cold-rolled and annealed flat products -- alloying elements group 2",
-    "zh": "冷轧并退火的扁平材——合金元素组2"
-  },
-  {
-    "en": "Cold-rolled and annealed flat products -- alloying elements group 3",
-    "zh": "冷轧并退火的扁平材——合金元素组3"
-  },
-  {
-    "en": "Containers for compressed or liquefied gas, of iron or steel",
-    "zh": "盛装压缩或液化气体的钢铁制容器"
-  },
-  {
-    "en": "Continuous casting (slab, billet, bloom)",
-    "zh": "连铸（板坯、方坯、大方坯）"
-  },
-  {
-    "en": "Diammonium hydrogenorthophosphate (diammonium phosphate)",
-    "zh": "磷酸氢二铵（磷酸二铵）"
-  },
-  {
-    "en": "Doors, windows and their frames and thresholds for doors",
-    "zh": "门、窗及其门框和门槛"
-  },
-  {
-    "en": "Double salts and mixtures of ammonium sulphate and ammonium nitrate",
-    "zh": "硫酸铵与硝酸铵的复盐及混合物"
-  },
-  {
-    "en": "Double salts and mixtures of calcium nitrate and ammonium nitrate",
-    "zh": "硝酸钙与硝酸铵的复盐及混合物"
-  },
-  {
-    "en": "Ferro-chromium",
-    "zh": "铬铁"
-  },
-  {
-    "en": "Ferro-manganese",
-    "zh": "锰铁"
-  },
-  {
-    "en": "Ferro-nickel",
-    "zh": "镍铁"
-  },
-  {
-    "en": "Ferrous products obtained by direct reduction of iron ore and other spongy ferrous products, in lumps, pellets or the like; iron having a minimum purity of 99.94%, in lumps, pellets or similar forms",
-    "zh": "直接还原铁矿石所得铁产品及海绵铁产品，块、团粒等；纯度不低于99.94%的铁，块、团粒等形状"
-  },
-  {
-    "en": "Forged, stamped, or sintered",
-    "zh": "锻制、冲压或烧结"
-  },
-  {
-    "en": "Forgings",
-    "zh": "锻件"
-  },
-  {
-    "en": "Forgings of cast iron",
-    "zh": "铸铁锻件"
-  },
-  {
-    "en": "Forgings of cast steel",
-    "zh": "铸钢锻件"
-  },
-  {
-    "en": "Granules and powders, of pig iron, spiegeleisen, iron or steel",
-    "zh": "生铁、镜铁、铁或钢的颗粒及粉末"
-  },
-  {
-    "en": "Hollow profiles",
-    "zh": "空心型材"
-  },
-  {
-    "en": "Hot-rolled flat products",
-    "zh": "热轧扁平材"
-  },
-  {
-    "en": "Hot-rolled flat products -- alloyed",
-    "zh": "热轧扁平材——合金钢"
-  },
-  {
-    "en": "Hydrogen",
-    "zh": "氢"
-  },
-  {
-    "en": "Ingots",
-    "zh": "钢锭"
-  },
-  {
-    "en": "Ingots and forgings",
-    "zh": "钢锭及锻件"
-  },
-  {
-    "en": "Iron or non-alloy steel, angles, shapes and sections",
-    "zh": "铁或非合金钢角材、型材及异型材"
-  },
-  {
-    "en": "Iron or non-alloy steel; bars and rods, hot-rolled, in irregularly wound coils",
-    "zh": "铁或非合金钢；热轧不规则盘卷的条、杆"
-  },
-  {
-    "en": "Iron or non-alloy steel; bars and rods, n.e.c. in chapter 72",
-    "zh": "铁或非合金钢；条、杆（第72章其他未列名）"
-  },
-  {
-    "en": "Iron or non-alloy steel; flat-rolled products of a width of 600mm or more, hot-rolled, not clad, plated or coated",
-    "zh": "铁或非合金钢；宽度≥600mm热轧扁平材，未包覆、镀层或涂层"
-  },
-  {
-    "en": "Iron or non-alloy steel; flat-rolled products, width 600mm or more, clad, plated or coated",
-    "zh": "铁或非合金钢；宽度≥600mm扁平材，经包覆、镀层或涂层"
-  },
-  {
-    "en": "Iron or non-alloy steel; flat-rolled products, width 600mm or more, cold-rolled (cold-reduced), not clad, plated or coated",
-    "zh": "铁或非合金钢；宽度≥600mm冷轧（冷减薄）扁平材，未包覆、镀层或涂层"
-  },
-  {
-    "en": "Iron or non-alloy steel; flat-rolled products, width less than 600mm, clad, plated or coated",
-    "zh": "铁或非合金钢；宽度＜600mm扁平材，经包覆、镀层或涂层"
-  },
-  {
-    "en": "Ladders and steps; Pallets and similar platforms for handling goods; Reels for cables, piping and the like; Non-mechanical ventilators, guttering, hooks and like articles used in the building\nindustry",
-    "zh": "梯子及踏步；货物装卸用托盘及类似平台；缆、管等用卷筒；建筑用非机械通风器、檐槽、钩及类似制品"
-  },
-  {
-    "en": "Mineral or chemical Fertilisers, nitrogenous",
-    "zh": "矿物或化学氮肥"
-  },
-  {
-    "en": "Mineral or chemical fertilisers containing the three fertilising elements nitrogen, phosphorus and potassium",
-    "zh": "含氮、磷、钾三种肥效元素的矿物或化学肥料"
-  },
-  {
-    "en": "Mineral or chemical fertilisers containing two or three of the fertilising elements nitrogen, phosphorus and potassium",
-    "zh": "含氮、磷、钾三种肥效元素中两种或三种的矿物或化学肥料"
-  },
-  {
-    "en": "Mixtures of ammonium nitrate with calcium carbonate or other inorganic non-fertilising substances",
-    "zh": "硝酸铵与碳酸钙或其他无机非肥料物质的混合物"
-  },
-  {
-    "en": "Mixtures of urea and ammonium nitrate in aqueous or Fertiliseral solution",
-    "zh": "尿素与硝酸铵的水溶液或氨溶液混合物"
-  },
-  {
-    "en": "Nails, tacks, staples (other than those of heading 8305), screws, bolts, nuts, screw hooks, rivets, cotters, cotter pins, washers and similar articles",
-    "zh": "钉、平头钉、U形钉（品目8305除外）、螺钉、螺栓、螺母、钩头螺钉、铆钉、销、开口销、垫圈及类似制品"
-  },
-  {
-    "en": "Nitrates of potassium",
+    "cnCode": "28342100",
+    "en": "Nitrites; nitrates — Nitrates — Of potassium",
     "zh": "硝酸钾"
   },
   {
-    "en": "Nitric acid; sulphonitric acids",
-    "zh": "硝酸；硝硫混酸"
+    "cnCode": "31021012",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Urea, whether or not in aqueous solution — Urea containing more than 45 % by weight of nitrogen on the dry anhydrous product — In aqueous solution, containing at least 31,8 % but not exceeding 33,2 % by weight of urea",
+    "zh": "尿素水溶液，干基含氮＞45%，尿素含量31.8%–33.2%"
   },
   {
-    "en": "Nuts",
-    "zh": "螺母"
+    "cnCode": "31021015",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Urea, whether or not in aqueous solution — Urea containing more than 45 % by weight of nitrogen on the dry anhydrous product — In aqueous solution, containing more than 33,2 % but not exceeding 55 % by weight of urea",
+    "zh": "尿素水溶液，干基含氮＞45%，尿素含量33.2%–55%"
   },
   {
-    "en": "Other",
-    "zh": "其他"
+    "cnCode": "31021019",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Urea, whether or not in aqueous solution — Urea containing more than 45 % by weight of nitrogen on the dry anhydrous product — Other",
+    "zh": "尿素（不论是否水溶液），干基含氮＞45%（特定水溶液除外）"
   },
   {
-    "en": "Other articles of iron or steel",
+    "cnCode": "31021090",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Urea, whether or not in aqueous solution — Other",
+    "zh": "尿素（不论是否水溶液），干基含氮≤45%"
+  },
+  {
+    "cnCode": "31022100",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Ammonium sulphate; double salts and mixtures of ammonium sulphate and ammonium nitrate — Ammonium sulphate",
+    "zh": "硫酸铵"
+  },
+  {
+    "cnCode": "31022900",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Ammonium sulphate; double salts and mixtures of ammonium sulphate and ammonium nitrate — Other",
+    "zh": "其他（31022900）"
+  },
+  {
+    "cnCode": "31023010",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Ammonium nitrate, whether or not in aqueous solution — In aqueous solution",
+    "zh": "硝酸铵"
+  },
+  {
+    "cnCode": "31023090",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Ammonium nitrate, whether or not in aqueous solution — Other",
+    "zh": "硝酸铵；其他"
+  },
+  {
+    "cnCode": "31024010",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Mixtures of ammonium nitrate with calcium carbonate or other inorganic non-fertilising substances — With a nitrogen content not exceeding 28 % by weight",
+    "zh": "硝酸铵与碳酸钙等混合物，含氮≤28%"
+  },
+  {
+    "cnCode": "31024090",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Mixtures of ammonium nitrate with calcium carbonate or other inorganic non-fertilising substances — With a nitrogen content exceeding 28 % by weight",
+    "zh": "硝酸铵与碳酸钙等混合物，含氮＞28%"
+  },
+  {
+    "cnCode": "31025000",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Sodium nitrate — Other",
+    "zh": "其他（31025000）"
+  },
+  {
+    "cnCode": "31026000",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Double salts and mixtures of calcium nitrate and ammonium nitrate — Other",
+    "zh": "其他（31026000）"
+  },
+  {
+    "cnCode": "31028000",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Mixtures of urea and ammonium nitrate in aqueous or ammoniacal solution",
+    "zh": "尿素与硝酸铵的水溶液或氨溶液混合物"
+  },
+  {
+    "cnCode": "31029000",
+    "en": "Mineral or chemical fertilisers, nitrogenous — Other, including mixtures not specified in the foregoing subheadings — Other",
+    "zh": "其他（31029000）"
+  },
+  {
+    "cnCode": "31051000",
+    "en": "Mineral or chemical fertilisers containing two or three of the fertilising elements nitrogen, phosphorus and potassium; other fertilisers; goods of this chapter in tablets or similar forms or in packages of a gross weight not exceeding 10 kg — Goods of this chapter in tablets or similar forms or in packages of a gross weight not exceeding 10 kg — Other",
+    "zh": "含氮磷钾的复合肥及其他肥料；其他（31051000）"
+  },
+  {
+    "cnCode": "31052010",
+    "en": "Mineral or chemical fertilisers containing two or three of the fertilising elements nitrogen, phosphorus and potassium; other fertilisers; goods of this chapter in tablets or similar forms or in packages of a gross weight not exceeding 10 kg — Mineral or chemical fertilisers containing the three fertilising elements nitrogen, phosphorus and potassium — With a nitrogen content exceeding 10 % by weight on the dry anhydrous product — Other",
+    "zh": "含氮磷钾的复合肥及其他肥料；其他（31052010）"
+  },
+  {
+    "cnCode": "31052090",
+    "en": "Mineral or chemical fertilisers containing two or three of the fertilising elements nitrogen, phosphorus and potassium; other fertilisers; goods of this chapter in tablets or similar forms or in packages of a gross weight not exceeding 10 kg — Mineral or chemical fertilisers containing the three fertilising elements nitrogen, phosphorus and potassium — Other",
+    "zh": "含氮磷钾的复合肥及其他肥料；其他（31052090）"
+  },
+  {
+    "cnCode": "31053000",
+    "en": "Mineral or chemical fertilisers containing two or three of the fertilising elements nitrogen, phosphorus and potassium; other fertilisers; goods of this chapter in tablets or similar forms or in packages of a gross weight not exceeding 10 kg — Diammonium hydrogenorthophosphate (diammonium phosphate)",
+    "zh": "含氮磷钾的复合肥及其他肥料（31053000）"
+  },
+  {
+    "cnCode": "31054000",
+    "en": "Mineral or chemical fertilisers containing two or three of the fertilising elements nitrogen, phosphorus and potassium; other fertilisers; goods of this chapter in tablets or similar forms or in packages of a gross weight not exceeding 10 kg — Ammonium dihydrogenorthophosphate (monoammonium phosphate) and mixtures thereof with diammonium hydrogenorthophosphate (diammonium phosphate)",
+    "zh": "含氮磷钾的复合肥及其他肥料（31054000）"
+  },
+  {
+    "cnCode": "31055100",
+    "en": "Mineral or chemical fertilisers containing two or three of the fertilising elements nitrogen, phosphorus and potassium; other fertilisers; goods of this chapter in tablets or similar forms or in packages of a gross weight not exceeding 10 kg — Other mineral or chemical fertilisers containing the two fertilising elements nitrogen and phosphorus — Containing nitrates and phosphates — Other",
+    "zh": "含氮磷钾的复合肥及其他肥料；其他（31055100）"
+  },
+  {
+    "cnCode": "31055900",
+    "en": "Mineral or chemical fertilisers containing two or three of the fertilising elements nitrogen, phosphorus and potassium; other fertilisers; goods of this chapter in tablets or similar forms or in packages of a gross weight not exceeding 10 kg — Other mineral or chemical fertilisers containing the two fertilising elements nitrogen and phosphorus — Other",
+    "zh": "含氮磷钾的复合肥及其他肥料；其他（31055900）"
+  },
+  {
+    "cnCode": "31059020",
+    "en": "Mineral or chemical fertilisers containing two or three of the fertilising elements nitrogen, phosphorus and potassium; other fertilisers; goods of this chapter in tablets or similar forms or in packages of a gross weight not exceeding 10 kg — Other — With a nitrogen content exceeding 10 % by weight on the dry anhydrous product — Other",
+    "zh": "含氮磷钾的复合肥及其他肥料；其他（31059020）"
+  },
+  {
+    "cnCode": "31059080",
+    "en": "Mineral or chemical fertilisers containing two or three of the fertilising elements nitrogen, phosphorus and potassium; other fertilisers; goods of this chapter in tablets or similar forms or in packages of a gross weight not exceeding 10 kg — Other",
+    "zh": "含氮磷钾的复合肥及其他肥料；其他（31059080）"
+  },
+  {
+    "cnCode": "28041000",
+    "en": "Hydrogen, rare gases and other non-metals — Hydrogen",
+    "zh": "氢"
+  },
+  {
+    "cnCode": "26011200",
+    "en": "Iron ores and concentrates, including roasted iron pyrites — Iron ores and concentrates, other than roasted iron pyrites — Agglomerated",
+    "zh": "烧结铁矿及精矿"
+  },
+  {
+    "cnCode": "72011011",
+    "en": "Pig iron and spiegeleisen in pigs, blocks or other primary forms — Non-alloy pig iron containing by weight 0,5 % or less of phosphorus — Containing by weight not less than 0,4 % of manganese — Containing by weight 1 % or less of silicon — Other",
+    "zh": "生铁及镜铁；其他（72011011）"
+  },
+  {
+    "cnCode": "72011019",
+    "en": "Pig iron and spiegeleisen in pigs, blocks or other primary forms — Non-alloy pig iron containing by weight 0,5 % or less of phosphorus — Containing by weight not less than 0,4 % of manganese — Containing by weight more than 1 % of silicon",
+    "zh": "生铁及镜铁（72011019）"
+  },
+  {
+    "cnCode": "72011030",
+    "en": "Pig iron and spiegeleisen in pigs, blocks or other primary forms — Non-alloy pig iron containing by weight 0,5 % or less of phosphorus — Containing by weight not less than 0,1 % but less than 0,4 % of manganese — Other",
+    "zh": "生铁及镜铁；其他（72011030）"
+  },
+  {
+    "cnCode": "72011090",
+    "en": "Pig iron and spiegeleisen in pigs, blocks or other primary forms — Non-alloy pig iron containing by weight 0,5 % or less of phosphorus — Containing by weight less than 0,1 % of manganese",
+    "zh": "生铁及镜铁（72011090）"
+  },
+  {
+    "cnCode": "72012000",
+    "en": "Pig iron and spiegeleisen in pigs, blocks or other primary forms — Non-alloy pig iron containing by weight more than 0,5 % of phosphorus",
+    "zh": "生铁及镜铁（72012000）"
+  },
+  {
+    "cnCode": "72015010",
+    "en": "Pig iron and spiegeleisen in pigs, blocks or other primary forms — Alloy pig iron; spiegeleisen — Alloy pig iron containing by weight not less than 0,3 % but not more than 1 % of titanium and not less than 0,5 % but not more than 1 % of vanadium",
+    "zh": "生铁及镜铁（72015010）"
+  },
+  {
+    "cnCode": "72015090",
+    "en": "Pig iron and spiegeleisen in pigs, blocks or other primary forms — Alloy pig iron; spiegeleisen — Other",
+    "zh": "生铁及镜铁；其他（72015090）"
+  },
+  {
+    "cnCode": "72021120",
+    "en": "Ferro-alloys — Ferro-manganese — Containing by weight more than 2 % of carbon — With a granulometry not exceeding 5 mm and a manganese content by weight exceeding 65 %",
+    "zh": "铁合金；锰铁（72021120）"
+  },
+  {
+    "cnCode": "72021180",
+    "en": "Ferro-alloys — Ferro-manganese — Containing by weight more than 2 % of carbon — Other",
+    "zh": "铁合金；锰铁（72021180）"
+  },
+  {
+    "cnCode": "72021900",
+    "en": "Ferro-alloys — Ferro-manganese — Other",
+    "zh": "铁合金；锰铁（72021900）"
+  },
+  {
+    "cnCode": "72024110",
+    "en": "Ferro-alloys — Ferro-chromium — Containing by weight more than 4 % of carbon — Containing by weight more than 4 % but not more than 6 % of carbon",
+    "zh": "铁合金；铬铁（72024110）"
+  },
+  {
+    "cnCode": "72024190",
+    "en": "Ferro-alloys — Ferro-chromium — Containing by weight more than 4 % of carbon — Containing by weight more than 6 % of carbon",
+    "zh": "铁合金；铬铁（72024190）"
+  },
+  {
+    "cnCode": "72024910",
+    "en": "Ferro-alloys — Ferro-chromium — Other — Containing by weight not more than 0,05 % of carbon — Other",
+    "zh": "铁合金；铬铁（72024910）"
+  },
+  {
+    "cnCode": "72024950",
+    "en": "Ferro-alloys — Ferro-chromium — Other — Containing by weight more than 0,05 % but not more than 0,5 % of carbon — With a chromium content by weight of 30% and more — Other",
+    "zh": "铁合金；铬铁（72024950）"
+  },
+  {
+    "cnCode": "72024990",
+    "en": "Ferro-alloys — Ferro-chromium — Other — Containing by weight more than 0,5 % but not more than 4 % of carbon",
+    "zh": "铁合金；铬铁（72024990）"
+  },
+  {
+    "cnCode": "72026000",
+    "en": "Ferro-alloys — Ferro-nickel",
+    "zh": "铁合金；镍铁"
+  },
+  {
+    "cnCode": "72031000",
+    "en": "Ferrous products obtained by direct reduction of iron ore and other spongy ferrous products, in lumps, pellets or similar forms; iron having a minimum purity by weight of 99,94 %, in lumps, pellets or similar forms — Ferrous products obtained by direct reduction of iron ore",
+    "zh": "直接还原铁、海绵铁及高纯铁"
+  },
+  {
+    "cnCode": "72039000",
+    "en": "Ferrous products obtained by direct reduction of iron ore and other spongy ferrous products, in lumps, pellets or similar forms; iron having a minimum purity by weight of 99,94 %, in lumps, pellets or similar forms — Other",
+    "zh": "直接还原铁、海绵铁及高纯铁；其他"
+  },
+  {
+    "cnCode": "72051000",
+    "en": "Granules and powders, of pig iron, spiegeleisen, iron or steel — Granules",
+    "zh": "生铁、镜铁、钢铁的粒状及粉状产品（72051000）"
+  },
+  {
+    "cnCode": "72052100",
+    "en": "Granules and powders, of pig iron, spiegeleisen, iron or steel — Powders — Of alloy steel",
+    "zh": "生铁、镜铁、钢铁的粒状及粉状产品（72052100）"
+  },
+  {
+    "cnCode": "72052900",
+    "en": "Granules and powders, of pig iron, spiegeleisen, iron or steel — Powders — Other",
+    "zh": "生铁、镜铁、钢铁的粒状及粉状产品；其他"
+  },
+  {
+    "cnCode": "72061000",
+    "en": "Iron and non-alloy steel in ingots or other primary forms (excluding iron of heading 7203) — Ingots",
+    "zh": "铁及非合金钢锭及其他初级形状"
+  },
+  {
+    "cnCode": "72069000",
+    "en": "Iron and non-alloy steel in ingots or other primary forms (excluding iron of heading 7203) — Other",
+    "zh": "铁及非合金钢锭及其他初级形状；其他"
+  },
+  {
+    "cnCode": "72071111",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight less than 0,25 % of carbon — Of rectangular (including square) cross-section, the width measuring less than twice the thickness — Rolled or obtained by continuous casting — Of free-cutting steel",
+    "zh": "铁或非合金钢半成品；按重量计含碳＜0.25%；易切削钢"
+  },
+  {
+    "cnCode": "72071114",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight less than 0,25 % of carbon — Of rectangular (including square) cross-section, the width measuring less than twice the thickness — Rolled or obtained by continuous casting — Other — Of a thickness not exceeding 130 mm",
+    "zh": "铁或非合金钢半成品；按重量计含碳＜0.25%（72071114）"
+  },
+  {
+    "cnCode": "72071116",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight less than 0,25 % of carbon — Of rectangular (including square) cross-section, the width measuring less than twice the thickness — Rolled or obtained by continuous casting — Other — Of a thickness exceeding 130 mm",
+    "zh": "铁或非合金钢半成品；按重量计含碳＜0.25%（72071116）"
+  },
+  {
+    "cnCode": "72071190",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight less than 0,25 % of carbon — Of rectangular (including square) cross-section, the width measuring less than twice the thickness — Forged",
+    "zh": "铁或非合金钢半成品；按重量计含碳＜0.25%（72071190）"
+  },
+  {
+    "cnCode": "72071210",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight less than 0,25 % of carbon — Other, of rectangular (other than square) cross-section — Rolled or obtained by continuous casting",
+    "zh": "铁或非合金钢半成品；按重量计含碳＜0.25%（72071210）"
+  },
+  {
+    "cnCode": "72071290",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight less than 0,25 % of carbon — Other, of rectangular (other than square) cross-section — Forged",
+    "zh": "铁或非合金钢半成品；按重量计含碳＜0.25%（72071290）"
+  },
+  {
+    "cnCode": "72071912",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight less than 0,25 % of carbon — Other — Of circular or polygonal cross-section — Rolled or obtained by continuous casting",
+    "zh": "铁或非合金钢半成品；按重量计含碳＜0.25%（72071912）"
+  },
+  {
+    "cnCode": "72071919",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight less than 0,25 % of carbon — Other — Of circular or polygonal cross-section — Forged",
+    "zh": "铁或非合金钢半成品；按重量计含碳＜0.25%（72071919）"
+  },
+  {
+    "cnCode": "72071980",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight less than 0,25 % of carbon — Other",
+    "zh": "铁或非合金钢半成品；按重量计含碳＜0.25%（72071980）"
+  },
+  {
+    "cnCode": "72072011",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight 0,25 % or more of carbon — Of rectangular (including square) cross-section, the width measuring less than twice the thickness — Rolled or obtained by continuous casting — Of free-cutting steel",
+    "zh": "铁或非合金钢半成品；易切削钢"
+  },
+  {
+    "cnCode": "72072015",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight 0,25 % or more of carbon — Of rectangular (including square) cross-section, the width measuring less than twice the thickness — Rolled or obtained by continuous casting — Other, containing by weight — 0,25 % or more but less than 0,6 % of carbon",
+    "zh": "铁或非合金钢半成品（72072015）"
+  },
+  {
+    "cnCode": "72072017",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight 0,25 % or more of carbon — Of rectangular (including square) cross-section, the width measuring less than twice the thickness — Rolled or obtained by continuous casting — Other, containing by weight — 0,6 % or more of carbon",
+    "zh": "铁或非合金钢半成品（72072017）"
+  },
+  {
+    "cnCode": "72072019",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight 0,25 % or more of carbon — Of rectangular (including square) cross-section, the width measuring less than twice the thickness — Forged",
+    "zh": "铁或非合金钢半成品（72072019）"
+  },
+  {
+    "cnCode": "72072032",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight 0,25 % or more of carbon — Other, of rectangular (other than square) cross-section — Rolled or obtained by continuous casting",
+    "zh": "铁或非合金钢半成品（72072032）"
+  },
+  {
+    "cnCode": "72072039",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight 0,25 % or more of carbon — Other, of rectangular (other than square) cross-section — Forged",
+    "zh": "铁或非合金钢半成品（72072039）"
+  },
+  {
+    "cnCode": "72072052",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight 0,25 % or more of carbon — Of circular or polygonal cross-section — Rolled or obtained by continuous casting",
+    "zh": "铁或非合金钢半成品（72072052）"
+  },
+  {
+    "cnCode": "72072059",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight 0,25 % or more of carbon — Of circular or polygonal cross-section — Forged",
+    "zh": "铁或非合金钢半成品（72072059）"
+  },
+  {
+    "cnCode": "72072080",
+    "en": "Semi-finished products of iron or non-alloy steel — Containing by weight 0,25 % or more of carbon — Other",
+    "zh": "铁或非合金钢半成品；其他"
+  },
+  {
+    "cnCode": "72081000",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — In coils, not further worked than hot-rolled, with patterns in relief",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；卷状，热轧，带浮雕花纹"
+  },
+  {
+    "cnCode": "72082500",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, in coils, not further worked than hot-rolled, pickled — Of a thickness of 4,75 mm or more",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；厚度≥4.75mm"
+  },
+  {
+    "cnCode": "72082600",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, in coils, not further worked than hot-rolled, pickled — Of a thickness of 3 mm or more but less than 4,75 mm",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；厚度3–4.75mm"
+  },
+  {
+    "cnCode": "72082700",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, in coils, not further worked than hot-rolled, pickled — Of a thickness of less than 3 mm",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；厚度＜3mm"
+  },
+  {
+    "cnCode": "72083600",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, in coils, not further worked than hot-rolled — Of a thickness exceeding 10 mm",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，卷状，热轧；厚度＞10mm"
+  },
+  {
+    "cnCode": "72083700",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, in coils, not further worked than hot-rolled — Of a thickness of 4,75 mm or more but not exceeding 10 mm — Other",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，卷状，热轧；厚度4.75–10mm"
+  },
+  {
+    "cnCode": "72083800",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, in coils, not further worked than hot-rolled — Of a thickness of 3 mm or more but less than 4,75 mm — Other",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，卷状，热轧；厚度3–4.75mm"
+  },
+  {
+    "cnCode": "72083900",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, in coils, not further worked than hot-rolled — Of a thickness of less than 3 mm — Other",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，卷状，热轧；厚度＜3mm"
+  },
+  {
+    "cnCode": "72084000",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Not in coils, not further worked than hot-rolled, with patterns in relief — Of a thickness of less than 2 mm",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；非卷状，热轧，带浮雕花纹；厚度＜2mm"
+  },
+  {
+    "cnCode": "72085120",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, not in coils, not further worked than hot-rolled — Of a thickness exceeding 10 mm — Of a thickness exceeding 15 mm — Other",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，非卷状，热轧；厚度＞10mm（72085120）"
+  },
+  {
+    "cnCode": "72085191",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, not in coils, not further worked than hot-rolled — Of a thickness exceeding 10 mm — Of a thickness exceeding 10 mm but not exceeding 15 mm, of a width of — 2 050 mm or more — Other",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，非卷状，热轧；厚度＞10mm（72085191）"
+  },
+  {
+    "cnCode": "72085198",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, not in coils, not further worked than hot-rolled — Of a thickness exceeding 10 mm — Of a thickness exceeding 10 mm but not exceeding 15 mm, of a width of — Less than 2 050 mm — Other",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，非卷状，热轧；厚度＞10mm（72085198）"
+  },
+  {
+    "cnCode": "72085210",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, not in coils, not further worked than hot-rolled — Of a thickness of 4,75 mm or more but not exceeding 10 mm — Rolled on four faces or in a closed box pass, of a width not exceeding 1 250 mm",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，非卷状，热轧；厚度4.75–10mm（72085210）"
+  },
+  {
+    "cnCode": "72085291",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, not in coils, not further worked than hot-rolled — Of a thickness of 4,75 mm or more but not exceeding 10 mm — Other, of a width of — 2 050 mm or more — Other",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，非卷状，热轧；厚度4.75–10mm（72085291）"
+  },
+  {
+    "cnCode": "72085299",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, not in coils, not further worked than hot-rolled — Of a thickness of 4,75 mm or more but not exceeding 10 mm — Other, of a width of — Less than 2 050 mm",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，非卷状，热轧；厚度4.75–10mm（72085299）"
+  },
+  {
+    "cnCode": "72085310",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, not in coils, not further worked than hot-rolled — Of a thickness of 3 mm or more but less than 4,75 mm — Rolled on four faces or in a closed box pass, of a width not exceeding 1 250 mm and of a thickness of 4 mm or more",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，非卷状，热轧；厚度3–4.75mm（72085310）"
+  },
+  {
+    "cnCode": "72085390",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, not in coils, not further worked than hot-rolled — Of a thickness of 3 mm or more but less than 4,75 mm — Other",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，非卷状，热轧；厚度3–4.75mm（72085390）"
+  },
+  {
+    "cnCode": "72085400",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other, not in coils, not further worked than hot-rolled — Of a thickness of less than 3 mm",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他，非卷状，热轧；厚度＜3mm"
+  },
+  {
+    "cnCode": "72089020",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other — Perforated — Other",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；穿孔"
+  },
+  {
+    "cnCode": "72089080",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, hot-rolled, not clad, plated or coated — Other",
+    "zh": "铁或非合金钢热轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他"
+  },
+  {
+    "cnCode": "72091500",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — In coils, not further worked than cold-rolled (cold-reduced) — Of a thickness of 3 mm or more — Other",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；卷状,冷轧"
+  },
+  {
+    "cnCode": "72091610",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — In coils, not further worked than cold-rolled (cold-reduced) — Of a thickness exceeding 1 mm but less than 3 mm — 'Electrical'",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；卷状,冷轧；厚度1–3mm（72091610）"
+  },
+  {
+    "cnCode": "72091690",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — In coils, not further worked than cold-rolled (cold-reduced) — Of a thickness exceeding 1 mm but less than 3 mm — Other",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；卷状,冷轧；厚度1–3mm（72091690）"
+  },
+  {
+    "cnCode": "72091710",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — In coils, not further worked than cold-rolled (cold-reduced) — Of a thickness of 0,5 mm or more but not exceeding 1 mm — 'Electrical'",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；卷状,冷轧；厚度0.5–1mm（72091710）"
+  },
+  {
+    "cnCode": "72091790",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — In coils, not further worked than cold-rolled (cold-reduced) — Of a thickness of 0,5 mm or more but not exceeding 1 mm — Other",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；卷状,冷轧；厚度0.5–1mm（72091790）"
+  },
+  {
+    "cnCode": "72091810",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — In coils, not further worked than cold-rolled (cold-reduced) — Of a thickness of less than 0,5 mm — 'Electrical'",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；卷状,冷轧；厚度＜0.5mm（72091810）"
+  },
+  {
+    "cnCode": "72091891",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — In coils, not further worked than cold-rolled (cold-reduced) — Of a thickness of less than 0,5 mm — Other — Of a thickness of 0,35 mm or more but less than 0,5 mm",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；卷状,冷轧；厚度＜0.5mm（72091891）"
+  },
+  {
+    "cnCode": "72091899",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — In coils, not further worked than cold-rolled (cold-reduced) — Of a thickness of less than 0,5 mm — Other — Of a thickness of less than 0,35 mm — Other",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；卷状,冷轧；厚度＜0.5mm（72091899）"
+  },
+  {
+    "cnCode": "72092500",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — Not in coils, not further worked than cold-rolled (cold-reduced) — Of a thickness of 3 mm or more — Other",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；非卷状,冷轧"
+  },
+  {
+    "cnCode": "72092610",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — Not in coils, not further worked than cold-rolled (cold-reduced) — Of a thickness exceeding 1 mm but less than 3 mm — 'Electrical'",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；非卷状,冷轧；厚度1–3mm（72092610）"
+  },
+  {
+    "cnCode": "72092690",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — Not in coils, not further worked than cold-rolled (cold-reduced) — Of a thickness exceeding 1 mm but less than 3 mm — Other",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；非卷状,冷轧；厚度1–3mm（72092690）"
+  },
+  {
+    "cnCode": "72092710",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — Not in coils, not further worked than cold-rolled (cold-reduced) — Of a thickness of 0,5 mm or more but not exceeding 1 mm — 'Electrical'",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；非卷状,冷轧；厚度0.5–1mm（72092710）"
+  },
+  {
+    "cnCode": "72092790",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — Not in coils, not further worked than cold-rolled (cold-reduced) — Of a thickness of 0,5 mm or more but not exceeding 1 mm — Other",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；非卷状,冷轧；厚度0.5–1mm（72092790）"
+  },
+  {
+    "cnCode": "72092810",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — Not in coils, not further worked than cold-rolled (cold-reduced) — Of a thickness of less than 0,5 mm — 'Electrical'",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；非卷状,冷轧；厚度＜0.5mm（72092810）"
+  },
+  {
+    "cnCode": "72092890",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — Not in coils, not further worked than cold-rolled (cold-reduced) — Of a thickness of less than 0,5 mm — Other",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；非卷状,冷轧；厚度＜0.5mm（72092890）"
+  },
+  {
+    "cnCode": "72099020",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — Other — Perforated",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；穿孔"
+  },
+  {
+    "cnCode": "72099080",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, cold-rolled (cold-reduced), not clad, plated or coated — Other",
+    "zh": "铁或非合金钢冷轧平板轧材，宽度≥600mm，未包覆、镀层或涂层；其他"
+  },
+  {
+    "cnCode": "72101100",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Plated or coated with tin — Of a thickness of 0,5 mm or more — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；镀锡"
+  },
+  {
+    "cnCode": "72101220",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Plated or coated with tin — Of a thickness of less than 0,5 mm — Tinplate — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；镀锡；厚度＜0.5mm（72101220）"
+  },
+  {
+    "cnCode": "72101280",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Plated or coated with tin — Of a thickness of less than 0,5 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；镀锡；厚度＜0.5mm（72101280）"
+  },
+  {
+    "cnCode": "72102000",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Plated or coated with lead, including terne-plate — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；其他（72102000）"
+  },
+  {
+    "cnCode": "72103000",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Electrolytically plated or coated with zinc — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；电镀锌"
+  },
+  {
+    "cnCode": "72104100",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Otherwise plated or coated with zinc — Corrugated — Not further worked than surface-treated or simply cut into shapes other than rectangular (including square) — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；其他镀锌或涂锌；仅表面处理或简单切割成非矩形（72104100）"
+  },
+  {
+    "cnCode": "72104900",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Otherwise plated or coated with zinc — Other — Not further worked than surface-treated or simply cut into shapes other than rectangular (including square) — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；其他镀锌或涂锌；仅表面处理或简单切割成非矩形（72104900）"
+  },
+  {
+    "cnCode": "72105000",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Plated or coated with chromium oxides or with chromium and chromium oxides — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；其他（72105000）"
+  },
+  {
+    "cnCode": "72106100",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Plated or coated with aluminium — Plated or coated with aluminium-zinc alloys — Not further worked than surface-treated or simply cut into shapes other than rectangular (including square) — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；镀铝锌合金；仅表面处理或简单切割成非矩形"
+  },
+  {
+    "cnCode": "72106900",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Plated or coated with aluminium — Other — Not further worked than surface-treated or simply cut into shapes other than rectangular (including square) — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；仅表面处理或简单切割成非矩形"
+  },
+  {
+    "cnCode": "72107010",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Painted, varnished or coated with plastics — Tinplate, varnished; products, plated or coated with chromium oxides or with chromium and chromium oxides, varnished — Not further worked than surface-treated or simply cut into shapes other than rectangular (including square) — Tinplate — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；涂漆、清漆或塑料涂层；仅表面处理或简单切割成非矩形"
+  },
+  {
+    "cnCode": "72107080",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Painted, varnished or coated with plastics — Other — Coated or plated with tin — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；涂漆、清漆或塑料涂层"
+  },
+  {
+    "cnCode": "72109030",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Other — Clad — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；其他（72109030）"
+  },
+  {
+    "cnCode": "72109040",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Other — Tinned and printed — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；其他（72109040）"
+  },
+  {
+    "cnCode": "72109080",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of 600 mm or more, clad, plated or coated — Other",
+    "zh": "铁或非合金钢平板轧材，宽度≥600mm，经包覆、镀层或涂层；其他（72109080）"
+  },
+  {
+    "cnCode": "72111300",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, not clad, plated or coated — Not further worked than hot-rolled — Rolled on four faces or in a closed box pass, of a width exceeding 150 mm and a thickness of not less than 4 mm, not in coils and without patterns in relief — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，未包覆、镀层或涂层；其他（72111300）"
+  },
+  {
+    "cnCode": "72111400",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, not clad, plated or coated — Not further worked than hot-rolled — Other, of a thickness of 4,75 mm or more — Of a width not exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，未包覆、镀层或涂层；其他（72111400）"
+  },
+  {
+    "cnCode": "72111900",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, not clad, plated or coated — Not further worked than hot-rolled — Other — Of a width not exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，未包覆、镀层或涂层；其他（72111900）"
+  },
+  {
+    "cnCode": "72112320",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, not clad, plated or coated — Not further worked than cold-rolled (cold-reduced) — Containing by weight less than 0,25 % of carbon — 'Electrical' — Of a width not exceeding 500 mm",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，未包覆、镀层或涂层；按重量计含碳＜0.25%（72112320）"
+  },
+  {
+    "cnCode": "72112330",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, not clad, plated or coated — Not further worked than cold-rolled (cold-reduced) — Containing by weight less than 0,25 % of carbon — Other — Of a thickness of 0,35 mm or more — Of a width not exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，未包覆、镀层或涂层；按重量计含碳＜0.25%（72112330）"
+  },
+  {
+    "cnCode": "72112380",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, not clad, plated or coated — Not further worked than cold-rolled (cold-reduced) — Containing by weight less than 0,25 % of carbon — Other — Of a thickness of less than 0,35 mm — Of a width not exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，未包覆、镀层或涂层；按重量计含碳＜0.25%（72112380）"
+  },
+  {
+    "cnCode": "72112900",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, not clad, plated or coated — Not further worked than cold-rolled (cold-reduced) — Other — Of a width not exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，未包覆、镀层或涂层；其他（72112900）"
+  },
+  {
+    "cnCode": "72119020",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, not clad, plated or coated — Other — Perforated",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，未包覆、镀层或涂层；穿孔"
+  },
+  {
+    "cnCode": "72119080",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, not clad, plated or coated — Other — Of a width exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，未包覆、镀层或涂层；其他（72119080）"
+  },
+  {
+    "cnCode": "72121010",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Plated or coated with tin — Tinplate, not further worked than surface-treated",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；镀锡（72121010）"
+  },
+  {
+    "cnCode": "72121090",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Plated or coated with tin — Other — Of a width exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；镀锡（72121090）"
+  },
+  {
+    "cnCode": "72122000",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Electrolytically plated or coated with zinc — Of a width exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；电镀锌"
+  },
+  {
+    "cnCode": "72123000",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Otherwise plated or coated with zinc — Not further worked than surface-treated — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；其他镀锌或涂锌"
+  },
+  {
+    "cnCode": "72124020",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Painted, varnished or coated with plastics — Tinplate, not further worked than varnished; products, plated or coated with chromium oxides or with chromium and chromium oxides, varnished — Other — Of a width exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；涂漆、清漆或塑料涂层（72124020）"
+  },
+  {
+    "cnCode": "72124080",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Painted, varnished or coated with plastics — Other — Of a width exceeding 500 mm — Other — Coated or plated with tin — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；涂漆、清漆或塑料涂层（72124080）"
+  },
+  {
+    "cnCode": "72125020",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Otherwise plated or coated — Plated or coated with chromium oxides or with chromium and chromium oxides — Of a width exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；其他（72125020）"
+  },
+  {
+    "cnCode": "72125030",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Otherwise plated or coated — Plated or coated with chromium or nickel — Of a width exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；其他（72125030）"
+  },
+  {
+    "cnCode": "72125040",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Otherwise plated or coated — Plated or coated with copper — Of a width exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；其他（72125040）"
+  },
+  {
+    "cnCode": "72125061",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Otherwise plated or coated — Plated or coated with aluminium — Plated or coated with aluminium-zinc alloys — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；镀铝锌合金"
+  },
+  {
+    "cnCode": "72125069",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Otherwise plated or coated — Plated or coated with aluminium — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；其他（72125069）"
+  },
+  {
+    "cnCode": "72125090",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Otherwise plated or coated — Other — Of a width exceeding 500 mm — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；其他（72125090）"
+  },
+  {
+    "cnCode": "72126000",
+    "en": "Flat-rolled products of iron or non-alloy steel, of a width of less than 600 mm, clad, plated or coated — Clad — Of a width not exceeding 500 mm — Not further worked than surface-treated — Other",
+    "zh": "铁或非合金钢平板轧材，宽度＜600mm，经包覆、镀层或涂层；其他（72126000）"
+  },
+  {
+    "cnCode": "72131000",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of iron or non-alloy steel — Containing indentations, ribs, grooves or other deformations produced during the rolling process",
+    "zh": "铁或非合金钢热轧盘条（72131000）"
+  },
+  {
+    "cnCode": "72132000",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of iron or non-alloy steel — Other, of free-cutting steel",
+    "zh": "铁或非合金钢热轧盘条（72132000）"
+  },
+  {
+    "cnCode": "72139110",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of iron or non-alloy steel — Other — Of circular cross-section measuring less than 14 mm in diameter — Of a type used for concrete reinforcement",
+    "zh": "铁或非合金钢热轧盘条；其他（72139110）"
+  },
+  {
+    "cnCode": "72139120",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of iron or non-alloy steel — Other — Of circular cross-section measuring less than 14 mm in diameter — Of a type used for tyre cord",
+    "zh": "铁或非合金钢热轧盘条；其他（72139120）"
+  },
+  {
+    "cnCode": "72139141",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of iron or non-alloy steel — Other — Of circular cross-section measuring less than 14 mm in diameter — Other — Containing by weight 0,06 % or less of carbon",
+    "zh": "铁或非合金钢热轧盘条；其他（72139141）"
+  },
+  {
+    "cnCode": "72139149",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of iron or non-alloy steel — Other — Of circular cross-section measuring less than 14 mm in diameter — Other — Containing by weight more than 0,06 % but less than 0,25 % of carbon",
+    "zh": "铁或非合金钢热轧盘条；其他（72139149）"
+  },
+  {
+    "cnCode": "72139170",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of iron or non-alloy steel — Other — Of circular cross-section measuring less than 14 mm in diameter — Other — Containing by weight 0,25 % or more but not more than 0,75 % of carbon",
+    "zh": "铁或非合金钢热轧盘条；其他（72139170）"
+  },
+  {
+    "cnCode": "72139190",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of iron or non-alloy steel — Other — Of circular cross-section measuring less than 14 mm in diameter — Other — Containing by weight more than 0,75 % of carbon",
+    "zh": "铁或非合金钢热轧盘条；其他（72139190）"
+  },
+  {
+    "cnCode": "72139910",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of iron or non-alloy steel — Other — Containing by weight less than 0,25 % of carbon",
+    "zh": "铁或非合金钢热轧盘条；按重量计含碳＜0.25%"
+  },
+  {
+    "cnCode": "72139990",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of iron or non-alloy steel — Other — Containing by weight 0,25 % or more of carbon",
+    "zh": "铁或非合金钢热轧盘条；其他（72139990）"
+  },
+  {
+    "cnCode": "72141000",
+    "en": "Other bars and rods of iron or non-alloy steel, not further worked than forged, hot-rolled, hot-drawn or hot-extruded, but including those twisted after rolling — Forged — Other",
+    "zh": "其他铁或非合金钢条杆（锻制、热轧、热拉拔或热挤压，含轧后扭曲）；其他（72141000）"
+  },
+  {
+    "cnCode": "72142000",
+    "en": "Other bars and rods of iron or non-alloy steel, not further worked than forged, hot-rolled, hot-drawn or hot-extruded, but including those twisted after rolling — Containing indentations, ribs, grooves or other deformations produced during the rolling process or twisted after rolling — Other",
+    "zh": "其他铁或非合金钢条杆（锻制、热轧、热拉拔或热挤压，含轧后扭曲）；带轧制变形纹或轧后扭曲"
+  },
+  {
+    "cnCode": "72143000",
+    "en": "Other bars and rods of iron or non-alloy steel, not further worked than forged, hot-rolled, hot-drawn or hot-extruded, but including those twisted after rolling — Other, of free-cutting steel — Other",
+    "zh": "其他铁或非合金钢条杆（锻制、热轧、热拉拔或热挤压，含轧后扭曲）；其他（72143000）"
+  },
+  {
+    "cnCode": "72149110",
+    "en": "Other bars and rods of iron or non-alloy steel, not further worked than forged, hot-rolled, hot-drawn or hot-extruded, but including those twisted after rolling — Other — Of rectangular (other than square) cross-section — Containing by weight less than 0,25 % of carbon — Other",
+    "zh": "其他铁或非合金钢条杆（锻制、热轧、热拉拔或热挤压，含轧后扭曲）；按重量计含碳＜0.25%（72149110）"
+  },
+  {
+    "cnCode": "72149190",
+    "en": "Other bars and rods of iron or non-alloy steel, not further worked than forged, hot-rolled, hot-drawn or hot-extruded, but including those twisted after rolling — Other — Of rectangular (other than square) cross-section — Containing by weight 0,25 % or more of carbon — Other",
+    "zh": "其他铁或非合金钢条杆（锻制、热轧、热拉拔或热挤压，含轧后扭曲）；其他（72149190）"
+  },
+  {
+    "cnCode": "72149910",
+    "en": "Other bars and rods of iron or non-alloy steel, not further worked than forged, hot-rolled, hot-drawn or hot-extruded, but including those twisted after rolling — Other — Containing by weight less than 0,25 % of carbon — Of a type used for concrete reinforcement — Other",
+    "zh": "其他铁或非合金钢条杆（锻制、热轧、热拉拔或热挤压，含轧后扭曲）；按重量计含碳＜0.25%（72149910）"
+  },
+  {
+    "cnCode": "72149931",
+    "en": "Other bars and rods of iron or non-alloy steel, not further worked than forged, hot-rolled, hot-drawn or hot-extruded, but including those twisted after rolling — Other — Containing by weight less than 0,25 % of carbon — Other, of circular cross-section measuring in diameter — 80 mm or more",
+    "zh": "其他铁或非合金钢条杆（锻制、热轧、热拉拔或热挤压，含轧后扭曲）；按重量计含碳＜0.25%（72149931）"
+  },
+  {
+    "cnCode": "72149939",
+    "en": "Other bars and rods of iron or non-alloy steel, not further worked than forged, hot-rolled, hot-drawn or hot-extruded, but including those twisted after rolling — Other — Containing by weight less than 0,25 % of carbon — Other, of circular cross-section measuring in diameter — Less than 80 mm",
+    "zh": "其他铁或非合金钢条杆（锻制、热轧、热拉拔或热挤压，含轧后扭曲）；按重量计含碳＜0.25%（72149939）"
+  },
+  {
+    "cnCode": "72149950",
+    "en": "Other bars and rods of iron or non-alloy steel, not further worked than forged, hot-rolled, hot-drawn or hot-extruded, but including those twisted after rolling — Other — Containing by weight less than 0,25 % of carbon — Other",
+    "zh": "其他铁或非合金钢条杆（锻制、热轧、热拉拔或热挤压，含轧后扭曲）；按重量计含碳＜0.25%（72149950）"
+  },
+  {
+    "cnCode": "72149971",
+    "en": "Other bars and rods of iron or non-alloy steel, not further worked than forged, hot-rolled, hot-drawn or hot-extruded, but including those twisted after rolling — Other — Containing by weight 0,25 % or more of carbon — Of a circular cross-section measuring in diameter — 80 mm or more",
+    "zh": "其他铁或非合金钢条杆（锻制、热轧、热拉拔或热挤压，含轧后扭曲）；其他（72149971）"
+  },
+  {
+    "cnCode": "72149979",
+    "en": "Other bars and rods of iron or non-alloy steel, not further worked than forged, hot-rolled, hot-drawn or hot-extruded, but including those twisted after rolling — Other — Containing by weight 0,25 % or more of carbon — Of a circular cross-section measuring in diameter — Less than 80 mm",
+    "zh": "其他铁或非合金钢条杆（锻制、热轧、热拉拔或热挤压，含轧后扭曲）；其他（72149979）"
+  },
+  {
+    "cnCode": "72149995",
+    "en": "Other bars and rods of iron or non-alloy steel, not further worked than forged, hot-rolled, hot-drawn or hot-extruded, but including those twisted after rolling — Other — Containing by weight 0,25 % or more of carbon — Other",
+    "zh": "其他铁或非合金钢条杆（锻制、热轧、热拉拔或热挤压，含轧后扭曲）；其他（72149995）"
+  },
+  {
+    "cnCode": "72151000",
+    "en": "Other bars and rods of iron or non-alloy steel — Of free-cutting steel, not further worked than cold-formed or cold-finished",
+    "zh": "其他铁或非合金钢条杆（72151000）"
+  },
+  {
+    "cnCode": "72155011",
+    "en": "Other bars and rods of iron or non-alloy steel — Other, not further worked than cold-formed or cold-finished — Containing by weight less than 0,25 % of carbon — Of rectangular (other than square) cross-section",
+    "zh": "其他铁或非合金钢条杆；按重量计含碳＜0.25%（72155011）"
+  },
+  {
+    "cnCode": "72155019",
+    "en": "Other bars and rods of iron or non-alloy steel — Other, not further worked than cold-formed or cold-finished — Containing by weight less than 0,25 % of carbon — Other",
+    "zh": "其他铁或非合金钢条杆；按重量计含碳＜0.25%（72155019）"
+  },
+  {
+    "cnCode": "72155080",
+    "en": "Other bars and rods of iron or non-alloy steel — Other, not further worked than cold-formed or cold-finished — Containing by weight 0,25 % or more of carbon",
+    "zh": "其他铁或非合金钢条杆（72155080）"
+  },
+  {
+    "cnCode": "72159000",
+    "en": "Other bars and rods of iron or non-alloy steel — Other",
+    "zh": "其他铁或非合金钢条杆；其他"
+  },
+  {
+    "cnCode": "72161000",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — U, I or H sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of less than 80 mm",
+    "zh": "铁或非合金钢角材、型材及异型材；U形、I形或H形型钢，高度＜80mm"
+  },
+  {
+    "cnCode": "72162100",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — L or T sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of less than 80 mm — L sections",
+    "zh": "铁或非合金钢角材、型材及异型材；L形或T形型钢，高度＜80mm（72162100）"
+  },
+  {
+    "cnCode": "72162200",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — L or T sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of less than 80 mm — T sections",
+    "zh": "铁或非合金钢角材、型材及异型材；L形或T形型钢，高度＜80mm（72162200）"
+  },
+  {
+    "cnCode": "72163110",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — U, I or H sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of 80 mm or more — U sections — Of a height of 80 mm or more but not exceeding 220 mm",
+    "zh": "铁或非合金钢角材、型材及异型材；U形、I形或H形型钢，高度≥80mm（72163110）"
+  },
+  {
+    "cnCode": "72163190",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — U, I or H sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of 80 mm or more — U sections — Of a height exceeding 220 mm",
+    "zh": "铁或非合金钢角材、型材及异型材；U形、I形或H形型钢，高度≥80mm（72163190）"
+  },
+  {
+    "cnCode": "72163211",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — U, I or H sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of 80 mm or more — I sections — Of a height of 80 mm or more but not exceeding 220 mm — With parallel flange faces",
+    "zh": "铁或非合金钢角材、型材及异型材；U形、I形或H形型钢，高度≥80mm（72163211）"
+  },
+  {
+    "cnCode": "72163219",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — U, I or H sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of 80 mm or more — I sections — Of a height of 80 mm or more but not exceeding 220 mm — Other",
+    "zh": "铁或非合金钢角材、型材及异型材；U形、I形或H形型钢，高度≥80mm（72163219）"
+  },
+  {
+    "cnCode": "72163291",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — U, I or H sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of 80 mm or more — I sections — Of a height exceeding 220 mm — With parallel flange faces",
+    "zh": "铁或非合金钢角材、型材及异型材；U形、I形或H形型钢，高度≥80mm（72163291）"
+  },
+  {
+    "cnCode": "72163299",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — U, I or H sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of 80 mm or more — I sections — Of a height exceeding 220 mm — Other",
+    "zh": "铁或非合金钢角材、型材及异型材；U形、I形或H形型钢，高度≥80mm（72163299）"
+  },
+  {
+    "cnCode": "72163310",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — U, I or H sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of 80 mm or more — H sections — Of a height of 80 mm or more but not exceeding 180 mm",
+    "zh": "铁或非合金钢角材、型材及异型材；U形、I形或H形型钢，高度≥80mm（72163310）"
+  },
+  {
+    "cnCode": "72163390",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — U, I or H sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of 80 mm or more — H sections — Of a height exceeding 180 mm",
+    "zh": "铁或非合金钢角材、型材及异型材；U形、I形或H形型钢，高度≥80mm（72163390）"
+  },
+  {
+    "cnCode": "72164010",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — L or T sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of 80 mm or more — L sections",
+    "zh": "铁或非合金钢角材、型材及异型材；L形或T形型钢，高度≥80mm（72164010）"
+  },
+  {
+    "cnCode": "72164090",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — L or T sections, not further worked than hot-rolled, hot-drawn or extruded, of a height of 80 mm or more — T sections",
+    "zh": "铁或非合金钢角材、型材及异型材；L形或T形型钢，高度≥80mm（72164090）"
+  },
+  {
+    "cnCode": "72165010",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — Other angles, shapes and sections, not further worked than hot-rolled, hot-drawn or extruded — With a cross-section which is capable of being enclosed in a square the side of which is 80 mm",
+    "zh": "铁或非合金钢角材、型材及异型材（72165010）"
+  },
+  {
+    "cnCode": "72165091",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — Other angles, shapes and sections, not further worked than hot-rolled, hot-drawn or extruded — Other — Bulb flats — Other",
+    "zh": "铁或非合金钢角材、型材及异型材；其他（72165091）"
+  },
+  {
+    "cnCode": "72165099",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — Other angles, shapes and sections, not further worked than hot-rolled, hot-drawn or extruded — Other",
+    "zh": "铁或非合金钢角材、型材及异型材；其他（72165099）"
+  },
+  {
+    "cnCode": "72166110",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — Angles, shapes and sections, not further worked than cold-formed or cold-finished — Obtained from flat-rolled products — C, L, U, Z, omega or open-ended sections",
+    "zh": "铁或非合金钢角材、型材及异型材（72166110）"
+  },
+  {
+    "cnCode": "72166190",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — Angles, shapes and sections, not further worked than cold-formed or cold-finished — Obtained from flat-rolled products — Other",
+    "zh": "铁或非合金钢角材、型材及异型材；其他（72166190）"
+  },
+  {
+    "cnCode": "72166900",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — Angles, shapes and sections, not further worked than cold-formed or cold-finished — Other",
+    "zh": "铁或非合金钢角材、型材及异型材；其他（72166900）"
+  },
+  {
+    "cnCode": "72169110",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — Other — Cold-formed or cold-finished from flat-rolled products — Profiled (ribbed) sheets",
+    "zh": "铁或非合金钢角材、型材及异型材；其他（72169110）"
+  },
+  {
+    "cnCode": "72169180",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — Other — Cold-formed or cold-finished from flat-rolled products — Other",
+    "zh": "铁或非合金钢角材、型材及异型材；其他（72169180）"
+  },
+  {
+    "cnCode": "72169900",
+    "en": "Angles, shapes and sections of iron or non-alloy steel — Other",
+    "zh": "铁或非合金钢角材、型材及异型材；其他（72169900）"
+  },
+  {
+    "cnCode": "72171010",
+    "en": "Wire of iron or non-alloy steel — Not plated or coated, whether or not polished — Containing by weight less than 0,25 % of carbon — With a maximum cross-sectional dimension of less than 0,8 mm",
+    "zh": "铁或非合金钢丝；按重量计含碳＜0.25%（72171010）"
+  },
+  {
+    "cnCode": "72171031",
+    "en": "Wire of iron or non-alloy steel — Not plated or coated, whether or not polished — Containing by weight less than 0,25 % of carbon — With a maximum cross-sectional dimension of 0,8 mm or more — Containing indentations, ribs, grooves or other deformations produced during the rolling process",
+    "zh": "铁或非合金钢丝；按重量计含碳＜0.25%（72171031）"
+  },
+  {
+    "cnCode": "72171039",
+    "en": "Wire of iron or non-alloy steel — Not plated or coated, whether or not polished — Containing by weight less than 0,25 % of carbon — With a maximum cross-sectional dimension of 0,8 mm or more — Other",
+    "zh": "铁或非合金钢丝；按重量计含碳＜0.25%（72171039）"
+  },
+  {
+    "cnCode": "72171050",
+    "en": "Wire of iron or non-alloy steel — Not plated or coated, whether or not polished — Containing by weight 0,25 % or more but less than 0,6 % of carbon",
+    "zh": "铁或非合金钢丝；按重量计含碳0.25%–0.6%（72171050）"
+  },
+  {
+    "cnCode": "72171090",
+    "en": "Wire of iron or non-alloy steel — Not plated or coated, whether or not polished — Containing by weight 0,6 % or more of carbon — Other",
+    "zh": "铁或非合金钢丝；按重量计含碳≥0.6%（72171090）"
+  },
+  {
+    "cnCode": "72172010",
+    "en": "Wire of iron or non-alloy steel — Plated or coated with zinc — Containing by weight less than 0,25 % of carbon — With a maximum cross-sectional dimension of less than 0,8 mm",
+    "zh": "铁或非合金钢丝；按重量计含碳＜0.25%（72172010）"
+  },
+  {
+    "cnCode": "72172030",
+    "en": "Wire of iron or non-alloy steel — Plated or coated with zinc — Containing by weight less than 0,25 % of carbon — With a maximum cross-sectional dimension of 0,8 mm or more",
+    "zh": "铁或非合金钢丝；按重量计含碳＜0.25%（72172030）"
+  },
+  {
+    "cnCode": "72172050",
+    "en": "Wire of iron or non-alloy steel — Plated or coated with zinc — Containing by weight 0,25 % or more but less than 0,6 % of carbon",
+    "zh": "铁或非合金钢丝；按重量计含碳0.25%–0.6%（72172050）"
+  },
+  {
+    "cnCode": "72172090",
+    "en": "Wire of iron or non-alloy steel — Plated or coated with zinc — Containing by weight 0,6 % or more of carbon — Other",
+    "zh": "铁或非合金钢丝；按重量计含碳≥0.6%（72172090）"
+  },
+  {
+    "cnCode": "72173041",
+    "en": "Wire of iron or non-alloy steel — Plated or coated with other base metals — Containing by weight less than 0,25 % of carbon — Copper-coated",
+    "zh": "铁或非合金钢丝；按重量计含碳＜0.25%（72173041）"
+  },
+  {
+    "cnCode": "72173049",
+    "en": "Wire of iron or non-alloy steel — Plated or coated with other base metals — Containing by weight less than 0,25 % of carbon — Other",
+    "zh": "铁或非合金钢丝；按重量计含碳＜0.25%（72173049）"
+  },
+  {
+    "cnCode": "72173050",
+    "en": "Wire of iron or non-alloy steel — Plated or coated with other base metals — Containing by weight 0,25 % or more but less than 0,6 % of carbon",
+    "zh": "铁或非合金钢丝；按重量计含碳0.25%–0.6%（72173050）"
+  },
+  {
+    "cnCode": "72173090",
+    "en": "Wire of iron or non-alloy steel — Plated or coated with other base metals — Containing by weight 0,6 % or more of carbon",
+    "zh": "铁或非合金钢丝；按重量计含碳≥0.6%（72173090）"
+  },
+  {
+    "cnCode": "72179020",
+    "en": "Wire of iron or non-alloy steel — Other — Containing by weight less than 0,25 % of carbon",
+    "zh": "铁或非合金钢丝；按重量计含碳＜0.25%（72179020）"
+  },
+  {
+    "cnCode": "72179050",
+    "en": "Wire of iron or non-alloy steel — Other — Containing by weight 0,25 % or more but less than 0,6 % of carbon",
+    "zh": "铁或非合金钢丝；按重量计含碳0.25%–0.6%（72179050）"
+  },
+  {
+    "cnCode": "72179090",
+    "en": "Wire of iron or non-alloy steel — Other — Containing by weight 0,6 % or more of carbon",
+    "zh": "铁或非合金钢丝；按重量计含碳≥0.6%（72179090）"
+  },
+  {
+    "cnCode": "72181000",
+    "en": "Stainless steel in ingots or other primary forms; semi-finished products of stainless steel — Ingots and other primary forms",
+    "zh": "不锈钢锭、初级形状及半成品"
+  },
+  {
+    "cnCode": "72189110",
+    "en": "Stainless steel in ingots or other primary forms; semi-finished products of stainless steel — Other — Of rectangular (other than square) cross-section — Containing by weight 2,5 % or more of nickel",
+    "zh": "不锈钢锭、初级形状及半成品；其他（72189110）"
+  },
+  {
+    "cnCode": "72189180",
+    "en": "Stainless steel in ingots or other primary forms; semi-finished products of stainless steel — Other — Of rectangular (other than square) cross-section — Containing by weight less than 2,5 % of nickel",
+    "zh": "不锈钢锭、初级形状及半成品；其他（72189180）"
+  },
+  {
+    "cnCode": "72189911",
+    "en": "Stainless steel in ingots or other primary forms; semi-finished products of stainless steel — Other — Of square cross-section — Rolled or obtained by continous casting",
+    "zh": "不锈钢锭、初级形状及半成品；其他（72189911）"
+  },
+  {
+    "cnCode": "72189919",
+    "en": "Stainless steel in ingots or other primary forms; semi-finished products of stainless steel — Other — Of square cross-section — Forged",
+    "zh": "不锈钢锭、初级形状及半成品；其他（72189919）"
+  },
+  {
+    "cnCode": "72189920",
+    "en": "Stainless steel in ingots or other primary forms; semi-finished products of stainless steel — Other — Rolled or obtained by continuous casting",
+    "zh": "不锈钢锭、初级形状及半成品；其他（72189920）"
+  },
+  {
+    "cnCode": "72189980",
+    "en": "Stainless steel in ingots or other primary forms; semi-finished products of stainless steel — Other — Forged",
+    "zh": "不锈钢锭、初级形状及半成品；其他（72189980）"
+  },
+  {
+    "cnCode": "72191100",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, in coils — Of a thickness exceeding 10 mm — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度＞10mm（72191100）"
+  },
+  {
+    "cnCode": "72191210",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, in coils — Of a thickness of 4,75 mm or more but not exceeding 10 mm — Containing by weight 2,5 % or more of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度4.75–10mm（72191210）"
+  },
+  {
+    "cnCode": "72191290",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, in coils — Of a thickness of 4,75 mm or more but not exceeding 10 mm — Containing by weight less than 2,5 % of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度4.75–10mm（72191290）"
+  },
+  {
+    "cnCode": "72191310",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, in coils — Of a thickness of 3 mm or more but less than 4,75 mm — Containing by weight 2,5 % or more of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度3–4.75mm（72191310）"
+  },
+  {
+    "cnCode": "72191390",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, in coils — Of a thickness of 3 mm or more but less than 4,75 mm — Containing by weight less than 2,5 % of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度3–4.75mm（72191390）"
+  },
+  {
+    "cnCode": "72191410",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, in coils — Of a thickness of less than 3 mm — Containing by weight 2,5 % or more of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度＜3mm（72191410）"
+  },
+  {
+    "cnCode": "72191490",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, in coils — Of a thickness of less than 3 mm — Containing by weight less than 2,5 % of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度＜3mm（72191490）"
+  },
+  {
+    "cnCode": "72192110",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, not in coils — Of a thickness exceeding 10 mm — Containing by weight 2,5 % or more of nickel",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度＞10mm（72192110）"
+  },
+  {
+    "cnCode": "72192190",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, not in coils — Of a thickness exceeding 10 mm — Containing by weight less than 2,5 % of nickel",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度＞10mm（72192190）"
+  },
+  {
+    "cnCode": "72192210",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, not in coils — Of a thickness of 4,75 mm or more but not exceeding 10 mm — Containing by weight 2,5 % or more of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度4.75–10mm（72192210）"
+  },
+  {
+    "cnCode": "72192290",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, not in coils — Of a thickness of 4,75 mm or more but not exceeding 10 mm — Containing by weight less than 2,5 % of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度4.75–10mm（72192290）"
+  },
+  {
+    "cnCode": "72192300",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, not in coils — Of a thickness of 3 mm or more but less than 4,75 mm — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度3–4.75mm（72192300）"
+  },
+  {
+    "cnCode": "72192400",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than hot-rolled, not in coils — Of a thickness of less than 3 mm — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度＜3mm（72192400）"
+  },
+  {
+    "cnCode": "72193100",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than cold-rolled (cold-reduced) — Of a thickness of 4,75 mm or more — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度≥4.75mm"
+  },
+  {
+    "cnCode": "72193210",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than cold-rolled (cold-reduced) — Of a thickness of 3 mm or more but less than 4,75 mm — Containing by weight 2,5 % or more of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度3–4.75mm（72193210）"
+  },
+  {
+    "cnCode": "72193290",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than cold-rolled (cold-reduced) — Of a thickness of 3 mm or more but less than 4,75 mm — Containing by weight less than 2,5 % of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度3–4.75mm（72193290）"
+  },
+  {
+    "cnCode": "72193310",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than cold-rolled (cold-reduced) — Of a thickness exceeding 1 mm but less than 3 mm — Containing by weight 2,5 % or more of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度1–3mm（72193310）"
+  },
+  {
+    "cnCode": "72193390",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than cold-rolled (cold-reduced) — Of a thickness exceeding 1 mm but less than 3 mm — Containing by weight less than 2,5 % of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度1–3mm（72193390）"
+  },
+  {
+    "cnCode": "72193410",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than cold-rolled (cold-reduced) — Of a thickness of 0,5 mm or more but not exceeding 1 mm — Containing by weight 2,5 % or more of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度0.5–1mm（72193410）"
+  },
+  {
+    "cnCode": "72193490",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than cold-rolled (cold-reduced) — Of a thickness of 0,5 mm or more but not exceeding 1 mm — Containing by weight less than 2,5 % of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度0.5–1mm（72193490）"
+  },
+  {
+    "cnCode": "72193510",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than cold-rolled (cold-reduced) — Of a thickness of less than 0,5 mm — Containing by weight 2,5 % or more of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度＜0.5mm（72193510）"
+  },
+  {
+    "cnCode": "72193590",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Not further worked than cold-rolled (cold-reduced) — Of a thickness of less than 0,5 mm — Containing by weight less than 2,5 % of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；厚度＜0.5mm（72193590）"
+  },
+  {
+    "cnCode": "72199020",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Other — Perforated — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；穿孔"
+  },
+  {
+    "cnCode": "72199080",
+    "en": "Flat-rolled products of stainless steel, of a width of 600 mm or more — Other",
+    "zh": "不锈钢平板轧材，宽度≥600mm；其他"
+  },
+  {
+    "cnCode": "72201100",
+    "en": "Flat-rolled products of stainless steel, of a width of less than 600 mm — Not further worked than hot-rolled — Of a thickness of 4,75 mm or more — Other",
+    "zh": "不锈钢平板轧材，宽度＜600mm；厚度≥4.75mm"
+  },
+  {
+    "cnCode": "72201200",
+    "en": "Flat-rolled products of stainless steel, of a width of less than 600 mm — Not further worked than hot-rolled — Of a thickness of less than 4,75 mm — Other",
+    "zh": "不锈钢平板轧材，宽度＜600mm；其他（72201200）"
+  },
+  {
+    "cnCode": "72202021",
+    "en": "Flat-rolled products of stainless steel, of a width of less than 600 mm — Not further worked than cold-rolled (cold-reduced) — Of a thickness of 3 mm or more, containing by weight — 2,5 % or more of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度＜600mm；其他（72202021）"
+  },
+  {
+    "cnCode": "72202029",
+    "en": "Flat-rolled products of stainless steel, of a width of less than 600 mm — Not further worked than cold-rolled (cold-reduced) — Of a thickness of 3 mm or more, containing by weight — Less than 2,5 % of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度＜600mm；其他（72202029）"
+  },
+  {
+    "cnCode": "72202041",
+    "en": "Flat-rolled products of stainless steel, of a width of less than 600 mm — Not further worked than cold-rolled (cold-reduced) — Of a thickness exceeding 0,35 mm but of less than 3 mm, containing by weight — 2,5 % or more of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度＜600mm；其他（72202041）"
+  },
+  {
+    "cnCode": "72202049",
+    "en": "Flat-rolled products of stainless steel, of a width of less than 600 mm — Not further worked than cold-rolled (cold-reduced) — Of a thickness exceeding 0,35 mm but of less than 3 mm, containing by weight — Less than 2,5 % of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度＜600mm；其他（72202049）"
+  },
+  {
+    "cnCode": "72202081",
+    "en": "Flat-rolled products of stainless steel, of a width of less than 600 mm — Not further worked than cold-rolled (cold-reduced) — Of a thickness not exceeding 0,35 mm, containing by weight — 2,5 % or more of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度＜600mm；其他（72202081）"
+  },
+  {
+    "cnCode": "72202089",
+    "en": "Flat-rolled products of stainless steel, of a width of less than 600 mm — Not further worked than cold-rolled (cold-reduced) — Of a thickness not exceeding 0,35 mm, containing by weight — Less than 2,5 % of nickel — Other",
+    "zh": "不锈钢平板轧材，宽度＜600mm；其他（72202089）"
+  },
+  {
+    "cnCode": "72209020",
+    "en": "Flat-rolled products of stainless steel, of a width of less than 600 mm — Other — Perforated — Other",
+    "zh": "不锈钢平板轧材，宽度＜600mm；穿孔"
+  },
+  {
+    "cnCode": "72209080",
+    "en": "Flat-rolled products of stainless steel, of a width of less than 600 mm — Other",
+    "zh": "不锈钢平板轧材，宽度＜600mm；其他（72209080）"
+  },
+  {
+    "cnCode": "72210010",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of stainless steel — Containing by weight 2,5 % or more of nickel",
+    "zh": "不锈钢热轧盘条（72210010）"
+  },
+  {
+    "cnCode": "72210090",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of stainless steel — Containing by weight less than 2,5 % of nickel",
+    "zh": "不锈钢热轧盘条（72210090）"
+  },
+  {
+    "cnCode": "72221111",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Of circular cross-section — Of a diameter of 80 mm or more, containing by weight — 2,5 % or more of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；圆形截面（72221111）"
+  },
+  {
+    "cnCode": "72221119",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Of circular cross-section — Of a diameter of 80 mm or more, containing by weight — Less than 2,5 % of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；圆形截面（72221119）"
+  },
+  {
+    "cnCode": "72221181",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Of circular cross-section — Of a diameter of less than 80 mm, containing by weight — 2,5 % or more of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；圆形截面（72221181）"
+  },
+  {
+    "cnCode": "72221189",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Of circular cross-section — Of a diameter of less than 80 mm, containing by weight — Less than 2,5 % of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；圆形截面（72221189）"
+  },
+  {
+    "cnCode": "72221910",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Other — Containing by weight 2,5 % or more of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；其他（72221910）"
+  },
+  {
+    "cnCode": "72221990",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Other — Containing by weight less than 2,5 % of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；其他（72221990）"
+  },
+  {
+    "cnCode": "72222011",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than cold-formed or cold-finished — Of circular cross-section — Of a diameter of 80 mm or more, containing by weight — 2,5 % or more of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；圆形截面（72222011）"
+  },
+  {
+    "cnCode": "72222019",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than cold-formed or cold-finished — Of circular cross-section — Of a diameter of 80 mm or more, containing by weight — Less than 2,5 % of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；圆形截面（72222019）"
+  },
+  {
+    "cnCode": "72222021",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than cold-formed or cold-finished — Of circular cross-section — Of a diameter of 25 mm or more, but less than 80 mm, containing by weight — 2,5 % or more of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；圆形截面（72222021）"
+  },
+  {
+    "cnCode": "72222029",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than cold-formed or cold-finished — Of circular cross-section — Of a diameter of 25 mm or more, but less than 80 mm, containing by weight — Less than 2,5 % of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；圆形截面（72222029）"
+  },
+  {
+    "cnCode": "72222031",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than cold-formed or cold-finished — Of circular cross-section — Of a diameter of less than 25 mm, containing by weight — 2,5 % or more of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；圆形截面（72222031）"
+  },
+  {
+    "cnCode": "72222039",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than cold-formed or cold-finished — Of circular cross-section — Of a diameter of less than 25 mm, containing by weight — Less than 2,5 % of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；圆形截面（72222039）"
+  },
+  {
+    "cnCode": "72222081",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than cold-formed or cold-finished — Other, containing by weight — 2,5 % or more of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材（72222081）"
+  },
+  {
+    "cnCode": "72222089",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Bars and rods, not further worked than cold-formed or cold-finished — Other, containing by weight — Less than 2,5 % of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材（72222089）"
+  },
+  {
+    "cnCode": "72223051",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Other bars and rods — Forged, containing by weight — 2,5 % or more of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材（72223051）"
+  },
+  {
+    "cnCode": "72223091",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Other bars and rods — Forged, containing by weight — Less than 2,5 % of nickel",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材（72223091）"
+  },
+  {
+    "cnCode": "72223097",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Other bars and rods — Other",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；其他（72223097）"
+  },
+  {
+    "cnCode": "72224010",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Angles, shapes and sections — Not further worked than hot-rolled, hot-drawn or extruded",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材（72224010）"
+  },
+  {
+    "cnCode": "72224050",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Angles, shapes and sections — Not further worked than cold-formed or cold-finished",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材（72224050）"
+  },
+  {
+    "cnCode": "72224090",
+    "en": "Other bars and rods of stainless steel; angles, shapes and sections of stainless steel — Angles, shapes and sections — Other",
+    "zh": "其他不锈钢条杆；不锈钢角材、型材及异型材；其他（72224090）"
+  },
+  {
+    "cnCode": "72230011",
+    "en": "Wire of stainless steel — Containing by weight 2,5 % or more of nickel — Containing by weight 28 % or more but not more than 31 % of nickel and 20 % or more but not more than 22 % of chromium",
+    "zh": "不锈钢丝（72230011）"
+  },
+  {
+    "cnCode": "72230019",
+    "en": "Wire of stainless steel — Containing by weight 2,5 % or more of nickel — Other",
+    "zh": "不锈钢丝；其他（72230019）"
+  },
+  {
+    "cnCode": "72230091",
+    "en": "Wire of stainless steel — Containing by weight less than 2,5 % of nickel — Containing by weight 13 % or more but not more than 25 % of chromium and 3,5 % or more but not more than 6 % of aluminium",
+    "zh": "不锈钢丝（72230091）"
+  },
+  {
+    "cnCode": "72230099",
+    "en": "Wire of stainless steel — Containing by weight less than 2,5 % of nickel — Other",
+    "zh": "不锈钢丝；其他（72230099）"
+  },
+  {
+    "cnCode": "72241010",
+    "en": "Other alloy steel in ingots or other primary forms; semi-finished products of other alloy steel — Ingots and other primary forms — Of tool steel",
+    "zh": "其他合金钢锭、初级形状及半成品"
+  },
+  {
+    "cnCode": "72241090",
+    "en": "Other alloy steel in ingots or other primary forms; semi-finished products of other alloy steel — Ingots and other primary forms — Other",
+    "zh": "其他合金钢锭、初级形状及半成品；其他（72241090）"
+  },
+  {
+    "cnCode": "72249002",
+    "en": "Other alloy steel in ingots or other primary forms; semi-finished products of other alloy steel — Other — Of tool steel — Other",
+    "zh": "其他合金钢锭、初级形状及半成品；其他（72249002）"
+  },
+  {
+    "cnCode": "72249003",
+    "en": "Other alloy steel in ingots or other primary forms; semi-finished products of other alloy steel — Other — Of rectangular (including square) cross-section — Hot-rolled or obtained by continuous casting — The width measuring less than twice the thickness — Of high-speed steel",
+    "zh": "其他合金钢锭、初级形状及半成品；其他（72249003）"
+  },
+  {
+    "cnCode": "72249005",
+    "en": "Other alloy steel in ingots or other primary forms; semi-finished products of other alloy steel — Other — Of rectangular (including square) cross-section — Hot-rolled or obtained by continuous casting — The width measuring less than twice the thickness — Containing by weight not more than 0,7 % of carbon, 0,5 % or more but not more than 1,2 % of manganese and 0,6 % or more but not more than 2,3 % of silicon; containing by weight 0,0008 % or more of boron with any other element less than the minimum content referred to in note 1(f) to this chapter",
+    "zh": "其他合金钢锭、初级形状及半成品；其他（72249005）"
+  },
+  {
+    "cnCode": "72249007",
+    "en": "Other alloy steel in ingots or other primary forms; semi-finished products of other alloy steel — Other — Of rectangular (including square) cross-section — Hot-rolled or obtained by continuous casting — The width measuring less than twice the thickness — Other",
+    "zh": "其他合金钢锭、初级形状及半成品；其他（72249007）"
+  },
+  {
+    "cnCode": "72249014",
+    "en": "Other alloy steel in ingots or other primary forms; semi-finished products of other alloy steel — Other — Of rectangular (including square) cross-section — Hot-rolled or obtained by continuous casting — Other",
+    "zh": "其他合金钢锭、初级形状及半成品；其他（72249014）"
+  },
+  {
+    "cnCode": "72249018",
+    "en": "Other alloy steel in ingots or other primary forms; semi-finished products of other alloy steel — Other — Of rectangular (including square) cross-section — Forged",
+    "zh": "其他合金钢锭、初级形状及半成品；其他（72249018）"
+  },
+  {
+    "cnCode": "72249031",
+    "en": "Other alloy steel in ingots or other primary forms; semi-finished products of other alloy steel — Other — Hot-rolled or obtained by continuous casting — Containing by weight not less than 0,9 % but not more than 1,15 % of carbon, not less than 0,5 % but not more than 2 % of chromium and, if present, not more than 0,5 % of molybdenum",
+    "zh": "其他合金钢锭、初级形状及半成品；其他（72249031）"
+  },
+  {
+    "cnCode": "72249038",
+    "en": "Other alloy steel in ingots or other primary forms; semi-finished products of other alloy steel — Other — Hot-rolled or obtained by continuous casting — Other",
+    "zh": "其他合金钢锭、初级形状及半成品；其他（72249038）"
+  },
+  {
+    "cnCode": "72249090",
+    "en": "Other alloy steel in ingots or other primary forms; semi-finished products of other alloy steel — Other — Forged",
+    "zh": "其他合金钢锭、初级形状及半成品；其他（72249090）"
+  },
+  {
+    "cnCode": "72251100",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Of silicon-electrical steel — Grain-oriented — Of a thickness exceeding 0,16 mm — With a maximum core loss not higher than 0.9 W/kg — With a maximum core loss higher than 0.7 W/kg but not higher than 0,9 W/kg",
+    "zh": "其他合金钢平板轧材，宽度≥600mm（72251100）"
+  },
+  {
+    "cnCode": "72251910",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Of silicon-electrical steel — Other — Hot-rolled — Other",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；其他（72251910）"
+  },
+  {
+    "cnCode": "72251990",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Of silicon-electrical steel — Other — Cold-rolled",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；其他（72251990）"
+  },
+  {
+    "cnCode": "72253010",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other, not further worked than hot-rolled, in coils — Of tool steel",
+    "zh": "其他合金钢平板轧材，宽度≥600mm（72253010）"
+  },
+  {
+    "cnCode": "72253030",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other, not further worked than hot-rolled, in coils — Of high-speed steel — Other",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；其他（72253030）"
+  },
+  {
+    "cnCode": "72253090",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other, not further worked than hot-rolled, in coils — Other",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；其他（72253090）"
+  },
+  {
+    "cnCode": "72254012",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other, not further worked than hot-rolled, not in coils — Of tool steel — Other",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；其他（72254012）"
+  },
+  {
+    "cnCode": "72254015",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other, not further worked than hot-rolled, not in coils — Of high-speed steel — Other",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；其他（72254015）"
+  },
+  {
+    "cnCode": "72254040",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other, not further worked than hot-rolled, not in coils — Other — Of a thickness exceeding 10 mm",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；厚度＞10mm"
+  },
+  {
+    "cnCode": "72254060",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other, not further worked than hot-rolled, not in coils — Other — Of a thickness of 4,75 mm or more but not exceeding 10 mm — Other",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；厚度4.75–10mm"
+  },
+  {
+    "cnCode": "72254090",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other, not further worked than hot-rolled, not in coils — Other — Of a thickness of less than 4,75 mm",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；其他（72254090）"
+  },
+  {
+    "cnCode": "72255020",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other, not further worked than cold-rolled (cold-reduced) — Of high-speed steel — Other",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；其他,冷轧（72255020）"
+  },
+  {
+    "cnCode": "72255080",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other, not further worked than cold-rolled (cold-reduced) — Other",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；其他,冷轧（72255080）"
+  },
+  {
+    "cnCode": "72259100",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other — Electrolytically plated or coated with zinc — Other",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；电镀锌"
+  },
+  {
+    "cnCode": "72259200",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other — Otherwise plated or coated with zinc — Not further worked than surface-treated, including cladding or simply cut into shapes other than rectangular (including square) — Other",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；其他镀锌或涂锌"
+  },
+  {
+    "cnCode": "72259900",
+    "en": "Flat-rolled products of other alloy steel, of a width of 600 mm or more — Other",
+    "zh": "其他合金钢平板轧材，宽度≥600mm；其他（72259900）"
+  },
+  {
+    "cnCode": "72261100",
+    "en": "Flat-rolled products of other alloy steel, of a width of less than 600 mm — Of silicon-electrical steel — Grain-oriented — Of a width not exceeding 500 mm — Of a thickness exceeding 0,16 mm — With a maximum core loss higher than 1,05 W/kg",
+    "zh": "其他合金钢平板轧材，宽度＜600mm"
+  },
+  {
+    "cnCode": "72261910",
+    "en": "Flat-rolled products of other alloy steel, of a width of less than 600 mm — Of silicon-electrical steel — Other — Not further worked than hot-rolled — Other",
+    "zh": "其他合金钢平板轧材，宽度＜600mm；其他（72261910）"
+  },
+  {
+    "cnCode": "72261980",
+    "en": "Flat-rolled products of other alloy steel, of a width of less than 600 mm — Of silicon-electrical steel — Other — Of a width not exceeding 500 mm",
+    "zh": "其他合金钢平板轧材，宽度＜600mm；其他（72261980）"
+  },
+  {
+    "cnCode": "72262000",
+    "en": "Flat-rolled products of other alloy steel, of a width of less than 600 mm — Of high-speed steel — Other",
+    "zh": "其他合金钢平板轧材，宽度＜600mm；其他（72262000）"
+  },
+  {
+    "cnCode": "72269120",
+    "en": "Flat-rolled products of other alloy steel, of a width of less than 600 mm — Other — Not further worked than hot-rolled — Of tool steel",
+    "zh": "其他合金钢平板轧材，宽度＜600mm；其他（72269120）"
+  },
+  {
+    "cnCode": "72269191",
+    "en": "Flat-rolled products of other alloy steel, of a width of less than 600 mm — Other — Not further worked than hot-rolled — Other — Of a thickness of 4,75 mm or more — Other",
+    "zh": "其他合金钢平板轧材，宽度＜600mm；厚度≥4.75mm"
+  },
+  {
+    "cnCode": "72269199",
+    "en": "Flat-rolled products of other alloy steel, of a width of less than 600 mm — Other — Not further worked than hot-rolled — Other — Of a thickness of less than 4,75 mm",
+    "zh": "其他合金钢平板轧材，宽度＜600mm；其他（72269199）"
+  },
+  {
+    "cnCode": "72269200",
+    "en": "Flat-rolled products of other alloy steel, of a width of less than 600 mm — Other — Not further worked than cold-rolled (cold-reduced) — Of a width not exceeding 500 mm",
+    "zh": "其他合金钢平板轧材，宽度＜600mm；其他（72269200）"
+  },
+  {
+    "cnCode": "72269910",
+    "en": "Flat-rolled products of other alloy steel, of a width of less than 600 mm — Other — Electrolytically plated or coated with zinc",
+    "zh": "其他合金钢平板轧材，宽度＜600mm；电镀锌"
+  },
+  {
+    "cnCode": "72269930",
+    "en": "Flat-rolled products of other alloy steel, of a width of less than 600 mm — Other — Otherwise plated or coated with zinc — Other",
+    "zh": "其他合金钢平板轧材，宽度＜600mm；其他镀锌或涂锌"
+  },
+  {
+    "cnCode": "72269970",
+    "en": "Flat-rolled products of other alloy steel, of a width of less than 600 mm — Other",
+    "zh": "其他合金钢平板轧材，宽度＜600mm；其他（72269970）"
+  },
+  {
+    "cnCode": "72271000",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of other alloy steel — Of high-speed steel",
+    "zh": "其他合金钢热轧盘条（72271000）"
+  },
+  {
+    "cnCode": "72272000",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of other alloy steel — Of silico-manganese steel",
+    "zh": "其他合金钢热轧盘条（72272000）"
+  },
+  {
+    "cnCode": "72279010",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of other alloy steel — Other — Containing by weight 0,0008 % or more of boron with any other element less than the minimum content referred to in note 1(f) to this chapter",
+    "zh": "其他合金钢热轧盘条；其他（72279010）"
+  },
+  {
+    "cnCode": "72279050",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of other alloy steel — Other — Containing by weight 0,9 % or more but not more than 1,15 % of carbon, 0,5 % or more but not more than 2 % of chromium and, if present, not more than 0,5 % of molybdenum",
+    "zh": "其他合金钢热轧盘条；其他（72279050）"
+  },
+  {
+    "cnCode": "72279095",
+    "en": "Bars and rods, hot-rolled, in irregularly wound coils, of other alloy steel — Other",
+    "zh": "其他合金钢热轧盘条；其他（72279095）"
+  },
+  {
+    "cnCode": "72281020",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Bars and rods, of high-speed steel — Not further worked than hot-rolled, hot-drawn or extruded; hot-rolled, hot-drawn or extruded, not further worked than clad",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢（72281020）"
+  },
+  {
+    "cnCode": "72281050",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Bars and rods, of high-speed steel — Forged",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢（72281050）"
+  },
+  {
+    "cnCode": "72281090",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Bars and rods, of high-speed steel — Other",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72281090）"
+  },
+  {
+    "cnCode": "72282010",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Bars and rods, of silico-manganese steel — Of rectangular (other than square) cross-section, hot-rolled on four faces — Other",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72282010）"
+  },
+  {
+    "cnCode": "72282091",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Bars and rods, of silico-manganese steel — Other — Not further worked than hot-rolled, hot-drawn or extruded; hot-rolled, hot-drawn or extruded, not further worked than clad",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72282091）"
+  },
+  {
+    "cnCode": "72282099",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Bars and rods, of silico-manganese steel — Other",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72282099）"
+  },
+  {
+    "cnCode": "72283020",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Of tool steel",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢（72283020）"
+  },
+  {
+    "cnCode": "72283041",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Containing by weight 0,9 % or more but not more than 1,15 % of carbon, 0,5 % or more but not more than 2 % of chromium and, if present, not more than 0,5 % of molybdenum — Of circular cross-section of a diameter of 80 mm or more",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢（72283041）"
+  },
+  {
+    "cnCode": "72283049",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Containing by weight 0,9 % or more but not more than 1,15 % of carbon, 0,5 % or more but not more than 2 % of chromium and, if present, not more than 0,5 % of molybdenum — Other",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72283049）"
+  },
+  {
+    "cnCode": "72283061",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Other — Of circular cross-section, of a diameter of — 80 mm or more",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72283061）"
+  },
+  {
+    "cnCode": "72283069",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Other — Of circular cross-section, of a diameter of — Less than 80 mm — Other",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72283069）"
+  },
+  {
+    "cnCode": "72283070",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Other — Of rectangular (other than square) cross-section, hot-rolled on four faces",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72283070）"
+  },
+  {
+    "cnCode": "72283089",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than hot-rolled, hot-drawn or extruded — Other",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72283089）"
+  },
+  {
+    "cnCode": "72284010",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than forged — Of tool steel",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢（72284010）"
+  },
+  {
+    "cnCode": "72284090",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than forged — Other",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72284090）"
+  },
+  {
+    "cnCode": "72285020",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than cold-formed or cold-finished — Of tool steel",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢（72285020）"
+  },
+  {
+    "cnCode": "72285040",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than cold-formed or cold-finished — Containing by weight 0,9 % or more but not more than 1,15 % of carbon, 0,5 % or more but not more than 2 % of chromium and, if present, not more than 0,5 % of molybdenum",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢（72285040）"
+  },
+  {
+    "cnCode": "72285061",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than cold-formed or cold-finished — Other — Of circular cross-section, of a diameter of — 80 mm or more",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72285061）"
+  },
+  {
+    "cnCode": "72285069",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than cold-formed or cold-finished — Other — Of circular cross-section, of a diameter of — Less than 80 mm",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72285069）"
+  },
+  {
+    "cnCode": "72285080",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods, not further worked than cold-formed or cold-finished — Other",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72285080）"
+  },
+  {
+    "cnCode": "72286020",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods — Of tool steel — Other",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72286020）"
+  },
+  {
+    "cnCode": "72286080",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Other bars and rods — Other",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72286080）"
+  },
+  {
+    "cnCode": "72287010",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Angles, shapes and sections — Not further worked than hot-rolled, hot-drawn or extruded",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢（72287010）"
+  },
+  {
+    "cnCode": "72287090",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Angles, shapes and sections — Other",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢；其他（72287090）"
+  },
+  {
+    "cnCode": "72288000",
+    "en": "Other bars and rods of other alloy steel; angles, shapes and sections, of other alloy steel; hollow drill bars and rods, of alloy or non-alloy steel — Hollow drill bars and rods",
+    "zh": "其他合金钢条杆、角材、型材及异型材；空心钻钢（72288000）"
+  },
+  {
+    "cnCode": "72292000",
+    "en": "Wire of other alloy steel — Of silico-manganese steel — Other",
+    "zh": "其他合金钢丝；其他（72292000）"
+  },
+  {
+    "cnCode": "72299020",
+    "en": "Wire of other alloy steel — Other — Of high-speed steel",
+    "zh": "其他合金钢丝；其他（72299020）"
+  },
+  {
+    "cnCode": "72299050",
+    "en": "Wire of other alloy steel — Other — Containing by weight 0,9 % or more but not more than 1,15 % of carbon, 0,5 % or more but not more than 2 % of chromium and, if present, not more than 0,5 % of molybdenum",
+    "zh": "其他合金钢丝；其他（72299050）"
+  },
+  {
+    "cnCode": "72299090",
+    "en": "Wire of other alloy steel — Other",
+    "zh": "其他合金钢丝；其他（72299090）"
+  },
+  {
+    "cnCode": "73011000",
+    "en": "Sheet piling of iron or steel, whether or not drilled, punched or made from assembled elements; welded angles, shapes and sections, of iron or steel — Sheet piling",
+    "zh": "铁或钢板桩；焊接角材、型材及异型材（73011000）"
+  },
+  {
+    "cnCode": "73012000",
+    "en": "Sheet piling of iron or steel, whether or not drilled, punched or made from assembled elements; welded angles, shapes and sections, of iron or steel — Angles, shapes and sections",
+    "zh": "铁或钢板桩；焊接角材、型材及异型材（73012000）"
+  },
+  {
+    "cnCode": "73021010",
+    "en": "Railway or tramway track construction material of iron or steel, the following: rails, check-rails and rack rails, switch blades, crossing frogs, point rods and other crossing pieces, sleepers (cross-ties), fish-plates, chairs, chair wedges, sole plates (base plates), rail clips, bedplates, ties and other material specialised for jointing or fixing rails — Rails — Current-conducting, with parts of non-ferrous metal",
+    "zh": "铁或钢轨道铺设材料（73021010）"
+  },
+  {
+    "cnCode": "73021022",
+    "en": "Railway or tramway track construction material of iron or steel, the following: rails, check-rails and rack rails, switch blades, crossing frogs, point rods and other crossing pieces, sleepers (cross-ties), fish-plates, chairs, chair wedges, sole plates (base plates), rail clips, bedplates, ties and other material specialised for jointing or fixing rails — Rails — Other — New — Vignole rails — Of a weight per metre of 36 kg or more",
+    "zh": "铁或钢轨道铺设材料；其他（73021022）"
+  },
+  {
+    "cnCode": "73021028",
+    "en": "Railway or tramway track construction material of iron or steel, the following: rails, check-rails and rack rails, switch blades, crossing frogs, point rods and other crossing pieces, sleepers (cross-ties), fish-plates, chairs, chair wedges, sole plates (base plates), rail clips, bedplates, ties and other material specialised for jointing or fixing rails — Rails — Other — New — Vignole rails — Of a weight per metre of less than 36 kg",
+    "zh": "铁或钢轨道铺设材料；其他（73021028）"
+  },
+  {
+    "cnCode": "73021040",
+    "en": "Railway or tramway track construction material of iron or steel, the following: rails, check-rails and rack rails, switch blades, crossing frogs, point rods and other crossing pieces, sleepers (cross-ties), fish-plates, chairs, chair wedges, sole plates (base plates), rail clips, bedplates, ties and other material specialised for jointing or fixing rails — Rails — Other — New — Grooved rails",
+    "zh": "铁或钢轨道铺设材料；其他（73021040）"
+  },
+  {
+    "cnCode": "73021050",
+    "en": "Railway or tramway track construction material of iron or steel, the following: rails, check-rails and rack rails, switch blades, crossing frogs, point rods and other crossing pieces, sleepers (cross-ties), fish-plates, chairs, chair wedges, sole plates (base plates), rail clips, bedplates, ties and other material specialised for jointing or fixing rails — Rails — Other — New — Other",
+    "zh": "铁或钢轨道铺设材料；其他（73021050）"
+  },
+  {
+    "cnCode": "73021090",
+    "en": "Railway or tramway track construction material of iron or steel, the following: rails, check-rails and rack rails, switch blades, crossing frogs, point rods and other crossing pieces, sleepers (cross-ties), fish-plates, chairs, chair wedges, sole plates (base plates), rail clips, bedplates, ties and other material specialised for jointing or fixing rails — Rails — Other — Used",
+    "zh": "铁或钢轨道铺设材料；其他（73021090）"
+  },
+  {
+    "cnCode": "73023000",
+    "en": "Railway or tramway track construction material of iron or steel, the following: rails, check-rails and rack rails, switch blades, crossing frogs, point rods and other crossing pieces, sleepers (cross-ties), fish-plates, chairs, chair wedges, sole plates (base plates), rail clips, bedplates, ties and other material specialised for jointing or fixing rails — Switch blades, crossing frogs, point rods and other crossing pieces",
+    "zh": "铁或钢轨道铺设材料（73023000）"
+  },
+  {
+    "cnCode": "73024000",
+    "en": "Railway or tramway track construction material of iron or steel, the following: rails, check-rails and rack rails, switch blades, crossing frogs, point rods and other crossing pieces, sleepers (cross-ties), fish-plates, chairs, chair wedges, sole plates (base plates), rail clips, bedplates, ties and other material specialised for jointing or fixing rails — Fish-plates and sole plates",
+    "zh": "铁或钢轨道铺设材料（73024000）"
+  },
+  {
+    "cnCode": "73029000",
+    "en": "Railway or tramway track construction material of iron or steel, the following: rails, check-rails and rack rails, switch blades, crossing frogs, point rods and other crossing pieces, sleepers (cross-ties), fish-plates, chairs, chair wedges, sole plates (base plates), rail clips, bedplates, ties and other material specialised for jointing or fixing rails — Other",
+    "zh": "铁或钢轨道铺设材料；其他（73029000）"
+  },
+  {
+    "cnCode": "73030010",
+    "en": "Tubes, pipes and hollow profiles, of cast iron — Tubes and pipes of a kind used in pressure systems — Other",
+    "zh": "铸铁管及空心型材；其他（73030010）"
+  },
+  {
+    "cnCode": "73030090",
+    "en": "Tubes, pipes and hollow profiles, of cast iron — Other",
+    "zh": "铸铁管及空心型材；其他（73030090）"
+  },
+  {
+    "cnCode": "73041100",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Line pipe of a kind used for oil or gas pipelines — Of stainless steel — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；石油或天然气管线管；不锈钢"
+  },
+  {
+    "cnCode": "73041910",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Line pipe of a kind used for oil or gas pipelines — Other — Of an external diameter not exceeding 168,3 mm — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；石油或天然气管线管（73041910）"
+  },
+  {
+    "cnCode": "73041930",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Line pipe of a kind used for oil or gas pipelines — Other — Of an external diameter exceeding 168,3 mm but not exceeding 406,4 mm — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；石油或天然气管线管（73041930）"
+  },
+  {
+    "cnCode": "73041990",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Line pipe of a kind used for oil or gas pipelines — Other — Of an external diameter exceeding 406,4 mm",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；石油或天然气管线管（73041990）"
+  },
+  {
+    "cnCode": "73042200",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Casing, tubing and drill pipe, of a kind used in drilling for oil or gas — Drill pipe of stainless steel — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；石油或天然气钻探用套管、油管及钻杆（73042200）"
+  },
+  {
+    "cnCode": "73042300",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Casing, tubing and drill pipe, of a kind used in drilling for oil or gas — Other drill pipe — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；石油或天然气钻探用套管、油管及钻杆（73042300）"
+  },
+  {
+    "cnCode": "73042400",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Casing, tubing and drill pipe, of a kind used in drilling for oil or gas — Other, of stainless steel — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；石油或天然气钻探用套管、油管及钻杆（73042400）"
+  },
+  {
+    "cnCode": "73042910",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Casing, tubing and drill pipe, of a kind used in drilling for oil or gas — Other — Of an external diameter not exceeding 168,3 mm — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；石油或天然气钻探用套管、油管及钻杆（73042910）"
+  },
+  {
+    "cnCode": "73042930",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Casing, tubing and drill pipe, of a kind used in drilling for oil or gas — Other — Of an external diameter exceeding 168,3 mm but not exceeding 406,4 mm — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；石油或天然气钻探用套管、油管及钻杆（73042930）"
+  },
+  {
+    "cnCode": "73042990",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Casing, tubing and drill pipe, of a kind used in drilling for oil or gas — Other — Of an external diameter exceeding 406,4 mm — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；石油或天然气钻探用套管、油管及钻杆（73042990）"
+  },
+  {
+    "cnCode": "73043120",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of iron or non-alloy steel — Cold-drawn or cold-rolled (cold-reduced) — Precision tubes — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，铁或非合金钢（73043120）"
+  },
+  {
+    "cnCode": "73043180",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of iron or non-alloy steel — Cold-drawn or cold-rolled (cold-reduced) — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，铁或非合金钢（73043180）"
+  },
+  {
+    "cnCode": "73043950",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of iron or non-alloy steel — Other — Threaded or threadable tubes (gas pipe) — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，铁或非合金钢（73043950）"
+  },
+  {
+    "cnCode": "73043982",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of iron or non-alloy steel — Other — Other, of an external diameter — Not exceeding 168,3 mm — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，铁或非合金钢（73043982）"
+  },
+  {
+    "cnCode": "73043983",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of iron or non-alloy steel — Other — Other, of an external diameter — Exceeding 168,3 mm but not exceeding 406,4 mm — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，铁或非合金钢（73043983）"
+  },
+  {
+    "cnCode": "73043988",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of iron or non-alloy steel — Other — Other, of an external diameter — Exceeding 406,4 mm",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，铁或非合金钢（73043988）"
+  },
+  {
+    "cnCode": "73044100",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of stainless steel — Cold-drawn or cold-rolled (cold-reduced) — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，不锈钢（73044100）"
+  },
+  {
+    "cnCode": "73044983",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of stainless steel — Other — Of an external diameter not exceeding 168,3 mm — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，不锈钢（73044983）"
+  },
+  {
+    "cnCode": "73044985",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of stainless steel — Other — Of an external diameter exceeding 168,3 mm but not exceeding 406,4 mm — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，不锈钢（73044985）"
+  },
+  {
+    "cnCode": "73044989",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of stainless steel — Other — Of an external diameter exceeding 406,4 mm — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，不锈钢（73044989）"
+  },
+  {
+    "cnCode": "73045110",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of other alloy steel — Cold-drawn or cold-rolled (cold-reduced) — Straight and of uniform wall thickness, of alloy steel containing by weight not less than 0,9 % but not more than 1,15 % of carbon, not less than 0,5 % but not more than 2 % of chromium and, if present, not more than 0,5 % of molybdenum",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，其他合金钢（73045110）"
+  },
+  {
+    "cnCode": "73045181",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of other alloy steel — Cold-drawn or cold-rolled (cold-reduced) — Other — Precision tubes",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，其他合金钢（73045181）"
+  },
+  {
+    "cnCode": "73045189",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of other alloy steel — Cold-drawn or cold-rolled (cold-reduced) — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，其他合金钢（73045189）"
+  },
+  {
+    "cnCode": "73045930",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of other alloy steel — Other — Straight and of uniform wall thickness, of alloy steel containing by weight not less than 0,9 % but not more than 1,15 % of carbon, not less than 0,5 % but not more than 2 % of chromium and, if present, not more than 0,5 % of molybdenum",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，其他合金钢（73045930）"
+  },
+  {
+    "cnCode": "73045982",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of other alloy steel — Other — Of an external diameter not exceeding 168,3 mm — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，其他合金钢（73045982）"
+  },
+  {
+    "cnCode": "73045983",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of other alloy steel — Other — Of an external diameter exceeding 168,3 mm but not exceeding 406,4 mm — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，其他合金钢（73045983）"
+  },
+  {
+    "cnCode": "73045989",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other, of circular cross-section, of other alloy steel — Other — Of an external diameter exceeding 406,4 mm",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他，圆形截面，其他合金钢（73045989）"
+  },
+  {
+    "cnCode": "73049000",
+    "en": "Tubes, pipes and hollow profiles, seamless, of iron (other than cast iron) or steel — Other",
+    "zh": "铁（非铸铁）或钢无缝管及空心型材；其他"
+  },
+  {
+    "cnCode": "73051100",
+    "en": "Other tubes and pipes (for example, welded, riveted or similarly closed), having circular cross-sections, the external diameter of which exceeds 406,4 mm, of iron or steel — Line pipe of a kind used for oil or gas pipelines — Longitudinally submerged arc welded",
+    "zh": "其他铁或钢圆形截面管，外径＞406.4mm；石油或天然气管线管（73051100）"
+  },
+  {
+    "cnCode": "73051200",
+    "en": "Other tubes and pipes (for example, welded, riveted or similarly closed), having circular cross-sections, the external diameter of which exceeds 406,4 mm, of iron or steel — Line pipe of a kind used for oil or gas pipelines — Other, longitudinally welded",
+    "zh": "其他铁或钢圆形截面管，外径＞406.4mm；石油或天然气管线管（73051200）"
+  },
+  {
+    "cnCode": "73051900",
+    "en": "Other tubes and pipes (for example, welded, riveted or similarly closed), having circular cross-sections, the external diameter of which exceeds 406,4 mm, of iron or steel — Line pipe of a kind used for oil or gas pipelines — Other",
+    "zh": "其他铁或钢圆形截面管，外径＞406.4mm；石油或天然气管线管（73051900）"
+  },
+  {
+    "cnCode": "73052000",
+    "en": "Other tubes and pipes (for example, welded, riveted or similarly closed), having circular cross-sections, the external diameter of which exceeds 406,4 mm, of iron or steel — Casing of a kind used in drilling for oil or gas",
+    "zh": "其他铁或钢圆形截面管，外径＞406.4mm（73052000）"
+  },
+  {
+    "cnCode": "73053100",
+    "en": "Other tubes and pipes (for example, welded, riveted or similarly closed), having circular cross-sections, the external diameter of which exceeds 406,4 mm, of iron or steel — Other, welded — Longitudinally welded",
+    "zh": "其他铁或钢圆形截面管，外径＞406.4mm（73053100）"
+  },
+  {
+    "cnCode": "73053900",
+    "en": "Other tubes and pipes (for example, welded, riveted or similarly closed), having circular cross-sections, the external diameter of which exceeds 406,4 mm, of iron or steel — Other, welded — Other",
+    "zh": "其他铁或钢圆形截面管，外径＞406.4mm；其他（73053900）"
+  },
+  {
+    "cnCode": "73059000",
+    "en": "Other tubes and pipes (for example, welded, riveted or similarly closed), having circular cross-sections, the external diameter of which exceeds 406,4 mm, of iron or steel — Other",
+    "zh": "其他铁或钢圆形截面管，外径＞406.4mm；其他（73059000）"
+  },
+  {
+    "cnCode": "73061100",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Line pipe of a kind used for oil or gas pipelines — Welded, of stainless steel",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；石油或天然气管线管（73061100）"
+  },
+  {
+    "cnCode": "73061900",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Line pipe of a kind used for oil or gas pipelines — Other",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；石油或天然气管线管（73061900）"
+  },
+  {
+    "cnCode": "73062100",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Casing and tubing of a kind used in drilling for oil or gas — Welded, of stainless steel",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）（73062100）"
+  },
+  {
+    "cnCode": "73062900",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Casing and tubing of a kind used in drilling for oil or gas — Other",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73062900）"
+  },
+  {
+    "cnCode": "73063012",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of circular cross-section, of iron or non-alloy steel — Precision tubes — Cold-drawn or cold-rolled (cold-reduced)",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）（73063012）"
+  },
+  {
+    "cnCode": "73063018",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of circular cross-section, of iron or non-alloy steel — Precision tubes — Other",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73063018）"
+  },
+  {
+    "cnCode": "73063041",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of circular cross-section, of iron or non-alloy steel — Other — Threaded or threadable tubes (gas pipe) — Plated or coated with zinc — Other",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73063041）"
+  },
+  {
+    "cnCode": "73063049",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of circular cross-section, of iron or non-alloy steel — Other — Threaded or threadable tubes (gas pipe) — Other",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73063049）"
+  },
+  {
+    "cnCode": "73063072",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of circular cross-section, of iron or non-alloy steel — Other — Other, of an external diameter — Not exceeding 168,3 mm — Plated or coated with zinc — Other",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73063072）"
+  },
+  {
+    "cnCode": "73063077",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of circular cross-section, of iron or non-alloy steel — Other — Other, of an external diameter — Not exceeding 168,3 mm — Other",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73063077）"
+  },
+  {
+    "cnCode": "73063080",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of circular cross-section, of iron or non-alloy steel — Other — Other, of an external diameter — Exceeding 168,3 mm but not exceeding 406,4 mm",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73063080）"
+  },
+  {
+    "cnCode": "73064020",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of circular cross-section, of stainless steel — Cold-drawn or cold-rolled (cold-reduced)",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）（73064020）"
+  },
+  {
+    "cnCode": "73064080",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of circular cross-section, of stainless steel — Other",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73064080）"
+  },
+  {
+    "cnCode": "73065021",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of circular cross-section, of other alloy steel — Precision tubes — Cold-drawn or cold-rolled (cold-reduced)",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）（73065021）"
+  },
+  {
+    "cnCode": "73065029",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of circular cross-section, of other alloy steel — Precision tubes — Other",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73065029）"
+  },
+  {
+    "cnCode": "73065080",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of circular cross-section, of other alloy steel — Other",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73065080）"
+  },
+  {
+    "cnCode": "73066110",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of non-circular cross-section — Of square or rectangular cross-section — Of stainless steel",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；不锈钢（73066110）"
+  },
+  {
+    "cnCode": "73066192",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of non-circular cross-section — Of square or rectangular cross-section — Other — With a wall thickness not exceeding 2 mm",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73066192）"
+  },
+  {
+    "cnCode": "73066199",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of non-circular cross-section — Of square or rectangular cross-section — Other — With a wall thickness exceeding 2 mm",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73066199）"
+  },
+  {
+    "cnCode": "73066910",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of non-circular cross-section — Of other non-circular cross-section — Of stainless steel",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；不锈钢（73066910）"
+  },
+  {
+    "cnCode": "73066990",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other, welded, of non-circular cross-section — Of other non-circular cross-section — Other",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73066990）"
+  },
+  {
+    "cnCode": "73069000",
+    "en": "Other tubes, pipes and hollow profiles (for example, open seam or welded, riveted or similarly closed), of iron or steel — Other",
+    "zh": "其他铁或钢管及空心型材（开缝、焊接等）；其他（73069000）"
+  },
+  {
+    "cnCode": "73071110",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Cast fittings — Of non-malleable cast iron — Of a kind used in pressure systems",
+    "zh": "铁或钢管子附件（73071110）"
+  },
+  {
+    "cnCode": "73071190",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Cast fittings — Of non-malleable cast iron — Other",
+    "zh": "铁或钢管子附件；其他（73071190）"
+  },
+  {
+    "cnCode": "73071910",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Cast fittings — Other — Of cast iron — Unthreaded — Of malleable cast iron — Other",
+    "zh": "铁或钢管子附件；铸铁"
+  },
+  {
+    "cnCode": "73071990",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Cast fittings — Other",
+    "zh": "铁或钢管子附件；其他（73071990）"
+  },
+  {
+    "cnCode": "73072100",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other, of stainless steel — Flanges — Other",
+    "zh": "铁或钢管子附件；法兰（73072100）"
+  },
+  {
+    "cnCode": "73072210",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other, of stainless steel — Threaded elbows, bends and sleeves — Sleeves",
+    "zh": "铁或钢管子附件（73072210）"
+  },
+  {
+    "cnCode": "73072290",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other, of stainless steel — Threaded elbows, bends and sleeves — Elbows and bends — Other",
+    "zh": "铁或钢管子附件；其他（73072290）"
+  },
+  {
+    "cnCode": "73072310",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other, of stainless steel — Butt welding fittings — Elbows and bends — Of austenitic stainless steel grades, corresponding to AISI types 304, 304L, 316, 316L, 316Ti, 321 and 321H and their equivalent in the other norms, with a greatest external diameter not exceeding 406.4 mm and a wall thickness of 16 mm or less, with a roughness average (Ra) of the internal surface not less than 0.8 micrometres, not flanged, whether or not finished — Other",
+    "zh": "铁或钢管子附件；对焊管件（73072310）"
+  },
+  {
+    "cnCode": "73072390",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other, of stainless steel — Butt welding fittings — Other — Of austenitic stainless steel grades, corresponding to AISI types 304, 304L, 316, 316L, 316Ti, 321 and 321H and their equivalent in the other norms, with a greatest external diameter not exceeding 406.4 mm and a wall thickness of 16 mm or less, with a roughness average (Ra) of the internal surface not less than 0.8 micrometres, not flanged, whether or not finished — Other",
+    "zh": "铁或钢管子附件；对焊管件（73072390）"
+  },
+  {
+    "cnCode": "73072910",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other, of stainless steel — Other — Threaded — Other",
+    "zh": "铁或钢管子附件；其他（73072910）"
+  },
+  {
+    "cnCode": "73072980",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other, of stainless steel — Other",
+    "zh": "铁或钢管子附件；其他（73072980）"
+  },
+  {
+    "cnCode": "73079100",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other — Flanges — Other",
+    "zh": "铁或钢管子附件；法兰（73079100）"
+  },
+  {
+    "cnCode": "73079210",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other — Threaded elbows, bends and sleeves — Sleeves",
+    "zh": "铁或钢管子附件；其他（73079210）"
+  },
+  {
+    "cnCode": "73079290",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other — Threaded elbows, bends and sleeves — Elbows and bends — Other",
+    "zh": "铁或钢管子附件；其他（73079290）"
+  },
+  {
+    "cnCode": "73079311",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other — Butt welding fittings — With greatest external diameter not exceeding 609,6 mm — Elbows and bends — Other",
+    "zh": "铁或钢管子附件；对焊管件（73079311）"
+  },
+  {
+    "cnCode": "73079319",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other — Butt welding fittings — With greatest external diameter not exceeding 609,6 mm — Other",
+    "zh": "铁或钢管子附件；对焊管件（73079319）"
+  },
+  {
+    "cnCode": "73079391",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other — Butt welding fittings — With greatest external diameter exceeding 609,6 mm — Elbows and bends — Other",
+    "zh": "铁或钢管子附件；对焊管件（73079391）"
+  },
+  {
+    "cnCode": "73079399",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other — Butt welding fittings — With greatest external diameter exceeding 609,6 mm — Other",
+    "zh": "铁或钢管子附件；对焊管件（73079399）"
+  },
+  {
+    "cnCode": "73079910",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other — Threaded — Other",
+    "zh": "铁或钢管子附件；其他（73079910）"
+  },
+  {
+    "cnCode": "73079980",
+    "en": "Tube or pipe fittings (for example, couplings, elbows, sleeves), of iron or steel — Other — With greatest external diameter not exceeding 609,6 mm — Other",
+    "zh": "铁或钢管子附件；其他（73079980）"
+  },
+  {
+    "cnCode": "73081000",
+    "en": "Structures (excluding prefabricated buildings of heading 9406) and parts of structures (for example, bridges and bridge-sections, lock-gates, towers, lattice masts, roofs, roofing frameworks, doors and windows and their frames and thresholds for doors, shutters, balustrades, pillars and columns), of iron or steel; plates, rods, angles, shapes, sections, tubes and the like, prepared for use in structures, of iron or steel — Bridges and bridge-sections",
+    "zh": "铁或钢结构体及其部件（73081000）"
+  },
+  {
+    "cnCode": "73082000",
+    "en": "Structures (excluding prefabricated buildings of heading 9406) and parts of structures (for example, bridges and bridge-sections, lock-gates, towers, lattice masts, roofs, roofing frameworks, doors and windows and their frames and thresholds for doors, shutters, balustrades, pillars and columns), of iron or steel; plates, rods, angles, shapes, sections, tubes and the like, prepared for use in structures, of iron or steel — Towers and lattice masts",
+    "zh": "铁或钢结构体及其部件（73082000）"
+  },
+  {
+    "cnCode": "73083000",
+    "en": "Structures (excluding prefabricated buildings of heading 9406) and parts of structures (for example, bridges and bridge-sections, lock-gates, towers, lattice masts, roofs, roofing frameworks, doors and windows and their frames and thresholds for doors, shutters, balustrades, pillars and columns), of iron or steel; plates, rods, angles, shapes, sections, tubes and the like, prepared for use in structures, of iron or steel — Doors, windows and their frames and thresholds for doors",
+    "zh": "铁或钢结构体及其部件（73083000）"
+  },
+  {
+    "cnCode": "73084000",
+    "en": "Structures (excluding prefabricated buildings of heading 9406) and parts of structures (for example, bridges and bridge-sections, lock-gates, towers, lattice masts, roofs, roofing frameworks, doors and windows and their frames and thresholds for doors, shutters, balustrades, pillars and columns), of iron or steel; plates, rods, angles, shapes, sections, tubes and the like, prepared for use in structures, of iron or steel — Equipment for scaffolding, shuttering, propping or pit-propping",
+    "zh": "铁或钢结构体及其部件（73084000）"
+  },
+  {
+    "cnCode": "73089051",
+    "en": "Structures (excluding prefabricated buildings of heading 9406) and parts of structures (for example, bridges and bridge-sections, lock-gates, towers, lattice masts, roofs, roofing frameworks, doors and windows and their frames and thresholds for doors, shutters, balustrades, pillars and columns), of iron or steel; plates, rods, angles, shapes, sections, tubes and the like, prepared for use in structures, of iron or steel — Other — Solely or principally of sheet — Panels comprising two walls of profiled (ribbed) sheet with an insulating core",
+    "zh": "铁或钢结构体及其部件；其他（73089051）"
+  },
+  {
+    "cnCode": "73089059",
+    "en": "Structures (excluding prefabricated buildings of heading 9406) and parts of structures (for example, bridges and bridge-sections, lock-gates, towers, lattice masts, roofs, roofing frameworks, doors and windows and their frames and thresholds for doors, shutters, balustrades, pillars and columns), of iron or steel; plates, rods, angles, shapes, sections, tubes and the like, prepared for use in structures, of iron or steel — Other — Solely or principally of sheet — Other",
+    "zh": "铁或钢结构体及其部件；其他（73089059）"
+  },
+  {
+    "cnCode": "73089098",
+    "en": "Structures (excluding prefabricated buildings of heading 9406) and parts of structures (for example, bridges and bridge-sections, lock-gates, towers, lattice masts, roofs, roofing frameworks, doors and windows and their frames and thresholds for doors, shutters, balustrades, pillars and columns), of iron or steel; plates, rods, angles, shapes, sections, tubes and the like, prepared for use in structures, of iron or steel — Other",
+    "zh": "铁或钢结构体及其部件；其他（73089098）"
+  },
+  {
+    "cnCode": "73090010",
+    "en": "Reservoirs, tanks, vats and similar containers for any material (other than compressed or liquefied gas), of iron or steel, of a capacity exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — For gases (other than compressed or liquefied gas)",
+    "zh": "铁或钢贮罐（容积＞300升）；气体用（压缩或液化气体除外）"
+  },
+  {
+    "cnCode": "73090030",
+    "en": "Reservoirs, tanks, vats and similar containers for any material (other than compressed or liquefied gas), of iron or steel, of a capacity exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — For liquids — Lined or heat-insulated",
+    "zh": "铁或钢贮罐（容积＞300升）；液体用，带内衬或隔热"
+  },
+  {
+    "cnCode": "73090051",
+    "en": "Reservoirs, tanks, vats and similar containers for any material (other than compressed or liquefied gas), of iron or steel, of a capacity exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — For liquids — Other, of a capacity — Exceeding 100 000 l",
+    "zh": "铁或钢贮罐（容积＞300升）；液体用，容积＞100000升"
+  },
+  {
+    "cnCode": "73090059",
+    "en": "Reservoirs, tanks, vats and similar containers for any material (other than compressed or liquefied gas), of iron or steel, of a capacity exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — For liquids — Other, of a capacity — Not exceeding 100 000 l",
+    "zh": "铁或钢贮罐（容积＞300升）；液体用，容积≤100000升"
+  },
+  {
+    "cnCode": "73090090",
+    "en": "Reservoirs, tanks, vats and similar containers for any material (other than compressed or liquefied gas), of iron or steel, of a capacity exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — For solids",
+    "zh": "铁或钢贮罐（容积＞300升）；固体用"
+  },
+  {
+    "cnCode": "73101000",
+    "en": "Tanks, casks, drums, cans, boxes and similar containers, for any material (other than compressed or liquefied gas), of iron or steel, of a capacity not exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — Of a capacity of 50 l or more — Other",
+    "zh": "其他（73101000）"
+  },
+  {
+    "cnCode": "73102111",
+    "en": "Tanks, casks, drums, cans, boxes and similar containers, for any material (other than compressed or liquefied gas), of iron or steel, of a capacity not exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — Of a capacity of less than 50 l — Cans which are to be closed by soldering or crimping — Cans of a kind used for preserving food",
+    "zh": "铁或钢容器（容积＜50升）；焊接或卷边密封罐，食品罐头用"
+  },
+  {
+    "cnCode": "73102119",
+    "en": "Tanks, casks, drums, cans, boxes and similar containers, for any material (other than compressed or liquefied gas), of iron or steel, of a capacity not exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — Of a capacity of less than 50 l — Cans which are to be closed by soldering or crimping — Cans of a kind used for preserving drink",
+    "zh": "铁或钢容器（容积＜50升）；焊接或卷边密封罐，饮料罐头用"
+  },
+  {
+    "cnCode": "73102191",
+    "en": "Tanks, casks, drums, cans, boxes and similar containers, for any material (other than compressed or liquefied gas), of iron or steel, of a capacity not exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — Of a capacity of less than 50 l — Cans which are to be closed by soldering or crimping — Other, with a wall thickness of — Less than 0,5 mm",
+    "zh": "铁或钢容器（容积＜50升）；焊接或卷边密封罐，壁厚＜0.5mm"
+  },
+  {
+    "cnCode": "73102199",
+    "en": "Tanks, casks, drums, cans, boxes and similar containers, for any material (other than compressed or liquefied gas), of iron or steel, of a capacity not exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — Of a capacity of less than 50 l — Cans which are to be closed by soldering or crimping — Other, with a wall thickness of — 0,5 mm or more",
+    "zh": "铁或钢容器（容积＜50升）；焊接或卷边密封罐，壁厚≥0.5mm"
+  },
+  {
+    "cnCode": "73102910",
+    "en": "Tanks, casks, drums, cans, boxes and similar containers, for any material (other than compressed or liquefied gas), of iron or steel, of a capacity not exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — Of a capacity of less than 50 l — Other — With a wall thickness of less than 0,5 mm",
+    "zh": "其他（73102910）"
+  },
+  {
+    "cnCode": "73102990",
+    "en": "Tanks, casks, drums, cans, boxes and similar containers, for any material (other than compressed or liquefied gas), of iron or steel, of a capacity not exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment — Of a capacity of less than 50 l — Other — With a wall thickness of 0,5 mm or more — Other",
+    "zh": "其他（73102990）"
+  },
+  {
+    "cnCode": "73110011",
+    "en": "Containers for compressed or liquefied gas, of iron or steel — Seamless — For a pressure of 165 bar or more, of a capacity of — Less than 20 l — Other",
+    "zh": "铁或钢气体容器；无缝（73110011）"
+  },
+  {
+    "cnCode": "73110013",
+    "en": "Containers for compressed or liquefied gas, of iron or steel — Seamless — For a pressure of 165 bar or more, of a capacity of — 20 l or more but not more than 50 l — Other",
+    "zh": "铁或钢气体容器；无缝（73110013）"
+  },
+  {
+    "cnCode": "73110019",
+    "en": "Containers for compressed or liquefied gas, of iron or steel — Seamless — For a pressure of 165 bar or more, of a capacity of — More than 50 l — Other",
+    "zh": "铁或钢气体容器；无缝（73110019）"
+  },
+  {
+    "cnCode": "73110030",
+    "en": "Containers for compressed or liquefied gas, of iron or steel — Seamless — Other",
+    "zh": "铁或钢气体容器；无缝（73110030）"
+  },
+  {
+    "cnCode": "73110091",
+    "en": "Containers for compressed or liquefied gas, of iron or steel — Other, of a capacity of — Less than 1 000 l",
+    "zh": "铁或钢气体容器（73110091）"
+  },
+  {
+    "cnCode": "73110099",
+    "en": "Containers for compressed or liquefied gas, of iron or steel — Other, of a capacity of — 1 000 l or more",
+    "zh": "铁或钢气体容器（73110099）"
+  },
+  {
+    "cnCode": "73181100",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Coach screws",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；方头木螺钉"
+  },
+  {
+    "cnCode": "73181210",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other wood screws — Of stainless steel — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；不锈钢"
+  },
+  {
+    "cnCode": "73181290",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other wood screws — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品（73181290）"
+  },
+  {
+    "cnCode": "73181300",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Screw hooks and screw rings — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品（73181300）"
+  },
+  {
+    "cnCode": "73181410",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Self-tapping screws — Of stainless steel — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；自攻螺钉（73181410）"
+  },
+  {
+    "cnCode": "73181491",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Self-tapping screws — Other — Spaced-thread screws — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；自攻螺钉（73181491）"
+  },
+  {
+    "cnCode": "73181499",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Self-tapping screws — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；自攻螺钉（73181499）"
+  },
+  {
+    "cnCode": "73181520",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other screws and bolts, whether or not with their nuts or washers — For fixing railway track construction material",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；其他螺钉及螺栓（73181520）"
+  },
+  {
+    "cnCode": "73181535",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other screws and bolts, whether or not with their nuts or washers — Other — Without heads — Of stainless steel — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；其他螺钉及螺栓（73181535）"
+  },
+  {
+    "cnCode": "73181542",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other screws and bolts, whether or not with their nuts or washers — Other — Without heads — Other, with a tensile strength — Of less than 800 MPa — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；其他螺钉及螺栓（73181542）"
+  },
+  {
+    "cnCode": "73181548",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other screws and bolts, whether or not with their nuts or washers — Other — Without heads — Other, with a tensile strength — Of 800 MPa or more — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；其他螺钉及螺栓（73181548）"
+  },
+  {
+    "cnCode": "73181552",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other screws and bolts, whether or not with their nuts or washers — Other — With heads — Slotted or cross-recessed heads — Of stainless steel — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；其他螺钉及螺栓（73181552）"
+  },
+  {
+    "cnCode": "73181558",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other screws and bolts, whether or not with their nuts or washers — Other — With heads — Slotted or cross-recessed heads — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；其他螺钉及螺栓（73181558）"
+  },
+  {
+    "cnCode": "73181562",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other screws and bolts, whether or not with their nuts or washers — Other — With heads — Hexagonal-socket heads — Of stainless steel — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；其他螺钉及螺栓（73181562）"
+  },
+  {
+    "cnCode": "73181568",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other screws and bolts, whether or not with their nuts or washers — Other — With heads — Hexagonal-socket heads — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；其他螺钉及螺栓（73181568）"
+  },
+  {
+    "cnCode": "73181575",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other screws and bolts, whether or not with their nuts or washers — Other — With heads — Hexagonal heads — Of stainless steel — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；其他螺钉及螺栓（73181575）"
+  },
+  {
+    "cnCode": "73181582",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other screws and bolts, whether or not with their nuts or washers — Other — With heads — Hexagonal heads — Other, with a tensile strength — Of less than 800 MPa — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；其他螺钉及螺栓（73181582）"
+  },
+  {
+    "cnCode": "73181588",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other screws and bolts, whether or not with their nuts or washers — Other — With heads — Hexagonal heads — Other, with a tensile strength — Of 800 MPa or more — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；其他螺钉及螺栓（73181588）"
+  },
+  {
+    "cnCode": "73181595",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other screws and bolts, whether or not with their nuts or washers — Other — With heads — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；其他螺钉及螺栓（73181595）"
+  },
+  {
+    "cnCode": "73181631",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Nuts — Of stainless steel — Blind rivet nuts — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；螺母（73181631）"
+  },
+  {
+    "cnCode": "73181639",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Nuts — Of stainless steel — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；螺母（73181639）"
+  },
+  {
+    "cnCode": "73181640",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Nuts — Other — Blind rivet nuts — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；螺母（73181640）"
+  },
+  {
+    "cnCode": "73181660",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Nuts — Other — Self-locking nuts — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；螺母（73181660）"
+  },
+  {
+    "cnCode": "73181692",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Nuts — Other — Other, with an inside diameter — Not exceeding 12 mm — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；螺母（73181692）"
+  },
+  {
+    "cnCode": "73181699",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Nuts — Other — Other, with an inside diameter — Exceeding 12 mm — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品；螺母（73181699）"
+  },
+  {
+    "cnCode": "73181900",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Threaded articles — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；螺纹制品（73181900）"
+  },
+  {
+    "cnCode": "73182100",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Non-threaded articles — Spring washers and other lock washers — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；非螺纹制品；弹簧垫圈及其他防松垫圈"
+  },
+  {
+    "cnCode": "73182200",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Non-threaded articles — Other washers — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；非螺纹制品（73182200）"
+  },
+  {
+    "cnCode": "73182300",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Non-threaded articles — Rivets — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；非螺纹制品；铆钉"
+  },
+  {
+    "cnCode": "73182400",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Non-threaded articles — Cotters and cotter pins — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；非螺纹制品（73182400）"
+  },
+  {
+    "cnCode": "73182900",
+    "en": "Screws, bolts, nuts, coach screws, screw hooks, rivets, cotters, cotter pins, washers (including spring washers) and similar articles, of iron or steel — Non-threaded articles — Other",
+    "zh": "铁或钢螺钉、螺栓、螺母、铆钉、垫圈等；非螺纹制品（73182900）"
+  },
+  {
+    "cnCode": "73261100",
+    "en": "Other articles of iron or steel — Forged or stamped, but not further worked — Grinding balls and similar articles for mills",
     "zh": "其他钢铁制品"
   },
   {
-    "en": "Other mineral or chemical fertilisers containing the two fertilising elements nitrogen and phosphorus (excl. nitrates and phosphates)",
-    "zh": "其他含氮、磷两种肥效元素的矿物或化学肥料（不含硝酸盐及磷酸盐）"
+    "cnCode": "73261910",
+    "en": "Other articles of iron or steel — Forged or stamped, but not further worked — Other — Open-die forged",
+    "zh": "其他钢铁制品；其他（73261910）"
   },
   {
-    "en": "Other mineral or chemical fertilisers containing the two fertilising elements nitrogen and phosphorus (nitrates and phosphates)",
-    "zh": "其他含氮、磷两种肥效元素的矿物或化学肥料（硝酸盐及磷酸盐类）"
+    "cnCode": "73261990",
+    "en": "Other articles of iron or steel — Forged or stamped, but not further worked — Other",
+    "zh": "其他钢铁制品；其他（73261990）"
   },
   {
-    "en": "Other screws and bolts, whether or not with their nuts or washers",
-    "zh": "其他螺钉及螺栓，不论是否带螺母或垫圈"
+    "cnCode": "73262000",
+    "en": "Other articles of iron or steel — Articles of iron or steel wire — Other",
+    "zh": "其他钢铁制品；其他（73262000）"
   },
   {
-    "en": "Other tubes and pipes (for example, welded, riveted or similarly closed), having circular cross-sections, the external diameter of which exceeds 406.4 mm, of iron or steel.",
-    "zh": "其他管（例如焊接、铆接或类似闭合），圆形截面，外径超过406.4毫米，钢铁制"
+    "cnCode": "73269030",
+    "en": "Other articles of iron or steel — Other — Ladders and steps",
+    "zh": "其他钢铁制品；其他（73269030）"
   },
   {
-    "en": "Other washers",
-    "zh": "其他垫圈"
+    "cnCode": "73269040",
+    "en": "Other articles of iron or steel — Other — Pallets and similar platforms for handling goods",
+    "zh": "其他钢铁制品；其他（73269040）"
   },
   {
-    "en": "Other white cements",
-    "zh": "其他白水泥"
+    "cnCode": "73269050",
+    "en": "Other articles of iron or steel — Other — Reels for cables, piping and the like",
+    "zh": "其他钢铁制品；其他（73269050）"
   },
   {
-    "en": "Other wood screws; self-tapping screws - of stainless steel",
-    "zh": "其他木螺钉；自攻螺钉——不锈钢制"
+    "cnCode": "73269060",
+    "en": "Other articles of iron or steel — Other — Non-mechanical ventilators, guttering, hooks and like articles used in the building industry",
+    "zh": "其他钢铁制品；其他（73269060）"
   },
   {
-    "en": "Pig iron and spiegeleisen in pigs, blocks or other primary forms",
-    "zh": "生铁及镜铁，锭、块或其他初级形状"
+    "cnCode": "73269092",
+    "en": "Other articles of iron or steel — Other — Other articles of iron or steel — Open-die forged — Other",
+    "zh": "其他钢铁制品；其他钢铁制品（73269092）"
   },
   {
-    "en": "Plated or coated flat products",
-    "zh": "镀层或涂层的扁平材"
+    "cnCode": "73269094",
+    "en": "Other articles of iron or steel — Other — Other articles of iron or steel — Closed-die forged — Other",
+    "zh": "其他钢铁制品；其他钢铁制品（73269094）"
   },
   {
-    "en": "Plated or coated wires",
-    "zh": "镀层或涂层的钢丝"
+    "cnCode": "73269096",
+    "en": "Other articles of iron or steel — Other — Other articles of iron or steel — Sintered — Other",
+    "zh": "其他钢铁制品；其他钢铁制品（73269096）"
   },
   {
-    "en": "Profiles",
-    "zh": "型材"
-  },
-  {
-    "en": "Railway or tramway track construction material of iron or steel, the following : rails, check-rails and rack rails, switch blades, crossing frogs, point rods and other crossing pieces, sleepers (cross-ties), fish-plates, chairs, chair wedges, sole plates",
-    "zh": "铁道或电车道铺轨用钢铁材料：轨、护轨及齿轨、辙叉尖、辙叉心、拉杆等辙叉件、轨枕（枕木）、鱼尾板、轨座、轨座楔、底板"
-  },
-  {
-    "en": "Reservoirs, tanks, vats and similar containers for any material (other than compressed or liquefied gas), of iron or steel, of a capacity exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment",
-    "zh": "盛装任何物料（压缩或液化气体除外）的钢铁贮器、罐、桶及类似容器，容积超过300升，不论是否衬里或隔热，未装机械或热力设备"
-  },
-  {
-    "en": "Rivets",
-    "zh": "铆钉"
-  },
-  {
-    "en": "Sheet piling of iron or steel, whether or not drilled, punched or made from assembled elements; welded angles, shapes and sections, of iron or steel.",
-    "zh": "钢铁板桩，不论是否钻孔、冲孔或由组装件构成；焊接的角材、型材及异型材，钢铁制"
-  },
-  {
-    "en": "Sodium nitrate",
-    "zh": "硝酸钠"
-  },
-  {
-    "en": "Stainless steel bars and rods, hot-rolled, in irregularly wound coils",
-    "zh": "不锈钢条、杆，热轧不规则盘卷"
-  },
-  {
-    "en": "Steel, alloy; bars and rods, hot-rolled, in irregularly wound coils",
-    "zh": "合金钢；条、杆，热轧不规则盘卷"
-  },
-  {
-    "en": "Stranded wire, cables, plaited bands and the like, of aluminium, not electrically insulated",
-    "zh": "铝绞股线、缆、编带及类似品，未绝缘"
-  },
-  {
-    "en": "Structures (excluding prefabricated buildings of heading 9406) and parts of structures (for example, bridges and bridge-sections, lock- gates, towers, lattice masts, roofs, roofing frameworks, doors and windows and their frames and thresholds for doors, shutters, balusTrades, pillars and columns), of iron or steel; plates, rods, angles, shapes, sections, tubes and the like, prepared for use in structures, of iron or steel",
-    "zh": "钢铁结构体（品目9406活动房屋除外）及结构体零件（例如桥梁及桥段、闸门、塔楼、格构式桅杆、屋顶、屋架、门、窗及其门框和门槛、百叶窗、栏杆、支柱及立柱）；供结构体用的钢铁板、杆、角材、型材、异型材、管等"
-  },
-  {
-    "en": "Tanks, casks, drums, cans, boxes and similar containers, for any material (other than compressed or liquefied gas), of iron or steel, of a capacity not exceeding 300 l, whether or not lined or heat-insulated, but not fitted with mechanical or thermal equipment",
-    "zh": "盛装任何物料（压缩或液化气体除外）的钢铁桶、罐、听、盒及类似容器，容积不超过300升，不论是否衬里或隔热，未装机械或热力设备"
-  },
-  {
-    "en": "Tubes, pipes & hollow profiles of cast iron",
-    "zh": "铸铁管及空心异型材"
-  },
-  {
-    "en": "Unwrought aluminium",
-    "zh": "未锻轧铝"
-  },
-  {
-    "en": "Urea, whether or not in aqueous solution",
-    "zh": "尿素，不论是否水溶液"
-  },
-  {
-    "en": "White clinker",
-    "zh": "白水泥熟料"
-  },
-  {
-    "en": "Wire of other alloy steel.",
-    "zh": "其他合金钢丝"
-  },
-  {
-    "en": "Wires",
-    "zh": "钢丝"
+    "cnCode": "73269098",
+    "en": "Other articles of iron or steel — Other — Other articles of iron or steel — Other",
+    "zh": "其他钢铁制品；其他钢铁制品（73269098）"
   }
 ]

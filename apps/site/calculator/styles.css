@@ -54,11 +54,18 @@ h1,h2,h3{font-family:"IBM Plex Sans","Noto Sans SC","PingFang SC",sans-serif}
   box-sizing:border-box;
 }
 .dashboard-shell .privacy-line,
+.dashboard-shell .data-version,
 .dashboard-shell .adjustment-title small,
 .dashboard-main .scope-notice,
 .chart-card header span{
   font-size:11px;
   color:#5a6863;
+}
+.dashboard-shell .data-version{
+  margin:0;
+  line-height:1.45;
+  padding-top:2px;
+  border-top:1px dashed #dce5e1;
 }
 @media(max-width:820px){
   .dashboard-shell{overflow-x:hidden}

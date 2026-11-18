@@ -17,7 +17,7 @@
 
 ---
 
-## A. 首页 `Lumino 官网.dc.html`
+## A. 首页 `home.html`
 
 ### A1. 首屏背景 Hero
 | 项 | 内容 |
@@ -46,7 +46,7 @@
 
 ---
 
-## B. 平台页 `Lumino 平台.dc.html`
+## B. 平台页 `platform.html`
 
 ### B1. 产品截图：工作台
 | 项 | 内容 |
@@ -119,7 +119,7 @@
 
 ---
 
-## F. 关于我们 `Lumino 关于.dc.html`
+## F. 关于我们 `about.html`
 
 | ID | 放置位置 | 主题 | 文件名 | Prompt / 说明 |
 |---|---|---|---|---|

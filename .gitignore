@@ -28,3 +28,6 @@ data/knowledge-catalog.json
 
 # Advisor eval local report
 packages/advisor/evals/.last-report.json
+
+# Calculator data generation intermediates; final reviewed datasets stay tracked
+apps/site/calculator/data/_build/

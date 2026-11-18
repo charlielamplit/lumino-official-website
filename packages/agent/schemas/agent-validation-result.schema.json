@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumino.example/schemas/agent-validation-result/1.0.0",
+  "title": "Lumino Agent Validation Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "validationResultId", "taskId", "executionId", "candidateId", "outputSchemaVersion", "valid", "errors", "warnings", "sourceObjectRef", "validatorVersion", "validatedAt"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "validationResultId": { "type": "string", "minLength": 1 },
+    "taskId": { "type": "string", "minLength": 1 },
+    "executionId": { "type": "string", "minLength": 1 },
+    "candidateId": { "type": "string", "minLength": 1 },
+    "outputSchemaVersion": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "valid": { "type": "boolean" },
+    "errors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    },
+    "sourceObjectRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "revision"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "revision": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "validatorVersion": { "type": "string", "minLength": 1 },
+    "validatedAt": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "code", "message"],
+      "properties": {
+        "path": { "type": "string" },
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "valid": { "const": false } } },
+      "then": { "properties": { "errors": { "minItems": 1 } } }
+    },
+    {
+      "if": { "properties": { "valid": { "const": true } } },
+      "then": { "properties": { "errors": { "maxItems": 0 } } }
+    }
+  ]
+}

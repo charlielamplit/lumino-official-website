@@ -50,6 +50,9 @@ const apiRoutes = {
   "/api/advisor-metrics": "api/advisor-metrics.js",
   "/api/advisor-ping": "api/advisor-ping.js",
   "/api/knowledge": "api/knowledge.js",
+  "/api/leads": "api/leads.js",
+  "/api/release": "api/release.js",
+  "/api/staff-login": "api/staff-login.js",
 };
 
 const vercelConfig = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
@@ -176,5 +179,7 @@ const server = http.createServer(async (request, response) => {
 
 server.listen(port, "127.0.0.1", () => {
   console.log(`Lumino local preview: http://127.0.0.1:${port}/site`);
+  console.log(`Calculator:           http://127.0.0.1:${port}/calculator/`);
+  console.log(`Portal:               http://127.0.0.1:${port}/portal/`);
   console.log(`Advisor API:          http://127.0.0.1:${port}/api/advisor`);
 });

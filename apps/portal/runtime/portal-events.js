@@ -40,9 +40,74 @@
     return domain === "huaxing-steel.cn";
   }
 
+  function isStaffEmail(email) {
+    const domain = String(email || "").split("@")[1]?.toLowerCase() || "";
+    return domain === "lumino.tech" || domain === "esgai.cn";
+  }
+
   function isValidWorkEmail(email) {
     return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(email || "").trim());
   }
+
+  function clearStaffSession() {
+    try { sessionStorage.removeItem("lumino-staff-session-token"); } catch (_) {}
+    try { sessionStorage.removeItem("lumino-leads-staff-key"); } catch (_) {}
+    try { sessionStorage.removeItem("lumino-staff-profile"); } catch (_) {}
+    state.publicLeads = [];
+    state.selectedLeadId = null;
+    state.leadsHydrated = false;
+    state.leadsError = null;
+  }
+
+  function saveStaffSession(payload) {
+    if (!payload?.staffKey) return;
+    try { sessionStorage.setItem("lumino-staff-session-token", payload.staffKey); } catch (_) {}
+    // Temporary compatibility for knowledge-client until it adopts bearer sessions.
+    try { sessionStorage.setItem("lumino-leads-staff-key", payload.staffKey); } catch (_) {}
+    try {
+      sessionStorage.setItem("lumino-staff-profile", JSON.stringify({
+        email: payload.email,
+        name: payload.name,
+        role: payload.role,
+      }));
+    } catch (_) {}
+    state.publicLeads = [];
+    state.selectedLeadId = null;
+    state.leadsHydrated = false;
+    state.leadsError = null;
+  }
+
+  async function staffPasswordLogin(email, password) {
+    const response = await fetch("/api/staff-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await response.json().catch(() => ({}));
+    const parsed = window.LuminoLeadsClient?.parseApiResponse
+      ? window.LuminoLeadsClient.parseApiResponse(response, data, "登录失败")
+      : {
+          ok: response.ok && data.ok !== false,
+          data: data.data && typeof data.data === "object" ? data.data : data,
+          error: typeof data.error === "string" ? data.error : data.error?.message || "登录失败",
+        };
+    if (!parsed.ok) {
+      const error = new Error(parsed.error || "登录失败");
+      error.code = parsed.code;
+      error.requestId = parsed.requestId;
+      throw error;
+    }
+    return parsed.data;
+  }
+
+  window.addEventListener("lumino:staff-session-expired", () => {
+    clearStaffSession();
+    if (["sales", "ops"].includes(state.role)) {
+      logout();
+      setLoginStep("email");
+      toast("登录已过期，请重新登录后查看正式线索收件箱。");
+    }
+  });
 
   function updateLoginEmailHint(email) {
     const hint = $("#loginEmailHint");
@@ -63,6 +128,8 @@
     }
     if (loginUsesSso(value)) {
       hint.textContent = "huaxing-steel.cn 已启用企业 SSO，继续后跳转到企业登录";
+    } else if (isStaffEmail(value)) {
+      hint.textContent = "Lumino 员工账号：继续后输入密码，登录后可查看真实线索";
     } else {
       hint.textContent = "继续后输入密码";
       hint.classList.add("is-muted");
@@ -94,7 +161,7 @@
   }
 
   $("#loginEmail")?.addEventListener("input", (event) => updateLoginEmailHint(event.target.value));
-  $("#loginForm").addEventListener("submit", (event) => {
+  $("#loginForm").addEventListener("submit", async (event) => {
     event.preventDefault();
     const step = $("#loginForm").dataset.step || "email";
     const email = ($("#loginEmail")?.value || "").trim();
@@ -107,6 +174,23 @@
     if (step === "password") {
       const password = $("#loginPassword")?.value || "";
       if (password.length < 6) { toast("请输入至少 6 位密码"); return; }
+      if (isStaffEmail(email)) {
+        const submit = $("#loginForm")?.querySelector('[data-step-panel="password"] button[type="submit"]');
+        const original = submit?.textContent || "登录";
+        try {
+          if (submit) { submit.disabled = true; submit.textContent = "登录中…"; }
+          const profile = await staffPasswordLogin(email, password);
+          saveStaffSession(profile);
+          login(profile.role);
+          toast(`已登录 ${profile.name || profile.email}，可查看线索收件箱`);
+        } catch (error) {
+          clearStaffSession();
+          toast(error.message || "员工登录失败");
+        } finally {
+          if (submit) { submit.disabled = false; submit.textContent = original; }
+        }
+        return;
+      }
       setLoginStep("workspace");
       return;
     }
@@ -132,6 +216,9 @@
   $("#demoRoleSelect")?.addEventListener("change", (event) => {
     const role = event.target.value;
     if (!role) return;
+    if (["sales", "ops"].includes(role) && !window.LuminoLeadsClient?.hasStaffSession()) {
+      toast("演示角色可进面板；查看真实线索请用 ops@lumino.tech / sales@lumino.tech 登录");
+    }
     login(role);
     event.target.value = "";
   });
@@ -163,7 +250,7 @@
   $("#accountMenu")?.addEventListener("click", (event) => {
     const item = event.target.closest("[data-account-action], #logoutButton");
     if (!item) return;
-    if (item.id === "logoutButton") { closeAccountMenu(); logout(); setLoginStep("email"); return; }
+    if (item.id === "logoutButton") { closeAccountMenu(); clearStaffSession(); logout(); setLoginStep("email"); return; }
     if (item.dataset.accountAction === "workspace") {
       closeAccountMenu();
       logout();
@@ -292,6 +379,17 @@
       event.preventDefault();
       closeCmdk();
     }
+    if (event.key === "Enter" && !event.shiftKey && event.target?.id === "agentInput") {
+      event.preventDefault();
+      window.LuminoAgentRuntime?.sendComposer?.();
+    }
+  });
+
+  document.addEventListener("input", (event) => {
+    if (event.target?.id === "agentInput") state.agentInput = event.target.value;
+  });
+  document.addEventListener("change", (event) => {
+    window.LuminoAgentRuntime?.handleAgentChange?.(event);
   });
 
   $("#settingsButton")?.addEventListener("click", () => {
@@ -328,6 +426,9 @@
     savePeriodState();
     state.year = event.target.value;
     state.quarter = annualProfile().defaultQuarter;
+    state.roadStage = null;
+    if (state.currentService === "cbam" && state.year === "2027" && workflowEngine.get("AUTH-CBAM-2027-001")?.status !== "ACTIVE") state.page = "service-start";
+    else if (state.page === "service-start") state.page = "work";
     loadPeriodState(); syncUiFromWorkflow();
     render();
     toast(`已切换到 ${state.year} 年度，页面数据与版本已整体切换。`);
@@ -347,6 +448,12 @@
   $("#drawerClose").addEventListener("click", closeDrawer);
   $("#drawerBackdrop").addEventListener("click", closeDrawer);
   document.addEventListener("keydown", (event) => {
+    if (window.LuminoAgentRuntime?.trapFocus?.(event)) return;
+    if (event.key === "Escape" && state.agentOpen && window.LuminoAgentRuntime) {
+      event.preventDefault();
+      window.LuminoAgentRuntime.closeAgent();
+      return;
+    }
     if (event.key === "Escape"
       && $("#drawerLayer").hidden
       && $("#cmdkLayer").hidden
@@ -367,6 +474,7 @@
     }
   });
   document.addEventListener("click", (event) => {
+    if (window.LuminoAgentRuntime?.handleAgentEvent?.(event)) return;
     const overviewAction = event.target.closest("[data-service-overview]");
     if (overviewAction) {
       setServiceOverviewMode(overviewAction.dataset.serviceOverview);
@@ -440,6 +548,100 @@
       persistPortalState(); render(); closeDrawer();
       $("#sidebar").classList.remove("open");
       $("#main").focus({ preventScroll: true });
+      return;
+    }
+    const onboardingAction = event.target.closest("[data-onboarding-action]");
+    if (onboardingAction) {
+      const action = onboardingAction.dataset.onboardingAction;
+      const actor = { name: roleConfig[state.role].name, role: state.role };
+      try {
+        if (action === "confirm-scope") {
+          if (!canPerformPortalAction("cbam-confirm-annual-scope")) { toast(portalActionDenial("cbam-confirm-annual-scope")); return; }
+          cbamGoldenPath.command("p03", "confirm", actor, { included: ["HRC", "HDG"], excluded: ["CRC"], exclusionReason: "2027 年尚无出口欧盟计划" });
+          render(); toast("2027 年度范围已确认；王晨可开始制备监测计划。"); return;
+        }
+        const form = document.querySelector("#cbamOnboardingForm");
+        const currentStep = Number(form?.dataset.step) || 1;
+        const data = form ? new FormData(form) : new FormData();
+        if (["next", "create"].includes(action) && form && !form.reportValidity()) return;
+        if (action === "next" && currentStep === 3 && data.getAll("products").length === 0) {
+          toast("请至少选择一个产品候选，再继续下一步。");
+          return;
+        }
+        const payload = { step: currentStep };
+        if (currentStep === 1) payload.startingPoint = data.get("startingPoint") || "new";
+        if (currentStep === 2) {
+          payload.cadence = data.get("cadence") || "quarterly";
+          payload.importer = data.get("importer") || "";
+          payload.firstDeadline = data.get("firstDeadline") || "";
+        }
+        if (currentStep === 3) payload.products = data.getAll("products");
+        if (action === "create") {
+          if (!canPerformPortalAction("cbam-create-annual-project")) { toast(portalActionDenial("cbam-create-annual-project")); return; }
+          cbamGoldenPath.command("p02", "create", actor, payload);
+          render(); toast("CBAM 2027 年度项目已创建并启动收资；Agent 现可协助整理本年度材料。"); return;
+        }
+        const targetStep = action === "prev" ? currentStep - 1 : action === "next" ? currentStep + 1 : currentStep;
+        cbamGoldenPath.command("p02", "save-draft", actor, { ...payload, step: targetStep });
+        if (action === "save-exit") state.page = "work";
+        render();
+        if (action === "save-exit") toast("年度项目草稿已保存。");
+      } catch (error) { toast(error.recovery || error.message); }
+      return;
+    }
+    const monitoringAction = event.target.closest("[data-monitoring-action]");
+    if (monitoringAction) {
+      const action = monitoringAction.dataset.monitoringAction;
+      const actor = { name: roleConfig[state.role].name, role: state.role };
+      const permission = action === "prepare" ? "cbam-prepare-monitoring-plan" : action === "review" ? "cbam-review-monitoring-plan" : action === "sign" ? "cbam-sign-monitoring-plan" : "cbam-draft-invitations";
+      if (!canPerformPortalAction(permission)) { toast(portalActionDenial(permission)); return; }
+      try {
+        if (action === "prepare") cbamGoldenPath.command("p04", "prepare", actor);
+        if (action === "review") cbamGoldenPath.command("p04", "review", actor);
+        if (action === "sign") cbamGoldenPath.command("p04", "sign", actor);
+        if (action === "draft-invitations") cbamGoldenPath.command("p05", "draft-invitations", actor);
+        render();
+        toast(action === "prepare" ? "制备确认完成；等待李娜独立复核。" : action === "review" ? "独立复核完成；已发布客户审阅版。" : action === "sign" ? "监测计划已签收；材料清单继续按当前版本同步维护。" : "邀请草稿已生成；未发送、未开通账号。");
+      } catch (error) { toast(error.recovery || error.message); }
+      return;
+    }
+    const activationAction = event.target.closest("[data-activation-action]");
+    if (activationAction) {
+      if (activationAction.dataset.activationAction === "continue") {
+        state.cbamEntryMode = "annual-project";
+        state.page = "annual-project";
+        render();
+        return;
+      }
+      const activation = workflowEngine.get("AUTH-CBAM-2027-001");
+      if (!activation || activation.status !== "PENDING_CUSTOMER_CONFIRMATION") { toast("当前启动单不在客户确认阶段。"); return; }
+      if (!["customer_owner", "customer_admin"].includes(state.role) || roleConfig[state.role].name !== activation.owner) { toast(`该启动单需由 ${activation.owner} 线上确认。`); return; }
+      try {
+        workflowEngine.transition(activation.id, "ACTIVE", { actor: roleConfig[state.role].name, role: state.role, reason: "客户企业管理员线上确认 2027 CBAM 服务启动", metadata: { customerConfirmedBy: roleConfig[state.role].name, customerConfirmedAt: new Date().toISOString() } });
+        state.cbamEntryMode = "annual-project";
+        state.page = "annual-project";
+        render();
+        toast("2027 CBAM 服务已启动；下一步创建年度项目。");
+      } catch (error) { toast(error.message); }
+      return;
+    }
+    const cbamSection = event.target.closest("[data-cbam-section]");
+    if (cbamSection) {
+      const section = cbamSection.dataset.cbamSection;
+      if (["products", "facilities", "changes"].includes(section)) {
+        state.cbamProductView = section;
+        state.page = "products";
+      } else {
+        state.cbamDataView = section;
+        state.page = "data-calculation";
+      }
+      persistPortalState();
+      render();
+      return;
+    }
+    const productImport = event.target.closest("[data-product-import]");
+    if (productImport) {
+      toast("原型已展示最近一次导入差异；正式版本会先校验模板并生成逐字段提案。");
       return;
     }
     const nav = event.target.closest("[data-page]");
@@ -528,26 +730,33 @@
       }
       if (!client || !leadId) { toast("线索客户端不可用。"); return; }
       const run = async () => {
+        const currentLead = (Array.isArray(state.publicLeads) ? state.publicLeads : [])
+          .find((lead) => lead.id === leadId) || null;
+        const revision = currentLead?.revision;
+        if (revision == null) {
+          toast("线索版本未知，请先刷新收件箱后再操作。");
+          return;
+        }
         if (action === "claim") {
-          const result = await client.patchLead(leadId, { status: "claimed", claimedBy: actor, actor });
+          const result = await client.patchLead(leadId, { status: "claimed", claimedBy: actor, actor, revision });
           if (!result.ok) { toast(result.error || "认领失败"); return; }
           toast(`已认领 ${leadId}`);
         } else if (action === "qualify") {
-          const result = await client.patchLead(leadId, { status: "qualified", actor, note: "确认有服务意向" });
+          const result = await client.patchLead(leadId, { status: "qualified", actor, note: "确认有服务意向", revision });
           if (!result.ok) { toast(result.error || "更新失败"); return; }
           toast("已标记为确认意向");
         } else if (action === "disqualify") {
-          const result = await client.patchLead(leadId, { status: "disqualified", actor, note: "排除跟进" });
+          const result = await client.patchLead(leadId, { status: "disqualified", actor, note: "排除跟进", revision });
           if (!result.ok) { toast(result.error || "更新失败"); return; }
           toast("已排除该线索");
         } else if (action === "convert") {
-          const result = await client.patchLead(leadId, { status: "converted", actor, note: "已线下跟进或转项目" });
+          const result = await client.patchLead(leadId, { status: "converted", actor, note: "已线下跟进或转项目", revision });
           if (!result.ok) { toast(result.error || "更新失败"); return; }
           toast("已标记转化（可继续在报价/订单中开户）");
         } else if (action === "note") {
           const text = window.prompt("添加备注", "");
           if (!text || !text.trim()) return;
-          const result = await client.patchLead(leadId, { note: text.trim(), actor });
+          const result = await client.patchLead(leadId, { note: text.trim(), actor, revision });
           if (!result.ok) { toast(result.error || "备注失败"); return; }
           toast("备注已保存");
         } else {
@@ -570,8 +779,80 @@
     if (delivery) { state.deliveryExpanded = state.deliveryExpanded === delivery.dataset.delivery ? null : delivery.dataset.delivery; render(); return; }
     const product = event.target.closest("[data-product]");
     if (product) { state.selectedProduct = product.dataset.product; state.configurationAdded = false; render(); return; }
+    const prodDecide = event.target.closest("[data-prod-decide]");
+    if (prodDecide) {
+      if (isLockedYear()) { toast("锁定年度为不可变快照；请通过更正申请创建新修订版。"); return; }
+      const id = prodDecide.dataset.prodId;
+      const decision = prodDecide.dataset.prodDecide;
+      if (id && (decision === "in" || decision === "out")) {
+        state.prodDec = { ...(state.prodDec || {}), [id]: decision };
+        persistPortalState();
+        render();
+        toast(decision === "in"
+          ? "已纳入年度范围，并标记为待专家确认生产配置。"
+          : "已记录不纳入，理由将写入审计记录。");
+      }
+      return;
+    }
+    const prodAction = event.target.closest("[data-prod-action]");
+    if (prodAction) {
+      const action = prodAction.dataset.prodAction;
+      if (action === "facilities") {
+        if (canManageOrganization()) {
+          state.currentService = null;
+          state.page = "org-settings";
+          state.settingsSection = "facilities";
+          persistPortalState();
+          render();
+        } else {
+          openDrawer("record-detail", {
+            eyebrow: "设施主档",
+            title: "上海一厂 · 无锡二厂",
+            object: "跨服务共用 · FAC-HX-SH01 / FAC-HX-WX02",
+            status: "只读摘要",
+            description: "上海一厂（热轧、酸洗冷轧、热镀锌）在 CBAM 范围内；无锡二厂（精整与仓储）不在范围。完整增删改由企业管理员在「企业设置 → 设施」维护。",
+          });
+        }
+        return;
+      }
+    }
+    const prodScroll = event.target.closest("[data-prod-scroll]");
+    if (prodScroll) {
+      const pending = document.querySelector(".prod-row.is-pending");
+      if (pending) pending.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    const roadStageBtn = event.target.closest("[data-road-stage]");
+    if (roadStageBtn) {
+      const idx = Number(roadStageBtn.dataset.roadStage);
+      if (Number.isInteger(idx) && idx >= 0 && idx <= 4) {
+        state.roadStage = idx;
+        persistPortalState();
+        render();
+      }
+      return;
+    }
+    const roadAction = event.target.closest("[data-road-action]");
+    if (roadAction) {
+      const action = roadAction.dataset.roadAction;
+      if (action === "plan-toast") {
+        state.page = "monitoring-plan";
+        render();
+        return;
+      }
+    }
     const quarter = event.target.closest("[data-quarter]");
-    if (quarter) { savePeriodState(); state.quarter = quarter.dataset.quarter; loadPeriodState(); syncUiFromWorkflow(); render(); toast(`正在查看 ${state.year} ${state.quarter} 数据包。`); return; }
+    if (quarter) {
+      savePeriodState();
+      state.quarter = quarter.dataset.quarter;
+      const targetPage = quarter.dataset.pageTarget || quarter.dataset.page;
+      if (targetPage) state.page = targetPage;
+      loadPeriodState();
+      syncUiFromWorkflow();
+      render();
+      toast(`正在查看 ${state.year} ${state.quarter} 数据包。`);
+      return;
+    }
     const workflowTransition = event.target.closest("[data-workflow-transition]");
     if (workflowTransition) {
       if (!canPerformPortalAction("workflow-approval")) {
@@ -581,6 +862,10 @@
       try {
         const target = workflowTransition.dataset.workflowTransition;
         const objectId = workflowTransition.dataset.objectId;
+        if (objectId === "AP-2026-014" && target === "APPROVED" && cbamGoldenPath.stage("p07").code === "REVIEW_REQUIRED") {
+          toast("需要由李娜先完成 RUN-CBAM-2026Q3-001 独立复核。");
+          return;
+        }
         workflowEngine.transition(objectId, target, { ...workflowActor(), reason: target === "APPROVED" ? "内部审批人同意默认值并行路径" : "退回项目协调人补充判断依据" });
         render();
         toast(`AP-2026-014 已更新为“${workflowStateLabel(target)}”，审计事件已记录。`);
@@ -601,6 +886,20 @@
           openDrawer("asset-detail", { assetId });
           toast("企业事实已确认；依赖此资产的服务绑定不会自动改变。");
         } catch (error) { toast(error.message); }
+      }
+      if (action === "cbam-review-calculation") {
+        try {
+          cbamGoldenPath.command("p07", "review", { name: roleConfig[state.role].name, role: state.role });
+          render();
+          toast("RUN-CBAM-2026Q3-001 已由李娜复核；接下来等待赵海峰处理 AP-2026-014。");
+        } catch (error) { toast(error.recovery || error.message); }
+      }
+      if (action === "cbam-reset-demo") {
+        const accepted = window.confirm("将清除本浏览器中的 Portal 演示工作流、Agent 任务与界面草稿，然后恢复 2027 开通期与固定 Q3 场景。继续吗？");
+        if (!accepted) return;
+        ["lumino-multiservice-workflow-v2", "lumino-agent-tasks-v1", "lumino-multiservice-portal-ui-v2"].forEach((key) => window.localStorage.removeItem(key));
+        window.location.reload();
+        return;
       }
       if (action === "asset-revise-confirm") {
         try {

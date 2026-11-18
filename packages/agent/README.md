@@ -29,3 +29,13 @@ npm test
 # 或
 node --test tests/*.test.*
 ```
+
+## Production Contract v1
+
+`contracts/production-contracts.js` 与 `schemas/agent-*.schema.json` 是 #73 / #74 的 Phase 0 生产契约基线，定义：
+
+- 服务端权威 Context、跨设备 Conversation、Execution 与只追加 Audit；
+- Agent Task、幂等材料、Validation 与 Candidate 生命周期；
+- 稳定错误码、版本兼容和状态迁移。
+
+它们不替代当前 Prototype Runtime，也不表示数据库、队列或模型已经接入。迁移边界与门禁见 `docs/contracts/agent-production-contract-v1.md` 和 ADR-0001。

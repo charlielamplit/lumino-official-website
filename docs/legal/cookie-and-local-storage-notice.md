@@ -15,12 +15,13 @@
 |---|---|---|---|---|---|
 | `lumino.lang` | `localStorage` | 官网 | 保存中文/英文偏好 | 保留至用户清除浏览器站点数据或再次修改 | 必要偏好 |
 | `lumino-contact-last` | `sessionStorage` | 联系页 | 防止当前浏览器会话内重复提交同一咨询 | 标签页/浏览器会话结束或手动清除 | 必要安全/防重复 |
-| `lumino.public.leads.v1` | `localStorage` | 官网与 Portal 演示桥接 | 在 API 不可用的静态演示环境保存本机线索，并供同一浏览器的 Portal 线索箱读取 | 当前最多保留 200 条；生产上线前必须配置期限和清除入口 | 功能性，本地回退 |
+| `lumino.public.leads.v1` | `localStorage` | 官网与 Portal 演示桥接 | 仅保存无个人 session 的本机 Demo 线索；正式提交或工作人员收件箱失败时不得以其冒充服务端成功 | 当前最多保留 200 条；生产上线前必须配置期限和清除入口 | 功能性，演示状态 |
 | `lumino-portal-session-role` | `sessionStorage` | Portal | 保存当前演示角色 | 会话结束、退出或手动清除 | 必要会话 |
 | `lumino-portal-onboarding` | `localStorage` | Portal | 记住是否收起引导 | 保留至重新打开引导或清除站点数据 | 必要偏好 |
 | `lumino.portal.state.*`（以实际常量为准） | `localStorage` | Portal | 保存演示工作流、资产和页面状态 | 保留至重置演示或清除站点数据 | 核心功能/演示状态 |
 | `lumino-customer-hub-visited.*`（以实际生成键为准） | `localStorage` | Portal | 记住客户中心首次访问状态 | 保留至清除站点数据 | 必要偏好 |
-| `lumino-leads-staff-key` | `sessionStorage` | Portal 工作人员视图 | 暂存工作人员访问密钥 | 会话结束或退出 | 必要安全；生产应由正式身份系统替代 |
+| `lumino-staff-session-token` | `sessionStorage` | Portal 工作人员视图 | 暂存个人 staff session token | 会话结束、退出、401 或显式撤销 | 必要安全 |
+| `lumino-leads-staff-key` | `sessionStorage` | Portal 工作人员视图 | 旧版共享客户端兼容键；个人 session 接线完成后移除 | 会话结束、退出或 401 | 迁移兼容，不得作为正式共享密钥 |
 
 表中的 Portal 存储当前包含演示数据。生产版不得在浏览器本地持久保存不必要的真实客户生产数据、联系方式或访问密钥。
 

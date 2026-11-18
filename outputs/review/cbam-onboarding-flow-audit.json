@@ -1,0 +1,222 @@
+{
+  "generatedAt": "2026-11-16T04:06:54.493Z",
+  "origin": "http://127.0.0.1:4174",
+  "widths": {
+    "390": {
+      "stages": {
+        "p01": "done",
+        "p02": "done",
+        "p03": "done",
+        "p04": "done",
+        "p05": "done"
+      },
+      "monitoringStatus": "APPROVED",
+      "materialRequestCount": 8,
+      "invitationStatus": "PROPOSED",
+      "externalSent": false,
+      "deliveryState": "DRAFT_ONLY",
+      "horizontalOverflow": false,
+      "viewportWidth": 390,
+      "scrollWidth": 390,
+      "minPrimaryControlHeight": null,
+      "overflowOffenders": [
+        {
+          "tag": "TABLE",
+          "className": "data-table",
+          "left": 15,
+          "right": 775
+        },
+        {
+          "tag": "THEAD",
+          "className": "",
+          "left": 15,
+          "right": 775
+        },
+        {
+          "tag": "TR",
+          "className": "",
+          "left": 15,
+          "right": 775
+        },
+        {
+          "tag": "TH",
+          "className": "",
+          "left": 334,
+          "right": 610
+        },
+        {
+          "tag": "TH",
+          "className": "",
+          "left": 610,
+          "right": 775
+        },
+        {
+          "tag": "TBODY",
+          "className": "",
+          "left": 15,
+          "right": 775
+        },
+        {
+          "tag": "TR",
+          "className": "",
+          "left": 15,
+          "right": 775
+        },
+        {
+          "tag": "TD",
+          "className": "",
+          "left": 334,
+          "right": 610
+        }
+      ],
+      "primaryControlHeight": 44,
+      "recoveredDraft": {
+        "step": 5,
+        "importer": "NordWerk GmbH",
+        "products": [
+          "HRC",
+          "HDG"
+        ]
+      },
+      "repeated": {
+        "signedIdempotent": true,
+        "draftedIdempotent": true
+      },
+      "draftRows": 3,
+      "afterProjectStart": {
+        "agentAvailable": true,
+        "parallelWorkstreams": 3,
+        "materialRequests": 8,
+        "annualCaseStatus": "COLLECTING"
+      }
+    },
+    "768": {
+      "stages": {
+        "p01": "done",
+        "p02": "done",
+        "p03": "done",
+        "p04": "done",
+        "p05": "done"
+      },
+      "monitoringStatus": "APPROVED",
+      "materialRequestCount": 8,
+      "invitationStatus": "PROPOSED",
+      "externalSent": false,
+      "deliveryState": "DRAFT_ONLY",
+      "horizontalOverflow": false,
+      "viewportWidth": 768,
+      "scrollWidth": 768,
+      "minPrimaryControlHeight": null,
+      "overflowOffenders": [
+        {
+          "tag": "TABLE",
+          "className": "data-table",
+          "left": 19,
+          "right": 779
+        },
+        {
+          "tag": "THEAD",
+          "className": "",
+          "left": 19,
+          "right": 779
+        },
+        {
+          "tag": "TR",
+          "className": "",
+          "left": 19,
+          "right": 779
+        },
+        {
+          "tag": "TH",
+          "className": "",
+          "left": 626,
+          "right": 779
+        },
+        {
+          "tag": "TBODY",
+          "className": "",
+          "left": 19,
+          "right": 779
+        },
+        {
+          "tag": "TR",
+          "className": "",
+          "left": 19,
+          "right": 779
+        },
+        {
+          "tag": "TD",
+          "className": "",
+          "left": 626,
+          "right": 779
+        },
+        {
+          "tag": "TR",
+          "className": "",
+          "left": 19,
+          "right": 779
+        }
+      ],
+      "primaryControlHeight": 44,
+      "recoveredDraft": {
+        "step": 5,
+        "importer": "NordWerk GmbH",
+        "products": [
+          "HRC",
+          "HDG"
+        ]
+      },
+      "repeated": {
+        "signedIdempotent": true,
+        "draftedIdempotent": true
+      },
+      "draftRows": 3,
+      "afterProjectStart": {
+        "agentAvailable": true,
+        "parallelWorkstreams": 3,
+        "materialRequests": 8,
+        "annualCaseStatus": "COLLECTING"
+      }
+    },
+    "1440": {
+      "stages": {
+        "p01": "done",
+        "p02": "done",
+        "p03": "done",
+        "p04": "done",
+        "p05": "done"
+      },
+      "monitoringStatus": "APPROVED",
+      "materialRequestCount": 8,
+      "invitationStatus": "PROPOSED",
+      "externalSent": false,
+      "deliveryState": "DRAFT_ONLY",
+      "horizontalOverflow": false,
+      "viewportWidth": 1440,
+      "scrollWidth": 1440,
+      "minPrimaryControlHeight": null,
+      "overflowOffenders": [],
+      "primaryControlHeight": 36,
+      "recoveredDraft": {
+        "step": 5,
+        "importer": "NordWerk GmbH",
+        "products": [
+          "HRC",
+          "HDG"
+        ]
+      },
+      "repeated": {
+        "signedIdempotent": true,
+        "draftedIdempotent": true
+      },
+      "draftRows": 3,
+      "afterProjectStart": {
+        "agentAvailable": true,
+        "parallelWorkstreams": 3,
+        "materialRequests": 8,
+        "annualCaseStatus": "COLLECTING"
+      }
+    }
+  },
+  "issues": []
+}

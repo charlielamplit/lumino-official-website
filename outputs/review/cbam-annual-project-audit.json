@@ -1,0 +1,49 @@
+{
+  "generatedAt": "2026-11-16T13:48:49.365Z",
+  "origin": "http://127.0.0.1:4174",
+  "widths": {
+    "390": {
+      "title": "2026 年度项目",
+      "facts": 4,
+      "statusControl": true,
+      "statusStages": 5,
+      "legacyJourney": 0,
+      "crossYear": "跨年度执行：2026 年数据在 2027 年关账并形成年度材料包；核查 Finding 可能要求补证、重算和修订交付，项目不会在 2026 年 12 月 31 日自动结束。",
+      "team": 4,
+      "cards": 3,
+      "overflow": false,
+      "viewportWidth": 390,
+      "scrollWidth": 390,
+      "pageHeight": 1721
+    },
+    "768": {
+      "title": "2026 年度项目",
+      "facts": 4,
+      "statusControl": true,
+      "statusStages": 5,
+      "legacyJourney": 0,
+      "crossYear": "跨年度执行：2026 年数据在 2027 年关账并形成年度材料包；核查 Finding 可能要求补证、重算和修订交付，项目不会在 2026 年 12 月 31 日自动结束。",
+      "team": 4,
+      "cards": 3,
+      "overflow": false,
+      "viewportWidth": 768,
+      "scrollWidth": 768,
+      "pageHeight": 1339
+    },
+    "1440": {
+      "title": "2026 年度项目",
+      "facts": 4,
+      "statusControl": true,
+      "statusStages": 5,
+      "legacyJourney": 0,
+      "crossYear": "跨年度执行：2026 年数据在 2027 年关账并形成年度材料包；核查 Finding 可能要求补证、重算和修订交付，项目不会在 2026 年 12 月 31 日自动结束。",
+      "team": 4,
+      "cards": 3,
+      "overflow": false,
+      "viewportWidth": 1440,
+      "scrollWidth": 1440,
+      "pageHeight": 900
+    }
+  },
+  "issues": []
+}

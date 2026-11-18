@@ -1,0 +1,27 @@
+{
+  "name": "@lumino/platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "exports": {
+    "./server-authority": "./contracts/server-authority.js",
+    "./api-response": "./contracts/api-response.js",
+    "./db": "./db/index.js",
+    "./db/pool": "./db/pool.js",
+    "./db/migrate": "./db/migrate.js",
+    "./db/leads": "./db/leads-repository.js",
+    "./db/identity": "./db/identity-repository.js"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.*",
+    "migrate": "node ../../scripts/db/migrate.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.16.0"
+  },
+  "files": [
+    "contracts",
+    "schemas",
+    "db"
+  ]
+}

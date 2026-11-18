@@ -20,3 +20,24 @@ test("未登记的普通界面动作不被权限模块误拦截", () => {
   assert.equal(permissions.canPerform("customer_owner", "dismiss-onboarding"), true);
   assert.equal(permissions.allowedRoles("dismiss-onboarding"), null);
 });
+
+test("CBAM 黄金路径保持客户、系统、复核和审批职责分离", () => {
+  assert.equal(permissions.canPerform("customer_owner", "cbam-confirm-quarter-data"), true);
+  assert.equal(permissions.canPerform("customer_approver", "cbam-confirm-quarter-data"), false);
+  assert.equal(permissions.canPerform("system", "cbam-run-calculation"), true);
+  assert.equal(permissions.canPerform("customer_owner", "cbam-run-calculation"), false);
+  assert.equal(permissions.canPerform("reviewer", "cbam-review-calculation"), true);
+  assert.equal(permissions.canPerform("customer_approver", "cbam-review-calculation"), false);
+  assert.equal(permissions.canPerform("customer_owner", "cbam-build-package"), true);
+});
+
+test("CBAM 开通期保持客户、制备和独立复核职责分离", () => {
+  assert.equal(permissions.canPerform("customer_owner", "cbam-create-annual-project"), true);
+  assert.equal(permissions.canPerform("customer_contrib", "cbam-create-annual-project"), false);
+  assert.equal(permissions.canPerform("expert", "cbam-prepare-monitoring-plan"), true);
+  assert.equal(permissions.canPerform("reviewer", "cbam-prepare-monitoring-plan"), false);
+  assert.equal(permissions.canPerform("reviewer", "cbam-review-monitoring-plan"), true);
+  assert.equal(permissions.canPerform("expert", "cbam-review-monitoring-plan"), false);
+  assert.equal(permissions.canPerform("customer_owner", "cbam-sign-monitoring-plan"), true);
+  assert.equal(permissions.canPerform("expert", "cbam-sign-monitoring-plan"), false);
+});

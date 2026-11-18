@@ -19,7 +19,7 @@ let data;
 let latest;
 
 async function loadData() {
-  const names = ["parameters", "cn-codes", "benchmarks", "default-values", "actual-values", "actual-full", "cn-description-zh"];
+  const names = ["parameters", "cn-codes", "benchmarks", "default-values", "actual-values", "actual-full", "cn-description-zh", "data-version"];
   const values = await Promise.all(
     names.map(async (name) => {
       const response = await fetch(`${DATA_ROOT}/${name}.json`);
@@ -37,12 +37,37 @@ async function loadData() {
     actualFull: data.actualfull,
   });
 
-  const zhByEnglish = new Map(data.cndescriptionzh.map((item) => [item.en.replace(/\s+/g, " ").trim(), item.zh]));
+  const zhByCode = new Map(
+    data.cndescriptionzh
+      .filter((item) => item.cnCode)
+      .map((item) => [String(item.cnCode), item.zh])
+  );
+  const zhByEnglish = new Map(
+    data.cndescriptionzh.map((item) => [item.en.replace(/\s+/g, " ").trim(), item.zh])
+  );
   data.cnCodesLocalized = data.cncodes.map((item) => ({
     ...item,
-    zh: zhByEnglish.get(item.description.replace(/\s+/g, " ").trim()) || item.description.replace(/\s+/g, " "),
+    zh:
+      item.zh ||
+      zhByCode.get(item.cnCode) ||
+      zhByEnglish.get(item.description.replace(/\s+/g, " ").trim()) ||
+      item.description.replace(/\s+/g, " "),
   }));
+  renderDataVersion();
   initializeForm();
+}
+
+function renderDataVersion() {
+  const meta = data.dataversion;
+  if (!meta) return;
+  const sidebar = $("#dataVersion");
+  if (sidebar) {
+    sidebar.textContent = `${meta.label} · ${meta.regulation} · Excel ${meta.excelPublished}`;
+  }
+  const cite = $("#dataCite");
+  if (cite) {
+    cite.textContent = `${meta.label} · 欧委会实施条例${meta.regulation}；信息用 Excel 发布日 ${meta.excelPublished}（文件版本 ${meta.excelVersion}）。${meta.note}`;
+  }
 }
 
 function initializeForm() {
@@ -125,7 +150,9 @@ function renderResult(comparison) {
   $("#freeQuota").textContent = money.format(result.sefa * result.quantity);
   $("#see").textContent = decimal.format(result.see);
   $("#netEmission").textContent = decimal.format(result.netEmissionPerTon);
-  $("#assumption").textContent = `按 €${result.certificatePrice}/张、汇率 ${result.exchangeRate}、${result.year} 年免费配额退坡因子试算。`;
+  const ver = data.dataversion;
+  const cite = ver ? `默认值依据 ${ver.regulation}。` : "";
+  $("#assumption").textContent = `按 €${result.certificatePrice}/张、汇率 ${result.exchangeRate}、${result.year} 年免费配额退坡因子试算。${cite}`;
   $("#savingPreview").textContent = comparison.potentialSaving > 0
     ? `实测路径可能带来约 ${comparison.savingRate}% 的成本差异`
     : "实测路径需结合供应链数据进一步判定";
@@ -310,7 +337,7 @@ async function submitLead(event) {
       unlockComparison();
       return;
     }
-    status.innerHTML = `${escapeHtml(error.message || "提交失败")} <a href="../Lumino%20联系.dc.html">改用预约诊断 →</a>`;
+    status.innerHTML = `${escapeHtml(error.message || "提交失败")} <a href="../contact.html">改用预约诊断 →</a>`;
     status.classList.add("error");
     button.disabled = false;
     button.textContent = "解锁实测对比";

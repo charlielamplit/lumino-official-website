@@ -1,30 +1,77 @@
 /**
- * Lead intake API
+ * Lead intake API (PostgreSQL phase-1)
  *
  * Failure strategy:
- * 1. Validate → persist first (file /tmp or data/leads.json + memory).
- * 2. If persist fails → 503 (do not claim delivery).
- * 3. Notify via LEAD_WEBHOOK_URL and/or Resend (LEAD_NOTIFY_EMAIL + RESEND_API_KEY).
- * 4. Persist OK + notify fail → still 200 with notified:false (inbox remains source of truth).
- * 5. CRM webhook is the same LEAD_WEBHOOK_URL; no separate CRM required in v1.
+ * 1. Validate → persist to Postgres (leads + outbox same transaction).
+ * 2. If DB fails → 503 / DEPENDENCY_UNAVAILABLE (never fall back to JSON/memory).
+ * 3. Notification is queued via outbox; worker/best-effort drain may send WeCom.
+ * 4. Actor/tenant/role always come from server session — never from request body.
+ *
+ * Responses follow Platform API Response Contract v1.
  */
 import { createLead, getLead, listLeads, updateLead } from "./_lib/leads-store.js";
+import { platformDb } from "./_lib/platform-db.js";
+import {
+  createRequestId,
+  sendSuccess,
+  sendError,
+  sendDomainError,
+} from "./_lib/platform-api-response.js";
 
 const PHONE_CN = /^1[3-9]\d{9}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_BODY_CHARS = 32_000;
 
-function json(response, status, body) {
-  response.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
-  response.setHeader("Cache-Control", "no-store");
-  response.end(JSON.stringify(body));
+function extractBearerOrStaffToken(request) {
+  const headerKey = String(request.headers["x-lumino-staff-key"] || "").trim();
+  if (headerKey) return headerKey;
+  const auth = String(request.headers.authorization || "").trim();
+  if (auth.toLowerCase().startsWith("bearer ")) return auth.slice(7).trim();
+  return "";
 }
 
-function staffAuthorized(request) {
-  const expected = process.env.LEADS_STAFF_KEY;
-  if (!expected) return false;
-  const header = request.headers["x-lumino-staff-key"] || "";
-  const query = request.query?.key || "";
-  return header === expected || query === expected;
+const STAFF_LEAD_ROLES = new Set(["ops", "sales", "admin"]);
+
+function assertLeadStaffRole(roles) {
+  const list = Array.isArray(roles) ? roles : [];
+  if (!list.some((role) => STAFF_LEAD_ROLES.has(String(role)))) {
+    const error = new Error("Forbidden role");
+    error.httpStatus = 403;
+    error.code = "FORBIDDEN_ROLE";
+    throw error;
+  }
+}
+
+async function requireStaffActor(request) {
+  if (request.query?.key) {
+    const error = new Error("Auth query key rejected");
+    error.httpStatus = 401;
+    error.code = "AUTH_QUERY_KEY_REJECTED";
+    throw error;
+  }
+  const token = extractBearerOrStaffToken(request);
+  if (!token) {
+    const error = new Error("Authentication required");
+    error.httpStatus = 401;
+    error.code = "AUTH_REQUIRED";
+    throw error;
+  }
+  const session = await platformDb.resolveSession(token);
+  if (!session?.userId || !session?.activeTenantId) {
+    const error = new Error("Authentication required");
+    error.httpStatus = 401;
+    error.code = "AUTH_REQUIRED";
+    throw error;
+  }
+  const roles = session.roles || [];
+  assertLeadStaffRole(roles);
+  return {
+    userId: session.userId,
+    tenantId: session.activeTenantId,
+    email: session.email,
+    name: session.name,
+    roles,
+  };
 }
 
 function normalizeServices(body) {
@@ -35,102 +82,172 @@ function normalizeServices(body) {
   return raw.split(/[,，\s]+/).map((s) => s.trim()).filter(Boolean);
 }
 
-async function notifyLead(lead) {
-  const results = { webhook: null, email: null };
-  const webhook = process.env.LEAD_WEBHOOK_URL;
-  if (webhook) {
+function isWecomWebhook(url) {
+  try {
+    const host = new URL(url).host;
+    return host === "qyapi.weixin.qq.com" || host.endsWith(".weixin.qq.com");
+  } catch {
+    return false;
+  }
+}
+
+function buildWecomMarkdown(lead) {
+  const portalBase = String(process.env.PUBLIC_SITE_URL || "").replace(/\/$/, "") || "https://www.luminoyou.com";
+  const services = (lead.services || []).join("、") || "—";
+  return [
+    `## 新线索 <font color="warning">${lead.id}</font>`,
+    `>公司：<font color="comment">${lead.company}</font>`,
+    `>联系人：<font color="comment">${lead.name}</font>`,
+    `>电话：<font color="comment">${lead.phone || "—"}</font>`,
+    `>邮箱：<font color="comment">${lead.email || "—"}</font>`,
+    `>服务：<font color="comment">${services}</font>`,
+    `>来源：<font color="comment">${lead.source || "—"}</font>`,
+    `>说明：${String(lead.note || "—").slice(0, 400)}`,
+    `[打开线索收件箱](${portalBase}/portal/)`,
+  ].join("\n");
+}
+
+async function postWebhook(url, body) {
+  const upstream = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(8000),
+  });
+  const text = await upstream.text();
+  let parsed = null;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    parsed = null;
+  }
+  const wecomFail = parsed && typeof parsed.errcode === "number" && parsed.errcode !== 0;
+  if (!upstream.ok || wecomFail) {
+    const detail = wecomFail ? `errcode_${parsed.errcode}` : `status_${upstream.status}`;
+    return { ok: false, detail };
+  }
+  return { ok: true, detail: "ok" };
+}
+
+async function drainOutboxOnce(leadPublicId) {
+  const wecomUrl = String(process.env.WECOM_WEBHOOK_URL || process.env.LEAD_WEBHOOK_URL || "").trim();
+  if (!wecomUrl || !isWecomWebhook(wecomUrl)) {
+    return { notified: false, notifyStatus: "queued", results: { wecom: "not_configured" } };
+  }
+
+  const claimed = await platformDb.claimPendingOutbox({ limit: 1, leadPublicId });
+  let notified = false;
+  const results = { wecom: null, webhook: null, email: null };
+
+  for (const row of claimed) {
+    if (row.channel !== "wecom") continue;
     try {
-      const upstream = await fetch(webhook, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(lead),
-        signal: AbortSignal.timeout(8000),
+      const lead = await platformDb.getLeadByPublicId({
+        tenantId: row.tenant_id,
+        publicId: row.payload?.publicId || leadPublicId,
       });
-      results.webhook = upstream.ok ? "ok" : `status_${upstream.status}`;
-      if (!upstream.ok) console.error("[lumino-lead] webhook failed", upstream.status, lead.id);
+      if (!lead) {
+        await platformDb.markOutboxFailed(row.id, "lead_missing", { attempts: row.attempts });
+        continue;
+      }
+      const sent = await postWebhook(wecomUrl, {
+        msgtype: "markdown",
+        markdown: { content: buildWecomMarkdown(lead) },
+      });
+      if (sent.ok) {
+        await platformDb.markOutboxSent(row.id);
+        notified = true;
+        results.wecom = "ok";
+      } else {
+        await platformDb.markOutboxFailed(row.id, sent.detail, { attempts: row.attempts });
+        results.wecom = sent.detail;
+      }
     } catch (error) {
-      results.webhook = "error";
-      console.error("[lumino-lead] webhook error", error, lead.id);
+      await platformDb.markOutboxFailed(row.id, error.code || "error", { attempts: row.attempts });
+      results.wecom = "error";
     }
   }
 
-  const notifyEmail = process.env.LEAD_NOTIFY_EMAIL;
-  const resendKey = process.env.RESEND_API_KEY;
-  if (notifyEmail && resendKey) {
-    try {
-      const from = process.env.LEAD_NOTIFY_FROM || "Lumino Leads <onboarding@resend.dev>";
-      const text = [
-        `新线索 ${lead.id}`,
-        `公司：${lead.company}`,
-        `联系人：${lead.name}`,
-        `手机：${lead.phone || "—"}`,
-        `邮箱：${lead.email || "—"}`,
-        `服务：${(lead.services || []).join(", ") || "—"}`,
-        `行业：${lead.industry || "—"}`,
-        `说明：${lead.note || "—"}`,
-        `来源：${lead.source}`,
-        `时间：${lead.createdAt}`,
-      ].join("\n");
-      const upstream = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${resendKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from,
-          to: [notifyEmail],
-          subject: `[Lumino] 新线索 ${lead.company} · ${lead.id}`,
-          text,
-        }),
-        signal: AbortSignal.timeout(8000),
-      });
-      results.email = upstream.ok ? "ok" : `status_${upstream.status}`;
-      if (!upstream.ok) console.error("[lumino-lead] email failed", await upstream.text());
-    } catch (error) {
-      results.email = "error";
-      console.error("[lumino-lead] email error", error, lead.id);
-    }
-  }
+  return {
+    notified,
+    notifyStatus: notified ? "sent" : "queued",
+    results,
+  };
+}
 
-  const notified = results.webhook === "ok" || results.email === "ok";
-  const configured = Boolean(webhook || (notifyEmail && resendKey));
-  return { notified, configured, results };
+function validationError(fieldErrors) {
+  const error = new Error("Validation failed");
+  error.code = "VALIDATION_FAILED";
+  error.httpStatus = 400;
+  error.fieldErrors = fieldErrors;
+  return error;
 }
 
 export default async function handler(request, response) {
+  const requestId = createRequestId(request);
+
   if (request.method === "OPTIONS") {
     response.status(204).end();
     return;
   }
 
   if (request.method === "GET") {
-    if (!staffAuthorized(request)) return json(response, 401, { error: "未授权" });
-    const id = request.query?.id;
-    if (id) {
-      const lead = getLead(String(id));
-      if (!lead) return json(response, 404, { error: "线索不存在" });
-      return json(response, 200, { ok: true, lead });
+    try {
+      const actor = await requireStaffActor(request);
+      const id = request.query?.id;
+      if (id) {
+        const lead = await getLead(String(id), actor);
+        if (!lead) return sendError(response, "RESOURCE_NOT_FOUND", { requestId });
+        return sendSuccess(response, { lead }, { requestId, revision: lead.revision });
+      }
+      const leads = await listLeads(actor);
+      return sendSuccess(response, { leads }, { requestId });
+    } catch (error) {
+      return sendDomainError(response, error, { requestId });
     }
-    return json(response, 200, { ok: true, leads: listLeads() });
   }
 
   if (request.method === "PATCH") {
-    if (!staffAuthorized(request)) return json(response, 401, { error: "未授权" });
-    const body = request.body || {};
-    const id = String(body.id || request.query?.id || "").trim();
-    if (!id) return json(response, 400, { error: "缺少线索编号" });
     try {
-      const { lead, persisted } = updateLead(id, body, body.actor || "staff");
-      if (!lead) return json(response, 404, { error: "线索不存在" });
-      if (!persisted) console.warn("[lumino-lead] patch memory-only", id);
-      return json(response, 200, { ok: true, lead, persisted });
+      const actor = await requireStaffActor(request);
+      const body = request.body || {};
+      const id = String(body.id || request.query?.id || "").trim();
+      if (!id) {
+        return sendError(response, "VALIDATION_FAILED", {
+          requestId,
+          fieldErrors: [{ field: "id", code: "REQUIRED", messageKey: "api.field_required" }],
+        });
+      }
+      const { lead, persisted } = await updateLead(
+        id,
+        {
+          status: body.status,
+          note: body.note,
+          claim: body.status === "claimed" || body.claim === true,
+          revision: body.revision ?? body.expectedRevision,
+          expectedRevision: body.expectedRevision ?? body.revision,
+        },
+        actor,
+        { requestId },
+      );
+      if (!lead) return sendError(response, "RESOURCE_NOT_FOUND", { requestId });
+      return sendSuccess(response, { lead, persisted }, { requestId, revision: lead.revision });
     } catch (error) {
-      return json(response, 400, { error: error.message || "更新失败" });
+      return sendDomainError(response, error, { requestId });
     }
   }
 
-  if (request.method !== "POST") return json(response, 405, { error: "Method Not Allowed" });
+  if (request.method !== "POST") {
+    return sendError(response, "METHOD_NOT_ALLOWED", { requestId });
+  }
+
+  const rawSize = Number(request.headers["content-length"] || 0);
+  if (rawSize > MAX_BODY_CHARS) {
+    return sendError(response, "VALIDATION_FAILED", {
+      requestId,
+      fieldErrors: [{ field: "body", code: "TOO_LARGE", messageKey: "api.field_too_large" }],
+    });
+  }
 
   const body = request.body || {};
   const company = String(body.company || "").trim();
@@ -144,25 +261,33 @@ export default async function handler(request, response) {
   const consent = body.consent === true || body.consent === "on" || body.consent === "true" || body.consent === "1";
   const requestType = String(body.requestType || "service-consultation").slice(0, 80);
 
-  if (!company) return json(response, 400, { error: "请填写公司名称" });
-  if (!name) return json(response, 400, { error: "请填写姓名" });
-  if (!consent) return json(response, 400, { error: "请同意联系授权后再提交" });
-  if (!phone && !email) return json(response, 400, { error: "请至少填写工作邮箱或电话 / 微信" });
+  const fieldErrors = [];
+  if (!company) fieldErrors.push({ field: "company", code: "REQUIRED", messageKey: "api.field_required" });
+  if (!name) fieldErrors.push({ field: "name", code: "REQUIRED", messageKey: "api.field_required" });
+  if (!consent) fieldErrors.push({ field: "consent", code: "REQUIRED", messageKey: "api.field_required" });
+  if (!phone && !email) {
+    fieldErrors.push({ field: "email", code: "REQUIRED_ONE_OF", messageKey: "api.field_required" });
+    fieldErrors.push({ field: "phone", code: "REQUIRED_ONE_OF", messageKey: "api.field_required" });
+  }
   if (phone) {
     const compact = phone.replace(/\s+/g, "");
-    // 试算等场景仍要求中国大陆手机号；联系页允许手机或微信号
     if (requestType !== "service-consultation" && body.source === "lumino-cbam-calculator") {
-      if (!PHONE_CN.test(compact)) return json(response, 400, { error: "请填写有效的 11 位手机号" });
+      if (!PHONE_CN.test(compact)) fieldErrors.push({ field: "phone", code: "INVALID", messageKey: "api.field_invalid" });
     } else if (!PHONE_CN.test(compact) && compact.length < 5) {
-      return json(response, 400, { error: "请填写有效的联系电话或微信" });
+      fieldErrors.push({ field: "phone", code: "INVALID", messageKey: "api.field_invalid" });
     }
   }
-  if (email && !EMAIL_RE.test(email)) return json(response, 400, { error: "请填写有效的工作邮箱" });
+  if (email && !EMAIL_RE.test(email)) {
+    fieldErrors.push({ field: "email", code: "INVALID", messageKey: "api.field_invalid" });
+  }
   if (!note && body.context) {
     const ctx = body.context;
     note = `试算线索：${ctx.sector || ""} CN ${ctx.cnCode || ""} · ${ctx.quantity || ""} t · 估算 ¥${ctx.estimatedCostCny || "—"}`.trim();
   }
-  if (!note) return json(response, 400, { error: "请填写需求说明" });
+  if (!note) fieldErrors.push({ field: "note", code: "REQUIRED", messageKey: "api.field_required" });
+  if (fieldErrors.length) {
+    return sendError(response, "VALIDATION_FAILED", { requestId, fieldErrors });
+  }
 
   const record = {
     source: String(body.source || "lumino-website").slice(0, 120),
@@ -176,33 +301,34 @@ export default async function handler(request, response) {
     note: note.slice(0, 4000),
     requestType,
     consent: true,
+    noticeVersion: String(body.noticeVersion || "v1").slice(0, 40),
     context: body.context || null,
     userAgent: request.headers["user-agent"] || "",
+    isDemo: body.isDemo === true,
   };
 
   let created;
   try {
-    created = createLead(record);
+    created = await createLead(record, { requestId });
   } catch (error) {
-    console.error("[lumino-lead] persist failed", error, record);
-    return json(response, 503, { error: "线索暂存失败，请稍后重试" });
+    console.error("[lumino-lead] persist failed", error && error.code ? error.code : "error");
+    return sendError(response, "DEPENDENCY_UNAVAILABLE", { requestId });
   }
 
-  if (!created.persisted) {
-    console.warn("[lumino-lead] persisted to memory only", created.lead.id);
+  let notify = { notified: false, notifyStatus: "queued", results: { wecom: "queued" } };
+  try {
+    notify = await drainOutboxOnce(created.lead.id);
+  } catch (error) {
+    console.error("[lumino-lead] outbox drain failed", error && error.code ? error.code : "error");
   }
 
-  const notify = await notifyLead(created.lead);
-  if (!notify.configured) {
-    console.warn("[lumino-lead] no LEAD_WEBHOOK_URL / Resend configured; inbox-only", created.lead.id);
-  }
-
-  return json(response, 200, {
-    ok: true,
+  return sendSuccess(response, {
     leadId: created.lead.id,
     status: created.lead.status,
-    persisted: created.persisted,
+    persisted: true,
     notified: notify.notified,
+    notifyStatus: notify.notifyStatus || "queued",
     notify: notify.results,
-  });
+    lead: created.lead,
+  }, { requestId, revision: created.lead.revision });
 }

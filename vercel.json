@@ -87,11 +87,11 @@
       "destination": "/apps/site/knowledge/:path*"
     },
     {
-      "source": "/Lumino CBAM 指南.dc.html",
+      "source": "/apps/site/guides/cbam.html",
       "destination": "/apps/site/knowledge/cbam-guide.html"
     },
     {
-      "source": "/Lumino 指南文章.dc.html",
+      "source": "/apps/site/guides/article.html",
       "destination": "/apps/site/knowledge/article.html?id=cbam-hs-cn-codes"
     },
     {
@@ -212,39 +212,79 @@
     },
     {
       "source": "/site",
-      "destination": "/apps/site/Lumino 官网.dc.html"
+      "destination": "/apps/site/home.html"
     },
     {
       "source": "/Lumino 官网.dc.html",
-      "destination": "/apps/site/Lumino 官网.dc.html"
+      "destination": "/apps/site/home.html"
+    },
+    {
+      "source": "/apps/site/Lumino 官网.dc.html",
+      "destination": "/apps/site/home.html"
     },
     {
       "source": "/Lumino 平台.dc.html",
-      "destination": "/apps/site/Lumino 平台.dc.html"
+      "destination": "/apps/site/platform.html"
+    },
+    {
+      "source": "/apps/site/Lumino 平台.dc.html",
+      "destination": "/apps/site/platform.html"
     },
     {
       "source": "/Lumino 关于.dc.html",
-      "destination": "/apps/site/Lumino 关于.dc.html"
+      "destination": "/apps/site/about.html"
+    },
+    {
+      "source": "/apps/site/Lumino 关于.dc.html",
+      "destination": "/apps/site/about.html"
     },
     {
       "source": "/Lumino 联系.dc.html",
-      "destination": "/apps/site/Lumino 联系.dc.html"
+      "destination": "/apps/site/contact.html"
     },
     {
-      "source": "/Lumino Cookie 与本地存储.dc.html",
-      "destination": "/apps/site/Lumino Cookie 与本地存储.dc.html"
-    },
-    {
-      "source": "/Lumino 用户内容与数据许可.dc.html",
-      "destination": "/apps/site/Lumino 用户内容与数据许可.dc.html"
+      "source": "/apps/site/Lumino 联系.dc.html",
+      "destination": "/apps/site/contact.html"
     },
     {
       "source": "/Lumino CBAM 指南.dc.html",
-      "destination": "/apps/site/Lumino CBAM 指南.dc.html"
+      "destination": "/apps/site/knowledge/cbam-guide.html"
+    },
+    {
+      "source": "/apps/site/Lumino CBAM 指南.dc.html",
+      "destination": "/apps/site/knowledge/cbam-guide.html"
     },
     {
       "source": "/Lumino 指南文章.dc.html",
-      "destination": "/apps/site/Lumino 指南文章.dc.html"
+      "destination": "/apps/site/knowledge/article.html?id=cbam-hs-cn-codes"
+    },
+    {
+      "source": "/apps/site/Lumino 指南文章.dc.html",
+      "destination": "/apps/site/knowledge/article.html?id=cbam-hs-cn-codes"
+    },
+    {
+      "source": "/Lumino 隐私与数据处理.dc.html",
+      "destination": "/apps/site/legal/privacy.html"
+    },
+    {
+      "source": "/apps/site/Lumino 隐私与数据处理.dc.html",
+      "destination": "/apps/site/legal/privacy.html"
+    },
+    {
+      "source": "/Lumino Cookie 与本地存储.dc.html",
+      "destination": "/apps/site/legal/cookies.html"
+    },
+    {
+      "source": "/apps/site/Lumino Cookie 与本地存储.dc.html",
+      "destination": "/apps/site/legal/cookies.html"
+    },
+    {
+      "source": "/Lumino 用户内容与数据许可.dc.html",
+      "destination": "/apps/site/legal/content-licence.html"
+    },
+    {
+      "source": "/apps/site/Lumino 用户内容与数据许可.dc.html",
+      "destination": "/apps/site/legal/content-licence.html"
     }
   ],
   "headers": [

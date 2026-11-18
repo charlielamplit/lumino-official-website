@@ -11,12 +11,12 @@ const outputDir = new URL("../outputs/review/", import.meta.url);
 await mkdir(outputDir, { recursive: true });
 
 const pages = [
-  "/apps/site/Lumino%20%E5%AE%98%E7%BD%91.dc.html",
-  "/apps/site/Lumino%20%E5%B9%B3%E5%8F%B0.dc.html",
+  "/apps/site/home.html",
+  "/apps/site/platform.html",
   "/apps/site/industries/",
   "/apps/site/tools/",
   "/apps/site/knowledge/",
-  "/apps/site/Lumino%20%E8%81%94%E7%B3%BB.dc.html",
+  "/apps/site/contact.html",
 ];
 
 const target = await fetch(`http://127.0.0.1:${cdpPort}/json/new?about:blank`, { method: "PUT" }).then((r) => r.json());

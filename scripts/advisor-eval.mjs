@@ -77,8 +77,8 @@ function resolveCase(input, lang, asOf) {
       next_question: null,
       suggested_replies: [],
       sources: [],
-      links: [{ type: "contact", label: "Contact Lumino", url: "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor&topic=privacy" }],
-      cta: { type: "contact", label: "Contact Lumino", url: "/apps/site/Lumino%20联系.dc.html?source=homepage-advisor&topic=privacy" },
+      links: [{ type: "contact", label: "Contact Lumino", url: "/apps/site/contact.html?source=homepage-advisor&topic=privacy" }],
+      cta: { type: "contact", label: "Contact Lumino", url: "/apps/site/contact.html?source=homepage-advisor&topic=privacy" },
       handoff: "contact",
       runtime_source: "privacy_guard",
     };

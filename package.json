@@ -1,0 +1,16 @@
+{
+  "name": "lumino-official-website",
+  "private": true,
+  "scripts": {
+    "db:migrate": "node scripts/db/migrate.mjs",
+    "db:migrate-leads-json": "node scripts/db/migrate-leads-json-to-pg.mjs",
+    "db:outbox-worker": "node scripts/db/outbox-worker.mjs",
+    "db:outbox-once": "node scripts/db/outbox-worker.mjs --once",
+    "db:provision-staff": "node scripts/db/provision-staff.mjs",
+    "test:platform": "node --test packages/platform/tests/*.test.cjs",
+    "test:db": "node --test packages/platform/tests/postgres-*.test.cjs"
+  },
+  "dependencies": {
+    "pg": "^8.16.0"
+  }
+}

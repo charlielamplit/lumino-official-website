@@ -19,6 +19,16 @@
     "pcf-run-calculation": Object.freeze(["customer_admin", "customer_owner"]),
     "pcf-complete-review": Object.freeze(["reviewer"]),
     "workflow-approval": Object.freeze(["customer_approver"]),
+    "cbam-create-annual-project": Object.freeze(["customer_admin", "customer_owner"]),
+    "cbam-confirm-annual-scope": Object.freeze(["customer_admin", "customer_owner"]),
+    "cbam-prepare-monitoring-plan": Object.freeze(["expert"]),
+    "cbam-review-monitoring-plan": Object.freeze(["reviewer"]),
+    "cbam-sign-monitoring-plan": Object.freeze(["customer_admin", "customer_owner"]),
+    "cbam-draft-invitations": Object.freeze(["customer_admin", "customer_owner"]),
+    "cbam-confirm-quarter-data": Object.freeze(["customer_admin", "customer_owner"]),
+    "cbam-run-calculation": Object.freeze(["system"]),
+    "cbam-review-calculation": Object.freeze(["reviewer"]),
+    "cbam-build-package": Object.freeze(["customer_admin", "customer_owner"]),
   });
 
   function allowedRoles(action) {
@@ -33,6 +43,9 @@
   function denialMessage(action) {
     if (action === "pcf-complete-review") return "该操作仅由独立复核员执行；客户可查看草稿和复核状态。";
     if (action === "workflow-approval") return "该操作需要内部审批人权限。";
+    if (action === "cbam-review-calculation") return "该操作只能由指定复核员执行。";
+    if (action === "cbam-prepare-monitoring-plan") return "该操作只能由指定制备专家执行。";
+    if (action === "cbam-review-monitoring-plan") return "该操作只能由指定独立复核员执行。";
     return "当前角色没有执行此操作的权限。";
   }
 
