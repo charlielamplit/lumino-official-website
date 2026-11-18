@@ -51,15 +51,12 @@ function mapLead(row) {
 async function nextPublicId(client, tenantId, now = new Date()) {
   const day = now.toISOString().slice(0, 10);
   const stamp = day.replaceAll("-", "");
-  await client.query(
+  const counter = await client.query(
     `INSERT INTO lead_daily_counters (tenant_id, day, seq)
      VALUES ($1, $2::date, 1)
      ON CONFLICT (tenant_id, day)
-     DO UPDATE SET seq = lead_daily_counters.seq + 1`,
-    [tenantId, day],
-  );
-  const counter = await client.query(
-    `SELECT seq FROM lead_daily_counters WHERE tenant_id = $1 AND day = $2::date`,
+     DO UPDATE SET seq = lead_daily_counters.seq + 1
+     RETURNING seq`,
     [tenantId, day],
   );
   const seq = String(counter.rows[0].seq).padStart(4, "0");

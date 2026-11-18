@@ -27,45 +27,46 @@ function verifyPassword(password, stored) {
 }
 
 async function ensureDefaultTenant(client, { slug = DEFAULT_TENANT_SLUG, name = "Lumino" } = {}) {
-  const existing = await client.query("SELECT * FROM tenants WHERE slug = $1", [slug]);
-  if (existing.rows[0]) return existing.rows[0];
-  const inserted = await client.query(
+  // Atomic upsert: concurrent bootstraps must not race on SELECT-then-INSERT.
+  const upserted = await client.query(
     `INSERT INTO tenants (slug, name)
      VALUES ($1, $2)
+     ON CONFLICT (slug) DO UPDATE
+       SET updated_at = tenants.updated_at
      RETURNING *`,
     [slug, name],
   );
-  return inserted.rows[0];
+  return upserted.rows[0];
 }
 
 async function upsertUserWithMembership(client, { email, password, name, role, tenantId }) {
   const normalizedEmail = String(email).trim().toLowerCase();
-  const found = await client.query("SELECT * FROM users WHERE email = $1", [normalizedEmail]);
-  let user = found.rows[0];
-  if (!user) {
-    const inserted = await client.query(
-      `INSERT INTO users (email, password_hash, name)
-       VALUES ($1, $2, $3)
-       RETURNING *`,
-      [normalizedEmail, hashPassword(password), name],
-    );
-    user = inserted.rows[0];
-  } else if (password) {
-    const updated = await client.query(
-      `UPDATE users
-       SET password_hash = $2, name = $3, updated_at = now(), revision = revision + 1
-       WHERE id = $1
-       RETURNING *`,
-      [user.id, hashPassword(password), name],
-    );
-    user = updated.rows[0];
-  }
+  const passwordHash = hashPassword(password);
+  const upserted = await client.query(
+    `INSERT INTO users (email, password_hash, name)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (email) DO UPDATE
+       SET password_hash = EXCLUDED.password_hash,
+           name = EXCLUDED.name,
+           is_active = true,
+           archived_at = NULL,
+           updated_at = now(),
+           revision = users.revision + 1
+     RETURNING *`,
+    [normalizedEmail, passwordHash, name],
+  );
+  const user = upserted.rows[0];
 
   await client.query(
     `INSERT INTO tenant_memberships (tenant_id, user_id, roles)
      VALUES ($1, $2, $3)
      ON CONFLICT (tenant_id, user_id)
-     DO UPDATE SET roles = EXCLUDED.roles, is_active = true, updated_at = now(), revision = tenant_memberships.revision + 1`,
+     DO UPDATE SET
+       roles = EXCLUDED.roles,
+       is_active = true,
+       archived_at = NULL,
+       updated_at = now(),
+       revision = tenant_memberships.revision + 1`,
     [tenantId, user.id, [role]],
   );
   return user;

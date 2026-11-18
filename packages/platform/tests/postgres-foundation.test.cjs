@@ -207,6 +207,40 @@ test("outbox lease reclaim and dead-letter after max attempts", async () => {
   assert.equal(row.last_error_code, "lease_timeout");
 });
 
+
+test("concurrent bootstrapStaffFromEnv and ensureDefaultTenant stay atomic", async () => {
+  const results = await Promise.all(
+    Array.from({ length: 16 }, () => db.bootstrapStaffFromEnv()),
+  );
+  const tenantIds = results.map((item) => item.tenant.id);
+  assert.equal(new Set(tenantIds).size, 1);
+
+  const tenants = await Promise.all(
+    Array.from({ length: 16 }, () => db.withClient((client) => db.ensureDefaultTenant(client))),
+  );
+  assert.equal(new Set(tenants.map((row) => row.id)).size, 1);
+  assert.equal(tenants[0].id, tenantIds[0]);
+
+  const counts = await db.withClient(async (client) => {
+    const tenantCount = await client.query(`SELECT count(*)::int AS c FROM tenants WHERE slug = 'lumino'`);
+    const userCount = await client.query(`SELECT count(*)::int AS c FROM users WHERE email = 'ops@lumino.tech'`);
+    const membershipCount = await client.query(
+      `SELECT count(*)::int AS c
+       FROM tenant_memberships m
+       JOIN users u ON u.id = m.user_id
+       WHERE u.email = 'ops@lumino.tech'`,
+    );
+    return {
+      tenants: tenantCount.rows[0].c,
+      users: userCount.rows[0].c,
+      memberships: membershipCount.rows[0].c,
+    };
+  });
+  assert.equal(counts.tenants, 1);
+  assert.equal(counts.users, 1);
+  assert.equal(counts.memberships, 1);
+});
+
 test("DATABASE_URL missing fails closed", async () => {
   const previous = process.env.DATABASE_URL;
   delete process.env.DATABASE_URL;
