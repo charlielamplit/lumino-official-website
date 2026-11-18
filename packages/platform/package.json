@@ -4,7 +4,8 @@
   "private": true,
   "type": "commonjs",
   "exports": {
-    "./server-authority": "./contracts/server-authority.js"
+    "./server-authority": "./contracts/server-authority.js",
+    "./api-response": "./contracts/api-response.js"
   },
   "scripts": {
     "test": "node --test tests/*.test.*"

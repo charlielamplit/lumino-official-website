@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumino.example/schemas/api-success-response/1.0.0",
+  "title": "Lumino Platform API Success Response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ok", "contractVersion", "requestId", "data"],
+  "properties": {
+    "ok": { "const": true },
+    "contractVersion": { "const": "1.0.0" },
+    "requestId": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "data": true,
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["revision"],
+      "properties": {
+        "revision": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}
