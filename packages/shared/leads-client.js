@@ -267,6 +267,21 @@
     const token = getStaffSessionToken();
     if (!token) return patchLocalDemo(id, patch);
 
+    const revision = patch.revision ?? patch.expectedRevision;
+    if (revision == null || revision === "") {
+      return {
+        ok: false,
+        status: 400,
+        code: "VALIDATION_FAILED",
+        error: "缺少线索版本号，请刷新收件箱后重试。",
+        requestId: null,
+        retryable: false,
+        recovery: "REFRESH_RESOURCE",
+        fieldErrors: [{ field: "revision", code: "REQUIRED", messageKey: "api.field_required" }],
+        retryAfterSeconds: null,
+      };
+    }
+
     try {
       const response = await root.fetch("/api/leads", {
         method: "PATCH",
@@ -279,6 +294,7 @@
           status: patch.status,
           note: patch.note,
           claim: patch.claim === true || patch.status === "claimed",
+          revision,
         }),
       });
       const parsed = await readApiResponse(response, "线索更新失败，请稍后重试。");

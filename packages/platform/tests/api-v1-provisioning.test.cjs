@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
-const { execFileSync } = require("node:child_process");
+const { Client } = require("pg");
 
 process.env.DATABASE_URL = process.env.DATABASE_URL || "postgres://lumino@127.0.0.1:5432/lumino_platform";
 process.env.LEADS_STORE = "postgres";
@@ -38,6 +38,43 @@ async function loadHandler(relativePath) {
   return (await import(url.href)).default;
 }
 
+function adminDatabaseUrl(baseUrl) {
+  const url = new URL(baseUrl);
+  url.pathname = "/postgres";
+  return url.toString();
+}
+
+function databaseUrlWithName(baseUrl, dbName) {
+  const url = new URL(baseUrl);
+  url.pathname = `/${dbName}`;
+  return url.toString();
+}
+
+async function createTempDatabase(baseUrl, dbName) {
+  const client = new Client({ connectionString: adminDatabaseUrl(baseUrl) });
+  await client.connect();
+  try {
+    await client.query(`CREATE DATABASE "${dbName}"`);
+  } finally {
+    await client.end();
+  }
+}
+
+async function dropTempDatabase(baseUrl, dbName) {
+  const client = new Client({ connectionString: adminDatabaseUrl(baseUrl) });
+  await client.connect();
+  try {
+    await client.query(`
+      SELECT pg_terminate_backend(pid)
+      FROM pg_stat_activity
+      WHERE datname = $1 AND pid <> pg_backend_pid()
+    `, [dbName]);
+    await client.query(`DROP DATABASE IF EXISTS "${dbName}"`);
+  } finally {
+    await client.end();
+  }
+}
+
 test.before(async () => {
   await db.migrate();
   await db.bootstrapStaffFromEnv();
@@ -47,11 +84,12 @@ test.after(async () => {
   await db.closePool();
 });
 
-test("empty database migration creates phase-1 tables", async () => {
+test("empty database migration creates phase-1 tables on the same DATABASE_URL host", async () => {
+  const baseUrl = process.env.DATABASE_URL;
   const dbName = `lumino_empty_${crypto.randomBytes(3).toString("hex")}`;
-  execFileSync("createdb", [dbName], { stdio: "ignore" });
+  await createTempDatabase(baseUrl, dbName);
   const previous = process.env.DATABASE_URL;
-  process.env.DATABASE_URL = `postgres://lumino@127.0.0.1:5432/${dbName}`;
+  process.env.DATABASE_URL = databaseUrlWithName(baseUrl, dbName);
   await db.closePool();
   try {
     const result = await db.migrate();
@@ -81,7 +119,7 @@ test("empty database migration creates phase-1 tables", async () => {
     await db.closePool();
     process.env.DATABASE_URL = previous;
     try {
-      execFileSync("dropdb", ["--if-exists", dbName], { stdio: "ignore" });
+      await dropTempDatabase(baseUrl, dbName);
     } catch (_) {
       // best-effort cleanup
     }
@@ -144,7 +182,7 @@ test("Bearer session authenticates staff leads GET via API contract", async () =
   assert.ok(body.requestId);
 });
 
-test("provisioning is anti-replay for archived accounts and idempotent for active ones", async () => {
+test("active provisioning replay is a true no-op and membership-only archive is skipped", async () => {
   const previous = process.env.STAFF_USERS;
   const email = `prov-${crypto.randomBytes(3).toString("hex")}@lumino.tech`;
   const password = "ProvTest-123456";
@@ -152,27 +190,259 @@ test("provisioning is anti-replay for archived accounts and idempotent for activ
   try {
     const first = await db.provisionStaffFromEnv({ reactivate: false });
     assert.equal(first.users.length, 1);
+    const userId = first.users[0].id;
+
+    const before = await db.withClient(async (client) => {
+      const user = await client.query(
+        `SELECT password_hash, revision FROM users WHERE id = $1`,
+        [userId],
+      );
+      const membership = await client.query(
+        `SELECT revision, is_active, archived_at FROM tenant_memberships WHERE user_id = $1`,
+        [userId],
+      );
+      return { user: user.rows[0], membership: membership.rows[0] };
+    });
+
     const second = await db.provisionStaffFromEnv({ reactivate: false });
-    assert.equal(second.users.length, 1);
-    assert.equal(second.users[0].id, first.users[0].id);
+    assert.equal(second.users.length, 0);
+    assert.ok(second.skipped.some((item) => item.email === email && item.reason === "already_provisioned"));
+
+    const afterReplay = await db.withClient(async (client) => {
+      const user = await client.query(
+        `SELECT password_hash, revision FROM users WHERE id = $1`,
+        [userId],
+      );
+      const membership = await client.query(
+        `SELECT revision, is_active, archived_at FROM tenant_memberships WHERE user_id = $1`,
+        [userId],
+      );
+      return { user: user.rows[0], membership: membership.rows[0] };
+    });
+    assert.equal(afterReplay.user.password_hash, before.user.password_hash);
+    assert.equal(afterReplay.user.revision, before.user.revision);
+    assert.equal(afterReplay.membership.revision, before.membership.revision);
 
     await db.withClient(async (client) => {
-      await client.query(`UPDATE users SET archived_at = now(), is_active = false WHERE id = $1`, [first.users[0].id]);
       await client.query(
-        `UPDATE tenant_memberships SET archived_at = now(), is_active = false WHERE user_id = $1`,
-        [first.users[0].id],
+        `UPDATE tenant_memberships
+         SET archived_at = now(), is_active = false, revision = revision + 1
+         WHERE user_id = $1`,
+        [userId],
       );
     });
 
     const third = await db.provisionStaffFromEnv({ reactivate: false });
     assert.equal(third.users.length, 0);
-    assert.ok(third.skipped.some((item) => item.email === email));
+    assert.ok(third.skipped.some((item) => item.email === email && item.reason === "membership_archived"));
+
+    const membershipStillArchived = await db.withClient(async (client) => {
+      const result = await client.query(
+        `SELECT is_active, archived_at FROM tenant_memberships WHERE user_id = $1`,
+        [userId],
+      );
+      return result.rows[0];
+    });
+    assert.equal(membershipStillArchived.is_active, false);
+    assert.ok(membershipStillArchived.archived_at);
   } finally {
     process.env.STAFF_USERS = previous;
   }
 });
 
-test("API contract returns 401 403 409 and 503 envelopes", async () => {
+test("requestId flows into lead create/patch and staff login audits", async () => {
+  const createRequestId = `REQ-create-${crypto.randomBytes(3).toString("hex")}`;
+  const loginRequestId = `REQ-login-${crypto.randomBytes(3).toString("hex")}`;
+  const patchRequestId = `REQ-patch-${crypto.randomBytes(3).toString("hex")}`;
+
+  const loginHandler = await loadHandler("api/staff-login.js");
+  const loginResponse = mockResponse();
+  await loginHandler({
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-request-id": loginRequestId,
+    },
+    query: {},
+    body: { email: "ops@lumino.tech", password: "OpsTest-123456" },
+  }, loginResponse);
+  assert.equal(loginResponse.statusCode, 200);
+  const loginBody = JSON.parse(loginResponse.body);
+  assert.equal(loginBody.requestId, loginRequestId);
+
+  const loginAudit = await db.withClient(async (client) => {
+    const result = await client.query(
+      `SELECT payload FROM audit_events
+       WHERE action = 'staff.login'
+         AND payload->>'requestId' = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [loginRequestId],
+    );
+    return result.rows[0] || null;
+  });
+  assert.ok(loginAudit);
+
+  const leadsHandler = await loadHandler("api/leads.js");
+  const createResponse = mockResponse();
+  await leadsHandler({
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-request-id": createRequestId,
+    },
+    query: {},
+    body: {
+      company: "Audit Co",
+      name: "Audit",
+      email: `audit-${crypto.randomBytes(2).toString("hex")}@example.com`,
+      note: "requestId audit",
+      consent: true,
+      source: "audit-test",
+      isDemo: true,
+    },
+  }, createResponse);
+  assert.equal(createResponse.statusCode, 200);
+  const createdBody = JSON.parse(createResponse.body);
+  assert.equal(createdBody.requestId, createRequestId);
+  const leadId = createdBody.data.leadId;
+  const revision = createdBody.meta.revision;
+
+  const createAudit = await db.withClient(async (client) => {
+    const result = await client.query(
+      `SELECT payload FROM audit_events
+       WHERE action = 'lead.create'
+         AND entity_id = $1
+         AND payload->>'requestId' = $2
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [leadId, createRequestId],
+    );
+    return result.rows[0] || null;
+  });
+  assert.ok(createAudit);
+
+  const token = loginBody.data.staffKey;
+  const patchResponse = mockResponse();
+  await leadsHandler({
+    method: "PATCH",
+    headers: {
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+      "x-request-id": patchRequestId,
+    },
+    query: {},
+    body: {
+      id: leadId,
+      status: "claimed",
+      revision,
+    },
+  }, patchResponse);
+  assert.equal(patchResponse.statusCode, 200);
+
+  const patchAudit = await db.withClient(async (client) => {
+    const result = await client.query(
+      `SELECT payload FROM audit_events
+       WHERE action = 'lead.patch'
+         AND entity_id = $1
+         AND payload->>'requestId' = $2
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [leadId, patchRequestId],
+    );
+    return result.rows[0] || null;
+  });
+  assert.ok(patchAudit);
+});
+
+test("Portal write path requires revision; stale revision returns 409", async () => {
+  const fs = require("node:fs");
+  const portalEvents = fs.readFileSync(
+    path.join(__dirname, "../../../apps/portal/runtime/portal-events.js"),
+    "utf8",
+  );
+  const leadsClient = fs.readFileSync(
+    path.join(__dirname, "../../../packages/shared/leads-client.js"),
+    "utf8",
+  );
+  assert.match(portalEvents, /revision/);
+  assert.match(portalEvents, /currentLead\?\.revision|currentLead\.revision|revision = currentLead/);
+  assert.match(leadsClient, /revision,/);
+  assert.match(leadsClient, /缺少线索版本号/);
+
+  const ops = await db.authenticateStaff({
+    email: "ops@lumino.tech",
+    password: "OpsTest-123456",
+  });
+  const created = await db.createLead({
+    company: "Rev Co",
+    name: "Rev",
+    email: `rev-${crypto.randomBytes(2).toString("hex")}@example.com`,
+    note: "revision",
+    consent: true,
+    source: "rev-test",
+    isDemo: true,
+  }, { tenantId: ops.tenant.id, requestId: "REQ-rev-create" });
+
+  const leadsHandler = await loadHandler("api/leads.js");
+
+  const missing = mockResponse();
+  await leadsHandler({
+    method: "PATCH",
+    headers: {
+      authorization: `Bearer ${ops.token}`,
+      "content-type": "application/json",
+    },
+    query: {},
+    body: {
+      id: created.lead.id,
+      status: "claimed",
+    },
+  }, missing);
+  assert.equal(missing.statusCode, 400);
+  const missingBody = JSON.parse(missing.body);
+  assert.equal(missingBody.error.code, "VALIDATION_FAILED");
+
+  const first = mockResponse();
+  await leadsHandler({
+    method: "PATCH",
+    headers: {
+      authorization: `Bearer ${ops.token}`,
+      "content-type": "application/json",
+    },
+    query: {},
+    body: {
+      id: created.lead.id,
+      status: "claimed",
+      revision: created.lead.revision,
+    },
+  }, first);
+  assert.equal(first.statusCode, 200);
+  const firstBody = JSON.parse(first.body);
+  assert.equal(firstBody.data.lead.status, "claimed");
+  assert.equal(firstBody.meta.revision, created.lead.revision + 1);
+
+  const stale = mockResponse();
+  await leadsHandler({
+    method: "PATCH",
+    headers: {
+      authorization: `Bearer ${ops.token}`,
+      "content-type": "application/json",
+    },
+    query: {},
+    body: {
+      id: created.lead.id,
+      status: "qualified",
+      revision: created.lead.revision,
+    },
+  }, stale);
+  assert.equal(stale.statusCode, 409);
+  const staleBody = JSON.parse(stale.body);
+  assert.equal(staleBody.error.code, "REVISION_CONFLICT");
+  assert.equal(staleBody.error.recovery, "REFRESH_RESOURCE");
+});
+
+test("API contract returns 401 403 and 503 envelopes", async () => {
   const leadsHandler = await loadHandler("api/leads.js");
 
   const unauthorized = mockResponse();
@@ -182,7 +452,6 @@ test("API contract returns 401 403 409 and 503 envelopes", async () => {
   assert.equal(unauthorizedBody.error.code, "AUTH_REQUIRED");
   assert.equal(unauthorizedBody.error.recovery, "SIGN_IN");
 
-  // 403: membership role outside ops/sales/admin
   const forbiddenEmail = `viewer-${crypto.randomBytes(2).toString("hex")}@lumino.tech`;
   const forbiddenPassword = "ViewerTest-123456";
   await db.withClient(async (client) => {
@@ -205,12 +474,11 @@ test("API contract returns 401 403 409 and 503 envelopes", async () => {
     email: forbiddenEmail,
     password: forbiddenPassword,
   });
-  const forbiddenToken = forbiddenSession.token;
 
   const forbidden = mockResponse();
   await leadsHandler({
     method: "GET",
-    headers: { authorization: `Bearer ${forbiddenToken}` },
+    headers: { authorization: `Bearer ${forbiddenSession.token}` },
     query: {},
     body: {},
   }, forbidden);
@@ -218,41 +486,6 @@ test("API contract returns 401 403 409 and 503 envelopes", async () => {
   const forbiddenBody = JSON.parse(forbidden.body);
   assert.equal(forbiddenBody.error.code, "CAPABILITY_FORBIDDEN");
 
-  // 409 revision conflict
-  const ops = await db.authenticateStaff({
-    email: "ops@lumino.tech",
-    password: "OpsTest-123456",
-  });
-  const created = await db.createLead({
-    company: "Rev Co",
-    name: "Rev",
-    email: `rev-${crypto.randomBytes(2).toString("hex")}@example.com`,
-    note: "revision",
-    consent: true,
-    source: "rev-test",
-    isDemo: true,
-  }, { tenantId: ops.tenant.id });
-
-  const conflict = mockResponse();
-  await leadsHandler({
-    method: "PATCH",
-    headers: {
-      authorization: `Bearer ${ops.token}`,
-      "content-type": "application/json",
-    },
-    query: {},
-    body: {
-      id: created.lead.id,
-      status: "claimed",
-      revision: 999,
-    },
-  }, conflict);
-  assert.equal(conflict.statusCode, 409);
-  const conflictBody = JSON.parse(conflict.body);
-  assert.equal(conflictBody.error.code, "REVISION_CONFLICT");
-  assert.equal(conflictBody.error.recovery, "REFRESH_RESOURCE");
-
-  // 503 dependency unavailable when DATABASE_URL missing in postgres mode
   const previousUrl = process.env.DATABASE_URL;
   const previousStore = process.env.LEADS_STORE;
   process.env.LEADS_STORE = "postgres";

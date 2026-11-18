@@ -1,6 +1,6 @@
 # Platform API Response Contract v1
 
-状态：F03-03 契约切片；`/api/staff-login` 与 `/api/leads` 已接入响应信封（Portal 接线另轨）
+状态：F03-03 契约切片；`/api/staff-login`、`/api/leads` 与 Portal leads 客户端已接入响应信封与 revision 闭环
 
 ## 1. 目标与边界
 
@@ -12,7 +12,7 @@ Portal、Agent Gateway 和后台 Worker 不应通过中文错误文案、数据�
 - 稳定错误码、HTTP 状态、是否可重试及前端恢复动作；
 - Authority Boundary 到公开 API 错误的不可枚举映射。
 
-本切片不修改 `/api/leads`、数据库 Repository、migration 或 Portal，也不表示现有接口已经迁移完成。
+当前接入范围：`/api/staff-login`、`/api/leads`（含 Repository 审计 `requestId`）、Portal `LuminoLeadsClient` / leads 收件箱写路径。其他 API 与 Worker 仍按采用顺序推进。
 
 ## 2. 成功响应
 
@@ -83,14 +83,14 @@ Portal、Agent Gateway 和后台 Worker 不应通过中文错误文案、数据�
 
 ## 6. 采用顺序
 
-> 接入状态更新：staff-login / leads 已接入契约信封；Portal 客户端改读 `code/recovery` 另轨。
+> 接入状态更新：staff-login / leads 已接入契约信封；Portal #82 dual-read + 本 PR revision 回传 / 缺失 fail-closed；`requestId` 写入 `audit_events.payload`。
 
 
-1. 后端入口生成或接收受信任的 `requestId`，将领域异常映射为本契约。
-2. `/api/staff-login`、`/api/leads` 先完成契约测试，再替换旧 `{ error: string }` 响应。
-3. Portal client 只按 `code/recovery` 决定流程，`messageKey` 决定文案。
+1. 后端入口生成或接收受信任的 `requestId`，贯穿授权、Repository、审计后映射为本契约。
+2. `/api/staff-login`、`/api/leads` 契约测试覆盖 401/403/409/503 与 revision 闭环。
+3. Portal client 只按 `code/recovery` 决定流程，`messageKey` 决定文案；写路径必须回传读取到的 revision。
 4. 移除生产路径的 localStorage 成功回退；503 必须明确未正式保存。
-5. 真实 PostgreSQL、并发 revision 与跨租户测试通过后，才可把 C2 标为完成。
+5. 真实 PostgreSQL、并发 revision 与跨租户测试通过后，才可把 C2 标为完成；#76 未决前禁止生产入库。
 
 机器可读实现：
 

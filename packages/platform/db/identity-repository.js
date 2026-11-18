@@ -26,6 +26,12 @@ function verifyPassword(password, stored) {
   return crypto.timingSafeEqual(left, right);
 }
 
+function auditPayload(base, requestId) {
+  const payload = { ...base };
+  if (requestId) payload.requestId = requestId;
+  return JSON.stringify(payload);
+}
+
 async function ensureDefaultTenant(client, { slug = DEFAULT_TENANT_SLUG, name = "Lumino" } = {}) {
   // Atomic upsert: concurrent bootstraps must not race on SELECT-then-INSERT.
   const upserted = await client.query(
@@ -39,59 +45,201 @@ async function ensureDefaultTenant(client, { slug = DEFAULT_TENANT_SLUG, name = 
   return upserted.rows[0];
 }
 
-async function upsertUserWithMembership(
-  client,
-  { email, password, name, role, tenantId, reactivate = false },
-) {
-  const normalizedEmail = String(email).trim().toLowerCase();
-  const passwordHash = hashPassword(password);
-
-  if (!reactivate) {
-    const existing = await client.query(
-      `SELECT id, archived_at FROM users WHERE email = $1`,
-      [normalizedEmail],
-    );
-    if (existing.rows[0]?.archived_at) {
-      return { skipped: true, reason: "archived", user: existing.rows[0] };
-    }
-  }
-
-  const upserted = await client.query(
-    `INSERT INTO users (email, password_hash, name)
-     VALUES ($1, $2, $3)
-     ON CONFLICT (email) DO UPDATE
-       SET password_hash = EXCLUDED.password_hash,
-           name = EXCLUDED.name,
-           is_active = CASE WHEN $4::boolean THEN true ELSE users.is_active END,
-           archived_at = CASE WHEN $4::boolean THEN NULL ELSE users.archived_at END,
-           updated_at = now(),
-           revision = users.revision + 1
-     WHERE users.archived_at IS NULL OR $4::boolean
-     RETURNING *`,
-    [normalizedEmail, passwordHash, name, Boolean(reactivate)],
-  );
-  const user = upserted.rows[0];
-  if (!user) {
-    return { skipped: true, reason: "archived" };
-  }
-
+async function writeProvisionAudit(client, {
+  tenantId,
+  userId,
+  email,
+  action,
+  requestId = null,
+  details = {},
+}) {
   await client.query(
-    `INSERT INTO tenant_memberships (tenant_id, user_id, roles)
-     VALUES ($1, $2, $3)
-     ON CONFLICT (tenant_id, user_id)
-     DO UPDATE SET
-       roles = EXCLUDED.roles,
-       is_active = CASE WHEN $4::boolean THEN true ELSE tenant_memberships.is_active END,
-       archived_at = CASE WHEN $4::boolean THEN NULL ELSE tenant_memberships.archived_at END,
-       updated_at = now(),
-       revision = tenant_memberships.revision + 1
-     WHERE tenant_memberships.archived_at IS NULL OR $4::boolean`,
-    [tenantId, user.id, [role], Boolean(reactivate)],
+    `INSERT INTO audit_events (tenant_id, actor_user_id, actor_email_snapshot, action, entity_type, entity_id, payload)
+     VALUES ($1, $2, $3, $4, 'user', $5, $6::jsonb)`,
+    [
+      tenantId,
+      userId,
+      email,
+      action,
+      userId,
+      auditPayload(details, requestId),
+    ],
   );
-  return { skipped: false, user };
 }
 
-async function provisionStaffFromEnv({ reactivate = false, ...options } = {}) {
+/**
+ * Default mode is true no-op for existing accounts (no password/role/revision mutation).
+ * Mutations require explicit flags: reactivate / rotatePassword / updateRoles.
+ */
+async function upsertUserWithMembership(
+  client,
+  {
+    email,
+    password,
+    name,
+    role,
+    tenantId,
+    reactivate = false,
+    rotatePassword = false,
+    updateRoles = false,
+    requestId = null,
+  },
+) {
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const existing = await client.query(
+    `SELECT * FROM users WHERE email = $1`,
+    [normalizedEmail],
+  );
+  let user = existing.rows[0] || null;
+
+  if (!user) {
+    const passwordHash = hashPassword(password);
+    const inserted = await client.query(
+      `INSERT INTO users (email, password_hash, name)
+       VALUES ($1, $2, $3)
+       RETURNING *`,
+      [normalizedEmail, passwordHash, name],
+    );
+    user = inserted.rows[0];
+    await client.query(
+      `INSERT INTO tenant_memberships (tenant_id, user_id, roles)
+       VALUES ($1, $2, $3::text[])`,
+      [tenantId, user.id, [role]],
+    );
+    await writeProvisionAudit(client, {
+      tenantId,
+      userId: user.id,
+      email: user.email,
+      action: "staff.provision",
+      requestId,
+      details: { role, created: true },
+    });
+    return { skipped: false, user, reason: "created" };
+  }
+
+  const membershipResult = await client.query(
+    `SELECT * FROM tenant_memberships WHERE tenant_id = $1 AND user_id = $2`,
+    [tenantId, user.id],
+  );
+  let membership = membershipResult.rows[0] || null;
+  const userArchived = Boolean(user.archived_at) || user.is_active === false;
+  const membershipArchived = membership
+    && (Boolean(membership.archived_at) || membership.is_active === false);
+
+  // Default: true skip / report inactive membership — never rewrite password/roles/revision.
+  if (!reactivate && !rotatePassword && !updateRoles) {
+    if (userArchived) {
+      return { skipped: true, reason: "archived", user };
+    }
+    if (membershipArchived) {
+      return { skipped: true, reason: "membership_archived", user };
+    }
+    if (!membership) {
+      await client.query(
+        `INSERT INTO tenant_memberships (tenant_id, user_id, roles)
+         VALUES ($1, $2, $3::text[])
+         ON CONFLICT (tenant_id, user_id) DO NOTHING`,
+        [tenantId, user.id, [role]],
+      );
+      await writeProvisionAudit(client, {
+        tenantId,
+        userId: user.id,
+        email: user.email,
+        action: "staff.provision.membership",
+        requestId,
+        details: { role, membershipCreated: true },
+      });
+      return { skipped: false, user, reason: "membership_created" };
+    }
+    return { skipped: true, reason: "already_provisioned", user };
+  }
+
+  if (userArchived && !reactivate) {
+    return { skipped: true, reason: "archived", user };
+  }
+  if (membershipArchived && !reactivate) {
+    return { skipped: true, reason: "membership_archived", user };
+  }
+
+  const shouldTouchUser = reactivate || rotatePassword;
+  if (shouldTouchUser) {
+    const nextHash = rotatePassword || reactivate ? hashPassword(password) : user.password_hash;
+    const updated = await client.query(
+      `UPDATE users
+       SET password_hash = CASE WHEN $2::boolean THEN $3 ELSE password_hash END,
+           name = COALESCE($4, name),
+           is_active = CASE WHEN $5::boolean THEN true ELSE is_active END,
+           archived_at = CASE WHEN $5::boolean THEN NULL ELSE archived_at END,
+           updated_at = now(),
+           revision = revision + 1
+       WHERE id = $1
+       RETURNING *`,
+      [
+        user.id,
+        Boolean(rotatePassword || reactivate),
+        nextHash,
+        name || null,
+        Boolean(reactivate),
+      ],
+    );
+    user = updated.rows[0];
+  }
+
+  if (!membership) {
+    const inserted = await client.query(
+      `INSERT INTO tenant_memberships (tenant_id, user_id, roles, is_active, archived_at)
+       VALUES ($1, $2, $3::text[], true, NULL)
+       RETURNING *`,
+      [tenantId, user.id, [role]],
+    );
+    membership = inserted.rows[0];
+  } else if (reactivate || updateRoles) {
+    await client.query(
+      `UPDATE tenant_memberships
+       SET roles = CASE WHEN $3::boolean THEN $4::text[] ELSE roles END,
+           is_active = CASE WHEN $5::boolean THEN true ELSE is_active END,
+           archived_at = CASE WHEN $5::boolean THEN NULL ELSE archived_at END,
+           updated_at = now(),
+           revision = revision + 1
+       WHERE tenant_id = $1 AND user_id = $2`,
+      [
+        tenantId,
+        user.id,
+        Boolean(updateRoles || reactivate),
+        [role],
+        Boolean(reactivate),
+      ],
+    );
+  }
+
+  await writeProvisionAudit(client, {
+    tenantId,
+    userId: user.id,
+    email: user.email,
+    action: reactivate
+      ? "staff.provision.reactivate"
+      : rotatePassword
+        ? "staff.provision.rotate_password"
+        : "staff.provision.update_roles",
+    requestId,
+    details: {
+      role,
+      reactivate: Boolean(reactivate),
+      rotatePassword: Boolean(rotatePassword),
+      updateRoles: Boolean(updateRoles),
+    },
+  });
+
+  return { skipped: false, user, reason: "updated" };
+}
+
+async function provisionStaffFromEnv({
+  reactivate = false,
+  rotatePassword = false,
+  updateRoles = false,
+  requestId = null,
+  ...options
+} = {}) {
   const raw = String(process.env.STAFF_USERS || "").trim();
   if (!raw) return { tenant: null, users: [], skipped: [] };
   return withTransaction(async (client) => {
@@ -111,6 +259,9 @@ async function provisionStaffFromEnv({ reactivate = false, ...options } = {}) {
         role,
         tenantId: tenant.id,
         reactivate,
+        rotatePassword,
+        updateRoles,
+        requestId,
       });
       if (result.skipped) {
         skipped.push({ email: email.toLowerCase(), reason: result.reason || "skipped" });
@@ -121,6 +272,7 @@ async function provisionStaffFromEnv({ reactivate = false, ...options } = {}) {
         email: result.user.email,
         name: result.user.name,
         role,
+        reason: result.reason,
       });
     }
     return { tenant, users, skipped };
@@ -129,7 +281,12 @@ async function provisionStaffFromEnv({ reactivate = false, ...options } = {}) {
 
 /** @deprecated Use provisionStaffFromEnv for one-time setup. Kept for tests/scripts. */
 async function bootstrapStaffFromEnv(options = {}) {
-  return provisionStaffFromEnv({ reactivate: true, ...options });
+  return provisionStaffFromEnv({
+    reactivate: true,
+    rotatePassword: true,
+    updateRoles: true,
+    ...options,
+  });
 }
 
 async function countActiveStaffUsers(options = {}) {
@@ -147,7 +304,7 @@ async function countActiveStaffUsers(options = {}) {
   }, options);
 }
 
-async function authenticateStaff({ email, password }, options = {}) {
+async function authenticateStaff({ email, password, requestId = null }, options = {}) {
   return withTransaction(async (client) => {
     const normalizedEmail = String(email || "").trim().toLowerCase();
     const userResult = await client.query(
@@ -200,7 +357,7 @@ async function authenticateStaff({ email, password }, options = {}) {
         user.id,
         user.email,
         user.id,
-        JSON.stringify({ role: membership.roles[0] || null }),
+        auditPayload({ role: membership.roles[0] || null }, requestId),
       ],
     );
 

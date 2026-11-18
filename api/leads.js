@@ -228,6 +228,7 @@ export default async function handler(request, response) {
           expectedRevision: body.expectedRevision ?? body.revision,
         },
         actor,
+        { requestId },
       );
       if (!lead) return sendError(response, "RESOURCE_NOT_FOUND", { requestId });
       return sendSuccess(response, { lead, persisted }, { requestId, revision: lead.revision });
@@ -308,7 +309,7 @@ export default async function handler(request, response) {
 
   let created;
   try {
-    created = await createLead(record);
+    created = await createLead(record, { requestId });
   } catch (error) {
     console.error("[lumino-lead] persist failed", error && error.code ? error.code : "error");
     return sendError(response, "DEPENDENCY_UNAVAILABLE", { requestId });

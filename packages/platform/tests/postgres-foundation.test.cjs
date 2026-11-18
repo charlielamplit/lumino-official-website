@@ -60,11 +60,12 @@ test("staff login issues personal session and rejects forged tenant/actor on pat
   const patched = await db.updateLead({
     tenantId: session.tenant.id,
     publicId: created.lead.id,
-    patch: { status: "claimed", note: "已认领" },
+    patch: { status: "claimed", note: "已认领", revision: created.lead.revision },
     actor: {
       userId: session.user.id,
       email: session.user.email,
     },
+    requestId: "REQ-foundation-patch",
   });
   assert.equal(patched.lead.status, "claimed");
   assert.equal(patched.lead.claimedByUserId, session.user.id);
@@ -73,10 +74,23 @@ test("staff login issues personal session and rejects forged tenant/actor on pat
     () => db.updateLead({
       tenantId: session.tenant.id,
       publicId: created.lead.id,
-      patch: { status: "qualified" },
+      patch: { status: "qualified", revision: patched.lead.revision },
       actor: null,
     }),
     /actor is required|AUTH_REQUIRED/,
+  );
+
+  await assert.rejects(
+    () => db.updateLead({
+      tenantId: session.tenant.id,
+      publicId: created.lead.id,
+      patch: { status: "qualified" },
+      actor: {
+        userId: session.user.id,
+        email: session.user.email,
+      },
+    }),
+    (error) => error.code === "VALIDATION_FAILED",
   );
 });
 

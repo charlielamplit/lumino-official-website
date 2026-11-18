@@ -53,17 +53,20 @@ export async function getLead(id, actor) {
   }
 }
 
-export async function createLead(input) {
+export async function createLead(input, options = {}) {
   try {
     platformDb.assertPostgresMode();
     const tenantId = await resolveDefaultTenantId();
-    return platformDb.createLead(input, { tenantId });
+    return platformDb.createLead(input, {
+      tenantId,
+      requestId: options.requestId || null,
+    });
   } catch (error) {
     throw asDbUnavailable(error);
   }
 }
 
-export async function updateLead(id, patch, actor) {
+export async function updateLead(id, patch, actor, options = {}) {
   try {
     platformDb.assertPostgresMode();
     if (!actor?.userId || !actor?.tenantId) {
@@ -77,6 +80,7 @@ export async function updateLead(id, patch, actor) {
       publicId: id,
       patch,
       actor,
+      requestId: options.requestId || null,
     });
   } catch (error) {
     if (error?.httpStatus) throw error;

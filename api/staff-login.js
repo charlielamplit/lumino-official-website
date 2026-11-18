@@ -83,7 +83,7 @@ async function handlePostgres(request, response, requestId) {
     }
 
     // Intentionally no bootstrapStaffFromEnv here — archived users must stay archived.
-    const session = await platformDb.authenticateStaff({ email, password });
+    const session = await platformDb.authenticateStaff({ email, password, requestId });
     return sendSuccess(response, {
       email: session.user.email,
       name: session.user.name,
