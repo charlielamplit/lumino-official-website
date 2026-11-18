@@ -24,6 +24,7 @@ test("Tencent deploy uploads before activation and rolls back failed smoke check
   assert.match(deploy, /Smoke checks failed; rolling back/);
   assert.match(deploy, /SSH_KNOWN_HOSTS:\?SSH_KNOWN_HOSTS required/);
   assert.doesNotMatch(deploy, /ssh-keyscan/);
+  assert.doesNotMatch(deploy, /rsync[^\n]*--delete/);
 });
 
 test("release endpoint reports only a full Git SHA and is routed by Tencent server", async () => {
