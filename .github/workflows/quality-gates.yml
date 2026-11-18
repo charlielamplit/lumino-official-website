@@ -49,8 +49,6 @@ jobs:
           --health-retries 5
     env:
       DATABASE_URL: postgres://lumino:lumino@localhost:5432/lumino_platform
-      LEADS_STORE: postgres
-      STAFF_USERS: ops@lumino.tech:OpsTest-123456:ops:Ops,sales@lumino.tech:SalesTest-123456:sales:Sales
     steps:
       - name: Checkout current revision
         uses: actions/checkout@v7

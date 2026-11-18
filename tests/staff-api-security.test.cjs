@@ -70,8 +70,12 @@ test("knowledge staff API fails closed when staff keys are missing", async () =>
 test("staff login fails closed when credentials or shared key are not configured", async () => {
   const previousUsers = process.env.STAFF_USERS;
   const previousKey = process.env.LEADS_STAFF_KEY;
+  const previousDb = process.env.DATABASE_URL;
+  const previousStore = process.env.LEADS_STORE;
   delete process.env.STAFF_USERS;
   delete process.env.LEADS_STAFF_KEY;
+  delete process.env.DATABASE_URL;
+  delete process.env.LEADS_STORE;
   try {
     const handler = await loadHandler("api/staff-login.js");
     const statusResponse = mockResponse();
@@ -88,14 +92,22 @@ test("staff login fails closed when credentials or shared key are not configured
     else process.env.STAFF_USERS = previousUsers;
     if (previousKey === undefined) delete process.env.LEADS_STAFF_KEY;
     else process.env.LEADS_STAFF_KEY = previousKey;
+    if (previousDb === undefined) delete process.env.DATABASE_URL;
+    else process.env.DATABASE_URL = previousDb;
+    if (previousStore === undefined) delete process.env.LEADS_STORE;
+    else process.env.LEADS_STORE = previousStore;
   }
 });
 
 test("staff login rejects invalid credentials and returns the configured key for a valid demo user", async () => {
   const previousUsers = process.env.STAFF_USERS;
   const previousKey = process.env.LEADS_STAFF_KEY;
+  const previousDb = process.env.DATABASE_URL;
+  const previousStore = process.env.LEADS_STORE;
   process.env.STAFF_USERS = "ops@example.com:secret:ops:林晓";
   process.env.LEADS_STAFF_KEY = "test-staff-key";
+  delete process.env.DATABASE_URL;
+  delete process.env.LEADS_STORE;
   try {
     const handler = await loadHandler("api/staff-login.js");
     const invalidResponse = mockResponse();
@@ -119,6 +131,10 @@ test("staff login rejects invalid credentials and returns the configured key for
     else process.env.STAFF_USERS = previousUsers;
     if (previousKey === undefined) delete process.env.LEADS_STAFF_KEY;
     else process.env.LEADS_STAFF_KEY = previousKey;
+    if (previousDb === undefined) delete process.env.DATABASE_URL;
+    else process.env.DATABASE_URL = previousDb;
+    if (previousStore === undefined) delete process.env.LEADS_STORE;
+    else process.env.LEADS_STORE = previousStore;
   }
 });
 
