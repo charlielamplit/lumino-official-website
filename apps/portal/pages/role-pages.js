@@ -57,10 +57,13 @@
       if (options.render !== false && ["sales", "ops"].includes(state.role) && state.page === "leads") render();
       return Promise.resolve();
     }
-    if (!state.publicLeads?.length) state.publicLeads = client.readLocal();
-    return client.fetchLeads().then(({ leads, source }) => {
+    if (!state.publicLeads?.length && !client.hasStaffSession()) state.publicLeads = client.readLocal();
+    return client.fetchLeads().then((result) => {
+      const leads = Array.isArray(result.leads) ? result.leads : [];
+      const source = result.source || "unavailable";
       state.publicLeads = leads;
       state.leadsSource = source;
+      state.leadsError = result.ok === false ? result : null;
       if (!state.selectedLeadId && leads[0]) state.selectedLeadId = leads[0].id;
       if (state.selectedLeadId && !leads.some((lead) => lead.id === state.selectedLeadId)) {
         state.selectedLeadId = leads[0]?.id || null;
@@ -75,11 +78,19 @@
     if (selected && state.selectedLeadId !== selected.id) state.selectedLeadId = selected.id;
     const openCount = leads.filter((lead) => lead.status === "new").length;
     const claimedCount = leads.filter((lead) => lead.status === "claimed").length;
-    const sourceNote = state.leadsSource === "api+local"
-      ? "已合并服务端线索库与本机缓存。"
-      : state.leadsSource === "local"
-        ? "当前显示本机线索箱（静态预览或 API 未接通时）。"
-        : "线索客户端未加载。";
+    const sourceNote = state.leadsSource === "api"
+      ? "当前显示个人会话有权访问的服务端线索。"
+      : state.leadsSource === "local-demo"
+        ? "当前为本机 Demo 线索，不代表正式入库或商务受理。"
+        : state.leadsSource === "auth-required"
+          ? "个人会话已失效，请重新登录。"
+          : state.leadsSource === "unavailable"
+            ? "正式线索服务暂不可用，本页不会用本机缓存冒充服务端数据。"
+            : "线索客户端未加载。";
+
+    const errorHtml = state.leadsError
+      ? `<div class="callout"><strong>收件箱未加载：</strong> ${safe(state.leadsError.error || "请稍后重试。")}${state.leadsError.requestId ? `<small>请求编号：${safe(state.leadsError.requestId)}</small>` : ""}</div>`
+      : "";
 
     const listHtml = leads.length
       ? leads.map((lead) => {
@@ -87,7 +98,9 @@
           const services = (lead.services || []).map(serviceLabel).join(" · ") || "未选服务";
           return `<button class="case-item${active}" type="button" data-lead-select="${safe(lead.id)}"><span><strong>${safe(lead.company)}</strong><em>${safe(lead.name)}</em></span><p>${safe(services)}</p><small>${leadStatusChip(lead.status)} · ${safe(String(lead.createdAt || "").slice(0, 16).replace("T", " "))}</small></button>`;
         }).join("")
-      : `<div class="callout"><strong>暂无公开线索。</strong>官网联系表或试算解锁提交后会出现在此收件箱。客户租户角色不会看到本池。</div>`;
+      : state.leadsError
+        ? ""
+        : `<div class="callout"><strong>暂无公开线索。</strong>官网联系表或试算解锁提交后会出现在此收件箱。客户租户角色不会看到本池。</div>`;
 
     const detailHtml = selected
       ? `<div class="case-meta">${leadStatusChip(selected.status)}${selected.localOnly ? '<span class="status-chip">本机</span>' : '<span class="status-chip">已入库</span>'}</div>
@@ -119,6 +132,7 @@
       ${pageHeader("PUBLIC LEADS INBOX", "官网与试算线索收件箱", `<p class="head-note">${sourceNote} 仅商务 / 运营可见；成交后再开客户租户。</p>`)}
       <div class="metric-line"><div><span>全部</span><strong>${leads.length}</strong></div><div><span>待认领</span><strong>${openCount}</strong></div><div><span>跟进中</span><strong>${claimedCount}</strong></div><div><span>角色</span><strong>${safe(roleConfig[state.role].title)}</strong></div></div>
       <div class="privacy-band"><strong>边界</strong><span>此处是销售漏斗前端，不是完整 CRM；不含生产证据与专家内部意见。</span></div>
+      ${errorHtml}
       <div class="staff-layout">
         <section class="panel"><div class="panel-head"><h2>线索列表</h2><button class="text-button" type="button" data-lead-action="refresh">刷新</button></div><div class="case-list">${listHtml}</div></section>
         <section class="panel case-detail">${detailHtml}</section>
