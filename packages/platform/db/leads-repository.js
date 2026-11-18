@@ -204,7 +204,7 @@ async function updateLead({ tenantId, publicId, patch, actor }, options = {}) {
     if (patch.status) {
       const nextStatus = String(patch.status);
       if (!STATUS.has(nextStatus)) {
-        throw Object.assign(new Error("????????"), { code: "INVALID_STATUS", httpStatus: 400 });
+        throw Object.assign(new Error("无效的线索状态"), { code: "INVALID_STATUS", httpStatus: 400 });
       }
       status = nextStatus;
       if (status === "claimed" && !claimedByUserId) {

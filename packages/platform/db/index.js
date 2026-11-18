@@ -4,6 +4,8 @@ const pool = require("./pool");
 const migrate = require("./migrate");
 const identity = require("./identity-repository");
 const leads = require("./leads-repository");
+const outboxNotify = require("./outbox-notify");
+const leadsJsonImport = require("./leads-json-import");
 
 function isPostgresMode() {
   const store = String(process.env.LEADS_STORE || "").trim().toLowerCase();
@@ -27,6 +29,8 @@ module.exports = {
   ...migrate,
   ...identity,
   ...leads,
+  ...outboxNotify,
+  ...leadsJsonImport,
   isPostgresMode,
   assertPostgresMode,
 };

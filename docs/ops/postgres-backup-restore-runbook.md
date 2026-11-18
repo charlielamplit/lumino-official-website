@@ -22,13 +22,19 @@ psql postgres://lumino@127.0.0.1:5432/lumino_platform_restore -c "SELECT count(*
 
 恢复后抽查若干 `public_id`、outbox 状态与 staff 会话是否可用。
 
-## 3. 从 JSON 回退（应急）
+## 3. 切换后回滚（禁止切回 JSON 写路径）
 
-1. 先确认目标库 schema 已迁移到当前版本。
-2. 用导入脚本按幂等方式回灌：先 dry-run，再正式写入。
-3. **注意**：仅在明确批准后才把 `LEADS_STORE` 切回 `file`；生产默认保持 Postgres fail-closed。
+一旦应用以 PostgreSQL 为线索唯一写路径上线：
+
+1. **禁止**把 `LEADS_STORE` 切回 `file` 作为生产写路径。
+2. **禁止**把 `data/leads.json`（或任何 JSON 文件）恢复为生产写入目标。
+3. JSON 仅可作为**一次性迁移输入**（`scripts/db/migrate-leads-json-to-pg.mjs`），导入幂等，不充当运行时存储。
+4. 切换后若需回滚，只允许：
+   - **回滚应用版本**（代码/配置回到上一发布，但仍指向 PostgreSQL）；或
+   - **从备份恢复 PostgreSQL**（隔离演练通过后再切流量）。
 
 ```bash
+# 迁移输入（非运行时写路径）
 DATABASE_URL=... node scripts/db/migrate-leads-json-to-pg.mjs --dry-run data/leads.json
 DATABASE_URL=... node scripts/db/migrate-leads-json-to-pg.mjs data/leads.json
 ```
@@ -68,4 +74,4 @@ npm run db:outbox-once
 npm run db:outbox-worker
 ```
 
-Worker 使用与 Repository 相同的 lease / 超时回收 / dead-letter 语义；不写 leads，失败不丢线索。
+Worker 使用与 Repository 相同的 lease / 超时回收 / dead-letter 语义；不写 leads，失败不丢线索。日志不含联系人完整信息。
