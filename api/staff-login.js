@@ -1,13 +1,12 @@
 /**
  * Staff login for Lumino ops / sales.
- * Issues the shared LEADS_STAFF_KEY after email+password verification so Portal
- * can call /api/leads without operators pasting a raw key.
  *
- * Configure STAFF_USERS as comma-separated:
- *   email:password:role:displayName
- * role = sales | ops
+ * Modes:
+ * - PostgreSQL (LEADS_STORE=postgres and/or DATABASE_URL): personal staff_sessions token
+ * - Legacy file/demo: STAFF_USERS + shared LEADS_STAFF_KEY
  */
 import crypto from "node:crypto";
+import { platformDb } from "./_lib/platform-db.js";
 
 function json(response, status, body) {
   response.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
@@ -24,7 +23,7 @@ function parseStaffUsers() {
     const [email, password, role, ...nameParts] = parts;
     const name = nameParts.join(":") || email.split("@")[0];
     if (!email || !password) return null;
-    if (!["sales", "ops"].includes(role)) return null;
+    if (!["sales", "ops", "admin"].includes(role)) return null;
     return {
       email: email.toLowerCase(),
       password,
@@ -41,18 +40,75 @@ function timingSafeEqual(a, b) {
   return crypto.timingSafeEqual(left, right);
 }
 
-export default async function handler(request, response) {
-  if (request.method === "OPTIONS") {
-    response.status(204).end();
-    return;
+async function handlePostgres(request, response) {
+  if (request.method === "GET") {
+    const users = parseStaffUsers();
+    try {
+      platformDb.assertPostgresMode();
+      return json(response, 200, {
+        ok: true,
+        configured: users.length > 0,
+        roles: ["sales", "ops", "admin"],
+        authMode: "staff_session",
+      });
+    } catch (error) {
+      return json(response, 503, {
+        ok: false,
+        configured: false,
+        error: error.message || "数据库未配置",
+      });
+    }
   }
 
+  if (request.method !== "POST") {
+    return json(response, 405, { error: "Method Not Allowed" });
+  }
+
+  const users = parseStaffUsers();
+  if (!users.length) {
+    return json(response, 503, {
+      error: "员工登录尚未配置，请设置 STAFF_USERS 与 DATABASE_URL",
+    });
+  }
+
+  try {
+    platformDb.assertPostgresMode();
+    await platformDb.bootstrapStaffFromEnv();
+
+    const body = request.body || {};
+    const email = String(body.email || "").trim().toLowerCase();
+    const password = String(body.password || "");
+    if (!email || !password) {
+      return json(response, 400, { error: "请输入工作邮箱和密码" });
+    }
+
+    const session = await platformDb.authenticateStaff({ email, password });
+    return json(response, 200, {
+      ok: true,
+      email: session.user.email,
+      name: session.user.name,
+      role: session.user.role,
+      roles: session.user.roles,
+      tenantId: session.tenant.id,
+      staffKey: session.token,
+      expiresInHours: session.expiresInHours,
+      expiresAt: session.expiresAt,
+      authMode: "staff_session",
+    });
+  } catch (error) {
+    const status = error.httpStatus || (error.code === "DB_UNAVAILABLE" ? 503 : 500);
+    return json(response, status, { error: error.message || "登录失败" });
+  }
+}
+
+function handleLegacy(request, response) {
   if (request.method === "GET") {
     const users = parseStaffUsers();
     return json(response, 200, {
       ok: true,
       configured: users.length > 0 && Boolean(process.env.LEADS_STAFF_KEY),
       roles: ["sales", "ops"],
+      authMode: "shared_key",
     });
   }
 
@@ -89,4 +145,16 @@ export default async function handler(request, response) {
     staffKey,
     expiresInHours: 12,
   });
+}
+
+export default async function handler(request, response) {
+  if (request.method === "OPTIONS") {
+    response.status(204).end();
+    return;
+  }
+
+  if (platformDb.isPostgresMode()) {
+    return handlePostgres(request, response);
+  }
+  return handleLegacy(request, response);
 }
