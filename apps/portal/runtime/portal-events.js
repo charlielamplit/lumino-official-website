@@ -50,12 +50,19 @@
   }
 
   function clearStaffSession() {
+    try { sessionStorage.removeItem("lumino-staff-session-token"); } catch (_) {}
     try { sessionStorage.removeItem("lumino-leads-staff-key"); } catch (_) {}
     try { sessionStorage.removeItem("lumino-staff-profile"); } catch (_) {}
+    state.publicLeads = [];
+    state.selectedLeadId = null;
+    state.leadsHydrated = false;
+    state.leadsError = null;
   }
 
   function saveStaffSession(payload) {
     if (!payload?.staffKey) return;
+    try { sessionStorage.setItem("lumino-staff-session-token", payload.staffKey); } catch (_) {}
+    // Temporary compatibility for knowledge-client until it adopts bearer sessions.
     try { sessionStorage.setItem("lumino-leads-staff-key", payload.staffKey); } catch (_) {}
     try {
       sessionStorage.setItem("lumino-staff-profile", JSON.stringify({
@@ -64,6 +71,10 @@
         role: payload.role,
       }));
     } catch (_) {}
+    state.publicLeads = [];
+    state.selectedLeadId = null;
+    state.leadsHydrated = false;
+    state.leadsError = null;
   }
 
   async function staffPasswordLogin(email, password) {
@@ -73,11 +84,30 @@
       body: JSON.stringify({ email, password }),
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.ok) {
-      throw new Error(data.error || "登录失败");
+    const parsed = window.LuminoLeadsClient?.parseApiResponse
+      ? window.LuminoLeadsClient.parseApiResponse(response, data, "登录失败")
+      : {
+          ok: response.ok && data.ok !== false,
+          data: data.data && typeof data.data === "object" ? data.data : data,
+          error: typeof data.error === "string" ? data.error : data.error?.message || "登录失败",
+        };
+    if (!parsed.ok) {
+      const error = new Error(parsed.error || "登录失败");
+      error.code = parsed.code;
+      error.requestId = parsed.requestId;
+      throw error;
     }
-    return data;
+    return parsed.data;
   }
+
+  window.addEventListener("lumino:staff-session-expired", () => {
+    clearStaffSession();
+    if (["sales", "ops"].includes(state.role)) {
+      logout();
+      setLoginStep("email");
+      toast("登录已过期，请重新登录后查看正式线索收件箱。");
+    }
+  });
 
   function updateLoginEmailHint(email) {
     const hint = $("#loginEmailHint");
@@ -186,7 +216,7 @@
   $("#demoRoleSelect")?.addEventListener("change", (event) => {
     const role = event.target.value;
     if (!role) return;
-    if (["sales", "ops"].includes(role) && !sessionStorage.getItem("lumino-leads-staff-key")) {
+    if (["sales", "ops"].includes(role) && !window.LuminoLeadsClient?.hasStaffSession()) {
       toast("演示角色可进面板；查看真实线索请用 ops@lumino.tech / sales@lumino.tech 登录");
     }
     login(role);
