@@ -150,7 +150,7 @@ jobs:
           VERCEL_PRODUCTION_URL: ${{ vars.VERCEL_PRODUCTION_URL || 'https://lumino-official-website.vercel.app' }}
         run: |
           vercel="$(curl -fsS "${VERCEL_PRODUCTION_URL%/}/api/release")"
-          tencent="$(curl -fsS "${PUBLIC_SITE_URL%/}/api/release")"
+          tencent="$(curl -fLsS "${PUBLIC_SITE_URL%/}/api/release")"
           [[ "$vercel" == *"\"releaseSha\":\"$RELEASE_SHA\""* ]]
           [[ "$tencent" == *"\"releaseSha\":\"$RELEASE_SHA\""* ]]
           echo "Vercel and Tencent are both serving $RELEASE_SHA"

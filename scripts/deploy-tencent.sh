@@ -107,7 +107,7 @@ check_status() {
   local url="$2"
   local allowed="$3"
   local code
-  code="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 10 --max-time 30 "$url" || true)"
+  code="$(curl -LsS -o /dev/null -w '%{http_code}' --connect-timeout 10 --max-time 30 "$url" || true)"
   if [[ ! "$code" =~ $allowed ]]; then
     echo "Smoke failed: $label returned $code ($url)" >&2
     smoke_failed=true
@@ -125,7 +125,7 @@ check_status advisor-ping "$public_base/api/advisor-ping" '^200$'
 check_status staff-login "$public_base/api/staff-login" '^200$'
 check_status leads-auth "$public_base/api/leads" '^401$'
 
-release_response="$(curl -fsS --connect-timeout 10 --max-time 30 "$public_base/api/release" || true)"
+release_response="$(curl -fLsS --connect-timeout 10 --max-time 30 "$public_base/api/release" || true)"
 if [[ "$release_response" != *"\"releaseSha\":\"$release_sha\""* ]]; then
   echo "Smoke failed: release SHA mismatch: $release_response" >&2
   smoke_failed=true
