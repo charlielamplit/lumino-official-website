@@ -95,63 +95,69 @@ test("staff login issues personal session and rejects forged tenant/actor on pat
 });
 
 test("archived membership/user/tenant invalidate session", async () => {
+  // Use an isolated tenant so parallel suites that depend on default `lumino` stay untouched.
   const email = `archive-${crypto.randomBytes(3).toString("hex")}@lumino.tech`;
   const password = "ArchiveTest-123456";
+  const tenantSlug = `archive-${crypto.randomBytes(3).toString("hex")}`;
   const { hashPassword } = require("../db/identity-repository.js");
   const boot = await db.withClient(async (client) => {
-    const tenant = await db.ensureDefaultTenant(client);
+    const tenant = await client.query(
+      `INSERT INTO tenants (slug, name)
+       VALUES ($1, $2)
+       RETURNING *`,
+      [tenantSlug, "Archive Isolation"],
+    );
     const user = await client.query(
       `INSERT INTO users (email, name, password_hash)
        VALUES ($1, $2, $3)
-       ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash, is_active = true, archived_at = NULL
        RETURNING *`,
       [email, "归档测试", hashPassword(password)],
     );
     await client.query(
       `INSERT INTO tenant_memberships (tenant_id, user_id, roles)
-       VALUES ($1, $2, $3::text[])
-       ON CONFLICT (tenant_id, user_id)
-       DO UPDATE SET roles = EXCLUDED.roles, is_active = true, archived_at = NULL`,
-      [tenant.id, user.rows[0].id, ["ops"]],
+       VALUES ($1, $2, $3::text[])`,
+      [tenant.rows[0].id, user.rows[0].id, ["ops"]],
     );
-    return { tenant, userId: user.rows[0].id };
+    return { tenant: tenant.rows[0], userId: user.rows[0].id };
   });
 
-  const session = await db.authenticateStaff({ email, password });
-  assert.ok(await db.resolveSession(session.token));
+  try {
+    const session = await db.authenticateStaff({ email, password });
+    assert.ok(await db.resolveSession(session.token));
 
-  await db.withClient(async (client) => {
-    await client.query(`UPDATE users SET archived_at = now() WHERE id = $1`, [boot.userId]);
-  });
-  assert.equal(await db.resolveSession(session.token), null);
+    await db.withClient(async (client) => {
+      await client.query(`UPDATE users SET archived_at = now() WHERE id = $1`, [boot.userId]);
+    });
+    assert.equal(await db.resolveSession(session.token), null);
 
-  await db.withClient(async (client) => {
-    await client.query(`UPDATE users SET archived_at = NULL WHERE id = $1`, [boot.userId]);
-  });
-  const session2 = await db.authenticateStaff({ email, password });
-  assert.ok(await db.resolveSession(session2.token));
+    await db.withClient(async (client) => {
+      await client.query(`UPDATE users SET archived_at = NULL, is_active = true WHERE id = $1`, [boot.userId]);
+    });
+    const session2 = await db.authenticateStaff({ email, password });
+    assert.ok(await db.resolveSession(session2.token));
 
-  await db.withClient(async (client) => {
-    await client.query(
-      `UPDATE tenant_memberships SET archived_at = now() WHERE user_id = $1 AND tenant_id = $2`,
-      [boot.userId, boot.tenant.id],
-    );
-  });
-  assert.equal(await db.resolveSession(session2.token), null);
+    await db.withClient(async (client) => {
+      await client.query(
+        `UPDATE tenant_memberships SET archived_at = now(), is_active = false WHERE user_id = $1 AND tenant_id = $2`,
+        [boot.userId, boot.tenant.id],
+      );
+    });
+    assert.equal(await db.resolveSession(session2.token), null);
 
-  await db.withClient(async (client) => {
-    await client.query(
-      `UPDATE tenant_memberships SET archived_at = NULL, is_active = true WHERE user_id = $1 AND tenant_id = $2`,
-      [boot.userId, boot.tenant.id],
-    );
-    await client.query(`UPDATE tenants SET archived_at = now() WHERE id = $1`, [boot.tenant.id]);
-  });
-  const session3 = await db.authenticateStaff({ email, password }).catch((error) => error);
-  assert.equal(session3 && session3.code, "TENANT_FORBIDDEN");
-
-  await db.withClient(async (client) => {
-    await client.query(`UPDATE tenants SET archived_at = NULL WHERE id = $1`, [boot.tenant.id]);
-  });
+    await db.withClient(async (client) => {
+      await client.query(
+        `UPDATE tenant_memberships SET archived_at = NULL, is_active = true WHERE user_id = $1 AND tenant_id = $2`,
+        [boot.userId, boot.tenant.id],
+      );
+      await client.query(`UPDATE tenants SET archived_at = now() WHERE id = $1`, [boot.tenant.id]);
+    });
+    const session3 = await db.authenticateStaff({ email, password }).catch((error) => error);
+    assert.equal(session3 && session3.code, "TENANT_FORBIDDEN");
+  } finally {
+    await db.withClient(async (client) => {
+      await client.query(`UPDATE tenants SET archived_at = NULL WHERE id = $1`, [boot.tenant.id]);
+    });
+  }
 });
 
 test("leads and outbox commit together; concurrent public_ids stay unique", async () => {

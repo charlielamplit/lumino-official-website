@@ -182,15 +182,61 @@ test("Bearer session authenticates staff leads GET via API contract", async () =
   assert.ok(body.requestId);
 });
 
+test("concurrent migrate is serialized by advisory lock on a fresh database", async () => {
+  const baseUrl = process.env.DATABASE_URL;
+  const dbName = `lumino_mig_${crypto.randomBytes(3).toString("hex")}`;
+  await createTempDatabase(baseUrl, dbName);
+  const previous = process.env.DATABASE_URL;
+  process.env.DATABASE_URL = databaseUrlWithName(baseUrl, dbName);
+  await db.closePool();
+  try {
+    const results = await Promise.all(Array.from({ length: 8 }, () => db.migrate()));
+    assert.equal(results.length, 8);
+    assert.ok(results.every((item) => Array.isArray(item.plan)));
+    const applied = await db.withClient(async (client) => {
+      const { rows } = await client.query(`SELECT id FROM schema_migrations ORDER BY id`);
+      return rows.map((row) => row.id);
+    });
+    assert.ok(applied.some((id) => id.startsWith("001_")));
+    assert.ok(applied.some((id) => id.startsWith("002_")));
+  } finally {
+    await db.closePool();
+    process.env.DATABASE_URL = previous;
+    try {
+      await dropTempDatabase(baseUrl, dbName);
+    } catch (_) {
+      // best-effort cleanup
+    }
+  }
+});
+
 test("active provisioning replay is a true no-op and membership-only archive is skipped", async () => {
   const previous = process.env.STAFF_USERS;
   const email = `prov-${crypto.randomBytes(3).toString("hex")}@lumino.tech`;
   const password = "ProvTest-123456";
   process.env.STAFF_USERS = `${email}:${password}:ops:供给`;
   try {
-    const first = await db.provisionStaffFromEnv({ reactivate: false });
+    const first = await db.provisionStaffFromEnv({ reactivate: false, source: "admin_cli" });
     assert.equal(first.users.length, 1);
     const userId = first.users[0].id;
+
+    const createAudit = await db.withClient(async (client) => {
+      const result = await client.query(
+        `SELECT actor_user_id, actor_email_snapshot, entity_id, payload
+         FROM audit_events
+         WHERE action = 'staff.provision' AND entity_id = $1
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [userId],
+      );
+      return result.rows[0] || null;
+    });
+    assert.ok(createAudit);
+    assert.equal(createAudit.actor_user_id, null);
+    assert.equal(createAudit.actor_email_snapshot, null);
+    assert.equal(createAudit.entity_id, userId);
+    assert.equal(createAudit.payload.source, "admin_cli");
+    assert.equal(createAudit.payload.targetUserId, userId);
 
     const before = await db.withClient(async (client) => {
       const user = await client.query(

@@ -44,11 +44,19 @@ async function appliedMigrations(client) {
   return rows;
 }
 
+// Stable advisory-lock key so concurrent migrate()/test before() hooks serialize safely.
+const MIGRATION_LOCK_KEY = 872_145_903;
+
 async function migrate(options = {}) {
   const pool = getPool(options);
   const client = await pool.connect();
   const dryRun = Boolean(options.dryRun);
+  let locked = false;
   try {
+    // Lock before CREATE TABLE to avoid pg_type duplicate-key races on empty DBs.
+    await client.query("SELECT pg_advisory_lock($1)", [MIGRATION_LOCK_KEY]);
+    locked = true;
+
     await ensureMigrationsTable(client);
     const applied = await appliedMigrations(client);
     const appliedMap = new Map(applied.map((row) => [row.id, row.checksum]));
@@ -97,6 +105,13 @@ async function migrate(options = {}) {
       plan: plan.map((item) => ({ id: item.id, action: item.action, checksum: item.checksum })),
     };
   } finally {
+    if (locked) {
+      try {
+        await client.query("SELECT pg_advisory_unlock($1)", [MIGRATION_LOCK_KEY]);
+      } catch (_) {
+        // Connection release will drop session-level locks as a fallback.
+      }
+    }
     client.release();
   }
 }

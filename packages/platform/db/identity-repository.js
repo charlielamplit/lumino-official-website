@@ -52,17 +52,29 @@ async function writeProvisionAudit(client, {
   action,
   requestId = null,
   details = {},
+  actorUserId = null,
+  actorEmail = null,
+  source = "admin_cli",
 }) {
+  // Target user is the entity, never the actor, unless an explicit trusted admin session is provided.
+  const resolvedSource = actorUserId
+    ? (details.source || "admin_session")
+    : (details.source || source || "admin_cli");
   await client.query(
     `INSERT INTO audit_events (tenant_id, actor_user_id, actor_email_snapshot, action, entity_type, entity_id, payload)
      VALUES ($1, $2, $3, $4, 'user', $5, $6::jsonb)`,
     [
       tenantId,
-      userId,
-      email,
+      actorUserId,
+      actorEmail,
       action,
       userId,
-      auditPayload(details, requestId),
+      auditPayload({
+        ...details,
+        targetUserId: userId,
+        targetEmail: email,
+        source: resolvedSource,
+      }, requestId),
     ],
   );
 }
@@ -83,6 +95,9 @@ async function upsertUserWithMembership(
     rotatePassword = false,
     updateRoles = false,
     requestId = null,
+    actorUserId = null,
+    actorEmail = null,
+    source = "admin_cli",
   },
 ) {
   const normalizedEmail = String(email).trim().toLowerCase();
@@ -113,6 +128,9 @@ async function upsertUserWithMembership(
       action: "staff.provision",
       requestId,
       details: { role, created: true },
+      actorUserId,
+      actorEmail,
+      source,
     });
     return { skipped: false, user, reason: "created" };
   }
@@ -148,6 +166,9 @@ async function upsertUserWithMembership(
         action: "staff.provision.membership",
         requestId,
         details: { role, membershipCreated: true },
+        actorUserId,
+        actorEmail,
+        source,
       });
       return { skipped: false, user, reason: "membership_created" };
     }
@@ -228,6 +249,9 @@ async function upsertUserWithMembership(
       rotatePassword: Boolean(rotatePassword),
       updateRoles: Boolean(updateRoles),
     },
+    actorUserId,
+    actorEmail,
+    source,
   });
 
   return { skipped: false, user, reason: "updated" };
@@ -238,6 +262,9 @@ async function provisionStaffFromEnv({
   rotatePassword = false,
   updateRoles = false,
   requestId = null,
+  actorUserId = null,
+  actorEmail = null,
+  source = "admin_cli",
   ...options
 } = {}) {
   const raw = String(process.env.STAFF_USERS || "").trim();
@@ -262,6 +289,9 @@ async function provisionStaffFromEnv({
         rotatePassword,
         updateRoles,
         requestId,
+        actorUserId,
+        actorEmail,
+        source,
       });
       if (result.skipped) {
         skipped.push({ email: email.toLowerCase(), reason: result.reason || "skipped" });
