@@ -54,3 +54,18 @@ DATABASE_URL=... node scripts/db/migrate-leads-json-to-pg.mjs data/leads.json
 - [ ] Portal / 收件箱使用个人 session，拒绝 query key
 - [ ] 独立 outbox worker 已部署，API 仅 best-effort 单条 drain
 - [ ] CI PostgreSQL service 与迁移步骤通过
+
+## 6. Outbox worker
+
+公开 `POST /api/leads` 只对**当前线索**做 best-effort 单条 drain。历史积压、重试与死信回收由独立 worker 处理：
+
+```bash
+export DATABASE_URL=postgres://lumino@127.0.0.1:5432/lumino_platform
+export WECOM_WEBHOOK_URL=https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=...
+# 单次
+npm run db:outbox-once
+# 常驻（可用 systemd 托管；生产选型仍待 #76）
+npm run db:outbox-worker
+```
+
+Worker 使用与 Repository 相同的 lease / 超时回收 / dead-letter 语义；不写 leads，失败不丢线索。
