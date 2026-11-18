@@ -32,6 +32,8 @@ test("release endpoint reports only a full Git SHA and is routed by Tencent serv
   const server = read("scripts/local-site-server.mjs");
   assert.match(endpoint, /\^\[0-9a-f\]\{40\}\$/);
   assert.match(endpoint, /Cache-Control/);
+  assert.doesNotMatch(endpoint, /node:fs|import\.meta/);
+  assert.match(server, /\.release-sha/);
   assert.match(server, /"\/api\/release": "api\/release\.js"/);
 
   const previousSha = process.env.VERCEL_GIT_COMMIT_SHA;
