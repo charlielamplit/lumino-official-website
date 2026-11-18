@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumino.example/schemas/authenticated-principal/1.0.0",
+  "title": "Lumino Authenticated Principal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "userId", "sessionId", "activeTenantId", "authenticatedAt"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "userId": { "type": "string", "minLength": 1 },
+    "sessionId": { "type": "string", "minLength": 1 },
+    "activeTenantId": { "type": "string", "minLength": 1 },
+    "authenticatedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": ["string", "null"], "format": "date-time" },
+    "authenticationMethod": { "type": ["string", "null"] }
+  }
+}

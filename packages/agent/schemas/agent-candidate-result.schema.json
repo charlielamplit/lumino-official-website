@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lumino.example/schemas/agent-candidate-result/1.0.0",
+  "title": "Lumino Agent Candidate Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "candidateId", "taskId", "executionId", "status", "sourceObjectRef", "resultRef", "createdAt", "createdBy"],
+  "properties": {
+    "schemaVersion": { "const": "1.0.0" },
+    "candidateId": { "type": "string", "minLength": 1 },
+    "taskId": { "type": "string", "minLength": 1 },
+    "executionId": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["DRAFT", "VALIDATING", "READY_FOR_REVIEW", "VALIDATION_FAILED", "CONFIRMED", "REJECTED", "APPLY_FAILED", "APPLIED", "SUPERSEDED"] },
+    "sourceObjectRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "revision"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "revision": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "resultRef": { "type": "string", "minLength": 1 },
+    "validationResultRef": { "type": ["string", "null"] },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "createdBy": { "type": "string", "minLength": 1 },
+    "reviewedAt": { "type": ["string", "null"], "format": "date-time" },
+    "reviewedBy": { "type": ["string", "null"] },
+    "reviewedByRole": { "type": ["string", "null"] },
+    "reviewReason": { "type": ["string", "null"] },
+    "domainCommandId": { "type": ["string", "null"] },
+    "appliedObjectRef": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "id", "revision"],
+          "properties": {
+            "type": { "type": "string", "minLength": 1 },
+            "id": { "type": "string", "minLength": 1 },
+            "revision": { "type": "integer", "minimum": 1 }
+          }
+        }
+      ]
+    },
+    "applyError": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "enum": ["CONFIRMED", "REJECTED", "APPLY_FAILED", "APPLIED"] } } },
+      "then": {
+        "required": ["reviewedAt", "reviewedBy", "reviewedByRole"],
+        "properties": {
+          "reviewedAt": { "type": "string", "format": "date-time" },
+          "reviewedBy": { "type": "string", "minLength": 1 },
+          "reviewedByRole": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "APPLIED" } } },
+      "then": {
+        "required": ["domainCommandId", "appliedObjectRef"],
+        "properties": {
+          "domainCommandId": { "type": "string", "minLength": 1 },
+          "appliedObjectRef": { "type": "object" },
+          "applyError": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "status": { "const": "APPLY_FAILED" } } },
+      "then": {
+        "required": ["domainCommandId", "applyError"],
+        "properties": {
+          "domainCommandId": { "type": "string", "minLength": 1 },
+          "applyError": { "type": "object" }
+        }
+      }
+    }
+  ]
+}
