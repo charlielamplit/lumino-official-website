@@ -1,8 +1,8 @@
 # PostgreSQL 第一阶段交接说明（先票后码）
 
-**日期**：2026-11-18  
-**关联 Issue**：[#76](https://github.com/charlielamplit/lumino-official-website/issues/76)  
-**方案正文**：`docs/architecture/2026-11-17-leads-database-proposal.md`  
+**日期**：2026-11-18
+**关联 Issue**：[#76](https://github.com/charlielamplit/lumino-official-website/issues/76)
+**方案正文**：`docs/architecture/2026-11-17-leads-database-proposal.md`
 **契约基线（尚未全部合入 `dev`）**：
 
 - `feature/platform-authority-boundary` @ `0b9d422`
