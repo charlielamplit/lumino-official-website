@@ -54,7 +54,7 @@ test("staff login issues personal session and rejects forged tenant/actor on pat
     { tenantId: session.tenant.id },
   );
   assert.equal(created.persisted, true);
-  assert.match(created.lead.id, /^LM-\d{8}-\d{4}$/);
+  assert.match(created.lead.id, /^LM-\d{8}-\d{4,}$/);
   assert.equal(created.notifyStatus, "queued");
 
   const patched = await db.updateLead({

@@ -224,6 +224,8 @@ export default async function handler(request, response) {
           status: body.status,
           note: body.note,
           claim: body.status === "claimed" || body.claim === true,
+          revision: body.revision ?? body.expectedRevision,
+          expectedRevision: body.expectedRevision ?? body.revision,
         },
         actor,
       );

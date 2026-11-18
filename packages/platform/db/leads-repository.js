@@ -193,6 +193,17 @@ async function updateLead({ tenantId, publicId, patch, actor }, options = {}) {
     const current = currentResult.rows[0];
     if (!current) return { lead: null, persisted: false };
 
+    const expectedRevision = patch.expectedRevision ?? patch.revision;
+    if (expectedRevision != null) {
+      const expected = Number(expectedRevision);
+      if (!Number.isInteger(expected) || expected < 1 || expected !== Number(current.revision)) {
+        throw Object.assign(new Error("The resource has changed. Refresh and retry."), {
+          code: "REVISION_CONFLICT",
+          httpStatus: 409,
+        });
+      }
+    }
+
     let status = current.status;
     let claimedByUserId = current.claimed_by_user_id;
     let claimedAt = current.claimed_at;

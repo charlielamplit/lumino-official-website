@@ -24,6 +24,7 @@ const DOMAIN_TO_API_CODE = Object.freeze({
   TENANT_REQUIRED: "VALIDATION_FAILED",
   RESOURCE_NOT_FOUND: "RESOURCE_NOT_FOUND",
   METHOD_NOT_ALLOWED: "METHOD_NOT_ALLOWED",
+  REVISION_CONFLICT: "REVISION_CONFLICT",
   DB_UNAVAILABLE: "DEPENDENCY_UNAVAILABLE",
   DB_MODE_DISABLED: "DEPENDENCY_UNAVAILABLE",
   DEPENDENCY_UNAVAILABLE: "DEPENDENCY_UNAVAILABLE",
@@ -82,6 +83,9 @@ export function sendDomainError(response, error, { requestId, fieldErrors } = {}
   }
   if (error?.httpStatus === 405) {
     return sendError(response, "METHOD_NOT_ALLOWED", { requestId });
+  }
+  if (error?.httpStatus === 409) {
+    return sendError(response, "REVISION_CONFLICT", { requestId });
   }
   if (error?.httpStatus === 503) {
     return sendError(response, "DEPENDENCY_UNAVAILABLE", { requestId });
