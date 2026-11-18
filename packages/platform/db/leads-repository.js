@@ -280,26 +280,53 @@ async function updateLead({ tenantId, publicId, patch, actor }, options = {}) {
   }, options);
 }
 
-async function claimPendingOutbox({ limit = 20 } = {}, options = {}) {
+const OUTBOX_MAX_ATTEMPTS = Number(process.env.OUTBOX_MAX_ATTEMPTS || 8);
+const OUTBOX_LEASE_SECONDS = Number(process.env.OUTBOX_LEASE_SECONDS || 120);
+
+async function claimPendingOutbox(
+  { limit = 20, leadPublicId = null, leaseSeconds = OUTBOX_LEASE_SECONDS } = {},
+  options = {},
+) {
   return withTransaction(async (client) => {
+    // Reclaim stale processing leases before claiming new work.
+    await client.query(
+      `UPDATE outbox_events
+       SET status = CASE
+             WHEN attempts >= $2 THEN 'dead'
+             ELSE 'failed'
+           END,
+           last_error_code = COALESCE(last_error_code, 'lease_timeout'),
+           next_attempt_at = now(),
+           processing_started_at = NULL,
+           updated_at = now()
+       WHERE status = 'processing'
+         AND processing_started_at IS NOT NULL
+         AND processing_started_at < now() - make_interval(secs => $1)`,
+      [Math.max(30, Number(leaseSeconds) || 120), OUTBOX_MAX_ATTEMPTS],
+    );
+
     const result = await client.query(
       `WITH picked AS (
-         SELECT id
-         FROM outbox_events
-         WHERE status IN ('pending', 'failed')
-           AND next_attempt_at <= now()
-         ORDER BY created_at ASC
-         FOR UPDATE SKIP LOCKED
+         SELECT o.id
+         FROM outbox_events o
+         LEFT JOIN leads l ON l.id = o.lead_id
+         WHERE o.status IN ('pending', 'failed')
+           AND o.next_attempt_at <= now()
+           AND o.attempts < $2
+           AND ($3::text IS NULL OR l.public_id = $3 OR o.payload->>'publicId' = $3)
+         ORDER BY o.created_at ASC
+         FOR UPDATE OF o SKIP LOCKED
          LIMIT $1
        )
        UPDATE outbox_events o
        SET status = 'processing',
            attempts = o.attempts + 1,
+           processing_started_at = now(),
            updated_at = now()
        FROM picked
        WHERE o.id = picked.id
        RETURNING o.*`,
-      [limit],
+      [limit, OUTBOX_MAX_ATTEMPTS, leadPublicId],
     );
     return result.rows;
   }, options);
@@ -309,7 +336,11 @@ async function markOutboxSent(id, options = {}) {
   return withClient(async (client) => {
     await client.query(
       `UPDATE outbox_events
-       SET status = 'sent', sent_at = now(), updated_at = now(), last_error_code = NULL
+       SET status = 'sent',
+           sent_at = now(),
+           processing_started_at = NULL,
+           updated_at = now(),
+           last_error_code = NULL
        WHERE id = $1`,
       [id],
     );
@@ -319,15 +350,17 @@ async function markOutboxSent(id, options = {}) {
 async function markOutboxFailed(id, errorCode, options = {}) {
   const attempts = Number(options.attempts || 1);
   const delaySeconds = Math.min(3600, 2 ** Math.min(attempts, 8));
+  const dead = attempts >= OUTBOX_MAX_ATTEMPTS;
   return withClient(async (client) => {
     await client.query(
       `UPDATE outbox_events
-       SET status = 'failed',
+       SET status = $4,
            last_error_code = $2,
            next_attempt_at = now() + make_interval(secs => $3),
+           processing_started_at = NULL,
            updated_at = now()
        WHERE id = $1`,
-      [id, String(errorCode || "error").slice(0, 120), delaySeconds],
+      [id, String(errorCode || "error").slice(0, 120), delaySeconds, dead ? "dead" : "failed"],
     );
   }, options);
 }

@@ -1,11 +1,10 @@
 {
   "name": "lumino-official-website",
   "private": true,
-  "type": "module",
   "scripts": {
     "db:migrate": "node scripts/db/migrate.mjs",
     "db:migrate-leads-json": "node scripts/db/migrate-leads-json-to-pg.mjs",
-    "test:platform": "node --test packages/platform/tests/*.test.*",
+    "test:platform": "node --test packages/platform/tests/*.test.cjs",
     "test:db": "node --test packages/platform/tests/postgres-*.test.cjs"
   },
   "dependencies": {

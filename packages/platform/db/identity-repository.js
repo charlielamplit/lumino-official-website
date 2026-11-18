@@ -107,7 +107,7 @@ async function authenticateStaff({ email, password }, options = {}) {
     );
     const user = userResult.rows[0];
     if (!user || !verifyPassword(password, user.password_hash)) {
-      const error = new Error("???????");
+      const error = new Error("账号或密码错误");
       error.code = "AUTH_INVALID";
       error.httpStatus = 401;
       throw error;
@@ -127,7 +127,7 @@ async function authenticateStaff({ email, password }, options = {}) {
     );
     const membership = membershipResult.rows[0];
     if (!membership) {
-      const error = new Error("?????????");
+      const error = new Error("无可用租户成员资格");
       error.code = "TENANT_FORBIDDEN";
       error.httpStatus = 403;
       throw error;
@@ -177,11 +177,20 @@ async function resolveSession(token, options = {}) {
   return withClient(async (client) => {
     const tokenHash = hashToken(token);
     const result = await client.query(
-      `SELECT s.*, u.email, u.name, u.is_active AS user_active, m.roles, m.is_active AS membership_active
+      `SELECT s.*,
+              u.email,
+              u.name,
+              u.is_active AS user_active,
+              u.archived_at AS user_archived_at,
+              m.roles,
+              m.is_active AS membership_active,
+              m.archived_at AS membership_archived_at,
+              t.archived_at AS tenant_archived_at
        FROM staff_sessions s
        JOIN users u ON u.id = s.user_id
        JOIN tenant_memberships m
          ON m.user_id = s.user_id AND m.tenant_id = s.tenant_id
+       JOIN tenants t ON t.id = s.tenant_id
        WHERE s.token_hash = $1`,
       [tokenHash],
     );
@@ -190,6 +199,7 @@ async function resolveSession(token, options = {}) {
     if (row.revoked_at) return null;
     if (new Date(row.expires_at).getTime() <= Date.now()) return null;
     if (!row.user_active || !row.membership_active) return null;
+    if (row.user_archived_at || row.membership_archived_at || row.tenant_archived_at) return null;
 
     await client.query(
       `UPDATE staff_sessions SET last_seen_at = now() WHERE token_hash = $1`,

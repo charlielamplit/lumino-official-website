@@ -33,6 +33,24 @@ jobs:
   repository-quality:
     name: Roadmap, syntax and tests
     runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: lumino
+          POSTGRES_PASSWORD: lumino
+          POSTGRES_DB: lumino_platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lumino -d lumino_platform"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://lumino:lumino@localhost:5432/lumino_platform
+      LEADS_STORE: postgres
+      STAFF_USERS: ops@lumino.tech:OpsTest-123456:ops:Ops,sales@lumino.tech:SalesTest-123456:sales:Sales
     steps:
       - name: Checkout current revision
         uses: actions/checkout@v7
@@ -43,6 +61,15 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install --no-fund --no-audit
+          fi
 
       - name: Validate Roadmap manifest
         run: node scripts/github-roadmap-sync.mjs --check
@@ -56,6 +83,9 @@ jobs:
             fi
           done
           find "${search_paths[@]}" -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.cjs' \) -print0 | xargs -0 -n1 node --check
+
+      - name: Apply database migrations
+        run: node scripts/db/migrate.mjs
 
       - name: Run deterministic tests
         run: |

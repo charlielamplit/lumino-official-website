@@ -28,6 +28,18 @@ function extractBearerOrStaffToken(request) {
   return "";
 }
 
+const STAFF_LEAD_ROLES = new Set(["ops", "sales", "admin"]);
+
+function assertLeadStaffRole(roles) {
+  const list = Array.isArray(roles) ? roles : [];
+  if (!list.some((role) => STAFF_LEAD_ROLES.has(String(role)))) {
+    const error = new Error("权限不足");
+    error.httpStatus = 403;
+    error.code = "FORBIDDEN_ROLE";
+    throw error;
+  }
+}
+
 async function requireStaffActor(request) {
   // URL ?key= is intentionally rejected in phase-1.
   if (request.query?.key) {
@@ -50,12 +62,14 @@ async function requireStaffActor(request) {
     error.code = "AUTH_REQUIRED";
     throw error;
   }
+  const roles = session.roles || [];
+  assertLeadStaffRole(roles);
   return {
     userId: session.userId,
     tenantId: session.activeTenantId,
     email: session.email,
     name: session.name,
-    roles: session.roles || [],
+    roles,
   };
 }
 
@@ -120,7 +134,8 @@ async function drainOutboxOnce(leadPublicId) {
     return { notified: false, notifyStatus: "queued", results: { wecom: "not_configured" } };
   }
 
-  const claimed = await platformDb.claimPendingOutbox({ limit: 10 });
+  // Only claim the just-created lead's outbox row — never drain historical backlog on POST.
+  const claimed = await platformDb.claimPendingOutbox({ limit: 1, leadPublicId });
   let notified = false;
   const results = { wecom: null, webhook: null, email: null };
 
@@ -141,7 +156,7 @@ async function drainOutboxOnce(leadPublicId) {
       });
       if (sent.ok) {
         await platformDb.markOutboxSent(row.id);
-        notified = notified || lead.id === leadPublicId || row.payload?.publicId === leadPublicId;
+        notified = true;
         results.wecom = "ok";
       } else {
         await platformDb.markOutboxFailed(row.id, sent.detail, { attempts: row.attempts });
