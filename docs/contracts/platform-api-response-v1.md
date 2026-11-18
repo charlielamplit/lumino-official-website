@@ -1,6 +1,6 @@
 # Platform API Response Contract v1
 
-状态：F03-03 契约切片；已定义响应、错误码与前端恢复动作，尚未接入具体 API
+状态：F03-03 契约切片；`/api/staff-login` 与 `/api/leads` 已接入响应信封（Portal 接线另轨）
 
 ## 1. 目标与边界
 

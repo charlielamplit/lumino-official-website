@@ -39,23 +39,41 @@ async function ensureDefaultTenant(client, { slug = DEFAULT_TENANT_SLUG, name = 
   return upserted.rows[0];
 }
 
-async function upsertUserWithMembership(client, { email, password, name, role, tenantId }) {
+async function upsertUserWithMembership(
+  client,
+  { email, password, name, role, tenantId, reactivate = false },
+) {
   const normalizedEmail = String(email).trim().toLowerCase();
   const passwordHash = hashPassword(password);
+
+  if (!reactivate) {
+    const existing = await client.query(
+      `SELECT id, archived_at FROM users WHERE email = $1`,
+      [normalizedEmail],
+    );
+    if (existing.rows[0]?.archived_at) {
+      return { skipped: true, reason: "archived", user: existing.rows[0] };
+    }
+  }
+
   const upserted = await client.query(
     `INSERT INTO users (email, password_hash, name)
      VALUES ($1, $2, $3)
      ON CONFLICT (email) DO UPDATE
        SET password_hash = EXCLUDED.password_hash,
            name = EXCLUDED.name,
-           is_active = true,
-           archived_at = NULL,
+           is_active = CASE WHEN $4::boolean THEN true ELSE users.is_active END,
+           archived_at = CASE WHEN $4::boolean THEN NULL ELSE users.archived_at END,
            updated_at = now(),
            revision = users.revision + 1
+     WHERE users.archived_at IS NULL OR $4::boolean
      RETURNING *`,
-    [normalizedEmail, passwordHash, name],
+    [normalizedEmail, passwordHash, name, Boolean(reactivate)],
   );
   const user = upserted.rows[0];
+  if (!user) {
+    return { skipped: true, reason: "archived" };
+  }
 
   await client.query(
     `INSERT INTO tenant_memberships (tenant_id, user_id, roles)
@@ -63,37 +81,69 @@ async function upsertUserWithMembership(client, { email, password, name, role, t
      ON CONFLICT (tenant_id, user_id)
      DO UPDATE SET
        roles = EXCLUDED.roles,
-       is_active = true,
-       archived_at = NULL,
+       is_active = CASE WHEN $4::boolean THEN true ELSE tenant_memberships.is_active END,
+       archived_at = CASE WHEN $4::boolean THEN NULL ELSE tenant_memberships.archived_at END,
        updated_at = now(),
-       revision = tenant_memberships.revision + 1`,
-    [tenantId, user.id, [role]],
+       revision = tenant_memberships.revision + 1
+     WHERE tenant_memberships.archived_at IS NULL OR $4::boolean`,
+    [tenantId, user.id, [role], Boolean(reactivate)],
   );
-  return user;
+  return { skipped: false, user };
 }
 
-async function bootstrapStaffFromEnv(options = {}) {
+async function provisionStaffFromEnv({ reactivate = false, ...options } = {}) {
   const raw = String(process.env.STAFF_USERS || "").trim();
-  if (!raw) return { tenant: null, users: [] };
+  if (!raw) return { tenant: null, users: [], skipped: [] };
   return withTransaction(async (client) => {
     const tenant = await ensureDefaultTenant(client);
     const users = [];
+    const skipped = [];
     for (const entry of raw.split(",")) {
       const parts = entry.split(":").map((part) => part.trim());
       if (parts.length < 3) continue;
       const [email, password, role, ...nameParts] = parts;
       if (!email || !password || !["sales", "ops", "admin"].includes(role)) continue;
       const name = nameParts.join(":") || email.split("@")[0];
-      const user = await upsertUserWithMembership(client, {
+      const result = await upsertUserWithMembership(client, {
         email,
         password,
         name,
         role,
         tenantId: tenant.id,
+        reactivate,
       });
-      users.push({ id: user.id, email: user.email, name: user.name, role });
+      if (result.skipped) {
+        skipped.push({ email: email.toLowerCase(), reason: result.reason || "skipped" });
+        continue;
+      }
+      users.push({
+        id: result.user.id,
+        email: result.user.email,
+        name: result.user.name,
+        role,
+      });
     }
-    return { tenant, users };
+    return { tenant, users, skipped };
+  }, options);
+}
+
+/** @deprecated Use provisionStaffFromEnv for one-time setup. Kept for tests/scripts. */
+async function bootstrapStaffFromEnv(options = {}) {
+  return provisionStaffFromEnv({ reactivate: true, ...options });
+}
+
+async function countActiveStaffUsers(options = {}) {
+  return withClient(async (client) => {
+    const result = await client.query(
+      `SELECT count(*)::int AS c
+       FROM users u
+       JOIN tenant_memberships m ON m.user_id = u.id
+       WHERE u.is_active = true
+         AND u.archived_at IS NULL
+         AND m.is_active = true
+         AND m.archived_at IS NULL`,
+    );
+    return result.rows[0].c;
   }, options);
 }
 
@@ -238,6 +288,8 @@ module.exports = {
   hashToken,
   ensureDefaultTenant,
   bootstrapStaffFromEnv,
+  provisionStaffFromEnv,
+  countActiveStaffUsers,
   authenticateStaff,
   resolveSession,
   revokeSession,
