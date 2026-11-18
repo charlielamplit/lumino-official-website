@@ -1,5 +1,9 @@
 # 下一阶段运维方案：线索通知、API 文档、Git 分支与 CI/CD
 
+> **发布流程更新（2026-11-19）**：独立 `server` 业务分支方案已由
+> [`unified-production-release.md`](./unified-production-release.md) 取代。Vercel 与腾讯云均发布同一个受保护的
+> `main` 提交；本文涉及 `server` 分支的内容仅保留为历史背景，不再作为执行指令。
+
 日期：2026-11-16
 
 范围：官网线索 API、员工线索收件箱、企业微信通知，以及 Vercel / 腾讯服务器双环境发布。
