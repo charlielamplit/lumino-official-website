@@ -3,22 +3,24 @@
  *
  * Failure strategy:
  * 1. Validate → persist to Postgres (leads + outbox same transaction).
- * 2. If DB fails → 503 (never fall back to JSON/memory, never fake success).
+ * 2. If DB fails → 503 / DEPENDENCY_UNAVAILABLE (never fall back to JSON/memory).
  * 3. Notification is queued via outbox; worker/best-effort drain may send WeCom.
  * 4. Actor/tenant/role always come from server session — never from request body.
+ *
+ * Responses follow Platform API Response Contract v1.
  */
 import { createLead, getLead, listLeads, updateLead } from "./_lib/leads-store.js";
 import { platformDb } from "./_lib/platform-db.js";
+import {
+  createRequestId,
+  sendSuccess,
+  sendError,
+  sendDomainError,
+} from "./_lib/platform-api-response.js";
 
 const PHONE_CN = /^1[3-9]\d{9}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_BODY_CHARS = 32_000;
-
-function json(response, status, body) {
-  response.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
-  response.setHeader("Cache-Control", "no-store");
-  response.end(JSON.stringify(body));
-}
 
 function extractBearerOrStaffToken(request) {
   const headerKey = String(request.headers["x-lumino-staff-key"] || "").trim();
@@ -33,7 +35,7 @@ const STAFF_LEAD_ROLES = new Set(["ops", "sales", "admin"]);
 function assertLeadStaffRole(roles) {
   const list = Array.isArray(roles) ? roles : [];
   if (!list.some((role) => STAFF_LEAD_ROLES.has(String(role)))) {
-    const error = new Error("权限不足");
+    const error = new Error("Forbidden role");
     error.httpStatus = 403;
     error.code = "FORBIDDEN_ROLE";
     throw error;
@@ -41,23 +43,22 @@ function assertLeadStaffRole(roles) {
 }
 
 async function requireStaffActor(request) {
-  // URL ?key= is intentionally rejected in phase-1.
   if (request.query?.key) {
-    const error = new Error("未授权");
+    const error = new Error("Auth query key rejected");
     error.httpStatus = 401;
     error.code = "AUTH_QUERY_KEY_REJECTED";
     throw error;
   }
   const token = extractBearerOrStaffToken(request);
   if (!token) {
-    const error = new Error("未授权");
+    const error = new Error("Authentication required");
     error.httpStatus = 401;
     error.code = "AUTH_REQUIRED";
     throw error;
   }
   const session = await platformDb.resolveSession(token);
   if (!session?.userId || !session?.activeTenantId) {
-    const error = new Error("未授权");
+    const error = new Error("Authentication required");
     error.httpStatus = 401;
     error.code = "AUTH_REQUIRED";
     throw error;
@@ -134,7 +135,6 @@ async function drainOutboxOnce(leadPublicId) {
     return { notified: false, notifyStatus: "queued", results: { wecom: "not_configured" } };
   }
 
-  // Only claim the just-created lead's outbox row — never drain historical backlog on POST.
   const claimed = await platformDb.claimPendingOutbox({ limit: 1, leadPublicId });
   let notified = false;
   const results = { wecom: null, webhook: null, email: null };
@@ -175,7 +175,17 @@ async function drainOutboxOnce(leadPublicId) {
   };
 }
 
+function validationError(fieldErrors) {
+  const error = new Error("Validation failed");
+  error.code = "VALIDATION_FAILED";
+  error.httpStatus = 400;
+  error.fieldErrors = fieldErrors;
+  return error;
+}
+
 export default async function handler(request, response) {
+  const requestId = createRequestId(request);
+
   if (request.method === "OPTIONS") {
     response.status(204).end();
     return;
@@ -187,13 +197,13 @@ export default async function handler(request, response) {
       const id = request.query?.id;
       if (id) {
         const lead = await getLead(String(id), actor);
-        if (!lead) return json(response, 404, { error: "线索不存在" });
-        return json(response, 200, { ok: true, lead });
+        if (!lead) return sendError(response, "RESOURCE_NOT_FOUND", { requestId });
+        return sendSuccess(response, { lead }, { requestId, revision: lead.revision });
       }
       const leads = await listLeads(actor);
-      return json(response, 200, { ok: true, leads });
+      return sendSuccess(response, { leads }, { requestId });
     } catch (error) {
-      return json(response, error.httpStatus || 503, { error: error.message || "查询失败" });
+      return sendDomainError(response, error, { requestId });
     }
   }
 
@@ -201,30 +211,42 @@ export default async function handler(request, response) {
     try {
       const actor = await requireStaffActor(request);
       const body = request.body || {};
-      // Ignore client-supplied actor / claimedBy for authority.
       const id = String(body.id || request.query?.id || "").trim();
-      if (!id) return json(response, 400, { error: "缺少线索编号" });
+      if (!id) {
+        return sendError(response, "VALIDATION_FAILED", {
+          requestId,
+          fieldErrors: [{ field: "id", code: "REQUIRED", messageKey: "api.field_required" }],
+        });
+      }
       const { lead, persisted } = await updateLead(
         id,
         {
           status: body.status,
           note: body.note,
           claim: body.status === "claimed" || body.claim === true,
+          revision: body.revision ?? body.expectedRevision,
+          expectedRevision: body.expectedRevision ?? body.revision,
         },
         actor,
+        { requestId },
       );
-      if (!lead) return json(response, 404, { error: "线索不存在" });
-      return json(response, 200, { ok: true, lead, persisted });
+      if (!lead) return sendError(response, "RESOURCE_NOT_FOUND", { requestId });
+      return sendSuccess(response, { lead, persisted }, { requestId, revision: lead.revision });
     } catch (error) {
-      return json(response, error.httpStatus || 400, { error: error.message || "更新失败" });
+      return sendDomainError(response, error, { requestId });
     }
   }
 
-  if (request.method !== "POST") return json(response, 405, { error: "Method Not Allowed" });
+  if (request.method !== "POST") {
+    return sendError(response, "METHOD_NOT_ALLOWED", { requestId });
+  }
 
   const rawSize = Number(request.headers["content-length"] || 0);
   if (rawSize > MAX_BODY_CHARS) {
-    return json(response, 413, { error: "请求过大" });
+    return sendError(response, "VALIDATION_FAILED", {
+      requestId,
+      fieldErrors: [{ field: "body", code: "TOO_LARGE", messageKey: "api.field_too_large" }],
+    });
   }
 
   const body = request.body || {};
@@ -239,24 +261,33 @@ export default async function handler(request, response) {
   const consent = body.consent === true || body.consent === "on" || body.consent === "true" || body.consent === "1";
   const requestType = String(body.requestType || "service-consultation").slice(0, 80);
 
-  if (!company) return json(response, 400, { error: "请填写公司名称" });
-  if (!name) return json(response, 400, { error: "请填写姓名" });
-  if (!consent) return json(response, 400, { error: "请同意联系授权后再提交" });
-  if (!phone && !email) return json(response, 400, { error: "请至少填写工作邮箱或电话 / 微信" });
+  const fieldErrors = [];
+  if (!company) fieldErrors.push({ field: "company", code: "REQUIRED", messageKey: "api.field_required" });
+  if (!name) fieldErrors.push({ field: "name", code: "REQUIRED", messageKey: "api.field_required" });
+  if (!consent) fieldErrors.push({ field: "consent", code: "REQUIRED", messageKey: "api.field_required" });
+  if (!phone && !email) {
+    fieldErrors.push({ field: "email", code: "REQUIRED_ONE_OF", messageKey: "api.field_required" });
+    fieldErrors.push({ field: "phone", code: "REQUIRED_ONE_OF", messageKey: "api.field_required" });
+  }
   if (phone) {
     const compact = phone.replace(/\s+/g, "");
     if (requestType !== "service-consultation" && body.source === "lumino-cbam-calculator") {
-      if (!PHONE_CN.test(compact)) return json(response, 400, { error: "请填写有效的 11 位手机号" });
+      if (!PHONE_CN.test(compact)) fieldErrors.push({ field: "phone", code: "INVALID", messageKey: "api.field_invalid" });
     } else if (!PHONE_CN.test(compact) && compact.length < 5) {
-      return json(response, 400, { error: "请填写有效的联系电话或微信" });
+      fieldErrors.push({ field: "phone", code: "INVALID", messageKey: "api.field_invalid" });
     }
   }
-  if (email && !EMAIL_RE.test(email)) return json(response, 400, { error: "请填写有效的工作邮箱" });
+  if (email && !EMAIL_RE.test(email)) {
+    fieldErrors.push({ field: "email", code: "INVALID", messageKey: "api.field_invalid" });
+  }
   if (!note && body.context) {
     const ctx = body.context;
     note = `试算线索：${ctx.sector || ""} CN ${ctx.cnCode || ""} · ${ctx.quantity || ""} t · 估算 ¥${ctx.estimatedCostCny || "—"}`.trim();
   }
-  if (!note) return json(response, 400, { error: "请填写需求说明" });
+  if (!note) fieldErrors.push({ field: "note", code: "REQUIRED", messageKey: "api.field_required" });
+  if (fieldErrors.length) {
+    return sendError(response, "VALIDATION_FAILED", { requestId, fieldErrors });
+  }
 
   const record = {
     source: String(body.source || "lumino-website").slice(0, 120),
@@ -278,13 +309,12 @@ export default async function handler(request, response) {
 
   let created;
   try {
-    created = await createLead(record);
+    created = await createLead(record, { requestId });
   } catch (error) {
     console.error("[lumino-lead] persist failed", error && error.code ? error.code : "error");
-    return json(response, 503, { error: "线索暂存失败，请稍后重试" });
+    return sendError(response, "DEPENDENCY_UNAVAILABLE", { requestId });
   }
 
-  // Best-effort outbox drain; lead already committed.
   let notify = { notified: false, notifyStatus: "queued", results: { wecom: "queued" } };
   try {
     notify = await drainOutboxOnce(created.lead.id);
@@ -292,13 +322,13 @@ export default async function handler(request, response) {
     console.error("[lumino-lead] outbox drain failed", error && error.code ? error.code : "error");
   }
 
-  return json(response, 200, {
-    ok: true,
+  return sendSuccess(response, {
     leadId: created.lead.id,
     status: created.lead.status,
     persisted: true,
     notified: notify.notified,
     notifyStatus: notify.notifyStatus || "queued",
     notify: notify.results,
-  });
+    lead: created.lead,
+  }, { requestId, revision: created.lead.revision });
 }

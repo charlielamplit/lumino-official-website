@@ -4,15 +4,18 @@
  * Modes:
  * - PostgreSQL (LEADS_STORE=postgres and/or DATABASE_URL): personal staff_sessions token
  * - Legacy file/demo: STAFF_USERS + shared LEADS_STAFF_KEY
+ *
+ * Responses follow Platform API Response Contract v1.
+ * Login never bootstraps/reactivates staff rows — use scripts/db/provision-staff.mjs.
  */
 import crypto from "node:crypto";
 import { platformDb } from "./_lib/platform-db.js";
-
-function json(response, status, body) {
-  response.status(status).setHeader("Content-Type", "application/json; charset=utf-8");
-  response.setHeader("Cache-Control", "no-store");
-  response.end(JSON.stringify(body));
-}
+import {
+  createRequestId,
+  sendSuccess,
+  sendError,
+  sendDomainError,
+} from "./_lib/platform-api-response.js";
 
 function parseStaffUsers() {
   const raw = String(process.env.STAFF_USERS || "").trim();
@@ -40,51 +43,48 @@ function timingSafeEqual(a, b) {
   return crypto.timingSafeEqual(left, right);
 }
 
-async function handlePostgres(request, response) {
+async function handlePostgres(request, response, requestId) {
   if (request.method === "GET") {
-    const users = parseStaffUsers();
     try {
       platformDb.assertPostgresMode();
-      return json(response, 200, {
-        ok: true,
-        configured: users.length > 0,
+      const provisioned = await platformDb.countActiveStaffUsers();
+      return sendSuccess(response, {
+        configured: provisioned > 0,
         roles: ["sales", "ops", "admin"],
         authMode: "staff_session",
-      });
+      }, { requestId });
     } catch (error) {
-      return json(response, 503, {
-        ok: false,
-        configured: false,
-        error: error.message || "数据库未配置",
-      });
+      return sendDomainError(response, error, { requestId });
     }
   }
 
   if (request.method !== "POST") {
-    return json(response, 405, { error: "Method Not Allowed" });
-  }
-
-  const users = parseStaffUsers();
-  if (!users.length) {
-    return json(response, 503, {
-      error: "员工登录尚未配置，请设置 STAFF_USERS 与 DATABASE_URL",
-    });
+    return sendError(response, "METHOD_NOT_ALLOWED", { requestId });
   }
 
   try {
     platformDb.assertPostgresMode();
-    await platformDb.bootstrapStaffFromEnv();
+    const provisioned = await platformDb.countActiveStaffUsers();
+    if (!provisioned) {
+      return sendError(response, "DEPENDENCY_UNAVAILABLE", { requestId });
+    }
 
     const body = request.body || {};
     const email = String(body.email || "").trim().toLowerCase();
     const password = String(body.password || "");
     if (!email || !password) {
-      return json(response, 400, { error: "请输入工作邮箱和密码" });
+      return sendError(response, "VALIDATION_FAILED", {
+        requestId,
+        fieldErrors: [
+          ...(!email ? [{ field: "email", code: "REQUIRED", messageKey: "api.field_required" }] : []),
+          ...(!password ? [{ field: "password", code: "REQUIRED", messageKey: "api.field_required" }] : []),
+        ],
+      });
     }
 
-    const session = await platformDb.authenticateStaff({ email, password });
-    return json(response, 200, {
-      ok: true,
+    // Intentionally no bootstrapStaffFromEnv here — archived users must stay archived.
+    const session = await platformDb.authenticateStaff({ email, password, requestId });
+    return sendSuccess(response, {
       email: session.user.email,
       name: session.user.name,
       role: session.user.role,
@@ -94,57 +94,58 @@ async function handlePostgres(request, response) {
       expiresInHours: session.expiresInHours,
       expiresAt: session.expiresAt,
       authMode: "staff_session",
-    });
+    }, { requestId });
   } catch (error) {
-    const status = error.httpStatus || (error.code === "DB_UNAVAILABLE" ? 503 : 500);
-    return json(response, status, { error: error.message || "登录失败" });
+    return sendDomainError(response, error, { requestId });
   }
 }
 
-function handleLegacy(request, response) {
+function handleLegacy(request, response, requestId) {
   if (request.method === "GET") {
     const users = parseStaffUsers();
-    return json(response, 200, {
-      ok: true,
+    return sendSuccess(response, {
       configured: users.length > 0 && Boolean(process.env.LEADS_STAFF_KEY),
       roles: ["sales", "ops"],
       authMode: "shared_key",
-    });
+    }, { requestId });
   }
 
   if (request.method !== "POST") {
-    return json(response, 405, { error: "Method Not Allowed" });
+    return sendError(response, "METHOD_NOT_ALLOWED", { requestId });
   }
 
   const staffKey = String(process.env.LEADS_STAFF_KEY || "").trim();
   const users = parseStaffUsers();
   if (!staffKey || !users.length) {
-    return json(response, 503, {
-      error: "员工登录尚未配置，请设置 STAFF_USERS 与 LEADS_STAFF_KEY",
-    });
+    return sendError(response, "DEPENDENCY_UNAVAILABLE", { requestId });
   }
 
   const body = request.body || {};
   const email = String(body.email || "").trim().toLowerCase();
   const password = String(body.password || "");
   if (!email || !password) {
-    return json(response, 400, { error: "请输入工作邮箱和密码" });
+    return sendError(response, "VALIDATION_FAILED", {
+      requestId,
+      fieldErrors: [
+        ...(!email ? [{ field: "email", code: "REQUIRED", messageKey: "api.field_required" }] : []),
+        ...(!password ? [{ field: "password", code: "REQUIRED", messageKey: "api.field_required" }] : []),
+      ],
+    });
   }
 
   const matched = users.find((user) => user.email === email);
   if (!matched || !timingSafeEqual(matched.password, password)) {
-    return json(response, 401, { error: "邮箱或密码错误" });
+    return sendError(response, "AUTH_REQUIRED", { requestId });
   }
 
-  return json(response, 200, {
-    ok: true,
+  return sendSuccess(response, {
     email: matched.email,
     name: matched.name,
     role: matched.role,
-    // Returned once after login; Portal stores it in sessionStorage for /api/leads.
     staffKey,
     expiresInHours: 12,
-  });
+    authMode: "shared_key",
+  }, { requestId });
 }
 
 export default async function handler(request, response) {
@@ -153,8 +154,9 @@ export default async function handler(request, response) {
     return;
   }
 
+  const requestId = createRequestId(request);
   if (platformDb.isPostgresMode()) {
-    return handlePostgres(request, response);
+    return handlePostgres(request, response, requestId);
   }
-  return handleLegacy(request, response);
+  return handleLegacy(request, response, requestId);
 }

@@ -730,26 +730,33 @@
       }
       if (!client || !leadId) { toast("线索客户端不可用。"); return; }
       const run = async () => {
+        const currentLead = (Array.isArray(state.publicLeads) ? state.publicLeads : [])
+          .find((lead) => lead.id === leadId) || null;
+        const revision = currentLead?.revision;
+        if (revision == null) {
+          toast("线索版本未知，请先刷新收件箱后再操作。");
+          return;
+        }
         if (action === "claim") {
-          const result = await client.patchLead(leadId, { status: "claimed", claimedBy: actor, actor });
+          const result = await client.patchLead(leadId, { status: "claimed", claimedBy: actor, actor, revision });
           if (!result.ok) { toast(result.error || "认领失败"); return; }
           toast(`已认领 ${leadId}`);
         } else if (action === "qualify") {
-          const result = await client.patchLead(leadId, { status: "qualified", actor, note: "确认有服务意向" });
+          const result = await client.patchLead(leadId, { status: "qualified", actor, note: "确认有服务意向", revision });
           if (!result.ok) { toast(result.error || "更新失败"); return; }
           toast("已标记为确认意向");
         } else if (action === "disqualify") {
-          const result = await client.patchLead(leadId, { status: "disqualified", actor, note: "排除跟进" });
+          const result = await client.patchLead(leadId, { status: "disqualified", actor, note: "排除跟进", revision });
           if (!result.ok) { toast(result.error || "更新失败"); return; }
           toast("已排除该线索");
         } else if (action === "convert") {
-          const result = await client.patchLead(leadId, { status: "converted", actor, note: "已线下跟进或转项目" });
+          const result = await client.patchLead(leadId, { status: "converted", actor, note: "已线下跟进或转项目", revision });
           if (!result.ok) { toast(result.error || "更新失败"); return; }
           toast("已标记转化（可继续在报价/订单中开户）");
         } else if (action === "note") {
           const text = window.prompt("添加备注", "");
           if (!text || !text.trim()) return;
-          const result = await client.patchLead(leadId, { note: text.trim(), actor });
+          const result = await client.patchLead(leadId, { note: text.trim(), actor, revision });
           if (!result.ok) { toast(result.error || "备注失败"); return; }
           toast("备注已保存");
         } else {

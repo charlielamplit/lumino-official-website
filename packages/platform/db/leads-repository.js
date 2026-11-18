@@ -63,8 +63,40 @@ async function nextPublicId(client, tenantId, now = new Date()) {
   return `LM-${stamp}-${seq}`;
 }
 
+function withRequestId(payload, requestId) {
+  if (!requestId) return payload;
+  return { ...payload, requestId };
+}
+
+function requireExpectedRevision(patch, currentRevision) {
+  const raw = patch?.expectedRevision ?? patch?.revision;
+  if (raw == null || raw === "") {
+    throw Object.assign(new Error("revision is required"), {
+      code: "VALIDATION_FAILED",
+      httpStatus: 400,
+      fieldErrors: [{ field: "revision", code: "REQUIRED", messageKey: "api.field_required" }],
+    });
+  }
+  const expected = Number(raw);
+  if (!Number.isInteger(expected) || expected < 1) {
+    throw Object.assign(new Error("revision is invalid"), {
+      code: "VALIDATION_FAILED",
+      httpStatus: 400,
+      fieldErrors: [{ field: "revision", code: "INVALID", messageKey: "api.field_invalid" }],
+    });
+  }
+  if (expected !== Number(currentRevision)) {
+    throw Object.assign(new Error("The resource has changed. Refresh and retry."), {
+      code: "REVISION_CONFLICT",
+      httpStatus: 409,
+    });
+  }
+  return expected;
+}
+
 async function createLead(input, options = {}) {
   const tenantId = options.tenantId;
+  const requestId = options.requestId || input.requestId || null;
   if (!tenantId) {
     const error = new Error("tenantId is required");
     error.code = "TENANT_REQUIRED";
@@ -116,7 +148,7 @@ async function createLead(input, options = {}) {
     await client.query(
       `INSERT INTO lead_events (lead_id, tenant_id, event_type, actor_user_id, payload)
        VALUES ($1, $2, 'lead.created', NULL, $3::jsonb)`,
-      [lead.id, tenantId, JSON.stringify({ publicId, source: lead.source })],
+      [lead.id, tenantId, JSON.stringify(withRequestId({ publicId, source: lead.source }, requestId))],
     );
 
     const eventKey = `lead.create.wecom.${lead.id}`;
@@ -128,18 +160,22 @@ async function createLead(input, options = {}) {
         eventKey,
         lead.id,
         tenantId,
-        JSON.stringify({
+        JSON.stringify(withRequestId({
           publicId: lead.public_id,
           company: lead.company,
           name: lead.name,
-        }),
+        }, requestId)),
       ],
     );
 
     await client.query(
       `INSERT INTO audit_events (tenant_id, actor_user_id, actor_email_snapshot, action, entity_type, entity_id, payload)
        VALUES ($1, NULL, NULL, 'lead.create', 'lead', $2, $3::jsonb)`,
-      [tenantId, lead.public_id, JSON.stringify({ source: lead.source, isDemo: lead.is_demo })],
+      [
+        tenantId,
+        lead.public_id,
+        JSON.stringify(withRequestId({ source: lead.source, isDemo: lead.is_demo }, requestId)),
+      ],
     );
 
     return {
@@ -181,9 +217,10 @@ async function getLeadByPublicId({ tenantId, publicId }, options = {}) {
   }, options);
 }
 
-async function updateLead({ tenantId, publicId, patch, actor }, options = {}) {
+async function updateLead({ tenantId, publicId, patch, actor, requestId = null }, options = {}) {
   if (!tenantId) throw Object.assign(new Error("tenantId is required"), { code: "TENANT_REQUIRED" });
   if (!actor?.userId) throw Object.assign(new Error("actor is required"), { code: "AUTH_REQUIRED", httpStatus: 401 });
+  const auditRequestId = requestId || options.requestId || patch?.requestId || null;
 
   return withTransaction(async (client) => {
     const currentResult = await client.query(
@@ -192,6 +229,8 @@ async function updateLead({ tenantId, publicId, patch, actor }, options = {}) {
     );
     const current = currentResult.rows[0];
     if (!current) return { lead: null, persisted: false };
+
+    requireExpectedRevision(patch || {}, current.revision);
 
     let status = current.status;
     let claimedByUserId = current.claimed_by_user_id;
@@ -249,7 +288,7 @@ async function updateLead({ tenantId, publicId, patch, actor }, options = {}) {
         current.id,
         tenantId,
         actor.userId,
-        JSON.stringify({ status, noteAdded: Boolean(patch.note) }),
+        JSON.stringify(withRequestId({ status, noteAdded: Boolean(patch.note) }, auditRequestId)),
       ],
     );
 
@@ -261,7 +300,7 @@ async function updateLead({ tenantId, publicId, patch, actor }, options = {}) {
         actor.userId,
         actor.email || null,
         publicId,
-        JSON.stringify({ status, claimedByUserId }),
+        JSON.stringify(withRequestId({ status, claimedByUserId }, auditRequestId)),
       ],
     );
 

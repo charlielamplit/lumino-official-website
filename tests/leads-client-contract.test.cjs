@@ -177,13 +177,34 @@ test("409 update failure preserves cached data and requires refresh", async () =
       });
     },
   });
-  const result = await client.patchLead("LM-1", { status: "qualified", actor: "forged-client-actor" });
+  const result = await client.patchLead("LM-1", {
+    status: "qualified",
+    actor: "forged-client-actor",
+    revision: 3,
+  });
   assert.equal(result.ok, false);
   assert.equal(result.code, "REVISION_CONFLICT");
   assert.equal(result.recovery, "REFRESH_RESOURCE");
   assert.equal(client.readLocal()[0].status, "new");
   assert.equal(Object.hasOwn(requestBody, "actor"), false);
   assert.equal(Object.hasOwn(requestBody, "claimedBy"), false);
+  assert.equal(requestBody.revision, 3);
+});
+
+test("staff patchLead refuses to call API without revision", async () => {
+  let called = false;
+  const { client } = loadClient({
+    sessionSeed: { "lumino-staff-session-token": "personal-token" },
+    fetchImpl: async () => {
+      called = true;
+      return response(200, { ok: true, contractVersion: "1.0.0", data: { lead: { id: "LM-1" } } });
+    },
+  });
+  const result = await client.patchLead("LM-1", { status: "qualified" });
+  assert.equal(result.ok, false);
+  assert.equal(result.code, "VALIDATION_FAILED");
+  assert.equal(result.recovery, "REFRESH_RESOURCE");
+  assert.equal(called, false);
 });
 
 test("no-session demo updates remain explicitly local-only", async () => {
@@ -204,6 +225,8 @@ test("Portal login consumes v1 data and keeps session-expiry recovery wired", ()
   assert.match(eventsSource, /parseApiResponse\(response, data/);
   assert.match(eventsSource, /lumino-staff-session-token/);
   assert.match(eventsSource, /lumino:staff-session-expired/);
+  assert.match(eventsSource, /revision/);
+  assert.match(eventsSource, /currentLead/);
   assert.match(roleSource, /不会用本机缓存冒充服务端数据/);
   assert.doesNotMatch(roleSource, /已合并服务端线索库与本机缓存/);
 });
