@@ -241,6 +241,43 @@ test("concurrent bootstrapStaffFromEnv and ensureDefaultTenant stay atomic", asy
   assert.equal(counts.memberships, 1);
 });
 
+
+test("provisionStaffFromEnv does not reactivate archived users by default", async () => {
+  const previousUsers = process.env.STAFF_USERS;
+  const email = `archived-prov-${crypto.randomBytes(3).toString("hex")}@lumino.tech`;
+  const password = "ArchiveProv-123456";
+  process.env.STAFF_USERS = `${email}:${password}:ops:归档供给`;
+  try {
+    const first = await db.provisionStaffFromEnv({ reactivate: true });
+    const userId = first.users[0].id;
+    await db.withClient(async (client) => {
+      await client.query(`UPDATE users SET archived_at = now(), is_active = false WHERE id = $1`, [userId]);
+      await client.query(
+        `UPDATE tenant_memberships SET archived_at = now(), is_active = false WHERE user_id = $1`,
+        [userId],
+      );
+    });
+
+    const second = await db.provisionStaffFromEnv({ reactivate: false });
+    assert.equal(second.users.length, 0);
+    assert.ok(second.skipped.some((item) => item.email === email && item.reason === "archived"));
+
+    const row = await db.withClient(async (client) => {
+      const result = await client.query(`SELECT archived_at, is_active FROM users WHERE id = $1`, [userId]);
+      return result.rows[0];
+    });
+    assert.ok(row.archived_at);
+    assert.equal(row.is_active, false);
+
+    await assert.rejects(
+      () => db.authenticateStaff({ email, password }),
+      (error) => error.code === "AUTH_INVALID",
+    );
+  } finally {
+    process.env.STAFF_USERS = previousUsers;
+  }
+});
+
 test("DATABASE_URL missing fails closed", async () => {
   const previous = process.env.DATABASE_URL;
   delete process.env.DATABASE_URL;
