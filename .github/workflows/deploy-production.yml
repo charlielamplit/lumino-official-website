@@ -121,7 +121,7 @@ jobs:
     name: Deploy the same SHA to Tencent
     needs: [quality, wait-for-vercel]
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     environment: tencent-lighthouse
     env:
       RELEASE_SHA: ${{ needs.quality.outputs.release_sha }}
@@ -139,8 +139,12 @@ jobs:
         with:
           ref: ${{ needs.quality.outputs.release_sha }}
 
-      - name: Install rsync
-        run: sudo apt-get update -y && sudo apt-get install -y rsync
+      - name: Verify deployment tools
+        run: |
+          command -v rsync
+          command -v scp
+          command -v tar
+          command -v timeout
 
       - name: Deploy atomic Tencent release
         id: tencent-deploy

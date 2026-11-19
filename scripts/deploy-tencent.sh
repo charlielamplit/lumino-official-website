@@ -21,8 +21,10 @@ health_base="${health_base%/}"
 
 key_file="$(mktemp)"
 stage="$(mktemp -d)"
+archive_file="$(mktemp)"
 cleanup() {
   rm -f "$key_file"
+  rm -f "$archive_file"
   rm -rf "$stage"
 }
 trap cleanup EXIT
@@ -43,12 +45,21 @@ ssh_command=(
   -o ServerAliveInterval=30
   -o ServerAliveCountMax=3
 )
-rsync_ssh="ssh -i $key_file -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=2 -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3"
+scp_command=(
+  scp -i "$key_file"
+  -o BatchMode=yes
+  -o ConnectTimeout=10
+  -o ConnectionAttempts=2
+  -o StrictHostKeyChecking=yes
+  -o ServerAliveInterval=30
+  -o ServerAliveCountMax=3
+)
 target="${user_name}@${host}"
 releases_dir="${deploy_dir}.releases"
 shared_dir="${deploy_dir}.shared"
 release_instance="${GITHUB_RUN_ID:-manual}-${GITHUB_RUN_ATTEMPT:-1}-$(date -u +%Y%m%dT%H%M%SZ)"
 remote_upload="${releases_dir}/.${release_sha}.upload-${release_instance}"
+remote_archive="${releases_dir}/.${release_sha}.upload-${release_instance}.tar.gz"
 remote_release="${releases_dir}/${release_sha}-${release_instance}"
 
 copy_runtime_dir() {
@@ -89,11 +100,15 @@ find "$root" -maxdepth 1 -type f \
 
 printf '%s\n' "$release_sha" > "$stage/.release-sha"
 printf '{"releaseSha":"%s"}\n' "$release_sha" > "$stage/release.json"
+tar -C "$stage" -czf "$archive_file" .
+echo "Release archive size: $(du -h "$archive_file" | awk '{print $1}')"
 
 echo "==> Upload release without touching the live directory"
 "${ssh_command[@]}" "$target" \
-  "sudo mkdir -p '$releases_dir' '$shared_dir' && sudo chown '$user_name:$user_name' '$releases_dir' '$shared_dir' && rm -rf '$remote_upload' && mkdir -p '$remote_upload'"
-rsync -az -e "$rsync_ssh" "$stage/" "${target}:${remote_upload}/"
+  "sudo mkdir -p '$releases_dir' '$shared_dir' && sudo chown '$user_name:$user_name' '$releases_dir' '$shared_dir' && rm -rf '$remote_upload' '$remote_archive' && mkdir -p '$remote_upload'"
+timeout --foreground 12m "${scp_command[@]}" "$archive_file" "${target}:${remote_archive}"
+"${ssh_command[@]}" "$target" \
+  "tar -xzf '$remote_archive' -C '$remote_upload' && rm -f '$remote_archive'"
 
 echo "==> Install production dependencies before activation"
 "${ssh_command[@]}" "$target" bash -s -- "$remote_upload" <<'REMOTE_PREPARE'
@@ -101,7 +116,7 @@ set -Eeuo pipefail
 upload_dir="$1"
 if [[ -f "$upload_dir/package-lock.json" ]]; then
   cd "$upload_dir"
-  npm ci --omit=dev --ignore-scripts
+  timeout --foreground 5m npm ci --omit=dev --ignore-scripts
 fi
 REMOTE_PREPARE
 
