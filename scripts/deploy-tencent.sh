@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-root="$(cd "$(dirname "$0")/.." && pwd)"
 host="${DEPLOY_HOST:?DEPLOY_HOST required}"
 user_name="${DEPLOY_USER:-ubuntu}"
 deploy_dir="${DEPLOY_DIR:-/var/www/lumino}"
@@ -11,6 +10,7 @@ health_base="${TENCENT_HEALTH_URL:-http://127.0.0.1:4174}"
 release_sha="${RELEASE_SHA:?RELEASE_SHA required}"
 known_hosts="${SSH_KNOWN_HOSTS:?SSH_KNOWN_HOSTS required}"
 ssh_private_key="${SSH_PRIVATE_KEY:?SSH_PRIVATE_KEY required}"
+repository="${GITHUB_REPOSITORY:-charlielamplit/lumino-official-website}"
 public_edge_base="${public_edge_base%/}"
 health_base="${health_base%/}"
 
@@ -20,12 +20,8 @@ health_base="${health_base%/}"
 }
 
 key_file="$(mktemp)"
-stage="$(mktemp -d)"
-archive_file="$(mktemp)"
 cleanup() {
   rm -f "$key_file"
-  rm -f "$archive_file"
-  rm -rf "$stage"
 }
 trap cleanup EXIT
 
@@ -45,15 +41,6 @@ ssh_command=(
   -o ServerAliveInterval=30
   -o ServerAliveCountMax=3
 )
-scp_command=(
-  scp -i "$key_file"
-  -o BatchMode=yes
-  -o ConnectTimeout=10
-  -o ConnectionAttempts=2
-  -o StrictHostKeyChecking=yes
-  -o ServerAliveInterval=30
-  -o ServerAliveCountMax=3
-)
 target="${user_name}@${host}"
 releases_dir="${deploy_dir}.releases"
 shared_dir="${deploy_dir}.shared"
@@ -61,54 +48,33 @@ release_instance="${GITHUB_RUN_ID:-manual}-${GITHUB_RUN_ATTEMPT:-1}-$(date -u +%
 remote_upload="${releases_dir}/.${release_sha}.upload-${release_instance}"
 remote_archive="${releases_dir}/.${release_sha}.upload-${release_instance}.tar.gz"
 remote_release="${releases_dir}/${release_sha}-${release_instance}"
+source_archive="https://codeload.github.com/${repository}/tar.gz/${release_sha}"
 
-copy_runtime_dir() {
-  local source="$1"
-  local destination="$2"
-  [[ -d "$root/$source" ]] || return 0
-  mkdir -p "$stage/$destination"
-  rsync -a \
-    --exclude 'tests/' \
-    --exclude 'evals/' \
-    --exclude 'prompts/' \
-    --exclude 'README.md' \
-    "$root/$source/" "$stage/$destination/"
-}
+echo "==> Pull immutable release $release_sha on Tencent without touching the live directory"
+"${ssh_command[@]}" "$target" bash -s -- \
+  "$releases_dir" "$shared_dir" "$remote_upload" "$remote_archive" "$source_archive" "$release_sha" "$user_name" <<'REMOTE_FETCH'
+set -Eeuo pipefail
+releases_dir="$1"
+shared_dir="$2"
+upload_dir="$3"
+archive_file="$4"
+source_archive="$5"
+release_sha="$6"
+user_name="$7"
 
-echo "==> Build immutable release $release_sha"
-copy_runtime_dir apps/site apps/site
-copy_runtime_dir apps/portal apps/portal
-copy_runtime_dir api api
-copy_runtime_dir packages/shared packages/shared
-copy_runtime_dir packages/advisor packages/advisor
-copy_runtime_dir packages/agent packages/agent
-copy_runtime_dir packages/platform packages/platform
-copy_runtime_dir db/migrations db/migrations
-copy_runtime_dir scripts/db scripts/db
-
-mkdir -p "$stage/scripts"
-cp "$root/scripts/local-site-server.mjs" "$stage/scripts/local-site-server.mjs"
-cp "$root/scripts/tencent-activate-release.sh" "$stage/scripts/tencent-activate-release.sh"
-cp "$root/vercel.json" "$stage/vercel.json"
-cp "$root/index.html" "$stage/index.html"
-for manifest in package.json package-lock.json; do
-  [[ -f "$root/$manifest" ]] && cp "$root/$manifest" "$stage/$manifest"
-done
-find "$root" -maxdepth 1 -type f \
-  \( -name 'favicon.*' -o -name 'apple-touch-icon.png' -o -name 'Lumino *.dc.html' \) \
-  -exec cp {} "$stage/" \;
-
-printf '%s\n' "$release_sha" > "$stage/.release-sha"
-printf '{"releaseSha":"%s"}\n' "$release_sha" > "$stage/release.json"
-tar -C "$stage" -czf "$archive_file" .
-echo "Release archive size: $(du -h "$archive_file" | awk '{print $1}')"
-
-echo "==> Upload release without touching the live directory"
-"${ssh_command[@]}" "$target" \
-  "sudo mkdir -p '$releases_dir' '$shared_dir' && sudo chown '$user_name:$user_name' '$releases_dir' '$shared_dir' && rm -rf '$remote_upload' '$remote_archive' && mkdir -p '$remote_upload'"
-timeout --foreground 12m "${scp_command[@]}" "$archive_file" "${target}:${remote_archive}"
-"${ssh_command[@]}" "$target" \
-  "tar -xzf '$remote_archive' -C '$remote_upload' && rm -f '$remote_archive'"
+sudo mkdir -p "$releases_dir" "$shared_dir"
+sudo chown "$user_name:$user_name" "$releases_dir" "$shared_dir"
+rm -rf "$upload_dir" "$archive_file"
+mkdir -p "$upload_dir"
+timeout --foreground 12m curl \
+  --fail --location --silent --show-error \
+  --retry 4 --retry-all-errors --connect-timeout 15 --max-time 660 \
+  "$source_archive" --output "$archive_file"
+tar -xzf "$archive_file" --strip-components=1 -C "$upload_dir"
+rm -f "$archive_file"
+printf '%s\n' "$release_sha" > "$upload_dir/.release-sha"
+printf '{"releaseSha":"%s"}\n' "$release_sha" > "$upload_dir/release.json"
+REMOTE_FETCH
 
 echo "==> Install production dependencies before activation"
 "${ssh_command[@]}" "$target" bash -s -- "$remote_upload" <<'REMOTE_PREPARE'
