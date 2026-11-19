@@ -34,8 +34,16 @@ chmod 700 "$HOME/.ssh"
 printf '%s\n' "$known_hosts" > "$HOME/.ssh/known_hosts"
 chmod 600 "$HOME/.ssh/known_hosts"
 
-ssh_command=(ssh -i "$key_file" -o StrictHostKeyChecking=yes -o ServerAliveInterval=30)
-rsync_ssh="ssh -i $key_file -o StrictHostKeyChecking=yes -o ServerAliveInterval=30"
+ssh_command=(
+  ssh -i "$key_file"
+  -o BatchMode=yes
+  -o ConnectTimeout=10
+  -o ConnectionAttempts=2
+  -o StrictHostKeyChecking=yes
+  -o ServerAliveInterval=30
+  -o ServerAliveCountMax=3
+)
+rsync_ssh="ssh -i $key_file -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=2 -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3"
 target="${user_name}@${host}"
 releases_dir="${deploy_dir}.releases"
 shared_dir="${deploy_dir}.shared"
@@ -118,38 +126,43 @@ check_edge_status() {
   fi
 }
 
-check_remote_status() {
+echo "==> Verify Tencent edge and service-local routes"
+check_edge_status nginx "$public_edge_base/" '^(200|301|302)$'
+if ! "${ssh_command[@]}" "$target" bash -s -- "$health_base" "$release_sha" <<'REMOTE_SMOKE'
+set -Eeuo pipefail
+health_base="$1"
+release_sha="$2"
+
+check_status() {
   local label="$1"
   local path="$2"
   local allowed="$3"
   local code
-  code="$("${ssh_command[@]}" "$target" \
-    "curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 5 --max-time 20 '$health_base$path'" || true)"
+  code="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 5 --max-time 20 "$health_base$path" || true)"
   if [[ ! "$code" =~ $allowed ]]; then
     echo "Service smoke failed: $label returned $code ($path)" >&2
-    smoke_failed=true
-  else
-    echo "Service smoke passed: $label returned $code"
+    return 1
   fi
+  echo "Service smoke passed: $label returned $code"
 }
 
-echo "==> Verify Tencent edge and service-local routes"
-check_edge_status nginx "$public_edge_base/" '^(200|301|302)$'
-check_remote_status home / '^(200|301|302)$'
-check_remote_status site /site '^(200|301|302)$'
-check_remote_status calculator /calculator/ '^(200|301|302)$'
-check_remote_status portal /portal/ '^(200|301|302)$'
-check_remote_status advisor-ping /api/advisor-ping '^200$'
-check_remote_status staff-login /api/staff-login '^200$'
-check_remote_status leads-auth /api/leads '^401$'
+check_status home / '^(200|301|302)$'
+check_status site /site '^(200|301|302)$'
+check_status calculator /calculator/ '^(200|301|302)$'
+check_status portal /portal/ '^(200|301|302)$'
+check_status advisor-ping /api/advisor-ping '^200$'
+check_status staff-login /api/staff-login '^200$'
+check_status leads-auth /api/leads '^401$'
 
-release_response="$("${ssh_command[@]}" "$target" \
-  "curl -fsS --connect-timeout 5 --max-time 20 '$health_base/api/release'" || true)"
-if [[ "$release_response" != *"\"releaseSha\":\"$release_sha\""* ]]; then
-  echo "Smoke failed: release SHA mismatch: $release_response" >&2
+release_response="$(curl -fsS --connect-timeout 5 --max-time 20 "$health_base/api/release")"
+[[ "$release_response" == *"\"releaseSha\":\"$release_sha\""* ]] || {
+  echo "Service smoke failed: release SHA mismatch: $release_response" >&2
+  exit 1
+}
+echo "Service smoke passed: Tencent is serving $release_sha"
+REMOTE_SMOKE
+then
   smoke_failed=true
-else
-  echo "Smoke passed: Tencent is serving $release_sha"
 fi
 
 if [[ "$smoke_failed" == true ]]; then

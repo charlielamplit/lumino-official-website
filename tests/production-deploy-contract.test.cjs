@@ -13,6 +13,7 @@ test("production workflow deploys one immutable main SHA to both environments", 
   assert.match(workflow, /Confirm Vercel production SHA/);
   assert.match(workflow, /Deploy the same SHA to Tencent/);
   assert.match(workflow, /Compare production release SHAs/);
+  assert.match(workflow, /timeout-minutes: 15/);
   assert.doesNotMatch(workflow, /branches: \[server\]/);
 });
 
@@ -24,7 +25,9 @@ test("Tencent deploy uploads before activation and rolls back failed smoke check
   assert.match(deploy, /Smoke checks failed; rolling back/);
   assert.match(deploy, /SSH_KNOWN_HOSTS:\?SSH_KNOWN_HOSTS required/);
   assert.match(deploy, /TENCENT_HEALTH_URL/);
-  assert.match(deploy, /check_remote_status/);
+  assert.match(deploy, /REMOTE_SMOKE/);
+  assert.match(deploy, /ConnectTimeout=10/);
+  assert.match(deploy, /BatchMode=yes/);
   assert.match(deploy, /GITHUB_OUTPUT/);
   assert.doesNotMatch(deploy, /ssh-keyscan/);
   assert.doesNotMatch(deploy, /rsync[^\n]*--delete/);
