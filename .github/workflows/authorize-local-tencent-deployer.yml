@@ -1,0 +1,57 @@
+name: Authorize Local Tencent Deployer
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: authorize-local-tencent-deployer
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  authorize:
+    name: Register approved local public key
+    runs-on: ubuntu-24.04
+    environment: tencent-lighthouse
+    timeout-minutes: 5
+    env:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      LOCAL_DEPLOY_PUBLIC_KEY: ${{ secrets.LOCAL_DEPLOY_PUBLIC_KEY }}
+    steps:
+      - name: Register public key idempotently
+        run: |
+          set -Eeuo pipefail
+          key_file="$(mktemp)"
+          trap 'rm -f "$key_file"' EXIT
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$key_file"
+          chmod 600 "$key_file"
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          public_key_b64="$(printf '%s\n' "$LOCAL_DEPLOY_PUBLIC_KEY" | base64 -w0)"
+          ssh -i "$key_file" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10 \
+            -o ConnectionAttempts=2 \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" bash -s -- "$public_key_b64" <<'REMOTE'
+          set -Eeuo pipefail
+          public_key="$(printf '%s' "$1" | base64 -d)"
+          [[ "$public_key" == ssh-ed25519\ * ]] || {
+            echo "Only an ED25519 public key is accepted" >&2
+            exit 2
+          }
+          umask 077
+          mkdir -p "$HOME/.ssh"
+          touch "$HOME/.ssh/authorized_keys"
+          grep -qxF "$public_key" "$HOME/.ssh/authorized_keys" || printf '%s\n' "$public_key" >> "$HOME/.ssh/authorized_keys"
+          chmod 700 "$HOME/.ssh"
+          chmod 600 "$HOME/.ssh/authorized_keys"
+          ssh-keygen -lf <(printf '%s\n' "$public_key")
+          REMOTE

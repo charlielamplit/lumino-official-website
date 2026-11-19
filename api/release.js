@@ -1,18 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-
 function readReleaseSha() {
-  const candidates = [process.env.VERCEL_GIT_COMMIT_SHA, process.env.RELEASE_SHA];
-  try {
-    candidates.push(fs.readFileSync(path.join(root, ".release-sha"), "utf8"));
-  } catch {
-    // Vercel uses its system Git SHA; Tencent writes .release-sha into the release.
-  }
-
-  return candidates
+  return [process.env.VERCEL_GIT_COMMIT_SHA, process.env.RELEASE_SHA]
     .map((value) => String(value || "").trim().toLowerCase())
     .find((value) => /^[0-9a-f]{40}$/.test(value));
 }

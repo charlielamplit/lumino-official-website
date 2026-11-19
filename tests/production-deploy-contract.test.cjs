@@ -13,18 +13,44 @@ test("production workflow deploys one immutable main SHA to both environments", 
   assert.match(workflow, /Confirm Vercel production SHA/);
   assert.match(workflow, /Deploy the same SHA to Tencent/);
   assert.match(workflow, /Compare production release SHAs/);
+  assert.match(workflow, /timeout-minutes: 25/);
   assert.doesNotMatch(workflow, /branches: \[server\]/);
 });
 
-test("Tencent deploy uploads before activation and rolls back failed smoke checks", () => {
+test("Tencent deploy seeds an immutable release, syncs only differences and rolls back failed smoke checks", () => {
   const deploy = read("scripts/deploy-tencent.sh");
-  const uploadIndex = deploy.indexOf("Upload release without touching the live directory");
+  const seedIndex = deploy.indexOf("Seed a new release from the current Tencent release");
+  const uploadIndex = deploy.indexOf("Sync only release differences");
   const activateIndex = deploy.indexOf("Finalize and activate release");
-  assert.ok(uploadIndex >= 0 && activateIndex > uploadIndex);
+  assert.ok(seedIndex >= 0 && uploadIndex > seedIndex && activateIndex > uploadIndex);
   assert.match(deploy, /Smoke checks failed; rolling back/);
   assert.match(deploy, /SSH_KNOWN_HOSTS:\?SSH_KNOWN_HOSTS required/);
+  assert.match(deploy, /TENCENT_HEALTH_URL/);
+  assert.match(deploy, /REMOTE_SMOKE/);
+  assert.match(deploy, /ConnectTimeout=10/);
+  assert.match(deploy, /BatchMode=yes/);
+  assert.match(deploy, /--link-dest="\$base"/);
+  assert.match(deploy, /--exclude '\/data'/);
+  assert.match(deploy, /--exclude '\/\.env'/);
+  assert.match(deploy, /timeout --foreground 8m rsync/);
+  assert.match(deploy, /--delete/);
+  assert.match(deploy, /timeout --foreground 5m npm ci/);
+  assert.match(deploy, /GITHUB_OUTPUT/);
   assert.doesNotMatch(deploy, /ssh-keyscan/);
-  assert.doesNotMatch(deploy, /rsync[^\n]*--delete/);
+  assert.doesNotMatch(read(".github/workflows/deploy-production.yml"), /apt-get/);
+});
+
+test("local Tencent deploy requires a clean checkout at the exact remote main SHA", () => {
+  const localDeploy = read("scripts/deploy-tencent-local.sh");
+  const authorize = read(".github/workflows/authorize-local-tencent-deployer.yml");
+  assert.match(localDeploy, /git status --porcelain/);
+  assert.match(localDeploy, /git fetch origin main/);
+  assert.match(localDeploy, /HEAD must equal origin\/main/);
+  assert.match(localDeploy, /Vercel is not serving/);
+  assert.match(localDeploy, /lumino_tencent_deploy/);
+  assert.match(authorize, /environment: tencent-lighthouse/);
+  assert.match(authorize, /LOCAL_DEPLOY_PUBLIC_KEY/);
+  assert.match(authorize, /grep -qxF/);
 });
 
 test("release endpoint reports only a full Git SHA and is routed by Tencent server", async () => {
@@ -32,6 +58,8 @@ test("release endpoint reports only a full Git SHA and is routed by Tencent serv
   const server = read("scripts/local-site-server.mjs");
   assert.match(endpoint, /\^\[0-9a-f\]\{40\}\$/);
   assert.match(endpoint, /Cache-Control/);
+  assert.doesNotMatch(endpoint, /node:fs|import\.meta/);
+  assert.match(server, /\.release-sha/);
   assert.match(server, /"\/api\/release": "api\/release\.js"/);
 
   const previousSha = process.env.VERCEL_GIT_COMMIT_SHA;

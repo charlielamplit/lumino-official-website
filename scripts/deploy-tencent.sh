@@ -6,11 +6,13 @@ host="${DEPLOY_HOST:?DEPLOY_HOST required}"
 user_name="${DEPLOY_USER:-ubuntu}"
 deploy_dir="${DEPLOY_DIR:-/var/www/lumino}"
 service_name="${DEPLOY_SERVICE:-lumino-site}"
-public_base="${PUBLIC_SITE_URL:?PUBLIC_SITE_URL required}"
+public_edge_base="${PUBLIC_EDGE_URL:-http://${host}}"
+health_base="${TENCENT_HEALTH_URL:-http://127.0.0.1:4174}"
 release_sha="${RELEASE_SHA:?RELEASE_SHA required}"
 known_hosts="${SSH_KNOWN_HOSTS:?SSH_KNOWN_HOSTS required}"
 ssh_private_key="${SSH_PRIVATE_KEY:?SSH_PRIVATE_KEY required}"
-public_base="${public_base%/}"
+public_edge_base="${public_edge_base%/}"
+health_base="${health_base%/}"
 
 [[ "$release_sha" =~ ^[0-9a-f]{40}$ ]] || {
   echo "RELEASE_SHA must be a full lowercase Git SHA" >&2
@@ -32,8 +34,16 @@ chmod 700 "$HOME/.ssh"
 printf '%s\n' "$known_hosts" > "$HOME/.ssh/known_hosts"
 chmod 600 "$HOME/.ssh/known_hosts"
 
-ssh_command=(ssh -i "$key_file" -o StrictHostKeyChecking=yes -o ServerAliveInterval=30)
-rsync_ssh="ssh -i $key_file -o StrictHostKeyChecking=yes -o ServerAliveInterval=30"
+ssh_command=(
+  ssh -i "$key_file"
+  -o BatchMode=yes
+  -o ConnectTimeout=10
+  -o ConnectionAttempts=2
+  -o StrictHostKeyChecking=yes
+  -o ServerAliveInterval=30
+  -o ServerAliveCountMax=3
+)
+rsync_ssh="ssh -i $key_file -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=2 -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3"
 target="${user_name}@${host}"
 releases_dir="${deploy_dir}.releases"
 shared_dir="${deploy_dir}.shared"
@@ -80,10 +90,35 @@ find "$root" -maxdepth 1 -type f \
 printf '%s\n' "$release_sha" > "$stage/.release-sha"
 printf '{"releaseSha":"%s"}\n' "$release_sha" > "$stage/release.json"
 
-echo "==> Upload release without touching the live directory"
-"${ssh_command[@]}" "$target" \
-  "sudo mkdir -p '$releases_dir' '$shared_dir' && sudo chown '$user_name:$user_name' '$releases_dir' '$shared_dir' && rm -rf '$remote_upload' && mkdir -p '$remote_upload'"
-rsync -az -e "$rsync_ssh" "$stage/" "${target}:${remote_upload}/"
+echo "==> Seed a new release from the current Tencent release"
+"${ssh_command[@]}" "$target" bash -s -- \
+  "$deploy_dir" "$releases_dir" "$shared_dir" "$remote_upload" "$user_name" <<'REMOTE_SEED'
+set -Eeuo pipefail
+deploy_dir="$1"
+releases_dir="$2"
+shared_dir="$3"
+upload_dir="$4"
+user_name="$5"
+
+sudo mkdir -p "$releases_dir" "$shared_dir"
+sudo chown "$user_name:$user_name" "$releases_dir" "$shared_dir"
+rm -rf "$upload_dir"
+mkdir -p "$upload_dir"
+base="$(readlink -f "$deploy_dir" 2>/dev/null || true)"
+if [[ -n "$base" && -d "$base" ]]; then
+  rsync -a \
+    --link-dest="$base" \
+    --exclude '/node_modules/' \
+    --exclude '/data' \
+    --exclude '/.env' \
+    "$base/" "$upload_dir/"
+fi
+rm -rf "$upload_dir/node_modules" "$upload_dir/data" "$upload_dir/.env"
+REMOTE_SEED
+
+echo "==> Sync only release differences without touching the live directory"
+timeout --foreground 8m rsync -az --delete --timeout=180 --stats \
+  -e "$rsync_ssh" "$stage/" "${target}:${remote_upload}/"
 
 echo "==> Install production dependencies before activation"
 "${ssh_command[@]}" "$target" bash -s -- "$remote_upload" <<'REMOTE_PREPARE'
@@ -91,7 +126,7 @@ set -Eeuo pipefail
 upload_dir="$1"
 if [[ -f "$upload_dir/package-lock.json" ]]; then
   cd "$upload_dir"
-  npm ci --omit=dev --ignore-scripts
+  timeout --foreground 5m npm ci --omit=dev --ignore-scripts
 fi
 REMOTE_PREPARE
 
@@ -102,35 +137,57 @@ echo "==> Finalize and activate release"
   "$remote_release/scripts/tencent-activate-release.sh activate '$deploy_dir' '$remote_release' '$shared_dir' '$service_name'"
 
 smoke_failed=false
-check_status() {
+check_edge_status() {
   local label="$1"
   local url="$2"
   local allowed="$3"
   local code
   code="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 10 --max-time 30 "$url" || true)"
   if [[ ! "$code" =~ $allowed ]]; then
-    echo "Smoke failed: $label returned $code ($url)" >&2
+    echo "Edge smoke failed: $label returned $code ($url)" >&2
     smoke_failed=true
   else
-    echo "Smoke passed: $label returned $code"
+    echo "Edge smoke passed: $label returned $code"
   fi
 }
 
-echo "==> Verify public routes"
-check_status home "$public_base/" '^(200|301|302)$'
-check_status site "$public_base/site" '^(200|301|302)$'
-check_status calculator "$public_base/calculator/" '^(200|301|302)$'
-check_status portal "$public_base/portal/" '^(200|301|302)$'
-check_status advisor-ping "$public_base/api/advisor-ping" '^200$'
-check_status staff-login "$public_base/api/staff-login" '^200$'
-check_status leads-auth "$public_base/api/leads" '^401$'
+echo "==> Verify Tencent edge and service-local routes"
+check_edge_status nginx "$public_edge_base/" '^(200|301|302)$'
+if ! "${ssh_command[@]}" "$target" bash -s -- "$health_base" "$release_sha" <<'REMOTE_SMOKE'
+set -Eeuo pipefail
+health_base="$1"
+release_sha="$2"
 
-release_response="$(curl -fsS --connect-timeout 10 --max-time 30 "$public_base/api/release" || true)"
-if [[ "$release_response" != *"\"releaseSha\":\"$release_sha\""* ]]; then
-  echo "Smoke failed: release SHA mismatch: $release_response" >&2
+check_status() {
+  local label="$1"
+  local path="$2"
+  local allowed="$3"
+  local code
+  code="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 5 --max-time 20 "$health_base$path" || true)"
+  if [[ ! "$code" =~ $allowed ]]; then
+    echo "Service smoke failed: $label returned $code ($path)" >&2
+    return 1
+  fi
+  echo "Service smoke passed: $label returned $code"
+}
+
+check_status home / '^(200|301|302)$'
+check_status site /site '^(200|301|302)$'
+check_status calculator /calculator/ '^(200|301|302)$'
+check_status portal /portal/ '^(200|301|302)$'
+check_status advisor-ping /api/advisor-ping '^200$'
+check_status staff-login /api/staff-login '^200$'
+check_status leads-auth /api/leads '^401$'
+
+release_response="$(curl -fsS --connect-timeout 5 --max-time 20 "$health_base/api/release")"
+[[ "$release_response" == *"\"releaseSha\":\"$release_sha\""* ]] || {
+  echo "Service smoke failed: release SHA mismatch: $release_response" >&2
+  exit 1
+}
+echo "Service smoke passed: Tencent is serving $release_sha"
+REMOTE_SMOKE
+then
   smoke_failed=true
-else
-  echo "Smoke passed: Tencent is serving $release_sha"
 fi
 
 if [[ "$smoke_failed" == true ]]; then
@@ -141,3 +198,6 @@ if [[ "$smoke_failed" == true ]]; then
 fi
 
 echo "==> Tencent deployment complete: $release_sha"
+if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+  echo "release_sha=$release_sha" >> "$GITHUB_OUTPUT"
+fi
