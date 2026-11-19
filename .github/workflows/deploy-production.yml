@@ -140,7 +140,9 @@ jobs:
           ref: ${{ needs.quality.outputs.release_sha }}
 
       - name: Verify deployment tools
-        run: command -v ssh
+        run: |
+          command -v ssh
+          command -v rsync
 
       - name: Deploy atomic Tencent release
         id: tencent-deploy
