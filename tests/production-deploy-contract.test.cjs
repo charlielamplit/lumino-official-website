@@ -29,7 +29,9 @@ test("Tencent deploy seeds an immutable release, syncs only differences and roll
   assert.match(deploy, /REMOTE_SMOKE/);
   assert.match(deploy, /ConnectTimeout=10/);
   assert.match(deploy, /BatchMode=yes/);
-  assert.match(deploy, /cp -al/);
+  assert.match(deploy, /--link-dest="\$base"/);
+  assert.match(deploy, /--exclude '\/data'/);
+  assert.match(deploy, /--exclude '\/\.env'/);
   assert.match(deploy, /timeout --foreground 8m rsync/);
   assert.match(deploy, /--delete/);
   assert.match(deploy, /timeout --foreground 5m npm ci/);

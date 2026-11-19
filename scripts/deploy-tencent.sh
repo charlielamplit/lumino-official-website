@@ -106,7 +106,12 @@ rm -rf "$upload_dir"
 mkdir -p "$upload_dir"
 base="$(readlink -f "$deploy_dir" 2>/dev/null || true)"
 if [[ -n "$base" && -d "$base" ]]; then
-  cp -al "$base/." "$upload_dir/"
+  rsync -a \
+    --link-dest="$base" \
+    --exclude '/node_modules/' \
+    --exclude '/data' \
+    --exclude '/.env' \
+    "$base/" "$upload_dir/"
 fi
 rm -rf "$upload_dir/node_modules" "$upload_dir/data" "$upload_dir/.env"
 REMOTE_SEED
