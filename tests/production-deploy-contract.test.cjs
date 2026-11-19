@@ -13,7 +13,7 @@ test("production workflow deploys one immutable main SHA to both environments", 
   assert.match(workflow, /Confirm Vercel production SHA/);
   assert.match(workflow, /Deploy the same SHA to Tencent/);
   assert.match(workflow, /Compare production release SHAs/);
-  assert.match(workflow, /timeout-minutes: 15/);
+  assert.match(workflow, /timeout-minutes: 25/);
   assert.doesNotMatch(workflow, /branches: \[server\]/);
 });
 
@@ -28,9 +28,14 @@ test("Tencent deploy uploads before activation and rolls back failed smoke check
   assert.match(deploy, /REMOTE_SMOKE/);
   assert.match(deploy, /ConnectTimeout=10/);
   assert.match(deploy, /BatchMode=yes/);
+  assert.match(deploy, /timeout --foreground 12m/);
+  assert.match(deploy, /timeout --foreground 5m npm ci/);
+  assert.match(deploy, /scp_command/);
+  assert.match(deploy, /tar -xzf/);
   assert.match(deploy, /GITHUB_OUTPUT/);
   assert.doesNotMatch(deploy, /ssh-keyscan/);
   assert.doesNotMatch(deploy, /rsync[^\n]*--delete/);
+  assert.doesNotMatch(read(".github/workflows/deploy-production.yml"), /apt-get/);
 });
 
 test("release endpoint reports only a full Git SHA and is routed by Tencent server", async () => {
