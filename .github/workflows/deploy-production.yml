@@ -121,6 +121,7 @@ jobs:
     name: Deploy the same SHA to Tencent
     needs: [quality, wait-for-vercel]
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     environment: tencent-lighthouse
     env:
       RELEASE_SHA: ${{ needs.quality.outputs.release_sha }}
