@@ -130,7 +130,8 @@ jobs:
       DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
       DEPLOY_DIR: ${{ vars.DEPLOY_DIR }}
       DEPLOY_SERVICE: ${{ vars.DEPLOY_SERVICE }}
-      PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL }}
+      PUBLIC_EDGE_URL: ${{ vars.PUBLIC_EDGE_URL }}
+      TENCENT_HEALTH_URL: ${{ vars.TENCENT_HEALTH_URL }}
     steps:
       - name: Checkout exact release
         uses: actions/checkout@v7
@@ -141,6 +142,7 @@ jobs:
         run: sudo apt-get update -y && sudo apt-get install -y rsync
 
       - name: Deploy atomic Tencent release
+        id: tencent-deploy
         run: |
           chmod +x scripts/deploy-tencent.sh scripts/tencent-activate-release.sh
           ./scripts/deploy-tencent.sh
@@ -150,7 +152,6 @@ jobs:
           VERCEL_PRODUCTION_URL: ${{ vars.VERCEL_PRODUCTION_URL || 'https://lumino-official-website.vercel.app' }}
         run: |
           vercel="$(curl -fsS "${VERCEL_PRODUCTION_URL%/}/api/release")"
-          tencent="$(curl -fLsS "${PUBLIC_SITE_URL%/}/api/release")"
           [[ "$vercel" == *"\"releaseSha\":\"$RELEASE_SHA\""* ]]
-          [[ "$tencent" == *"\"releaseSha\":\"$RELEASE_SHA\""* ]]
+          [[ "${{ steps.tencent-deploy.outputs.release_sha }}" == "$RELEASE_SHA" ]]
           echo "Vercel and Tencent are both serving $RELEASE_SHA"

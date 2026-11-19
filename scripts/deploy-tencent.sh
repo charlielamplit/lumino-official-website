@@ -6,11 +6,13 @@ host="${DEPLOY_HOST:?DEPLOY_HOST required}"
 user_name="${DEPLOY_USER:-ubuntu}"
 deploy_dir="${DEPLOY_DIR:-/var/www/lumino}"
 service_name="${DEPLOY_SERVICE:-lumino-site}"
-public_base="${PUBLIC_SITE_URL:?PUBLIC_SITE_URL required}"
+public_edge_base="${PUBLIC_EDGE_URL:-http://${host}}"
+health_base="${TENCENT_HEALTH_URL:-http://127.0.0.1:4174}"
 release_sha="${RELEASE_SHA:?RELEASE_SHA required}"
 known_hosts="${SSH_KNOWN_HOSTS:?SSH_KNOWN_HOSTS required}"
 ssh_private_key="${SSH_PRIVATE_KEY:?SSH_PRIVATE_KEY required}"
-public_base="${public_base%/}"
+public_edge_base="${public_edge_base%/}"
+health_base="${health_base%/}"
 
 [[ "$release_sha" =~ ^[0-9a-f]{40}$ ]] || {
   echo "RELEASE_SHA must be a full lowercase Git SHA" >&2
@@ -102,30 +104,47 @@ echo "==> Finalize and activate release"
   "$remote_release/scripts/tencent-activate-release.sh activate '$deploy_dir' '$remote_release' '$shared_dir' '$service_name'"
 
 smoke_failed=false
-check_status() {
+check_edge_status() {
   local label="$1"
   local url="$2"
   local allowed="$3"
   local code
-  code="$(curl -LsS -o /dev/null -w '%{http_code}' --connect-timeout 10 --max-time 30 "$url" || true)"
+  code="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 10 --max-time 30 "$url" || true)"
   if [[ ! "$code" =~ $allowed ]]; then
-    echo "Smoke failed: $label returned $code ($url)" >&2
+    echo "Edge smoke failed: $label returned $code ($url)" >&2
     smoke_failed=true
   else
-    echo "Smoke passed: $label returned $code"
+    echo "Edge smoke passed: $label returned $code"
   fi
 }
 
-echo "==> Verify public routes"
-check_status home "$public_base/" '^(200|301|302)$'
-check_status site "$public_base/site" '^(200|301|302)$'
-check_status calculator "$public_base/calculator/" '^(200|301|302)$'
-check_status portal "$public_base/portal/" '^(200|301|302)$'
-check_status advisor-ping "$public_base/api/advisor-ping" '^200$'
-check_status staff-login "$public_base/api/staff-login" '^200$'
-check_status leads-auth "$public_base/api/leads" '^401$'
+check_remote_status() {
+  local label="$1"
+  local path="$2"
+  local allowed="$3"
+  local code
+  code="$("${ssh_command[@]}" "$target" \
+    "curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 5 --max-time 20 '$health_base$path'" || true)"
+  if [[ ! "$code" =~ $allowed ]]; then
+    echo "Service smoke failed: $label returned $code ($path)" >&2
+    smoke_failed=true
+  else
+    echo "Service smoke passed: $label returned $code"
+  fi
+}
 
-release_response="$(curl -fLsS --connect-timeout 10 --max-time 30 "$public_base/api/release" || true)"
+echo "==> Verify Tencent edge and service-local routes"
+check_edge_status nginx "$public_edge_base/" '^(200|301|302)$'
+check_remote_status home / '^(200|301|302)$'
+check_remote_status site /site '^(200|301|302)$'
+check_remote_status calculator /calculator/ '^(200|301|302)$'
+check_remote_status portal /portal/ '^(200|301|302)$'
+check_remote_status advisor-ping /api/advisor-ping '^200$'
+check_remote_status staff-login /api/staff-login '^200$'
+check_remote_status leads-auth /api/leads '^401$'
+
+release_response="$("${ssh_command[@]}" "$target" \
+  "curl -fsS --connect-timeout 5 --max-time 20 '$health_base/api/release'" || true)"
 if [[ "$release_response" != *"\"releaseSha\":\"$release_sha\""* ]]; then
   echo "Smoke failed: release SHA mismatch: $release_response" >&2
   smoke_failed=true
@@ -141,3 +160,6 @@ if [[ "$smoke_failed" == true ]]; then
 fi
 
 echo "==> Tencent deployment complete: $release_sha"
+if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+  echo "release_sha=$release_sha" >> "$GITHUB_OUTPUT"
+fi

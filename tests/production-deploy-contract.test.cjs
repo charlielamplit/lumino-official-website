@@ -23,8 +23,9 @@ test("Tencent deploy uploads before activation and rolls back failed smoke check
   assert.ok(uploadIndex >= 0 && activateIndex > uploadIndex);
   assert.match(deploy, /Smoke checks failed; rolling back/);
   assert.match(deploy, /SSH_KNOWN_HOSTS:\?SSH_KNOWN_HOSTS required/);
-  assert.match(deploy, /curl -LsS/);
-  assert.match(deploy, /curl -fLsS/);
+  assert.match(deploy, /TENCENT_HEALTH_URL/);
+  assert.match(deploy, /check_remote_status/);
+  assert.match(deploy, /GITHUB_OUTPUT/);
   assert.doesNotMatch(deploy, /ssh-keyscan/);
   assert.doesNotMatch(deploy, /rsync[^\n]*--delete/);
 });
