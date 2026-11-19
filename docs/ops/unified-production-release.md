@@ -6,8 +6,8 @@
 
 - 不从 `dev`、功能分支或独立 `server` 分支直接发布生产。
 - Vercel 公网与腾讯服务器本机的 `/api/release` 必须返回同一个 40 位 `releaseSha`。
-- 腾讯云先上传到独立 release 目录，安装依赖后才切换；冒烟失败自动恢复前一 release。
-- `.env` 与 `data/` 位于共享运行目录，不由 rsync 覆盖或删除。
+- 腾讯云服务器主动从 GitHub codeload 拉取精确 SHA 到独立 release 目录，安装依赖后才切换；冒烟失败自动恢复前一 release。
+- `.env` 与 `data/` 位于共享运行目录，不由代码拉取覆盖或删除。
 - 数据库迁移不属于代码同步动作，必须按独立生产门禁执行。
 
 ## GitHub Environment

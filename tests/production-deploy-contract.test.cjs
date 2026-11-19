@@ -17,9 +17,9 @@ test("production workflow deploys one immutable main SHA to both environments", 
   assert.doesNotMatch(workflow, /branches: \[server\]/);
 });
 
-test("Tencent deploy uploads before activation and rolls back failed smoke checks", () => {
+test("Tencent deploy pulls before activation and rolls back failed smoke checks", () => {
   const deploy = read("scripts/deploy-tencent.sh");
-  const uploadIndex = deploy.indexOf("Upload release without touching the live directory");
+  const uploadIndex = deploy.indexOf("Pull immutable release");
   const activateIndex = deploy.indexOf("Finalize and activate release");
   assert.ok(uploadIndex >= 0 && activateIndex > uploadIndex);
   assert.match(deploy, /Smoke checks failed; rolling back/);
@@ -30,11 +30,12 @@ test("Tencent deploy uploads before activation and rolls back failed smoke check
   assert.match(deploy, /BatchMode=yes/);
   assert.match(deploy, /timeout --foreground 12m/);
   assert.match(deploy, /timeout --foreground 5m npm ci/);
-  assert.match(deploy, /scp_command/);
-  assert.match(deploy, /tar -xzf/);
+  assert.match(deploy, /codeload\.github\.com/);
+  assert.match(deploy, /curl/);
+  assert.match(deploy, /tar -xzf .*--strip-components=1/);
   assert.match(deploy, /GITHUB_OUTPUT/);
   assert.doesNotMatch(deploy, /ssh-keyscan/);
-  assert.doesNotMatch(deploy, /rsync[^\n]*--delete/);
+  assert.doesNotMatch(deploy, /\bscp\b|\brsync\b/);
   assert.doesNotMatch(read(".github/workflows/deploy-production.yml"), /apt-get/);
 });
 
