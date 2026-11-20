@@ -11,11 +11,12 @@ import {
   shouldSendStoreFalse,
 } from "./advisor-gateway.js";
 
-const LUNA = process.env.ADVISOR_MODEL_LUNA || "gpt-4.1-mini";
-// Prefer a fast Sol by default; slow Sol models cause Beta No-Go under client budget.
-const SOL = process.env.ADVISOR_MODEL_SOL || "deepseek/deepseek-v4-flash";
-// Luna is opt-in while the production gateway route is timing out. #104
-const LUNA_ENABLED = process.env.ADVISOR_LUNA_ENABLED === "1";
+const configuredLuna = process.env.ADVISOR_MODEL_LUNA || "gpt-6-luna";
+const configuredSol = process.env.ADVISOR_MODEL_SOL || "gpt-6.1-terra";
+// Migrate known unhealthy/retired gateway IDs without requiring a secret rotation. #104
+const LUNA = configuredLuna === "anthropic/claude-haiku-5.5" ? "gpt-6-luna" : configuredLuna;
+const SOL = configuredSol === "deepseek/deepseek-v4-flash" ? "gpt-6.1-terra" : configuredSol;
+const LUNA_ENABLED = process.env.ADVISOR_LUNA_ENABLED !== "0";
 const CONTACT_URL = "/apps/site/contact.html";
 
 function apiKey() {
