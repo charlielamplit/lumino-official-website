@@ -154,10 +154,11 @@ check_edge_status() {
 
 echo "==> Verify Tencent edge and service-local routes"
 check_edge_status nginx "$public_edge_base/" '^(200|301|302)$'
-if ! "${ssh_command[@]}" "$target" bash -s -- "$health_base" "$release_sha" <<'REMOTE_SMOKE'
+if ! "${ssh_command[@]}" "$target" bash -s -- "$health_base" "$release_sha" "$deploy_dir" <<'REMOTE_SMOKE'
 set -Eeuo pipefail
 health_base="$1"
 release_sha="$2"
+deploy_dir="$3"
 
 check_status() {
   local label="$1"
