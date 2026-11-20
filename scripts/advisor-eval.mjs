@@ -52,6 +52,7 @@ function resolveCase(input, lang, asOf) {
     return {
       intent: "invalid_request",
       answer_mode: "fallback",
+      outcome_type: "handoff",
       answer: "invalid",
       confidence: "low",
       service_matches: [],
@@ -69,6 +70,7 @@ function resolveCase(input, lang, asOf) {
     return {
       intent: "privacy_guard",
       answer_mode: "fallback",
+      outcome_type: "handoff",
       answer: lang === "en"
         ? "The input may contain contact or identity details. It was not stored. Use the controlled contact page if you want Lumino to contact you."
         : "输入中可能包含联系方式或证件号码。内容未保存。如需联系，请使用受控联系页。",

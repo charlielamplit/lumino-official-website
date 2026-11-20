@@ -13,6 +13,11 @@ const SENSITIVE_RE = [
   /\b[A-Z]{1,2}\d{7,9}\b/, // passport-like
 ];
 
+const OUT_OF_SCOPE_RE = [
+  /(?:写|创作|生成).{0,16}(?:诗|歌词|小说|故事|情书|笑话)/,
+  /\b(?:write|compose|create)\b.{0,30}\b(?:poem|song|lyrics|novel|story|joke)\b/i,
+];
+
 function cleanContextValue(value, max = 120) {
   return String(value || "").trim().slice(0, max);
 }
@@ -42,6 +47,22 @@ export function detectSensitive(value) {
   return SENSITIVE_RE.some((pattern) => pattern.test(input));
 }
 
+export function detectOutOfScope(value) {
+  const input = String(value || "");
+  return OUT_OF_SCOPE_RE.some((pattern) => pattern.test(input));
+}
+
+export function hasStaleReferenceDate(value, asOf) {
+  const requestedYear = Number(String(asOf || "").slice(0, 4));
+  if (!Number.isInteger(requestedYear)) return false;
+  const text = String(value || "");
+  const patterns = [
+    /(?:参考(?:时点|日期|时间)|截至|当前(?:日期|时间))[^0-9]{0,12}(20\d{2})/gi,
+    /(?:reference|as of|current) date[^0-9]{0,12}(20\d{2})/gi,
+  ];
+  return patterns.some((pattern) => [...text.matchAll(pattern)].some((match) => Number(match[1]) < requestedYear));
+}
+
 export function clientKey(request) {
   const forwarded = request.headers?.["x-forwarded-for"];
   if (typeof forwarded === "string" && forwarded.trim()) return forwarded.split(",")[0].trim();
@@ -69,7 +90,7 @@ export function sanitizeRequest(body = {}) {
   const text = String(body.text || "").trim();
   const topicId = String(body.topicId || "").trim();
   const replyId = String(body.replyId || "").trim();
-  const asOf = String(body.asOf || "").trim();
+  const asOf = String(body.asOf || new Date().toISOString().slice(0, 10)).trim();
   const surface = body.surface === "portal" ? "portal" : "public";
   const taskMode = surface === "portal" && body.taskMode === "draft" ? "draft" : "ask";
   const context = surface === "portal" ? sanitizePortalContext(body.context) : null;
@@ -90,11 +111,13 @@ export function sanitizeRequest(body = {}) {
 
   const joined = [text, ...history.map((item) => item.text), JSON.stringify(context || {})].join("\n");
   const sensitive = detectSensitive(joined);
+  const outOfScope = detectOutOfScope(text);
 
   return {
     ok: errors.length === 0,
     errors,
     sensitive,
+    outOfScope,
     request: {
       lang,
       text: sensitive ? "" : text,
