@@ -7,6 +7,7 @@
 | `ADVISOR_PUBLIC_BETA=0` | 隐藏「问 Lumino」入口；`/api/advisor` 返回降级说明；计算器等工具仍可用 |
 | `ADVISOR_MODEL_ENABLED=0` | 立即停用模型，仅保留固定答案、工具路由与已发布检索 grounded fallback |
 | 去掉 `ADVISOR_OPENAI_API_KEY` / `OPENAI_API_KEY` | 同等模型停用效果 |
+| `ADVISOR_UPSTREAM_URL=https://intl.luminoyou.com` | 当前环境先执行隐私拦截和上下文白名单，再将开放问题转交指定 HTTPS Advisor；用于模型供应商在该网络不可达的过渡期 |
 
 紧急越界 / 错误法规来源 / 隐私事件：先设 `ADVISOR_MODEL_ENABLED=0`；必要时再设 `ADVISOR_PUBLIC_BETA=0`。
 

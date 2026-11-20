@@ -14,6 +14,8 @@ test("production workflow deploys one immutable main SHA to both environments", 
   assert.match(workflow, /Deploy the same SHA to Tencent/);
   assert.match(workflow, /Compare production release SHAs/);
   assert.match(workflow, /timeout-minutes: 25/);
+  assert.match(workflow, /https:\/\/intl\.luminoyou\.com/);
+  assert.match(workflow, /Verify Vercel Advisor model/);
   assert.doesNotMatch(workflow, /branches: \[server\]/);
 });
 
@@ -36,6 +38,7 @@ test("Tencent deploy seeds an immutable release, syncs only differences and roll
   assert.match(deploy, /--delete/);
   assert.match(deploy, /timeout --foreground 5m npm ci/);
   assert.match(deploy, /GITHUB_OUTPUT/);
+  assert.match(deploy, /check-advisor-model\.mjs/);
   assert.doesNotMatch(deploy, /ssh-keyscan/);
   assert.doesNotMatch(read(".github/workflows/deploy-production.yml"), /apt-get/);
 });

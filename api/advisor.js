@@ -110,13 +110,66 @@ function unavailablePayload(lang, reason = "server_error") {
   return result;
 }
 
+function advisorUpstreamUrl() {
+  const value = String(process.env.ADVISOR_UPSTREAM_URL || "").trim();
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url.origin : "";
+  } catch (_) {
+    return "";
+  }
+}
+
+async function resolveUpstreamQuestion(request, signal) {
+  const base = advisorUpstreamUrl();
+  if (!base) return null;
+  const response = await fetch(`${base}/api/advisor`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(request),
+    signal,
+  });
+  const payload = await response.json();
+  if (!response.ok || !payload?.answer) throw new Error(`advisor_upstream_${response.status}`);
+  const { ok: _ok, runtime = {}, ...result } = payload;
+  return {
+    result,
+    source: runtime.source || result.answer_mode || "actionable_fallback",
+    model: {
+      tier: runtime.model_tier || null,
+      storage_policy: runtime.storage_policy,
+      store_requested: runtime.store_requested,
+    },
+    modelAttempted: Boolean(runtime.model_configured),
+    modelFailed: Boolean(runtime.degradation_reason?.startsWith("model_")),
+  };
+}
+
 async function resolveOpenQuestion(request, signal) {
   const hits = retrievePublishedKnowledge({
     text: request.text,
     lang: request.lang,
     asOf: request.asOf,
     limit: 3,
+    serviceId: request.context?.serviceId || "",
   });
+  if (advisorUpstreamUrl()) {
+    try {
+      return await resolveUpstreamQuestion(request, signal);
+    } catch (error) {
+      console.error("[lumino-advisor] upstream failed", error?.message || error);
+      const result = hits.length ? buildGroundedFallback(hits, request.lang) : stopWithoutSources(request.lang);
+      result.degradation_reason = "upstream_error";
+      result.ui_state = "basic_mode";
+      return {
+        result,
+        source: hits.length ? "retrieval_grounded" : "actionable_fallback",
+        modelAttempted: true,
+        modelFailed: true,
+      };
+    }
+  }
   if (!hits.length) {
     if (modelConfigured()) {
       try {
@@ -124,6 +177,7 @@ async function resolveOpenQuestion(request, signal) {
           text: request.text,
           lang: request.lang,
           signal,
+          request,
         });
         if (generated?.answer) {
           const { runtime_model: runtimeModel, ...rest } = generated;
@@ -163,6 +217,7 @@ async function resolveOpenQuestion(request, signal) {
         lang: request.lang,
         hits,
         signal,
+        request,
       });
       if (generated?.answer && generated.sources?.length) {
         const { runtime_model: runtimeModel, _allowedUrls, ...rest } = generated;
@@ -266,10 +321,9 @@ export default async function handler(request, response) {
       result = sensitivePayload(sanitized.request.lang);
       source = "privacy_guard";
     } else {
-      result = routeDeterministic(sanitized.request);
-      result.ui_state = result.ui_state || "ok";
-      result.degradation_reason = result.degradation_reason || null;
-      if (result.answer_mode === "fallback" && sanitized.request.text) {
+      const portalOpenQuestion = sanitized.request.surface === "portal" && sanitized.request.text;
+      result = portalOpenQuestion ? null : routeDeterministic(sanitized.request);
+      if (portalOpenQuestion || (result.answer_mode === "fallback" && sanitized.request.text)) {
         const open = await resolveOpenQuestion(sanitized.request, abort.signal);
         result = open.result;
         source = open.source;
@@ -277,6 +331,8 @@ export default async function handler(request, response) {
         modelAttempted = Boolean(open.modelAttempted);
         modelFailed = Boolean(open.modelFailed);
       }
+      result.ui_state = result.ui_state || "ok";
+      result.degradation_reason = result.degradation_reason || null;
     }
 
     const latencyMs = Date.now() - started;
@@ -285,7 +341,8 @@ export default async function handler(request, response) {
       ...result,
       runtime: {
         source,
-        model_configured: modelConfigured(),
+        surface: sanitized.request.surface,
+        model_configured: modelConfigured() || Boolean(advisorUpstreamUrl()),
         model_tier: model?.tier || null,
         // Provider retention: capability-based. Do not advertise store:false on third-party gateways.
         storage_policy: model?.storage_policy || flags.storage_policy,

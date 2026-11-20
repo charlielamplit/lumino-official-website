@@ -6,7 +6,7 @@ cd "$root"
 
 deploy_key="${LUMINO_DEPLOY_KEY:-$HOME/.ssh/lumino_tencent_deploy}"
 known_hosts_file="${LUMINO_KNOWN_HOSTS:-$HOME/.ssh/known_hosts}"
-vercel_base="${VERCEL_PRODUCTION_URL:-https://lumino-official-website.vercel.app}"
+vercel_base="${VERCEL_PRODUCTION_URL:-https://intl.luminoyou.com}"
 
 [[ -f "$deploy_key" ]] || { echo "Missing deploy key: $deploy_key" >&2; exit 2; }
 [[ -f "$known_hosts_file" ]] || { echo "Missing known_hosts: $known_hosts_file" >&2; exit 2; }
