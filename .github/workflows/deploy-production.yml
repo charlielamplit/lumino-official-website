@@ -102,6 +102,11 @@ jobs:
       RELEASE_SHA: ${{ needs.quality.outputs.release_sha }}
       VERCEL_PRODUCTION_URL: ${{ vars.VERCEL_PRODUCTION_URL || 'https://intl.luminoyou.com' }}
     steps:
+      - name: Checkout exact release
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.quality.outputs.release_sha }}
+
       - name: Wait for Vercel production
         run: |
           base="${VERCEL_PRODUCTION_URL%/}"
