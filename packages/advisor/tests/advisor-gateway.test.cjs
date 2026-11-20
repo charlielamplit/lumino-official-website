@@ -94,7 +94,7 @@ test("classifyUpstreamHttpError distinguishes auth, rate limit, and upstream fai
   assert.match(gw.classifyUpstreamHttpError(405, "openai_error"), /model_http_405/);
 });
 
-test("chooseModel keeps Luna opt-in while its production route is unstable", async () => {
+test("chooseModel supports explicit Luna opt-out", async () => {
   const model = await loadModel();
   const luna = "luna-test-model";
   const sol = "sol-test-model";
@@ -112,6 +112,23 @@ test("chooseModel keeps Luna opt-in while its production route is unstable", asy
   });
   assert.equal(model.chooseModel({ text: "x", hits: [{}, {}, {}], luna, sol, lunaEnabled: true }).tier, "sol");
   assert.equal(model.chooseModel({ text: "a".repeat(281), hits: [{ id: 1 }], luna, sol, lunaEnabled: true }).tier, "sol");
+});
+
+test("known unhealthy gateway model ids migrate to current cost-effective routes", async () => {
+  const previous = {
+    luna: process.env.ADVISOR_MODEL_LUNA,
+    sol: process.env.ADVISOR_MODEL_SOL,
+  };
+  try {
+    process.env.ADVISOR_MODEL_LUNA = "anthropic/claude-haiku-5.5";
+    process.env.ADVISOR_MODEL_SOL = "deepseek/deepseek-v4-flash";
+    const model = await loadModel();
+    assert.equal(model.ADVISOR_MODELS.LUNA, "gpt-6-luna");
+    assert.equal(model.ADVISOR_MODELS.SOL, "gpt-6.1-terra");
+  } finally {
+    if (previous.luna == null) delete process.env.ADVISOR_MODEL_LUNA; else process.env.ADVISOR_MODEL_LUNA = previous.luna;
+    if (previous.sol == null) delete process.env.ADVISOR_MODEL_SOL; else process.env.ADVISOR_MODEL_SOL = previous.sol;
+  }
 });
 
 test("public flags expose storage_policy instead of blanket store:false", async () => {
