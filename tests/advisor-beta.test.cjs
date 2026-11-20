@@ -238,6 +238,98 @@ test("unmatched questions reach the general model path when the model is configu
   }
 });
 
+test("portal free text bypasses public fixed routing and uses contextual model output", async () => {
+  const previous = {
+    beta: process.env.ADVISOR_PUBLIC_BETA,
+    enabled: process.env.ADVISOR_MODEL_ENABLED,
+    key: process.env.ADVISOR_OPENAI_API_KEY,
+    base: process.env.ADVISOR_OPENAI_BASE_URL,
+    mode: process.env.ADVISOR_OPENAI_API_MODE,
+  };
+  const originalFetch = globalThis.fetch;
+  process.env.ADVISOR_PUBLIC_BETA = "1";
+  process.env.ADVISOR_MODEL_ENABLED = "1";
+  process.env.ADVISOR_OPENAI_API_KEY = "sk-test";
+  process.env.ADVISOR_OPENAI_BASE_URL = "https://aiberm.com/v1";
+  process.env.ADVISOR_OPENAI_API_MODE = "chat";
+  let modelCalled = false;
+  try {
+    globalThis.fetch = async (_url, init) => {
+      modelCalled = true;
+      const body = JSON.parse(init.body);
+      assert.match(body.messages[0].content, /Portal 的 CBAM 助手/);
+      assert.match(body.messages[1].content, /CASE-CBAM-2026/);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          choices: [{
+            finish_reason: "stop",
+            message: {
+              content: JSON.stringify({
+                intent: "portal_cbam_scope",
+                answer: "结合当前 2026 年度项目，应先核对本季度产品 CN Code、进口商关系和数据缺口。",
+                confidence: "medium",
+                next_question: "要先看产品范围还是数据缺口？",
+                primary_service_id: "cbam",
+                secondary_service_id: null,
+                handoff: "none",
+              }),
+            },
+          }],
+        }),
+      };
+    };
+    const file = pathToFileURL(path.join(root, "api/advisor.js")).href;
+    const mod = await import(`${file}?t=${Date.now()}-${Math.random()}`);
+    const out = { statusCode: 0, body: "" };
+    const res = {
+      status(code) { out.statusCode = code; return this; },
+      setHeader() {},
+      end(body) { out.body = body || ""; },
+      write() {},
+    };
+    await mod.default({
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.93" },
+      body: {
+        text: "我的产品是否可能涉及 CBAM？",
+        lang: "zh",
+        surface: "portal",
+        taskMode: "ask",
+        asOf: "2026-11-20",
+        context: {
+          serviceId: "cbam",
+          annualProjectId: "CASE-CBAM-2026",
+          serviceYear: "2026",
+          workstream: "scope_master_data",
+          objectRef: { type: "annualInclusion", id: "SCOPE-CBAM-2026", revision: 3 },
+        },
+      },
+      query: {},
+      on() {},
+    }, res);
+    const data = JSON.parse(out.body);
+    assert.equal(out.statusCode, 200);
+    assert.equal(modelCalled, true);
+    assert.equal(data.runtime.surface, "portal");
+    assert.match(data.answer, /2026 年度项目/);
+    assert.notEqual(data.answer_mode, "fixed");
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const [key, value] of Object.entries({
+      ADVISOR_PUBLIC_BETA: previous.beta,
+      ADVISOR_MODEL_ENABLED: previous.enabled,
+      ADVISOR_OPENAI_API_KEY: previous.key,
+      ADVISOR_OPENAI_BASE_URL: previous.base,
+      ADVISOR_OPENAI_API_MODE: previous.mode,
+    })) {
+      if (value == null) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
 test("advisor API disables when public beta is off", async () => {
   const prev = process.env.ADVISOR_PUBLIC_BETA;
   process.env.ADVISOR_PUBLIC_BETA = "0";
