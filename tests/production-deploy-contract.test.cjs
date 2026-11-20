@@ -30,6 +30,8 @@ test("Tencent deploy seeds an immutable release, syncs only differences and roll
   assert.match(deploy, /SSH_KNOWN_HOSTS:\?SSH_KNOWN_HOSTS required/);
   assert.match(deploy, /TENCENT_HEALTH_URL/);
   assert.match(deploy, /REMOTE_SMOKE/);
+  assert.match(deploy, /bash -s -- "\$health_base" "\$release_sha" "\$deploy_dir"/);
+  assert.match(deploy, /deploy_dir="\$3"/);
   assert.match(deploy, /ConnectTimeout=10/);
   assert.match(deploy, /BatchMode=yes/);
   assert.match(deploy, /--link-dest="\$base"/);
