@@ -33,9 +33,9 @@ test("advisor model smoke accepts a real model source", async () => {
   assert.match(result.output, /smoke passed/);
 });
 
-test("advisor model smoke rejects fallback-only responses after two attempts", async () => {
+test("advisor model smoke rejects fallback-only responses after bounded retries", async () => {
   const result = await runSmoke({ ok: true, answer: "回退回答", runtime: { source: "retrieval_grounded", degradation_reason: "model_error" } });
   assert.equal(result.code, 1);
-  assert.equal(result.requests, 2);
+  assert.equal(result.requests, 4);
   assert.match(result.output, /source=retrieval_grounded/);
 });
