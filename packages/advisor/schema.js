@@ -9,6 +9,7 @@
   const ANSWER_MODES = Object.freeze(["fixed", "tool_route", "retrieval_model", "general_model", "fallback"]);
   const CONFIDENCE = Object.freeze(["high", "medium", "low"]);
   const HANDOFF = Object.freeze(["none", "contact", "expert_required"]);
+  const OUTCOME_TYPES = Object.freeze(["answer", "clarify", "tool", "handoff"]);
 
   function validateResponse(value) {
     const errors = [];
@@ -22,8 +23,9 @@
     if (!Array.isArray(value.sources) || value.sources.length > 3) errors.push("sources must contain at most three items");
     if (!Array.isArray(value.links) || value.links.length > 3) errors.push("links must contain at most three items");
     if (!HANDOFF.includes(value.handoff)) errors.push("handoff is invalid");
+    if (!OUTCOME_TYPES.includes(value.outcome_type)) errors.push("outcome_type is invalid");
     return { ok: errors.length === 0, errors };
   }
 
-  return Object.freeze({ ANSWER_MODES, CONFIDENCE, HANDOFF, validateResponse });
+  return Object.freeze({ ANSWER_MODES, CONFIDENCE, HANDOFF, OUTCOME_TYPES, validateResponse });
 });

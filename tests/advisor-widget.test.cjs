@@ -92,6 +92,9 @@ test("float dock stays viewport-fixed and clusters ask/tools/top", () => {
 test("advisor widget preserves keyboard, privacy and current-tab recovery controls", () => {
   const source = read("apps/site/site/advisor-widget.js");
   assert.match(source, /sessionStorage/);
+  assert.match(source, /interactionId/);
+  assert.match(source, /url\.searchParams\.set\("source", "advisor"\)/);
+  assert.match(source, /url\.searchParams\.set\("serviceId", serviceId\)/);
   assert.match(source, /containsSensitiveInfo/);
   assert.match(source, /aria-live="polite"/);
   assert.match(source, /event\.key === "Escape"/);
@@ -122,6 +125,13 @@ test("advisor widget preserves keyboard, privacy and current-tab recovery contro
   assert.match(source, /waitForDelay\(deterministicDelayMs\(\), delayController\.signal\)/);
   assert.match(source, /general_model/);
   assert.match(source, /Buffer stream text only|deliberation/);
+});
+
+test("advisor contact attribution carries only bounded non-PII routing fields", () => {
+  const contact = read("apps/site/site/contact.js");
+  assert.match(contact, /advisor.*topic.*interactionId/s);
+  assert.match(contact, /\.slice\(0, 120\)/);
+  assert.doesNotMatch(contact, /params\.get\("(?:text|question|answer|email|phone)"\)/);
 });
 
 test("advisor presentation reuses site tokens and has mobile and reduced-motion rules", () => {

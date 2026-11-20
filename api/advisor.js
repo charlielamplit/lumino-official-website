@@ -5,7 +5,7 @@
  * - Phrase-chunk SSE for print-style UI; Abort cancels upstream model
  * - No conversation persistence / no sales leads
  */
-import { checkRateLimit, clientKey, publicLogFields, sanitizeRequest } from "./_lib/advisor-policy.js";
+import { checkRateLimit, clientKey, hasStaleReferenceDate, publicLogFields, sanitizeRequest } from "./_lib/advisor-policy.js";
 import { modelConfigured, routeDeterministic } from "./_lib/advisor-runtime.js";
 import { buildGroundedFallback, retrievePublishedKnowledge, stopWithoutSources } from "./_lib/advisor-retrieval.js";
 import { generateGeneralAnswer, generateGroundedAnswer } from "./_lib/advisor-model.js";
@@ -70,6 +70,7 @@ function writeSse(response, payload, { streamAnswer = false } = {}) {
 function betaDisabledPayload(lang) {
   const result = stopWithoutSources(lang);
   result.intent = "beta_disabled";
+  result.outcome_type = "handoff";
   result.answer = lang === "en"
     ? "Ask Lumino is temporarily unavailable. Use the tools menu or the contact page for a scoped review."
     : "「问 Lumino」暂时不可用。请使用工具菜单，或通过联系页申请有范围的复核。";
@@ -86,6 +87,7 @@ function sensitivePayload(lang) {
   result.next_question = null;
   result.suggested_replies = [];
   result.answer_mode = "fallback";
+  result.outcome_type = "handoff";
   result.confidence = "low";
   result.handoff = "contact";
   result.sources = [];
@@ -99,9 +101,51 @@ function sensitivePayload(lang) {
   return result;
 }
 
+function outOfScopePayload(lang) {
+  return {
+    intent: "out_of_scope",
+    answer_mode: "fallback",
+    outcome_type: "clarify",
+    answer: lang === "en"
+      ? "I focus on CBAM, product carbon footprints, GHG inventories, ESG and export compliance. Reframe your question around a product, customer requirement, required file or deadline, and I can give you a concrete next step."
+      : "我专注于 CBAM、产品碳足迹、碳盘查、ESG 与出口合规。请把问题改写为具体产品、客户要求、所需文件或截止时间，我可以继续给出明确的下一步。",
+    confidence: "high",
+    service_matches: [],
+    next_question: lang === "en" ? "What product, requirement, deliverable or deadline do you need help with?" : "你需要处理的产品、要求、交付物或截止时间是什么？",
+    suggested_replies: [],
+    sources: [],
+    links: [{ type: "link", label: lang === "en" ? "View Lumino services" : "查看 Lumino 服务", url: "/apps/site/home.html#services" }],
+    cta: { type: "link", label: lang === "en" ? "View Lumino services" : "查看 Lumino 服务", url: "/apps/site/home.html#services" },
+    handoff: "none",
+    degradation_reason: null,
+    ui_state: "ok",
+  };
+}
+
+function inferOutcomeType(result) {
+  if (["answer", "clarify", "tool", "handoff"].includes(result?.outcome_type)) return result.outcome_type;
+  if (result?.answer_mode === "tool_route") return "tool";
+  if (result?.handoff === "contact" || result?.handoff === "expert_required") return "handoff";
+  if (result?.answer_mode === "fallback" && result?.next_question) return "clarify";
+  return "answer";
+}
+
+function staleModelFallback(request, hits) {
+  const result = hits.length ? buildGroundedFallback(hits, request.lang) : stopWithoutSources(request.lang);
+  result.degradation_reason = "stale_reference_date";
+  result.ui_state = "basic_mode";
+  return {
+    result,
+    source: hits.length ? "retrieval_grounded" : "actionable_fallback",
+    modelAttempted: true,
+    modelFailed: true,
+  };
+}
+
 function unavailablePayload(lang, reason = "server_error") {
   const result = stopWithoutSources(lang);
   result.intent = "service_unavailable";
+  result.outcome_type = "handoff";
   result.degradation_reason = reason;
   result.answer = lang === "en"
     ? "The advisor service is temporarily unavailable. You can retry, choose a topic below, or use the contact page."
@@ -156,7 +200,8 @@ async function resolveOpenQuestion(request, signal) {
   });
   if (advisorUpstreamUrl()) {
     try {
-      return await resolveUpstreamQuestion(request, signal);
+      const upstream = await resolveUpstreamQuestion(request, signal);
+      return hasStaleReferenceDate(upstream.result.answer, request.asOf) ? staleModelFallback(request, hits) : upstream;
     } catch (error) {
       console.error("[lumino-advisor] upstream failed", error?.message || error);
       const result = hits.length ? buildGroundedFallback(hits, request.lang) : stopWithoutSources(request.lang);
@@ -180,6 +225,7 @@ async function resolveOpenQuestion(request, signal) {
           request,
         });
         if (generated?.answer) {
+          if (hasStaleReferenceDate(generated.answer, request.asOf)) return staleModelFallback(request, hits);
           const { runtime_model: runtimeModel, ...rest } = generated;
           rest.degradation_reason = "no_published_sources";
           rest.ui_state = "ok";
@@ -220,6 +266,7 @@ async function resolveOpenQuestion(request, signal) {
         request,
       });
       if (generated?.answer && generated.sources?.length) {
+        if (hasStaleReferenceDate(generated.answer, request.asOf)) return staleModelFallback(request, hits);
         const { runtime_model: runtimeModel, _allowedUrls, ...rest } = generated;
         rest.degradation_reason = null;
         rest.ui_state = "ok";
@@ -320,6 +367,9 @@ export default async function handler(request, response) {
     } else if (sanitized.sensitive) {
       result = sensitivePayload(sanitized.request.lang);
       source = "privacy_guard";
+    } else if (sanitized.outOfScope) {
+      result = outOfScopePayload(sanitized.request.lang);
+      source = "out_of_scope";
     } else {
       const portalOpenQuestion = sanitized.request.surface === "portal" && sanitized.request.text;
       result = portalOpenQuestion ? null : routeDeterministic(sanitized.request);
@@ -334,6 +384,8 @@ export default async function handler(request, response) {
       result.ui_state = result.ui_state || "ok";
       result.degradation_reason = result.degradation_reason || null;
     }
+
+    result.outcome_type = inferOutcomeType(result);
 
     const latencyMs = Date.now() - started;
     const payload = {
@@ -406,6 +458,7 @@ export default async function handler(request, response) {
       return json(response, 503, {
         ok: false,
         answer_mode: "fallback",
+        outcome_type: "handoff",
         ui_state: "unavailable",
         degradation_reason: reason,
         answer: sanitized.request.lang === "en"

@@ -6,6 +6,7 @@
   const select = document.getElementById("serviceSelect");
   const industrySelect = document.getElementById("industrySelect");
   const timelineField = document.getElementById("timelineField");
+  const safeToken = (value, max) => String(value || "").match(new RegExp(`^[a-zA-Z0-9_-]{1,${max}}$`))?.[0] || "";
   if (requested && select) {
     if (select.options) {
       if ([...select.options].some((option) => option.value === requested)) select.value = requested;
@@ -18,7 +19,12 @@
     if ([...industrySelect.options].some((o) => o.value === ind)) industrySelect.value = ind;
   }
   if (timelineField && params.get("timeline")) timelineField.value = params.get("timeline");
-  document.getElementById("sourceField").value = params.get("source") || document.referrer || "public-contact";
+  const source = params.get("source");
+  const topic = safeToken(params.get("topic"), 80);
+  const interactionId = safeToken(params.get("interactionId"), 80);
+  document.getElementById("sourceField").value = source === "advisor"
+    ? ["advisor", topic || "unresolved", interactionId].filter(Boolean).join(":").slice(0, 120)
+    : source || document.referrer || "public-contact";
 
   const show = (text, tone) => {
     message.textContent = text;

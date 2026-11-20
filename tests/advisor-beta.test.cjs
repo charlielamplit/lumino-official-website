@@ -143,6 +143,7 @@ test("unmatched questions fall back to a useful framework when the model is not 
     assert.equal(data.runtime.source, "actionable_fallback");
     assert.equal(data.runtime.model_configured, false);
     assert.equal(data.runtime.ui_state, "basic_mode");
+    assert.equal(data.outcome_type, "clarify");
     assert.equal(data.sources.length, 0);
     assert.match(data.answer, /三个动作|截止时间/);
     assert.doesNotMatch(data.answer, /没有足够依据|无法确认/);
@@ -156,6 +157,41 @@ test("unmatched questions fall back to a useful framework when the model is not 
       if (value == null) delete process.env[key];
       else process.env[key] = value;
     }
+  }
+});
+
+test("clear out-of-scope requests are redirected without calling a model", async () => {
+  const previous = process.env.ADVISOR_PUBLIC_BETA;
+  const originalFetch = globalThis.fetch;
+  process.env.ADVISOR_PUBLIC_BETA = "1";
+  let called = false;
+  try {
+    globalThis.fetch = async () => { called = true; throw new Error("must not call model"); };
+    const file = pathToFileURL(path.join(root, "api/advisor.js")).href;
+    const mod = await import(`${file}?t=${Date.now()}-${Math.random()}`);
+    const out = { statusCode: 0, body: "" };
+    const res = {
+      status(code) { out.statusCode = code; return this; },
+      setHeader() {},
+      end(body) { out.body = body || ""; },
+      write() {},
+    };
+    await mod.default({
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.96" },
+      body: { text: "帮我写一首关于海边的诗", lang: "zh" },
+      query: {},
+      on() {},
+    }, res);
+    const data = JSON.parse(out.body);
+    assert.equal(called, false);
+    assert.equal(data.intent, "out_of_scope");
+    assert.equal(data.outcome_type, "clarify");
+    assert.equal(data.runtime.source, "out_of_scope");
+    assert.equal(data.links.some((item) => item.type === "contact"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previous == null) delete process.env.ADVISOR_PUBLIC_BETA; else process.env.ADVISOR_PUBLIC_BETA = previous;
   }
 });
 
@@ -177,6 +213,7 @@ test("unmatched questions reach the general model path when the model is configu
     globalThis.fetch = async (_url, init) => {
       const body = JSON.parse(init.body);
       assert.match(body.messages[0].content, /运用自身能力直接回答/);
+      assert.match(body.messages[1].content, /参考日期：2026-11-20/);
       return {
         ok: true,
         status: 200,
@@ -210,19 +247,92 @@ test("unmatched questions reach the general model path when the model is configu
     await mod.default({
       method: "POST",
       headers: { "x-forwarded-for": "198.51.100.92" },
-      body: { text: "这个完全没有收录的新要求应该怎么判断？", lang: "zh" },
+      body: { text: "这个完全没有收录的新要求应该怎么判断？", lang: "zh", asOf: "2026-11-20" },
       query: {},
       on() {},
     }, res);
     const data = JSON.parse(out.body);
     assert.equal(out.statusCode, 200);
     assert.equal(data.answer_mode, "general_model");
+    assert.equal(data.outcome_type, "answer");
     assert.equal(data.runtime.source, "general_model");
     assert.equal(data.runtime.model_configured, true);
     assert.equal(data.runtime.ui_state, "ok");
     assert.equal(data.runtime.degradation_reason, "no_published_sources");
     assert.equal(data.sources.length, 0);
     assert.match(data.answer, /适用辖区/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const [key, value] of Object.entries({
+      ADVISOR_PUBLIC_BETA: previous.beta,
+      ADVISOR_MODEL_ENABLED: previous.enabled,
+      ADVISOR_OPENAI_API_KEY: previous.key,
+      ADVISOR_OPENAI_BASE_URL: previous.base,
+      ADVISOR_OPENAI_API_MODE: previous.mode,
+    })) {
+      if (value == null) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
+test("stale model reference dates degrade to a safe actionable result", async () => {
+  const previous = {
+    beta: process.env.ADVISOR_PUBLIC_BETA,
+    enabled: process.env.ADVISOR_MODEL_ENABLED,
+    key: process.env.ADVISOR_OPENAI_API_KEY,
+    base: process.env.ADVISOR_OPENAI_BASE_URL,
+    mode: process.env.ADVISOR_OPENAI_API_MODE,
+  };
+  const originalFetch = globalThis.fetch;
+  process.env.ADVISOR_PUBLIC_BETA = "1";
+  process.env.ADVISOR_MODEL_ENABLED = "1";
+  process.env.ADVISOR_OPENAI_API_KEY = "sk-test";
+  process.env.ADVISOR_OPENAI_BASE_URL = "https://aiberm.com/v1";
+  process.env.ADVISOR_OPENAI_API_MODE = "chat";
+  try {
+    globalThis.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [{
+          finish_reason: "stop",
+          message: {
+            content: JSON.stringify({
+              intent: "general_guidance",
+              answer: "参考时点为 2025 年，可以直接使用旧规则。",
+              confidence: "medium",
+              next_question: null,
+              primary_service_id: "cbam",
+              secondary_service_id: null,
+              handoff: "none",
+            }),
+          },
+        }],
+      }),
+    });
+    const file = pathToFileURL(path.join(root, "api/advisor.js")).href;
+    const mod = await import(`${file}?t=${Date.now()}-${Math.random()}`);
+    const out = { statusCode: 0, body: "" };
+    const res = {
+      status(code) { out.statusCode = code; return this; },
+      setHeader() {},
+      end(body) { out.body = body || ""; },
+      write() {},
+    };
+    await mod.default({
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.97" },
+      body: { text: "这个新要求应该怎么判断？", lang: "zh", asOf: "2026-11-20" },
+      query: {},
+      on() {},
+    }, res);
+    const data = JSON.parse(out.body);
+    assert.equal(out.statusCode, 200);
+    assert.equal(data.runtime.source, "actionable_fallback");
+    assert.equal(data.runtime.degradation_reason, "stale_reference_date");
+    assert.equal(data.outcome_type, "clarify");
+    assert.doesNotMatch(data.answer, /2025|旧规则/);
   } finally {
     globalThis.fetch = originalFetch;
     for (const [key, value] of Object.entries({

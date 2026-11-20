@@ -176,6 +176,7 @@ export function buildGroundedFallback(hits, lang) {
   return {
     intent: "knowledge_retrieval",
     answer_mode: "retrieval_model",
+    outcome_type: "answer",
     answer,
     confidence: "medium",
     service_matches: services.slice(0, 2),
@@ -209,6 +210,7 @@ export function stopWithoutSources(lang) {
   return {
     intent: "unresolved",
     answer_mode: "fallback",
+    outcome_type: "clarify",
     answer: lang === "en"
       ? "Here is a useful starting point: identify who is asking, the exact file or decision they need, and the deadline. Keep the original email, template or screenshot, then list what you already have and what is missing. Share any one of those details and I can turn it into a more specific action list."
       : "可以先从三个动作开始：确认是谁提出要求、具体要什么文件或判断、截止时间是什么；保留原始邮件、模板或截图；再列出已有资料和缺口。你补充其中任意一项，我就可以继续整理成更具体的行动清单。",

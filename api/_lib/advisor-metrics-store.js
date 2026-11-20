@@ -10,6 +10,7 @@ const SOURCES = new Set([
   "actionable_fallback",
   "no_sources",
   "privacy_guard",
+  "out_of_scope",
   "error",
   "beta_disabled",
 ]);
