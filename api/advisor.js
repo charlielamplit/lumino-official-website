@@ -110,6 +110,42 @@ function unavailablePayload(lang, reason = "server_error") {
   return result;
 }
 
+function advisorUpstreamUrl() {
+  const value = String(process.env.ADVISOR_UPSTREAM_URL || "").trim();
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url.origin : "";
+  } catch (_) {
+    return "";
+  }
+}
+
+async function resolveUpstreamQuestion(request, signal) {
+  const base = advisorUpstreamUrl();
+  if (!base) return null;
+  const response = await fetch(`${base}/api/advisor`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(request),
+    signal,
+  });
+  const payload = await response.json();
+  if (!response.ok || !payload?.answer) throw new Error(`advisor_upstream_${response.status}`);
+  const { ok: _ok, runtime = {}, ...result } = payload;
+  return {
+    result,
+    source: runtime.source || result.answer_mode || "actionable_fallback",
+    model: {
+      tier: runtime.model_tier || null,
+      storage_policy: runtime.storage_policy,
+      store_requested: runtime.store_requested,
+    },
+    modelAttempted: Boolean(runtime.model_configured),
+    modelFailed: Boolean(runtime.degradation_reason?.startsWith("model_")),
+  };
+}
+
 async function resolveOpenQuestion(request, signal) {
   const hits = retrievePublishedKnowledge({
     text: request.text,
@@ -118,6 +154,22 @@ async function resolveOpenQuestion(request, signal) {
     limit: 3,
     serviceId: request.context?.serviceId || "",
   });
+  if (advisorUpstreamUrl()) {
+    try {
+      return await resolveUpstreamQuestion(request, signal);
+    } catch (error) {
+      console.error("[lumino-advisor] upstream failed", error?.message || error);
+      const result = hits.length ? buildGroundedFallback(hits, request.lang) : stopWithoutSources(request.lang);
+      result.degradation_reason = "upstream_error";
+      result.ui_state = "basic_mode";
+      return {
+        result,
+        source: hits.length ? "retrieval_grounded" : "actionable_fallback",
+        modelAttempted: true,
+        modelFailed: true,
+      };
+    }
+  }
   if (!hits.length) {
     if (modelConfigured()) {
       try {
@@ -290,7 +342,7 @@ export default async function handler(request, response) {
       runtime: {
         source,
         surface: sanitized.request.surface,
-        model_configured: modelConfigured(),
+        model_configured: modelConfigured() || Boolean(advisorUpstreamUrl()),
         model_tier: model?.tier || null,
         // Provider retention: capability-based. Do not advertise store:false on third-party gateways.
         storage_policy: model?.storage_policy || flags.storage_policy,

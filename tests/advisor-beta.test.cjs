@@ -330,6 +330,109 @@ test("portal free text bypasses public fixed routing and uses contextual model o
   }
 });
 
+test("portal may forward only sanitized open questions to an HTTPS Advisor upstream", async () => {
+  const previous = {
+    beta: process.env.ADVISOR_PUBLIC_BETA,
+    upstream: process.env.ADVISOR_UPSTREAM_URL,
+  };
+  const originalFetch = globalThis.fetch;
+  process.env.ADVISOR_PUBLIC_BETA = "1";
+  process.env.ADVISOR_UPSTREAM_URL = "https://intl.luminoyou.com/path-is-ignored";
+  let calls = 0;
+  try {
+    globalThis.fetch = async (url, init) => {
+      calls += 1;
+      assert.equal(url, "https://intl.luminoyou.com/api/advisor");
+      const body = JSON.parse(init.body);
+      assert.equal(body.surface, "portal");
+      assert.equal(body.context.serviceId, "cbam");
+      assert.equal(body.context.tenantId, undefined);
+      assert.equal(body.context.secret, undefined);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          ok: true,
+          answer_mode: "general_model",
+          answer: "先确认产品、期间和交付用途。",
+          confidence: "medium",
+          sources: [],
+          runtime: {
+            source: "general_model",
+            model_configured: true,
+            model_tier: "luna",
+            storage_policy: "provider_contract_required",
+            store_requested: false,
+          },
+        }),
+      };
+    };
+    const file = pathToFileURL(path.join(root, "api/advisor.js")).href;
+    const mod = await import(`${file}?t=${Date.now()}-${Math.random()}`);
+    const out = { statusCode: 0, body: "" };
+    const res = {
+      status(code) { out.statusCode = code; return this; },
+      setHeader() {},
+      end(body) { out.body = body || ""; },
+      write() {},
+    };
+    await mod.default({
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.94" },
+      body: {
+        text: "这个季度应该先准备什么？",
+        lang: "zh",
+        surface: "portal",
+        context: { serviceId: "cbam", tenantId: "must-not-forward", secret: "must-not-forward" },
+      },
+      query: {},
+      on() {},
+    }, res);
+    const data = JSON.parse(out.body);
+    assert.equal(calls, 1);
+    assert.equal(out.statusCode, 200);
+    assert.equal(data.runtime.source, "general_model");
+    assert.equal(data.runtime.model_tier, "luna");
+    assert.match(data.answer, /产品/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previous.beta == null) delete process.env.ADVISOR_PUBLIC_BETA; else process.env.ADVISOR_PUBLIC_BETA = previous.beta;
+    if (previous.upstream == null) delete process.env.ADVISOR_UPSTREAM_URL; else process.env.ADVISOR_UPSTREAM_URL = previous.upstream;
+  }
+});
+
+test("sensitive portal input is rejected locally before an Advisor upstream call", async () => {
+  const previous = process.env.ADVISOR_UPSTREAM_URL;
+  const originalFetch = globalThis.fetch;
+  process.env.ADVISOR_UPSTREAM_URL = "https://intl.luminoyou.com";
+  let called = false;
+  try {
+    globalThis.fetch = async () => { called = true; throw new Error("must not call upstream"); };
+    const file = pathToFileURL(path.join(root, "api/advisor.js")).href;
+    const mod = await import(`${file}?t=${Date.now()}-${Math.random()}`);
+    const out = { statusCode: 0, body: "" };
+    const res = {
+      status(code) { out.statusCode = code; return this; },
+      setHeader() {},
+      end(body) { out.body = body || ""; },
+      write() {},
+    };
+    await mod.default({
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.95" },
+      body: { text: "请处理 13800138000", lang: "zh", surface: "portal" },
+      query: {},
+      on() {},
+    }, res);
+    const data = JSON.parse(out.body);
+    assert.equal(called, false);
+    assert.equal(data.runtime.source, "privacy_guard");
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previous == null) delete process.env.ADVISOR_UPSTREAM_URL; else process.env.ADVISOR_UPSTREAM_URL = previous;
+  }
+});
+
 test("advisor API disables when public beta is off", async () => {
   const prev = process.env.ADVISOR_PUBLIC_BETA;
   process.env.ADVISOR_PUBLIC_BETA = "0";
