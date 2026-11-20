@@ -16,6 +16,7 @@ test("production workflow deploys one immutable main SHA to both environments", 
   assert.match(workflow, /timeout-minutes: 25/);
   assert.match(workflow, /https:\/\/intl\.luminoyou\.com/);
   assert.match(workflow, /Verify Vercel Advisor model/);
+  assert.match(workflow, /Confirm Vercel production SHA[\s\S]*Checkout exact release[\s\S]*Verify Vercel Advisor model/);
   assert.doesNotMatch(workflow, /branches: \[server\]/);
 });
 
