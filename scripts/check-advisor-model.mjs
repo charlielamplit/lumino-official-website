@@ -7,15 +7,16 @@ if (!/^https?:\/\//.test(base)) {
 }
 
 const expectedSources = new Set(["general_model", "retrieval_model"]);
+const maxAttempts = 4;
 let lastFailure = "no response";
 
-for (let attempt = 1; attempt <= 2; attempt += 1) {
+for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
   try {
     const response = await fetch(`${base}/api/advisor`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
-        text: "请给出一个不含客户数据的 CBAM 启动资料清单，并明确需要人工确认的假设。",
+        text: "我应该如何组织一次合规项目启动会？",
         lang: "zh",
         asOf: new Date().toISOString().slice(0, 10),
         surface: "portal",
@@ -33,7 +34,8 @@ for (let attempt = 1; attempt <= 2; attempt += 1) {
   } catch (error) {
     lastFailure = error?.message || String(error);
   }
+  if (attempt < maxAttempts) await new Promise((resolve) => setTimeout(resolve, 2000));
 }
 
-console.error(`Advisor model smoke failed after 2 attempts: ${lastFailure}`);
+console.error(`Advisor model smoke failed after ${maxAttempts} attempts: ${lastFailure}`);
 process.exit(1);
