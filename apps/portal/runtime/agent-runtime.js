@@ -282,14 +282,23 @@
       const response = await fetch("/api/advisor", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ text: q, lang: "zh", asOf: "2026-11-16", history, taskMode: options.mode || "ask", context: state.agentContext || syncAgentContext() }),
+        body: JSON.stringify({
+          text: q,
+          lang: "zh",
+          asOf: new Date().toISOString().slice(0, 10),
+          surface: "portal",
+          history,
+          taskMode: options.mode || "ask",
+          context: state.agentContext || syncAgentContext(),
+        }),
         signal: controller.signal,
       });
       if (!response.ok) return localQuestionFallback(`http_${response.status}`);
       const payload = await response.json();
       if (!payload?.answer) return localQuestionFallback("empty_response");
       const source = payload.runtime?.source || payload.answer_mode || "advisor_api";
-      return { text: payload.answer, sourceLabel: `Agent API · ${source}`, tools: [], prop: null };
+      const sourceKind = ["general_model", "retrieval_model"].includes(source) ? "Agent 模型" : "Agent 回退";
+      return { text: payload.answer, sourceLabel: `${sourceKind} · ${source}`, tools: [], prop: null };
     } catch (error) {
       return localQuestionFallback(controller.signal.aborted ? "timeout_or_cancelled" : "network_error");
     } finally {

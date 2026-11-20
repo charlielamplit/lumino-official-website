@@ -124,6 +124,7 @@ async function resolveOpenQuestion(request, signal) {
           text: request.text,
           lang: request.lang,
           signal,
+          request,
         });
         if (generated?.answer) {
           const { runtime_model: runtimeModel, ...rest } = generated;
@@ -163,6 +164,7 @@ async function resolveOpenQuestion(request, signal) {
         lang: request.lang,
         hits,
         signal,
+        request,
       });
       if (generated?.answer && generated.sources?.length) {
         const { runtime_model: runtimeModel, _allowedUrls, ...rest } = generated;
@@ -266,10 +268,9 @@ export default async function handler(request, response) {
       result = sensitivePayload(sanitized.request.lang);
       source = "privacy_guard";
     } else {
-      result = routeDeterministic(sanitized.request);
-      result.ui_state = result.ui_state || "ok";
-      result.degradation_reason = result.degradation_reason || null;
-      if (result.answer_mode === "fallback" && sanitized.request.text) {
+      const portalOpenQuestion = sanitized.request.surface === "portal" && sanitized.request.text;
+      result = portalOpenQuestion ? null : routeDeterministic(sanitized.request);
+      if (portalOpenQuestion || (result.answer_mode === "fallback" && sanitized.request.text)) {
         const open = await resolveOpenQuestion(sanitized.request, abort.signal);
         result = open.result;
         source = open.source;
@@ -277,6 +278,8 @@ export default async function handler(request, response) {
         modelAttempted = Boolean(open.modelAttempted);
         modelFailed = Boolean(open.modelFailed);
       }
+      result.ui_state = result.ui_state || "ok";
+      result.degradation_reason = result.degradation_reason || null;
     }
 
     const latencyMs = Date.now() - started;
@@ -285,6 +288,7 @@ export default async function handler(request, response) {
       ...result,
       runtime: {
         source,
+        surface: sanitized.request.surface,
         model_configured: modelConfigured(),
         model_tier: model?.tier || null,
         // Provider retention: capability-based. Do not advertise store:false on third-party gateways.

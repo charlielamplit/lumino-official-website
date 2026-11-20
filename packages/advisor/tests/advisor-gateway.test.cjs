@@ -333,6 +333,74 @@ test("generateGeneralAnswer uses model capability when no published source match
   }
 });
 
+test("portal model prompt uses sanitized context without claiming authority or execution", async () => {
+  const previous = {
+    key: process.env.ADVISOR_OPENAI_API_KEY,
+    base: process.env.ADVISOR_OPENAI_BASE_URL,
+    mode: process.env.ADVISOR_OPENAI_API_MODE,
+    enabled: process.env.ADVISOR_MODEL_ENABLED,
+  };
+  process.env.ADVISOR_OPENAI_API_KEY = "sk-test";
+  process.env.ADVISOR_OPENAI_BASE_URL = "https://aiberm.com/v1";
+  process.env.ADVISOR_OPENAI_API_MODE = "chat";
+  process.env.ADVISOR_MODEL_ENABLED = "1";
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async (_url, init) => {
+      const body = JSON.parse(init.body);
+      assert.match(body.messages[0].content, /Portal 的 CBAM 助手/);
+      assert.match(body.messages[0].content, /不得声称已读取文件、修改数据、执行工作流/);
+      assert.match(body.messages[1].content, /CASE-CBAM-2026/);
+      assert.match(body.messages[1].content, /PKG-2026-Q3/);
+      assert.match(body.messages[1].content, /assistant: 上一轮回答/);
+      assert.doesNotMatch(body.messages[1].content, /must-not-reach-model/);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ choices: [{ finish_reason: "stop", message: { content: JSON.stringify({
+          intent: "portal_context_qa",
+          answer: "当前定位到 2026 Q3 数据收集对象；先核对监测计划要求与材料缺口。",
+          confidence: "medium",
+          next_question: "需要查看哪类材料？",
+          primary_service_id: "cbam",
+          secondary_service_id: null,
+          handoff: "none",
+        }) } }] }),
+      };
+    };
+    const model = await loadModel();
+    const out = await model.generateGeneralAnswer({
+      text: "这个季度还缺什么？",
+      lang: "zh",
+      request: {
+        surface: "portal",
+        taskMode: "ask",
+        asOf: "2026-11-20",
+        history: [{ role: "assistant", text: "上一轮回答" }],
+        context: {
+          annualProjectId: "CASE-CBAM-2026",
+          serviceYear: "2026",
+          workstream: "data_collection",
+          objectRef: { type: "quarterlyPackage", id: "PKG-2026-Q3", revision: "3" },
+          period: { quarter: "Q3" },
+        },
+      },
+    });
+    assert.match(out.answer, /2026 Q3/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const [key, value] of Object.entries({
+      ADVISOR_OPENAI_API_KEY: previous.key,
+      ADVISOR_OPENAI_BASE_URL: previous.base,
+      ADVISOR_OPENAI_API_MODE: previous.mode,
+      ADVISOR_MODEL_ENABLED: previous.enabled,
+    })) {
+      if (value == null) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
 test("official responses mode may request store:false under api_no_store", async () => {
   const prev = {
     key: process.env.ADVISOR_OPENAI_API_KEY,

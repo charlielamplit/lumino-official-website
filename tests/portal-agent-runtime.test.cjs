@@ -54,7 +54,10 @@ test("预置回答有 1-4 秒延迟且选项和面板暴露完整 ARIA 状态", 
 test("未命中预置问题调用服务端 Agent API，失败时仍返回可行动反馈", () => {
   const runtime = read("apps/portal/runtime/agent-runtime.js");
   assert.match(runtime, /fetch\("\/api\/advisor"/);
-  assert.match(runtime, /Agent API ·/);
+  assert.match(runtime, /surface: "portal"/);
+  assert.match(runtime, /new Date\(\)\.toISOString\(\)\.slice\(0, 10\)/);
+  assert.match(runtime, /\["general_model", "retrieval_model"\]/);
+  assert.match(runtime, /"Agent 模型" : "Agent 回退"/);
   assert.match(runtime, /本地回退/);
   assert.match(runtime, /没有执行工作流操作/);
   assert.doesNotMatch(runtime, /OPENAI_API_KEY|ADVISOR_OPENAI_API_KEY|sk-/);

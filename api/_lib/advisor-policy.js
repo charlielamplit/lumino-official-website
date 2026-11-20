@@ -13,6 +13,30 @@ const SENSITIVE_RE = [
   /\b[A-Z]{1,2}\d{7,9}\b/, // passport-like
 ];
 
+function cleanContextValue(value, max = 120) {
+  return String(value || "").trim().slice(0, max);
+}
+
+function sanitizePortalContext(value) {
+  if (!value || typeof value !== "object") return null;
+  const year = /^20\d{2}$/.test(String(value.serviceYear || "")) ? String(value.serviceYear) : null;
+  const quarter = /^Q[1-4]$/.test(String(value.period?.quarter || "")) ? String(value.period.quarter) : null;
+  const object = value.objectRef && typeof value.objectRef === "object" ? {
+    type: cleanContextValue(value.objectRef.type, 60) || null,
+    id: cleanContextValue(value.objectRef.id) || null,
+    revision: cleanContextValue(value.objectRef.revision, 40) || null,
+  } : null;
+  return {
+    serviceId: cleanContextValue(value.serviceId, 40) || null,
+    annualProjectId: cleanContextValue(value.annualProjectId) || null,
+    serviceYear: year,
+    workstream: cleanContextValue(value.workstream, 80) || null,
+    objectRef: object?.type && object?.id ? object : null,
+    period: quarter ? { quarter } : null,
+    pageId: cleanContextValue(value.pageId, 80) || null,
+  };
+}
+
 export function detectSensitive(value) {
   const input = String(value || "");
   return SENSITIVE_RE.some((pattern) => pattern.test(input));
@@ -46,6 +70,9 @@ export function sanitizeRequest(body = {}) {
   const topicId = String(body.topicId || "").trim();
   const replyId = String(body.replyId || "").trim();
   const asOf = String(body.asOf || "").trim();
+  const surface = body.surface === "portal" ? "portal" : "public";
+  const taskMode = surface === "portal" && body.taskMode === "draft" ? "draft" : "ask";
+  const context = surface === "portal" ? sanitizePortalContext(body.context) : null;
 
   if (text.length > MAX_INPUT_CHARS) errors.push("input_too_long");
   if (topicId.length > 80) errors.push("topic_invalid");
@@ -61,7 +88,7 @@ export function sanitizeRequest(body = {}) {
     }))
     .filter((item) => item.text);
 
-  const joined = [text, ...history.map((item) => item.text)].join("\n");
+  const joined = [text, ...history.map((item) => item.text), JSON.stringify(context || {})].join("\n");
   const sensitive = detectSensitive(joined);
 
   return {
@@ -75,6 +102,9 @@ export function sanitizeRequest(body = {}) {
       replyId,
       asOf,
       history,
+      surface,
+      taskMode,
+      context,
     },
   };
 }
