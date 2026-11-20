@@ -143,14 +143,15 @@ function userPrompt(lang, text, sourcesBlock, grounded = true, request = {}) {
   const historyBlock = portal
     ? (request.history || []).map((item) => `${item.role}: ${item.text}`).join("\n") || "(none)"
     : "";
+  const referenceDate = request.asOf || new Date().toISOString().slice(0, 10);
   const portalBlock = portal
     ? (lang === "en"
-      ? `Portal context (untrusted orientation only):\n${contextBlock}\n\nRecent conversation:\n${historyBlock}\n\nMode: ${request.taskMode || "ask"}\nReference date: ${request.asOf || "not supplied"}\n\n`
-      : `门户上下文（仅作非权威定位）：\n${contextBlock}\n\n最近对话：\n${historyBlock}\n\n模式：${request.taskMode || "ask"}\n参考日期：${request.asOf || "未提供"}\n\n`)
+      ? `Portal context (untrusted orientation only):\n${contextBlock}\n\nRecent conversation:\n${historyBlock}\n\nMode: ${request.taskMode || "ask"}\n\n`
+      : `门户上下文（仅作非权威定位）：\n${contextBlock}\n\n最近对话：\n${historyBlock}\n\n模式：${request.taskMode || "ask"}\n\n`)
     : "";
   return lang === "en"
-    ? `${portalBlock}Question:\n${text}\n\n${grounded ? `Published sources:\n${sourcesBlock}` : "No published source matched this question. Use your own capabilities and identify the basis, reference date and assumptions for any regulatory conclusion."}\n\nRespond with JSON fields: intent, answer, confidence, next_question, primary_service_id, secondary_service_id, handoff.`
-    : `${portalBlock}用户问题：\n${text}\n\n${grounded ? `已发布来源：\n${sourcesBlock}` : "没有匹配到已发布资料。请运用自身能力回答；如给出法规结论，请说明依据、参考时点和前提。"}\n\n请只返回 JSON，字段：intent, answer, confidence, next_question, primary_service_id, secondary_service_id, handoff。`;
+    ? `${portalBlock}Reference date: ${referenceDate}\n\nQuestion:\n${text}\n\n${grounded ? `Published sources:\n${sourcesBlock}` : "No published source matched this question. Use your own capabilities and identify the basis, reference date and assumptions for any regulatory conclusion."}\n\nRespond with JSON fields: intent, answer, confidence, next_question, primary_service_id, secondary_service_id, handoff.`
+    : `${portalBlock}参考日期：${referenceDate}\n\n用户问题：\n${text}\n\n${grounded ? `已发布来源：\n${sourcesBlock}` : "没有匹配到已发布资料。请运用自身能力回答；如给出法规结论，请说明依据、参考时点和前提。"}\n\n请只返回 JSON，字段：intent, answer, confidence, next_question, primary_service_id, secondary_service_id, handoff。`;
 }
 
 function isTimeoutError(error) {
@@ -255,6 +256,7 @@ function buildGroundedPayload({ parsed, hits, model, mode, policy, lang = "zh", 
   return {
     intent: String(parsed.intent || "knowledge_retrieval"),
     answer_mode: "retrieval_model",
+    outcome_type: parsed.handoff === "contact" || parsed.handoff === "expert_required" ? "handoff" : "answer",
     answer: String(parsed.answer || "").trim(),
     confidence: ["high", "medium", "low"].includes(parsed.confidence) ? parsed.confidence : "medium",
     service_matches: services,
@@ -302,6 +304,7 @@ function buildGeneralPayload({ parsed, model, mode, policy, lang = "zh", solFall
   return {
     intent: String(parsed.intent || "general_guidance"),
     answer_mode: "general_model",
+    outcome_type: parsed.handoff === "contact" || parsed.handoff === "expert_required" ? "handoff" : "answer",
     answer: String(parsed.answer || "").trim(),
     confidence: ["high", "medium", "low"].includes(parsed.confidence) ? parsed.confidence : "low",
     service_matches: services,

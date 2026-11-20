@@ -17,6 +17,12 @@
   let thinkTimer = null;
   let lastRequest = null;
   let lastUserLabel = null;
+  let interactionId = createInteractionId();
+
+  function createInteractionId() {
+    if (root.crypto?.randomUUID) return root.crypto.randomUUID();
+    return `adv-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  }
 
   function trackMetric(payload) {
     try {
@@ -114,11 +120,25 @@
     } catch (_) { return "#"; }
   }
 
+  function attributedUrl(item, response) {
+    const value = safeUrl(item?.url);
+    if (item?.type !== "contact" || value === "#") return value;
+    const url = new URL(value, location.origin);
+    const serviceId = String(response.service_matches?.[0]?.service_id || "").match(/^[a-z0-9_-]{1,40}$/i)?.[0];
+    const topic = String(response.topic_id || response.intent || "unresolved").match(/^[a-z0-9_-]{1,80}$/i)?.[0] || "unresolved";
+    url.searchParams.set("source", "advisor");
+    url.searchParams.set("topic", topic);
+    url.searchParams.set("interactionId", interactionId);
+    if (serviceId) url.searchParams.set("serviceId", serviceId);
+    return `${url.pathname}${url.search}${url.hash}`;
+  }
+
   function loadState() {
     try {
       const state = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
       if (state && Array.isArray(state.history)) {
         history = state.history.filter((item) => item?.topicId && item?.response?.answer_mode).slice(-8);
+        if (/^[a-z0-9-]{8,80}$/i.test(state.interactionId || "")) interactionId = state.interactionId;
       }
     } catch (_) { history = []; }
   }
@@ -126,7 +146,7 @@
   function saveState() {
     try {
       const safeHistory = history.filter((item) => item.topicId && !item.freeText).slice(-8);
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ history: safeHistory }));
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({ history: safeHistory, interactionId }));
     } catch (_) {}
   }
 
@@ -180,7 +200,7 @@
       `<button class="advisor-reply" type="button" data-topic-id="${escapeHtml(response.topic_id || "")}" data-reply-id="${escapeHtml(item.id)}">${escapeHtml(item.label)}</button>`
     ).join("");
     const links = (response.links || []).map((item, index) =>
-      `<a class="advisor-link ${index === 0 ? "advisor-link--primary" : ""}" href="${escapeHtml(safeUrl(item.url))}" data-advisor-cta="${escapeHtml(item.type || "link")}" data-answer-mode="${escapeHtml(response.answer_mode || "")}">${escapeHtml(item.label)}</a>`
+      `<a class="advisor-link ${index === 0 ? "advisor-link--primary" : ""}" href="${escapeHtml(attributedUrl(item, response))}" data-advisor-cta="${escapeHtml(item.type || "link")}" data-answer-mode="${escapeHtml(response.answer_mode || "")}">${escapeHtml(item.label)}</a>`
     ).join("");
     const sources = (response.sources || []).map((item) =>
       `<a href="${escapeHtml(safeUrl(item.url))}">${escapeHtml(item.title)} ↗</a>`
@@ -256,6 +276,7 @@
   function unavailableLocal(reason) {
     const response = root.LuminoAdvisor.route({ text: "", lang: lang() });
     response.answer_mode = "fallback";
+    response.outcome_type = "handoff";
     response.intent = "service_unavailable";
     response.ui_state = "unavailable";
     response.degradation_reason = reason;
@@ -397,6 +418,7 @@
         if (printed) {
           return {
             answer_mode: "fallback",
+            outcome_type: "answer",
             answer: printed,
             ui_state: "ok",
             suggested_replies: [],
@@ -449,6 +471,7 @@
     if (userLabel) thread.insertAdjacentHTML("beforeend", `<article class="advisor-turn advisor-turn--user"><p>${escapeHtml(userLabel)}</p></article>`);
     const pending = {
       answer_mode: "fallback",
+      outcome_type: "clarify",
       answer: "",
       ui_state: "ok",
       suggested_replies: [],
@@ -545,6 +568,7 @@
     stopActive("reset");
     clearPrintTimer();
     history = [];
+    interactionId = createInteractionId();
     lastRequest = null;
     try { sessionStorage.removeItem(SESSION_KEY); } catch (_) {}
     panel.querySelector(".advisor-thread").innerHTML = initialMarkup();

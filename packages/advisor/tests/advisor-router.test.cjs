@@ -19,6 +19,7 @@ test("each initial topic returns a valid fixed response without a model", () => 
   for (const topic of advisor.getTopics("zh")) {
     const response = advisor.route({ topicId: topic.id, lang: "zh", asOf: AS_OF });
     assert.equal(response.answer_mode, "fixed");
+    assert.equal(response.outcome_type, "answer");
     assert.equal(response.confidence, "high");
     assert.equal(schema.validateResponse(response).ok, true);
     assert.ok(response.answer.length > 20);
@@ -37,6 +38,7 @@ test("CN Code questions route to tools and never claim formal classification", (
   for (const input of ["我想查 CN Code", "HS code lookup", "TARIC 怎么查"]) {
     const response = advisor.route({ text: input, lang: "zh", asOf: AS_OF });
     assert.equal(response.answer_mode, "tool_route");
+    assert.equal(response.outcome_type, "tool");
     assert.equal(response.intent, "cn_code_lookup");
     assert.equal(response.handoff, "expert_required");
     assert.deepEqual(response.links.map((item) => item.url), [
@@ -100,6 +102,7 @@ test("every visible preset reply has a bilingual deterministic terminal answer",
 test("unknown questions provide a safe action framework instead of inventing facts", () => {
   const response = advisor.route({ text: "我有一个完全未发布的特殊问题", lang: "zh", asOf: AS_OF });
   assert.equal(response.answer_mode, "fallback");
+  assert.equal(response.outcome_type, "clarify");
   assert.equal(response.confidence, "low");
   assert.equal(response.handoff, "contact");
   assert.equal(response.sources.length, 0);

@@ -20,6 +20,21 @@ test("sanitizeRequest rejects oversized input and flags sensitive content", asyn
   assert.equal(sensitive.request.text, "");
 });
 
+test("policy blocks clear creative requests and defaults the reference date", async () => {
+  const policy = await loadPolicy();
+  const result = policy.sanitizeRequest({ text: "帮我写一首关于海边的诗", lang: "zh" });
+  assert.equal(result.outOfScope, true);
+  assert.match(result.request.asOf, /^20\d{2}-\d{2}-\d{2}$/);
+  assert.equal(policy.detectOutOfScope("How should I prepare CBAM data?"), false);
+});
+
+test("policy detects stale explicit reference dates only", async () => {
+  const policy = await loadPolicy();
+  assert.equal(policy.hasStaleReferenceDate("参考时点为 2025 年。", "2026-11-20"), true);
+  assert.equal(policy.hasStaleReferenceDate("参考时点为 2026 年。", "2026-11-20"), false);
+  assert.equal(policy.hasStaleReferenceDate("2025 年产生了一项历史记录。", "2026-11-20"), false);
+});
+
 test("sanitizeRequest keeps only the portal context needed for model orientation", async () => {
   const policy = await loadPolicy();
   const result = policy.sanitizeRequest({
