@@ -25,8 +25,8 @@ Secrets：
 
 - `DEPLOY_DIR`，默认 `/var/www/lumino`
 - `DEPLOY_SERVICE`，默认 `lumino-site`
-- `VERCEL_PRODUCTION_URL`，默认 `https://lumino-official-website.vercel.app`
-- `PUBLIC_EDGE_URL`，默认 `http://DEPLOY_HOST`，仅检查 Nginx 首跳可达
+- `VERCEL_PRODUCTION_URL`，默认 `https://intl.luminoyou.com`
+- `PUBLIC_EDGE_URL`，国内备案完成后设为 `https://www.luminoyou.cn`；备案期间可保留 `http://DEPLOY_HOST`，仅检查 Nginx 首跳可达
 - `TENCENT_HEALTH_URL`，默认 `http://127.0.0.1:4174`，通过 SSH 在服务器本机检查应用
 
 ## 正常发布
@@ -35,7 +35,7 @@ Secrets：
 2. `dev → main` PR 完成发布审查并合并。
 3. Vercel 自动发布 `main`。
 4. `Deploy Production` 确认 Vercel SHA 后发布腾讯云。
-5. 工作流从公网检查 Vercel，从腾讯服务器本机检查首页、官网、Calculator、Portal、关键 API 与 `/api/release`。GitHub Runner 到中国域名的跨境连接不作为应用健康判据。
+5. 工作流从公网检查 Vercel 与真实模型，从腾讯服务器本机检查首页、官网、Calculator、Portal、关键 API、真实模型与 `/api/release`。GitHub Runner 到中国域名的跨境连接不作为应用健康判据。
 
 ## 本地受控发布
 

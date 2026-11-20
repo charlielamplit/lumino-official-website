@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       RELEASE_SHA: ${{ needs.quality.outputs.release_sha }}
-      VERCEL_PRODUCTION_URL: ${{ vars.VERCEL_PRODUCTION_URL || 'https://lumino-official-website.vercel.app' }}
+      VERCEL_PRODUCTION_URL: ${{ vars.VERCEL_PRODUCTION_URL || 'https://intl.luminoyou.com' }}
     steps:
       - name: Wait for Vercel production
         run: |
@@ -116,6 +116,9 @@ jobs:
           done
           echo "Vercel did not publish $RELEASE_SHA within 10 minutes" >&2
           exit 1
+
+      - name: Verify Vercel Advisor model
+        run: node scripts/check-advisor-model.mjs "${VERCEL_PRODUCTION_URL%/}"
 
   deploy-tencent:
     name: Deploy the same SHA to Tencent
@@ -152,7 +155,7 @@ jobs:
 
       - name: Compare production release SHAs
         env:
-          VERCEL_PRODUCTION_URL: ${{ vars.VERCEL_PRODUCTION_URL || 'https://lumino-official-website.vercel.app' }}
+          VERCEL_PRODUCTION_URL: ${{ vars.VERCEL_PRODUCTION_URL || 'https://intl.luminoyou.com' }}
         run: |
           vercel="$(curl -fsS "${VERCEL_PRODUCTION_URL%/}/api/release")"
           [[ "$vercel" == *"\"releaseSha\":\"$RELEASE_SHA\""* ]]

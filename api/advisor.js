@@ -116,6 +116,7 @@ async function resolveOpenQuestion(request, signal) {
     lang: request.lang,
     asOf: request.asOf,
     limit: 3,
+    serviceId: request.context?.serviceId || "",
   });
   if (!hits.length) {
     if (modelConfigured()) {

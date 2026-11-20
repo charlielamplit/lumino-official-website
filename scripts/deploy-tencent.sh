@@ -78,6 +78,7 @@ copy_runtime_dir scripts/db scripts/db
 mkdir -p "$stage/scripts"
 cp "$root/scripts/local-site-server.mjs" "$stage/scripts/local-site-server.mjs"
 cp "$root/scripts/tencent-activate-release.sh" "$stage/scripts/tencent-activate-release.sh"
+cp "$root/scripts/check-advisor-model.mjs" "$stage/scripts/check-advisor-model.mjs"
 cp "$root/vercel.json" "$stage/vercel.json"
 cp "$root/index.html" "$stage/index.html"
 for manifest in package.json package-lock.json; do
@@ -185,6 +186,8 @@ release_response="$(curl -fsS --connect-timeout 5 --max-time 20 "$health_base/ap
   exit 1
 }
 echo "Service smoke passed: Tencent is serving $release_sha"
+
+node "$deploy_dir/scripts/check-advisor-model.mjs" "$health_base"
 REMOTE_SMOKE
 then
   smoke_failed=true

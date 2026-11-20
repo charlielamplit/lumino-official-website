@@ -59,6 +59,19 @@ test("grounded fallback always attaches published sources", async () => {
   assert.doesNotMatch(grounded.answer, PROCESS_LEAK);
 });
 
+test("portal service context prevents cross-service retrieval", async () => {
+  const retrieval = await loadRetrieval();
+  const hits = retrieval.retrievePublishedKnowledge({
+    text: "供应商没有产品级电耗分摊规则，应该如何补数和留证？",
+    lang: "zh",
+    asOf: "2026-11-20",
+    serviceId: "cbam",
+  });
+  assert.ok(hits.length >= 1);
+  assert.ok(hits.every((hit) => hit.serviceId === "cbam"));
+  assert.doesNotMatch(hits.map((hit) => hit.title).join(" "), /PPWR/);
+});
+
 async function loadModel() {
   const file = pathToFileURL(path.resolve(__dirname, "../../../api/_lib/advisor-model.js")).href;
   return import(file);

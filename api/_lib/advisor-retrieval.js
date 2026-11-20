@@ -112,13 +112,14 @@ export function clearRetrievalCache() {
   cache = null;
 }
 
-export function retrievePublishedKnowledge({ text = "", lang = "zh", asOf = "", limit = 3 } = {}) {
+export function retrievePublishedKnowledge({ text = "", lang = "zh", asOf = "", limit = 3, serviceId = "" } = {}) {
   const queryTokens = tokenize(text);
   if (!queryTokens.length) return [];
   const locale = lang === "en" ? "en" : "zh";
   const scored = [];
   for (const doc of loadCorpus()) {
     if (doc.lang !== locale) continue;
+    if (serviceId && doc.serviceId !== serviceId) continue;
     if (!isFresh({ status: doc.status, updatedAt: doc.updatedAt }, asOf)) continue;
     let score = 0;
     for (const token of queryTokens) {
