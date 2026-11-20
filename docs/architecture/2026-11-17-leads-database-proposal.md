@@ -2,7 +2,7 @@
 
 **日期**：2026-11-17
 **状态**：已完成架构初审 / 修订后可批准
-**范围**：腾讯云轻量（国内站 `www.luminoyou.com`）优先；Vercel 国际站本轮不做双写，但上线前必须拍板其留资是关闭还是转发到受控 API
+**范围**：腾讯云轻量（国内站 `www.luminoyou.cn`）优先；Vercel 国际站（`intl.luminoyou.com`）本轮不做双写，但上线前必须拍板其留资是关闭还是转发到受控 API
 **关联**：`docs/api/leads-inbox.md`、`api/_lib/leads-store.js`、`docs/ops/2026-11-16-next-phase-git-cicd-wecom.md`
 
 ### 评审结论（2026-11-17）

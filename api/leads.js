@@ -92,7 +92,7 @@ function isWecomWebhook(url) {
 }
 
 function buildWecomMarkdown(lead) {
-  const portalBase = String(process.env.PUBLIC_SITE_URL || "").replace(/\/$/, "") || "https://www.luminoyou.com";
+  const portalBase = String(process.env.PUBLIC_SITE_URL || "").replace(/\/$/, "") || "https://www.luminoyou.cn";
   const services = (lead.services || []).join("、") || "—";
   return [
     `## 新线索 <font color="warning">${lead.id}</font>`,
