@@ -14,6 +14,8 @@ import {
 const LUNA = process.env.ADVISOR_MODEL_LUNA || "gpt-4.1-mini";
 // Prefer a fast Sol by default; slow Sol models cause Beta No-Go under client budget.
 const SOL = process.env.ADVISOR_MODEL_SOL || "deepseek/deepseek-v4-flash";
+// Luna is opt-in while the production gateway route is timing out. #104
+const LUNA_ENABLED = process.env.ADVISOR_LUNA_ENABLED === "1";
 const CONTACT_URL = "/apps/site/contact.html";
 
 function apiKey() {
@@ -48,7 +50,9 @@ export function chooseModel({
   hits = [],
   luna = LUNA,
   sol = SOL,
+  lunaEnabled = LUNA_ENABLED,
 } = {}) {
+  if (!lunaEnabled) return { id: sol, tier: "sol" };
   const long = String(text).length > 280;
   const multi = hits.length >= 3;
   const complex = /对比|比较|差异|区别|and also|compare|versus|vs\./i.test(text);

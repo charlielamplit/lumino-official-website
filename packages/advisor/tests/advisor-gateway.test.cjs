@@ -94,20 +94,24 @@ test("classifyUpstreamHttpError distinguishes auth, rate limit, and upstream fai
   assert.match(gw.classifyUpstreamHttpError(405, "openai_error"), /model_http_405/);
 });
 
-test("chooseModel routes Luna vs Sol", async () => {
+test("chooseModel keeps Luna opt-in while its production route is unstable", async () => {
   const model = await loadModel();
   const luna = "luna-test-model";
   const sol = "sol-test-model";
-  assert.deepEqual(model.chooseModel({ text: "What is CBAM?", hits: [{ id: 1 }], luna, sol }), {
+  assert.deepEqual(model.chooseModel({ text: "What is CBAM?", hits: [{ id: 1 }], luna, sol, lunaEnabled: true }), {
     id: luna,
     tier: "luna",
   });
-  assert.deepEqual(model.chooseModel({ text: "Please compare CBAM versus PCF", hits: [{ id: 1 }], luna, sol }), {
+  assert.deepEqual(model.chooseModel({ text: "What is CBAM?", hits: [{ id: 1 }], luna, sol, lunaEnabled: false }), {
     id: sol,
     tier: "sol",
   });
-  assert.equal(model.chooseModel({ text: "x", hits: [{}, {}, {}], luna, sol }).tier, "sol");
-  assert.equal(model.chooseModel({ text: "a".repeat(281), hits: [{ id: 1 }], luna, sol }).tier, "sol");
+  assert.deepEqual(model.chooseModel({ text: "Please compare CBAM versus PCF", hits: [{ id: 1 }], luna, sol, lunaEnabled: true }), {
+    id: sol,
+    tier: "sol",
+  });
+  assert.equal(model.chooseModel({ text: "x", hits: [{}, {}, {}], luna, sol, lunaEnabled: true }).tier, "sol");
+  assert.equal(model.chooseModel({ text: "a".repeat(281), hits: [{ id: 1 }], luna, sol, lunaEnabled: true }).tier, "sol");
 });
 
 test("public flags expose storage_policy instead of blanket store:false", async () => {
@@ -148,7 +152,7 @@ test("generateGroundedAnswer maps gateway 401/429/500 and does not send store:fa
     mode: process.env.ADVISOR_OPENAI_API_MODE,
     luna: process.env.ADVISOR_MODEL_LUNA,
     sol: process.env.ADVISOR_MODEL_SOL,
-    sol: process.env.ADVISOR_MODEL_SOL,
+    lunaEnabled: process.env.ADVISOR_LUNA_ENABLED,
     enabled: process.env.ADVISOR_MODEL_ENABLED,
   };
   process.env.ADVISOR_OPENAI_API_KEY = "sk-test";
@@ -156,6 +160,7 @@ test("generateGroundedAnswer maps gateway 401/429/500 and does not send store:fa
   process.env.ADVISOR_OPENAI_API_MODE = "chat";
   process.env.ADVISOR_MODEL_LUNA = "luna-mock";
   process.env.ADVISOR_MODEL_SOL = "sol-mock";
+  process.env.ADVISOR_LUNA_ENABLED = "1";
   process.env.ADVISOR_MODEL_ENABLED = "1";
 
   const originalFetch = globalThis.fetch;
@@ -252,6 +257,7 @@ test("generateGroundedAnswer maps gateway 401/429/500 and does not send store:fa
       ADVISOR_OPENAI_API_MODE: prev.mode,
       ADVISOR_MODEL_LUNA: prev.luna,
       ADVISOR_MODEL_SOL: prev.sol,
+      ADVISOR_LUNA_ENABLED: prev.lunaEnabled,
       ADVISOR_MODEL_ENABLED: prev.enabled,
     })) {
       if (value == null) delete process.env[key];
