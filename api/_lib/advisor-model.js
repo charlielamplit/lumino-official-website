@@ -204,6 +204,22 @@ async function callResponsesApi({ model, key, lang, text, sourcesBlock, signal, 
 }
 
 async function callChatCompletionsApi({ model, key, lang, text, sourcesBlock, signal, grounded, request }) {
+  const body = {
+    model: model.id,
+    temperature: 0.2,
+    // Compatible gateways may count hidden reasoning against this budget;
+    // 1200 previously truncated valid JSON before the closing quote/brace.
+    max_tokens: 2400,
+    messages: [
+      { role: "system", content: systemPrompt(lang, grounded, request) },
+      { role: "user", content: userPrompt(lang, text, sourcesBlock, grounded, request) },
+    ],
+  };
+  // Third-party gateways guarantee Chat Completions, but not OpenAI JSON mode.
+  // The prompts require raw JSON and parseModelJson validates the result locally.
+  if (new URL(apiBaseUrl()).hostname === "api.openai.com") {
+    body.response_format = { type: "json_object" };
+  }
   const upstream = await fetch(`${apiBaseUrl()}/chat/completions`, {
     method: "POST",
     headers: {
@@ -211,18 +227,7 @@ async function callChatCompletionsApi({ model, key, lang, text, sourcesBlock, si
       "Content-Type": "application/json",
     },
     signal,
-    body: JSON.stringify({
-      model: model.id,
-      temperature: 0.2,
-      // Compatible gateways may count hidden reasoning against this budget;
-      // 1200 previously truncated valid JSON before the closing quote/brace.
-      max_tokens: 2400,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: systemPrompt(lang, grounded, request) },
-        { role: "user", content: userPrompt(lang, text, sourcesBlock, grounded, request) },
-      ],
-    }),
+    body: JSON.stringify(body),
   });
   if (!upstream.ok) {
     const detail = await upstream.text().catch(() => "");

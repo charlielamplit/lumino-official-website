@@ -219,7 +219,7 @@ test("generateGroundedAnswer maps gateway 401/429/500 and does not send store:fa
       const body = JSON.parse(init.body);
       assert.equal(body.model, "luna-mock");
       assert.equal(body.store, undefined);
-      assert.equal(body.response_format?.type, "json_object");
+      assert.equal(body.response_format, undefined);
       return {
         ok: true,
         status: 200,
