@@ -1274,44 +1274,31 @@
       if (action === "confirm-fact") {
         if (!assertStageGate("cbam", "scope-codes").ok) return;
         try {
-          const evidenceId = `EVD-${state.year}-${state.quarter}-GAS`;
+          if (!canPerformPortalAction("cbam-confirm-quarter-data")) throw Object.assign(new Error(portalActionDenial("cbam-confirm-quarter-data")), { code: "FORBIDDEN" });
+          const request = currentIntakeRequest();
+          if (!request) throw Object.assign(new Error("当前期间没有可确认的材料请求。"), { code: "MATERIAL_REQUEST_REQUIRED" });
+          const candidate = intakeCandidateStore.latest({ requestId: request.id, tenantId: intakeTenantId, year: state.year, quarter: state.quarter });
+          if (!candidate) throw Object.assign(new Error("当前页面会话没有待确认候选，请重新上传演示账单。"), { code: "CANDIDATE_NOT_FOUND" });
+          const evidenceId = candidate.evidenceId;
           const factId = `FACT-${state.year}-${state.quarter}-GAS`;
-          const gasAssetId = `REC-HX-GAS-${state.year}${state.quarter}`;
-          const actor = { ...workflowActor(), reason: "确认江苏二厂天然气提取结果并写入企业资产池" };
-          if (!assetRegistry.get(evidenceId)) {
-            assetRegistry.register({
-              id: evidenceId, type: "evidence", status: "CONFIRMED", tenantId: "TNT-0018", ownerOrganizationId: "ORG-HX-001",
-              name: `江苏二厂 ${state.year} ${state.quarter} 天然气账单`,
-              subjectRefs: { facilityId: "FAC-JS-02" },
-              temporal: { periodStart: `${state.year}-07-01`, periodEnd: `${state.year}-09-30`, recordedAt: new Date().toISOString() },
-              payload: { fileName: `江苏二厂天然气账单_${state.year}-09.pdf`, documentType: "energy_invoice", mediaType: "application/pdf" },
-              access: { confidentiality: "sensitive", visibility: "enterprise", allowedRoles: [], metadataVisible: true },
-            }, { ...actor, role: "customer_owner", reason: "登记天然气证据资产" });
-          }
-          if (!assetRegistry.get(gasAssetId)) {
-            assetRegistry.register({
-              id: gasAssetId, type: "energyConsumption", status: "NEEDS_CONFIRMATION", tenantId: "TNT-0018", ownerOrganizationId: "ORG-HX-001",
-              name: "江苏二厂购入天然气",
-              subjectRefs: { facilityId: "FAC-JS-02" },
-              temporal: { periodStart: `${state.year}-07-01`, periodEnd: `${state.year}-09-30`, recordedAt: new Date().toISOString() },
-              payload: { metricCode: "energy.natural_gas.purchased", originalValue: "18420", originalUnit: "Nm3", normalizedValue: "18420", normalizedUnit: "Nm3", dataOrigin: "invoice" },
-              provenance: { sourceType: "agent-extraction", sourceAssetIds: [evidenceId], extractionRuleVersion: "extract-gas@1.0.0" },
-              access: { confidentiality: "sensitive", visibility: "enterprise", allowedRoles: [], metadataVisible: true },
-            }, { ...actor, role: "customer_owner", reason: "登记天然气活动数据" });
-          }
+          const gasAssetId = candidate.assetId;
+          const actor = { ...intakeActor(), reason: "确认能源账单演示提取结果并写入企业资产池" };
+          const evidence = intakeEvidenceStore.get({ evidenceId, tenantId: intakeTenantId, actor });
+          window.LuminoIntakeModel.assertConfirmAllowed({ candidate, evidence, request: { ...request, tenantId: request.metadata?.tenantId || intakeTenantId }, actor, expectedRevision: candidate.revision });
+          if (!assetRegistry.get(evidenceId) || !assetRegistry.get(gasAssetId)) throw Object.assign(new Error("候选资产不完整，请重新上传演示账单。"), { code: "INTAKE_ASSET_MISSING" });
           if (assetRegistry.get(gasAssetId)?.status !== "CONFIRMED") {
-            assetRegistry.confirm(gasAssetId, { ...actor, role: "customer_owner", basis: "核对账单账期、设施与用量" });
+            assetRegistry.confirm(gasAssetId, { ...actor, basis: "核对候选数值、单位、账期与设施" });
           }
-          const gasBindingId = `BIND-REC-GAS-CBAM-${state.year}${state.quarter}`;
-          if (!assetRegistry.bindings({ id: gasBindingId }).length) {
-            assetRegistry.bind({ id: gasBindingId, serviceId: "cbam", caseId: `CBAM-${state.year}-${state.quarter}`, assetId: gasAssetId, usagePurpose: "季度直接排放", scopeId: "FAC-JS-02" }, actor);
-            assetRegistry.confirmBinding(gasBindingId, { ...actor, role: "customer_owner", basis: "确认纳入 CBAM 季度核算" });
-          }
-          ensureWorkflowObject({ id: evidenceId, type: "evidence", status: "PARSED", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: "天然气账单", metadata: { assetId: evidenceId, activityAssetId: gasAssetId, facilityAssetId: "FAC-JS-02" } });
-          moveWorkflow(evidenceId, ["CLASSIFIED", "LINKED", "REVIEWED", "ACCEPTED"], "项目协调人确认证据的账期、设施与提取值");
-          ensureWorkflowObject({ id: factId, type: "fact", status: "MISSING", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: "天然气用量", metadata: { assetId: gasAssetId } });
-          moveWorkflow(factId, ["PROPOSED", "NEEDS_CONFIRMATION", "CONFIRMED"], "已将通过复核的证据确认为本期业务事实", { evidenceId, assetId: gasAssetId });
+          if (assetRegistry.get(evidenceId)?.status !== "CONFIRMED") assetRegistry.confirm(evidenceId, { ...actor, basis: "核对文件摘要、账期与材料请求" });
+          const gasBindingId = `BIND-${candidate.id}`;
+          if (assetRegistry.bindings({ id: gasBindingId })[0]?.status !== "CONFIRMED") assetRegistry.confirmBinding(gasBindingId, { ...actor, basis: "确认当前候选纳入 CBAM 季度核算" });
+          moveWorkflow(evidenceId, ["CLASSIFIED", "LINKED", "REVIEWED", "ACCEPTED"], "具名客户确认证据、候选和材料请求血缘", { requestId: request.id, candidateId: candidate.id, candidateRevision: candidate.revision });
+          ensureWorkflowObject({ id: factId, type: "fact", status: "MISSING", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: "天然气用量", metadata: { serviceId: "cbam" } });
+          workflowEngine.patch(factId, { metadata: { serviceId: "cbam", requestId: request.id, evidenceId, candidateId: candidate.id, candidateRevision: candidate.revision, assetId: gasAssetId, value: candidate.proposedPatch.originalValue, unit: candidate.proposedPatch.originalUnit } }, { ...workflowActor(), reason: "将当前候选版本绑定到业务事实" });
+          moveWorkflow(factId, ["PROPOSED", "NEEDS_CONFIRMATION", "CONFIRMED"], "已将通过复核的候选确认为本期业务事实", { requestId: request.id, evidenceId, candidateId: candidate.id, candidateRevision: candidate.revision, assetId: gasAssetId });
           workflowEngine.invalidateDependents(factId, { ...workflowActor(), reason: `事实 ${factId} 已确认，原当前计算版本失效` });
+          intakeCandidateStore.confirm({ candidateId: candidate.id, tenantId: intakeTenantId, expectedRevision: candidate.revision, actor });
+          workflowEngine.patch(request.id, { metadata: { ...request.metadata, evidenceId, candidateId: candidate.id, candidateRevision: candidate.revision, intakeStatus: "CONFIRMED" } }, { ...workflowActor(), reason: "材料请求完成具名确认" });
           const runId = `RUN-05-${state.year}-${state.quarter}`;
           ensureWorkflowObject({ id: runId, type: "calculationRun", status: "QUEUED", owner: "王晨", year: state.year, quarter: state.quarter, dependsOn: [factId], metadata: { rulepack: `EU-CBAM-${state.year}.1`, activityAssetId: gasAssetId } });
           moveWorkflow(runId, ["RUNNING", "SUCCEEDED", "CURRENT"], "以已确认事实创建新计算版本");
@@ -1402,7 +1389,7 @@
     }
   });
 
-  document.addEventListener("submit", (event) => {
+  document.addEventListener("submit", async (event) => {
     const activeDrawerForm = event.target.closest("[data-drawer-form]");
     if (activeDrawerForm) {
       event.preventDefault();
@@ -1576,58 +1563,42 @@
       }
       if (id === "upload-evidence") {
         const file = formData.get("file");
-        if (file && file.size > 30 * 1024 * 1024) {
-          state.actionBusy = false;
-          if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }
-          toast("文件超过 30 MB。请压缩或拆分后重试；已填写内容不会丢失。");
-          return;
-        }
-        const evidenceId = `EVD-${state.year}-${state.quarter}-GAS`;
-        const activityAssetId = `REC-HX-GAS-${state.year}${state.quarter}`;
-        const bindingId = `BIND-REC-GAS-CBAM-${state.year}${state.quarter}`;
+        const requestId = String(formData.get("requestId") || "");
+        const request = currentIntakeRequest(requestId);
         const facilityName = String(formData.get("facility") || "设施待确认");
         const facilityAsset = assetRegistry.catalog({ tenantId: "TNT-0018", role: state.role, type: "facility" }).find((item) => item.name === facilityName);
         const facilityAssetId = facilityAsset?.id || "FAC-JS-02";
-        const filename = file?.name || "demo-evidence.pdf";
         try {
+          if (!canPerformPortalAction("cbam-upload-evidence")) throw Object.assign(new Error(portalActionDenial("cbam-upload-evidence")), { code: "FORBIDDEN" });
+          window.LuminoIntakeModel.assertUploadAllowed(request, { name: file?.name, size: file?.size, year: state.year, quarter: state.quarter });
+          const actor = intakeActor();
+          const bytes = new Uint8Array(await file.arrayBuffer());
+          const evidence = await intakeEvidenceStore.put({ requestId: request.id, annualCaseId: request.metadata?.annualCaseId || `CASE-CBAM-${state.year}`, year: state.year, quarter: state.quarter, filename: file.name, mediaType: file.type || "text/plain", bytes, tenantId: intakeTenantId, actor });
+          const evidenceId = evidence.evidenceId;
           if (!assetRegistry.get(evidenceId)) {
             assetRegistry.register({
-              id: evidenceId, type: "evidence", status: "NEEDS_CONFIRMATION", tenantId: "TNT-0018", ownerOrganizationId: "ORG-HX-001",
+              id: evidenceId, type: "evidence", status: "NEEDS_CONFIRMATION", tenantId: intakeTenantId, ownerOrganizationId: "ORG-HX-001",
               name: `${facilityName} ${state.year} ${state.quarter} 能源账单`,
               subjectRefs: { facilityId: facilityAssetId },
               temporal: { periodStart: `${state.year}-07-01`, periodEnd: `${state.year}-09-30`, recordedAt: new Date().toISOString() },
-              payload: { fileName: filename, documentType: "energy_invoice", mediaType: "application/pdf", materialType: String(formData.get("type") || "能源账单") },
+              payload: { fileName: evidence.filename, documentType: "energy_invoice_demo", mediaType: evidence.mediaType, materialType: String(formData.get("type") || "能源账单"), requestId: request.id, contentSha256: evidence.contentSha256, byteLength: evidence.byteLength, extractionMode: "demo_fixture" },
               access: { confidentiality: "sensitive", visibility: "enterprise", allowedRoles: [], metadataVisible: true },
             }, { ...workflowActor(), reason: "上传证据文件进入企业资产池" });
           }
-          ensureWorkflowObject({ id: evidenceId, type: "evidence", status: "UPLOADED", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: facilityName, metadata: { filename, materialType: String(formData.get("type") || "能源账单"), facilityAssetId, assetId: evidenceId, agentSerialNo: `cbam-gas-${evidenceId}` } });
-          moveWorkflow(evidenceId, ["SECURITY_SCANNED"], "文件已通过安全扫描，提交 Agent 提取任务", { filename, facilityAssetId });
+          ensureWorkflowObject({ id: evidenceId, type: "evidence", status: "UPLOADED", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: facilityName, metadata: { serviceId: "cbam", requestId: request.id, annualCaseId: evidence.annualCaseId, filename: evidence.filename, contentSha256: evidence.contentSha256, byteLength: evidence.byteLength, extractionMode: "demo_fixture", materialType: String(formData.get("type") || "能源账单"), facilityAssetId, assetId: evidenceId, tenantId: intakeTenantId, agentSerialNo: `cbam-gas-${evidenceId}` } });
+          moveWorkflow(evidenceId, ["SECURITY_SCANNED"], "演示文件已读取并计算摘要，提交 Agent 提取任务", { filename: evidence.filename, facilityAssetId, requestId: request.id, contentSha256: evidence.contentSha256 });
 
           const serialNo = `cbam-gas-${evidenceId}`;
           const task = agentTaskEngine.submit({
             serialNo,
             businessType: "CBAM_ENERGY_INVOICE_EXTRACT",
-            tenantId: "TNT-0018",
-            caseId: `CBAM-${state.year}-${state.quarter}`,
-            input: { evidenceId, filename, facilityAssetId, year: state.year, quarter: state.quarter },
+            tenantId: intakeTenantId,
+            caseId: request.metadata?.annualCaseId || `CASE-CBAM-${state.year}`,
+            input: { requestId: request.id, evidenceId, filename: evidence.filename, contentSha256: evidence.contentSha256, facilityAssetId, year: state.year, quarter: state.quarter },
           }, { actor: roleConfig[state.role].name });
 
-          const pendingResult = {
-            proposals: [{
-              proposalId: `PROP-${activityAssetId}`,
-              assetId: activityAssetId,
-              targetAssetType: "energyConsumption",
-              tenantId: "TNT-0018",
-              ownerOrganizationId: "ORG-HX-001",
-              name: `${facilityName}购入天然气`,
-              subjectRefs: { facilityId: facilityAssetId },
-              temporal: { periodStart: `${state.year}-07-01`, periodEnd: `${state.year}-09-30`, recordedAt: new Date().toISOString() },
-              sourceAssetIds: [evidenceId],
-              proposedPatch: { metricCode: "energy.natural_gas.purchased", originalValue: "18420", originalUnit: "Nm3", normalizedValue: "18420", normalizedUnit: "Nm3", dataOrigin: "invoice" },
-              binding: { id: bindingId, serviceId: "cbam", caseId: `CBAM-${state.year}-${state.quarter}`, usagePurpose: "季度直接排放", scopeId: facilityAssetId },
-            }],
-            summary: "已从账单提取天然气用量，等待企业确认",
-          };
+          const extracted = window.LuminoEnergyInvoiceExtractor.extractEnergyInvoice({ evidenceMeta: evidence, bytes, facilityAssetId, facilityName, caseId: request.metadata?.annualCaseId || `CASE-CBAM-${state.year}`, actor, temporal: { periodStart: `${state.year}-07-01`, periodEnd: `${state.year}-09-30`, recordedAt: new Date().toISOString() } });
+          const pendingResult = { proposals: extracted.proposals, summary: extracted.summary, warnings: extracted.warnings, partial: !extracted.proposals.length, allowEmpty: true };
           setSubmitBusyLabel(submitButton, "提取中…");
           toast(`Agent 任务 ${task.id} 已提交（${serialNo}），正在轮询状态…`);
           runAgentTaskWithPolling({
@@ -1636,19 +1607,21 @@
             onStatus: (snapshot) => setSubmitBusyLabel(submitButton, snapshot.status === "PROCESSING" ? "Agent 处理中…" : "任务提交中…"),
             onReady: (completed) => {
               try {
-                window.LuminoProposalBridge.applyTaskResult(assetRegistry, completed, {
-                  tenantId: "TNT-0018",
+                if (completed.result.proposals.length) window.LuminoProposalBridge.applyTaskResult(assetRegistry, completed, {
+                  tenantId: intakeTenantId,
                   ownerOrganizationId: "ORG-HX-001",
                   reason: "Agent 任务产出待确认活动数据提议",
                 });
-                moveWorkflow(evidenceId, ["PARSED"], `Agent 任务 ${completed.id} 已就绪（proposal_only）`, { agentTaskId: completed.id, activityAssetId, bindingId });
-                state.uploadAdded = true;
+                const candidate = extracted.candidate ? intakeCandidateStore.put(extracted.candidate) : null;
+                moveWorkflow(evidenceId, ["PARSED"], candidate ? `Agent 任务 ${completed.id} 已就绪（proposal_only）` : `Agent 任务 ${completed.id} 无法识别演示字段`, { agentTaskId: completed.id, requestId: request.id, candidateId: candidate?.id || null, candidateRevision: candidate?.revision || null, candidateStatus: candidate?.status || "UNPARSEABLE", activityAssetId: candidate?.assetId || null, bindingId: candidate ? `BIND-${candidate.id}` : null });
+                workflowEngine.patch(request.id, { metadata: { ...request.metadata, evidenceId, candidateId: candidate?.id || null, candidateRevision: candidate?.revision || null, intakeStatus: candidate ? "AWAITING_CONFIRMATION" : "RETURNED" } }, { ...workflowActor(), reason: candidate ? "材料请求进入候选确认" : "演示提取无法识别，等待重新提交" });
+                state.uploadAdded = Boolean(candidate);
                 persistPortalState();
                 state.actionBusy = false;
                 closeDrawer(); render();
-                toast(completed.status === "READY_PARTIAL"
-                  ? "材料已上传；Agent 仅部分提取成功，请核对后确认事实。"
-                  : "轮询完成。Agent 已提交待确认提议，不会自动写成正式事实。");
+                toast(candidate
+                  ? "演示提取完成。Agent 已提交待确认候选，不会自动写成正式事实。"
+                  : "文件已登记，但演示提取无法识别 NATURAL_GAS_NM3；请修正 TXT/CSV 后重新提交。");
               } catch (error) {
                 state.actionBusy = false;
                 if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }

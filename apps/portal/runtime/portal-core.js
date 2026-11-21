@@ -305,6 +305,24 @@
     return { actor: profile.name, role: state.role };
   }
 
+  const intakeTenantId = "TNT-0018";
+  function intakeActor() { return { ...workflowActor(), tenantId: intakeTenantId }; }
+  function intakeRequests() {
+    return workflowEngine.list({ type: "workPackage", year: state.year, quarter: state.quarter })
+      .filter((item) => item.metadata?.basis === "annual_scope_and_monitoring_draft");
+  }
+  function currentIntakeRequest(requestId = null) {
+    const requests = intakeRequests();
+    return requests.find((item) => item.id === requestId) || requests[0] || null;
+  }
+  function currentIntakeCandidate(requestId = null) {
+    const request = currentIntakeRequest(requestId);
+    return request ? intakeCandidateStore.latest({ requestId: request.id, tenantId: intakeTenantId, year: state.year, quarter: state.quarter }) : null;
+  }
+  function currentIntakeEvidence(candidate = currentIntakeCandidate()) {
+    return candidate ? intakeEvidenceStore.get({ evidenceId: candidate.evidenceId, tenantId: intakeTenantId, actor: intakeActor() }) : null;
+  }
+
   function workflowObject(flowId) {
     const reference = workflowObjectRefs[flowId];
     if (!reference) return null;
@@ -336,8 +354,9 @@
   }
 
   function syncUiFromWorkflow() {
-    const evidence = workflowEngine.get(`EVD-${state.year}-${state.quarter}-GAS`);
-    const fact = workflowEngine.get(`FACT-${state.year}-${state.quarter}-GAS`);
+    const candidate = currentIntakeCandidate();
+    const evidence = candidate ? workflowEngine.get(candidate.evidenceId) : null;
+    const fact = candidate ? workflowEngine.list({ type: "fact", year: state.year, quarter: state.quarter }).find((item) => item.metadata?.candidateId === candidate.id) : null;
     const finding = workflowEngine.get("FND-PRE-004");
     state.uploadAdded = Boolean(evidence && !["UPLOADED", "SECURITY_SCANNED"].includes(evidence.status));
     state.factConfirmed = Boolean(fact && ["CONFIRMED", "APPROVED", "VERIFIED"].includes(fact.status));
@@ -962,12 +981,13 @@
       if (!facilities.length) return '<option value="">请选择</option><option>上海一厂</option><option>江苏二厂</option>';
       return `<option value="">请选择</option>${facilities.map((facility) => `<option value="${safe(facility.name)}">${safe(facility.name)}</option>`).join("")}`;
     })();
+    const materialRequestOptions = intakeRequests().map((request) => `<option value="${safe(request.id)}">${safe(request.scope)} · ${safe(request.owner)}</option>`).join("");
     const pcfCase = workflowEngine.get("PCF-2026-001");
     const pcfCalculation = pcfCase?.metadata?.calculation || {};
     const pcfDeclaration = pcfCase?.metadata?.declaration || {};
     const pcfBoundary = pcfCase?.metadata?.boundary || {};
     const templates = {
-      "upload-evidence": ["QUARTERLY EVIDENCE", `上传 ${state.year} ${state.quarter} 材料`, drawerForm("upload-evidence", "上传后先进入 Agent 提取区。只有你确认账期、设施和数值后，材料才会进入正式事实建议。", `${formField("材料类型", '<select name="type"><option>能源账单</option><option>产量台账</option><option>发运台账</option><option>供应商排放数据</option><option>其他证明</option></select>')}${formField("所属设施", `<select name="facility">${facilitySelectOptions}</select>`)}${formField("数据期间", `<input name="period" value="${state.year} ${state.quarter}" readonly>`)}<label class="upload-drop"><input name="file" type="file" required><strong>选择文件或拖到这里</strong><small>PDF、XLSX、CSV、JPG；单个文件不超过 30 MB</small></label>${formField("补充说明", '<textarea name="note" rows="3" placeholder="例如：账单同时覆盖两座设施"></textarea>')}`, "上传并交给 Agent")],
+      "upload-evidence": ["QUARTERLY EVIDENCE", `上传 ${state.year} ${state.quarter} 材料`, drawerForm("upload-evidence", "这是内容感知的演示提取：文件字节只保留在当前页面会话，不是正式证据库。只有具名确认后才形成事实建议。", `${formField("材料请求", `<select name="requestId" required>${materialRequestOptions || '<option value="">当前期间没有可用材料请求</option>'}</select>`)}${formField("材料类型", '<select name="type"><option>能源账单</option></select>')}${formField("所属设施", `<select name="facility">${facilitySelectOptions}</select>`)}${formField("数据期间", `<input name="period" value="${state.year} ${state.quarter}" readonly>`)}<label class="upload-drop"><input name="file" type="file" accept=".txt,.csv,text/plain,text/csv" required><strong>选择 TXT 或 CSV 演示账单</strong><small>当前不解析 PDF、XLSX 或图片；单个文件不超过 30 MB</small></label>${formField("补充说明", '<textarea name="note" rows="3" placeholder="例如：账单同时覆盖两座设施"></textarea>')}`, "上传并演示提取")],
       "new-product": ["ENTERPRISE PRODUCT MASTER", "新增产品主档", drawerForm("new-product", "产品属于企业长期主档，不必绑定某一年。可以先创建，再由 Agent 或关务人员补充 CN Code。", `${formField("产品名称", '<input name="productName" value="冷轧非合金钢板" required>')}${formField("内部编码", '<input name="internalCode" value="CRS-02" required>')}${formField("CN Code 候选", '<input name="cnCodes" placeholder="如 72091690；多个用逗号分隔">', "可留空；候选不会自动成为已确认编码")}<fieldset class="drawer-field drawer-fieldset"><legend>初始年度范围（可选）</legend><div class="check-grid">${newProductYearChecks}</div><small>这里只列出已创建且未锁定的年度；也可以稍后再纳入。</small></fieldset>`, "创建产品主档")],
       "edit-product": ["PRODUCT MASTER", "编辑产品主档", drawerForm("edit-product", "主档变更会形成新版本，不覆盖锁定年度中的历史快照。", `${formField("产品名称", `<input name="productName" value="${safe(context.name || "热轧非合金钢卷")}" required>`)}${formField("内部编码", `<input name="internalCode" value="${safe(context.code || "HRC-01")}" required>`)}${formField("变更生效日", '<input name="effectiveDate" type="date" value="2026-10-10">')}${formField("变更原因", '<textarea name="reason" rows="4" required placeholder="说明为何修改产品主档"></textarea>')}`, "保存为新版本")],
       "manage-cn": ["CN CODE MANAGEMENT", "管理 CN Code", drawerForm("manage-cn", "同一企业产品可以保留多个候选编码。最终确认需要记录依据、确认人和有效期。", `<div class="code-candidate"><div><strong>72083900</strong><small>候选 · Agent 根据产品说明建议</small></div><span class="record-state warn">待关务确认</span></div><div class="code-candidate"><div><strong>72083800</strong><small>历史候选 · 2026 年使用</small></div><span class="record-state">历史</span></div>${formField("新增候选 CN Code", '<input name="cnCode" inputmode="numeric" placeholder="8 位 CN Code">')}${formField("建议依据", '<textarea name="basis" rows="3" placeholder="产品说明、材质、规格或关务意见"></textarea>')}`, "保存候选")],
@@ -1055,12 +1075,15 @@
           </div>`];
       })(),
       "extract-energy": (() => {
-        const rows = [
-          ["7 月 购入电力", "电力账单 7 月 · 第 1 页", "4,120 MWh", false],
-          ["8 月 购入电力", "电力账单 8 月 · 第 1 页", "4,260 MWh", false],
-          ["9 月 购入电力", "电力账单 9 月 · 含 8 月补抄", "4,100 MWh", true],
-          ["Q3 天然气", "天然气计量表 · 汇总行", "1.86 百万 m³", false],
-        ].map(([k, src, v, flag]) => `
+        const candidate = currentIntakeCandidate();
+        const evidence = currentIntakeEvidence(candidate);
+        const rows = candidate ? [[
+          `${state.quarter} 天然气`,
+          `${evidence?.filename || candidate.evidenceId} · ${candidate.locator || "内容标记"}`,
+          `${candidate.proposedPatch.originalValue} ${candidate.proposedPatch.originalUnit}`,
+          false,
+        ]] : [["尚无可确认候选", "请先上传 TXT/CSV 演示账单", "—", true]];
+        const rowHtml = rows.map(([k, src, v, flag]) => `
           <li class="cbam-extract__row ${flag ? "is-warn" : ""}">
             <span><strong>${safe(k)}</strong><small>${safe(src)}</small></span>
             <b>${safe(v)}</b>
@@ -1068,12 +1091,12 @@
           </li>`).join("");
         return ["CBAM · 能源确认", "核对 Q3 能源用量", `
           <div class="drawer-detail" data-template="T3">
-            <p class="drawer-lead">Agent 从你上传的文件中提取了以下用量。逐项核对，有误的点“修正”。</p>
-            <ul class="cbam-extract">${rows}</ul>
-            <p class="drawer-note">确认后生成企业事实新版本，并用于 Q3 计算；依赖旧版本的计算会标记为需要重算。</p>
+            <p class="drawer-lead">演示提取已读取当前页面会话中的文件内容。请核对数值、账期、设施、证据摘要和候选版本。</p>
+            <ul class="cbam-extract">${rowHtml}</ul>
+            <p class="drawer-note">候选 ${safe(candidate?.id || "—")} · Rev ${safe(candidate?.revision || "—")} · 证据 ${safe(candidate?.evidenceId || "—")}。刷新页面后演示文件不可恢复，需要重新上传。</p>
             <footer class="drawer-actions">
               <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
-              <button class="button button--primary" type="button" data-action="confirm-fact">确认提取结果</button>
+              <button class="button button--primary" type="button" data-action="confirm-fact" ${candidate ? "" : "disabled"}>确认提取结果</button>
             </footer>
           </div>`];
       })(),
