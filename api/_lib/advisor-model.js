@@ -206,10 +206,6 @@ async function callResponsesApi({ model, key, lang, text, sourcesBlock, signal, 
 async function callChatCompletionsApi({ model, key, lang, text, sourcesBlock, signal, grounded, request }) {
   const body = {
     model: model.id,
-    temperature: 0.2,
-    // Compatible gateways may count hidden reasoning against this budget;
-    // 1200 previously truncated valid JSON before the closing quote/brace.
-    max_tokens: 2400,
     messages: [
       { role: "system", content: systemPrompt(lang, grounded, request) },
       { role: "user", content: userPrompt(lang, text, sourcesBlock, grounded, request) },
@@ -218,6 +214,8 @@ async function callChatCompletionsApi({ model, key, lang, text, sourcesBlock, si
   // Third-party gateways guarantee Chat Completions, but not OpenAI JSON mode.
   // The prompts require raw JSON and parseModelJson validates the result locally.
   if (new URL(apiBaseUrl()).hostname === "api.openai.com") {
+    body.temperature = 0.2;
+    body.max_tokens = 2400;
     body.response_format = { type: "json_object" };
   }
   const upstream = await fetch(`${apiBaseUrl()}/chat/completions`, {

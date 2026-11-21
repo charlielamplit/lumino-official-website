@@ -219,6 +219,8 @@ test("generateGroundedAnswer maps gateway 401/429/500 and does not send store:fa
       const body = JSON.parse(init.body);
       assert.equal(body.model, "luna-mock");
       assert.equal(body.store, undefined);
+      assert.equal(body.temperature, undefined);
+      assert.equal(body.max_tokens, undefined);
       assert.equal(body.response_format, undefined);
       return {
         ok: true,
@@ -303,7 +305,8 @@ test("generateGeneralAnswer uses model capability when no published source match
       const body = JSON.parse(init.body);
       assert.equal(body.model, "sol-general-mock");
       assert.equal(body.store, undefined);
-      assert.equal(body.max_tokens, 2400);
+      assert.equal(body.temperature, undefined);
+      assert.equal(body.max_tokens, undefined);
       const system = body.messages[0].content;
       const user = body.messages[1].content;
       assert.match(system, /运用自身能力直接回答/);
