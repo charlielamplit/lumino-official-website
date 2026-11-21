@@ -48,23 +48,39 @@ function chunkText(text, size = ADVISOR_SSE_CHUNK_CHARS) {
   return chunks;
 }
 
-function writeSse(response, payload, { streamAnswer = false } = {}) {
+function openSse(response, headers = {}) {
   response.status(200);
   response.setHeader("Content-Type", "text/event-stream; charset=utf-8");
   response.setHeader("Cache-Control", "no-store");
   response.setHeader("Connection", "keep-alive");
   response.setHeader("X-Accel-Buffering", "no");
+  for (const [name, value] of Object.entries(headers)) response.setHeader(name, value);
+  response.flushHeaders?.();
+}
+
+function writeSseEvent(response, event, data) {
+  response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+}
+
+function writeSse(response, payload, { streamAnswer = false, opened = false, headers = {} } = {}) {
+  if (!opened) openSse(response, headers);
 
   if (streamAnswer && payload?.answer) {
-    response.write(`event: status\ndata: ${JSON.stringify({ phase: "printing" })}\n\n`);
+    writeSseEvent(response, "status", { phase: "printing" });
     for (const delta of chunkText(payload.answer)) {
-      response.write(`event: delta\ndata: ${JSON.stringify({ text: delta })}\n\n`);
+      writeSseEvent(response, "delta", { text: delta });
     }
   }
 
-  response.write(`event: advisor\ndata: ${JSON.stringify(payload)}\n\n`);
-  response.write(`event: done\ndata: {}\n\n`);
+  writeSseEvent(response, "advisor", payload);
+  writeSseEvent(response, "done", {});
   response.end();
+}
+
+function provisionalAnswer(lang) {
+  return lang === "en"
+    ? "Start with three facts: who is asking, the exact deliverable or decision, and the deadline. I’m now turning your question into a more specific answer."
+    : "先确认三个事实：谁提出要求、需要什么具体交付物或判断、截止时间是什么。我正在结合你的问题补充更具体的答案。";
 }
 
 function betaDisabledPayload(lang) {
@@ -190,7 +206,7 @@ async function resolveUpstreamQuestion(request, signal) {
   };
 }
 
-async function resolveOpenQuestion(request, signal) {
+async function resolveOpenQuestion(request, signal, onDelta) {
   const hits = retrievePublishedKnowledge({
     text: request.text,
     lang: request.lang,
@@ -223,6 +239,7 @@ async function resolveOpenQuestion(request, signal) {
           lang: request.lang,
           signal,
           request,
+          onDelta,
         });
         if (generated?.answer) {
           if (hasStaleReferenceDate(generated.answer, request.asOf)) return staleModelFallback(request, hits);
@@ -365,6 +382,8 @@ export default async function handler(request, response) {
 
   const abort = createRequestAbort(request, modelTimeoutMs());
   const started = Date.now();
+  let sseOpened = false;
+  let modelStreamed = false;
   try {
     let result;
     let source = "deterministic";
@@ -386,7 +405,17 @@ export default async function handler(request, response) {
       const portalOpenQuestion = sanitized.request.surface === "portal" && sanitized.request.text;
       result = portalOpenQuestion ? null : routeDeterministic(sanitized.request);
       if (portalOpenQuestion || (result.answer_mode === "fallback" && sanitized.request.text)) {
-        const open = await resolveOpenQuestion(sanitized.request, abort.signal);
+        if (wantsStream) {
+          openSse(response, rateHeaders);
+          sseOpened = true;
+          writeSseEvent(response, "status", { phase: "working" });
+          writeSseEvent(response, "provisional", { text: provisionalAnswer(sanitized.request.lang) });
+        }
+        const open = await resolveOpenQuestion(sanitized.request, abort.signal, wantsStream ? (delta) => {
+          if (!delta || abort.signal.aborted) return;
+          modelStreamed = true;
+          writeSseEvent(response, "delta", { text: delta });
+        } : null);
         result = open.result;
         source = open.source;
         model = open.model || null;
@@ -445,7 +474,11 @@ export default async function handler(request, response) {
       model_tier: model?.tier || null,
     }));
 
-    if (wantsStream) return writeSse(response, payload, { streamAnswer: true });
+    if (wantsStream) return writeSse(response, payload, {
+      streamAnswer: !modelStreamed,
+      opened: sseOpened,
+      headers: rateHeaders,
+    });
     return json(response, 200, payload, rateHeaders);
   } catch (error) {
     console.error("[lumino-advisor] failed", error?.message || error);
@@ -463,7 +496,11 @@ export default async function handler(request, response) {
     } catch (_) {}
     try {
       const fallback = unavailablePayload(sanitized.request.lang, reason);
-      if (wantsStream) return writeSse(response, { ok: false, ...fallback }, { streamAnswer: true });
+      if (wantsStream) return writeSse(response, { ok: false, ...fallback }, {
+        streamAnswer: !modelStreamed,
+        opened: sseOpened,
+        headers: rateHeaders,
+      });
       return json(response, 503, { ok: false, ...fallback }, rateHeaders);
     } catch (nested) {
       console.error("[lumino-advisor] unavailable payload failed", nested?.message || nested);

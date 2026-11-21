@@ -404,19 +404,37 @@
       if (contentType.includes("text/event-stream") && upstream.body) {
         let finalPayload = null;
         let printed = "";
-        // Buffer stream text only — deliberation + print are owned by appendExchange
-        // so fixed answers do not flash as an instant dump.
+        let receivingModel = false;
+        const textNode = article?.querySelector(".advisor-answer__text");
         await readSse(upstream, {
+          provisional(data) {
+            if (!textNode || receivingModel || controller.signal.aborted) return;
+            textNode.dataset.thinking = "0";
+            textNode.textContent = data.text || "";
+            announce(data.text || "");
+            scrollToLatest();
+          },
           delta(data) {
             if (controller.signal.aborted) return;
+            if (!receivingModel) {
+              receivingModel = true;
+              printed = "";
+              if (textNode) textNode.textContent = "";
+            }
             printed += data.text || "";
+            if (textNode) textNode.textContent = printed;
+            scrollToLatest();
           },
           advisor(data) { finalPayload = data; },
           done() {},
         });
-        if (finalPayload && finalPayload.answer) return finalPayload;
+        if (finalPayload && finalPayload.answer) {
+          finalPayload.__streamed = receivingModel;
+          return finalPayload;
+        }
         if (printed) {
           return {
+            __streamed: true,
             answer_mode: "fallback",
             outcome_type: "answer",
             answer: printed,
@@ -496,7 +514,8 @@
       article.querySelector(".advisor-answer__mode").textContent = modeLabel(response);
       article.dataset.fullText = fullText;
       const textNode = article.querySelector(".advisor-answer__text");
-      if (textNode) textNode.textContent = "";
+      const alreadyStreamed = Boolean(response.__streamed && textNode?.textContent);
+      if (textNode && !alreadyStreamed) textNode.textContent = "";
 
       await new Promise((resolve) => {
         let settled = false;
@@ -518,6 +537,11 @@
         };
         article.addEventListener("advisor:stop-print", () => finish("stopped"), { once: true });
         if (!fullText) {
+          finish("done");
+          return;
+        }
+        if (alreadyStreamed) {
+          textNode.textContent = fullText;
           finish("done");
           return;
         }
