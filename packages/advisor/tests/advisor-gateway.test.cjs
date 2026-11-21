@@ -359,6 +359,63 @@ test("generateGeneralAnswer uses model capability when no published source match
   }
 });
 
+test("general answers forward provider deltas before the final payload", async () => {
+  const previous = {
+    key: process.env.ADVISOR_OPENAI_API_KEY,
+    base: process.env.ADVISOR_OPENAI_BASE_URL,
+    mode: process.env.ADVISOR_OPENAI_API_MODE,
+    sol: process.env.ADVISOR_MODEL_SOL,
+    enabled: process.env.ADVISOR_MODEL_ENABLED,
+  };
+  process.env.ADVISOR_OPENAI_API_KEY = "sk-test";
+  process.env.ADVISOR_OPENAI_BASE_URL = "https://aiberm.com/v1";
+  process.env.ADVISOR_OPENAI_API_MODE = "chat";
+  process.env.ADVISOR_MODEL_SOL = "sol-stream-mock";
+  process.env.ADVISOR_MODEL_ENABLED = "1";
+  const originalFetch = globalThis.fetch;
+  try {
+    const encoder = new TextEncoder();
+    globalThis.fetch = async (_url, init) => {
+      const body = JSON.parse(init.body);
+      assert.equal(body.stream, true);
+      assert.equal(body.response_format, undefined);
+      assert.match(body.messages[0].content, /只输出回答正文/);
+      return {
+        ok: true,
+        status: 200,
+        body: new ReadableStream({
+          start(controller) {
+            controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"第一段"}}]}\n\n'));
+            controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"第二段"}}]}\n\n'));
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+            controller.close();
+          },
+        }),
+      };
+    };
+    const deltas = [];
+    const output = await (await loadModel()).generateGeneralAnswer({
+      text: "如何启动一个合规项目？",
+      lang: "zh",
+      onDelta: (delta) => deltas.push(delta),
+    });
+    assert.deepEqual(deltas, ["第一段", "第二段"]);
+    assert.equal(output.answer, "第一段第二段");
+    assert.equal(output.answer_mode, "general_model");
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const [key, value] of Object.entries({
+      ADVISOR_OPENAI_API_KEY: previous.key,
+      ADVISOR_OPENAI_BASE_URL: previous.base,
+      ADVISOR_OPENAI_API_MODE: previous.mode,
+      ADVISOR_MODEL_SOL: previous.sol,
+      ADVISOR_MODEL_ENABLED: previous.enabled,
+    })) {
+      if (value == null) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});
+
 test("portal model prompt uses sanitized context without claiming authority or execution", async () => {
   const previous = {
     key: process.env.ADVISOR_OPENAI_API_KEY,
