@@ -17,7 +17,7 @@
       stageIds: Object.freeze(["data-prep"]),
       promptId: "cbam.extract_energy_invoice",
       promptPath: "prompts/cbam.extract_energy_invoice.md",
-      ruleOrPromptVersion: "extract-gas@1.0.0",
+      ruleOrPromptVersion: "extract-gas@1.1.0",
       targetAssetType: "energyConsumption",
       evidenceAssetType: "evidence",
       completionMode: "proposal_only",

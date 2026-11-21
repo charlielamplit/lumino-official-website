@@ -315,7 +315,13 @@
     const planStage = cbamGoldenPath.stage("p04");
     const scopeLabel = scopeStage.state === "done" ? "已确认" : "待确认";
     const planLabel = planStage.state === "done" ? "已签收" : planStage.state === "waiting_human" ? `等待 ${planStage.assignee}` : "待制备";
-    const requestLabel = annual.materialRequests.count ? `${annual.materialRequests.count} 项首轮材料` : "待生成首轮清单";
+    const requestLabel = annual.materialRequests.awaitingConfirmation
+      ? `${annual.materialRequests.awaitingConfirmation} 项待确认`
+      : annual.materialRequests.returned
+        ? `${annual.materialRequests.returned} 项待重交`
+        : annual.materialRequests.confirmed
+          ? `${annual.materialRequests.confirmed} 项已确认`
+          : annual.materialRequests.count ? `${annual.materialRequests.count} 项首轮材料` : "待生成首轮清单";
     $("#main").innerHTML = `
       ${pageHeader(`${safe(annual.organizationName)} / CBAM`, `${safe(annual.year)} 年度项目`, `<div class="head-actions">${window.LuminoAgentRuntime?.agentPageAction?.("协助本年度收资") || ""}${statusChip(annual.project.statusLabel)}</div>`)}
       <section class="annual-project-shell annual-started">
@@ -579,7 +585,7 @@
       },
       {
         n: "02", t: "监测计划", when: `${y} 年 1–2 月`,
-        d: "每类数据用什么方法、从哪里来、由谁负责；默认值的使用条件也在这里约定。锁定后生成每季度的材料请求。",
+        d: "每类数据用什么方法、从哪里来、由谁负责；与首轮收资并行维护，数据发现可触发方法修订。",
         who: "王晨 制备 · 李娜 复核 · 你确认",
         outs: [`监测计划 MP-${y} v2`, "数据源分工 9 项", "默认值使用规则"],
         gate: "需要年度范围确认",
@@ -589,7 +595,7 @@
         d: "每季度重复：材料请求 → 上传与 Agent 提取 → 你确认 → 计算与复核 → 数据包共享给进口商并回执。",
         who: "你 · 数据贡献者 · Lumino 专家",
         quarters: true,
-        gate: "需要监测计划锁定",
+        gate: "年度项目启动后即可收资；正式计算前需确认范围与方法版本",
       },
       {
         n: "04", t: "年度排放报告", when: `${y + 1} 年 1–2 月`,
@@ -649,7 +655,7 @@
       } else if (year === "2025") {
         quarters = ["Q1", "Q2", "Q3", "Q4"].map((q) => ({ q, st: "已回执", chip: "ok", d: "已封存", live: false }));
       } else {
-        quarters = ["Q1", "Q2", "Q3", "Q4"].map((q) => ({ q, st: "未开始", chip: "locked", d: "监测计划锁定后开启", live: false }));
+        quarters = ["Q1", "Q2", "Q3", "Q4"].map((q) => ({ q, st: "未开始", chip: "locked", d: "年度项目创建后开启收资", live: false }));
       }
     }
 
