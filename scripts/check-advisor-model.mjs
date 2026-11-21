@@ -21,7 +21,7 @@ for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
         asOf: new Date().toISOString().slice(0, 10),
         surface: "public",
       }),
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.timeout(25_000),
     });
     const payload = await response.json();
     const source = payload.runtime?.source;
