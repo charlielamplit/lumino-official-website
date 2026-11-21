@@ -1,9 +1,14 @@
 /** Aligned client/server budgets to avoid orphan model spend after client fallback. */
-export const ADVISOR_CLIENT_TIMEOUT_MS = Number(process.env.ADVISOR_CLIENT_TIMEOUT_MS || 15000);
-export const ADVISOR_MODEL_TIMEOUT_MS = Number(process.env.ADVISOR_MODEL_TIMEOUT_MS || 12000);
+function migrateLegacyBudget(value, legacy, current) {
+  const parsed = Number(value || current);
+  return parsed === legacy ? current : parsed;
+}
+
+export const ADVISOR_CLIENT_TIMEOUT_MS = migrateLegacyBudget(process.env.ADVISOR_CLIENT_TIMEOUT_MS, 15000, 22000);
+export const ADVISOR_MODEL_TIMEOUT_MS = migrateLegacyBudget(process.env.ADVISOR_MODEL_TIMEOUT_MS, 12000, 18000);
 /** Optional tighter Luna budget; Sol uses the full model budget then may fall back to Luna. */
-export const ADVISOR_LUNA_TIMEOUT_MS = Number(process.env.ADVISOR_LUNA_TIMEOUT_MS || ADVISOR_MODEL_TIMEOUT_MS);
-export const ADVISOR_SOL_TIMEOUT_MS = Number(process.env.ADVISOR_SOL_TIMEOUT_MS || ADVISOR_MODEL_TIMEOUT_MS);
+export const ADVISOR_LUNA_TIMEOUT_MS = migrateLegacyBudget(process.env.ADVISOR_LUNA_TIMEOUT_MS, 12000, ADVISOR_MODEL_TIMEOUT_MS);
+export const ADVISOR_SOL_TIMEOUT_MS = migrateLegacyBudget(process.env.ADVISOR_SOL_TIMEOUT_MS, 12000, ADVISOR_MODEL_TIMEOUT_MS);
 export const ADVISOR_SSE_CHUNK_CHARS = 16;
 
 function clampToClientBudget(ms) {

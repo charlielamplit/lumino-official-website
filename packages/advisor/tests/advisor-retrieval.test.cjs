@@ -79,7 +79,7 @@ async function loadModel() {
 
 test("chooseModel upgrades complex or multi-source questions to Sol", async () => {
   const model = await loadModel();
-  assert.equal(model.chooseModel({ text: "short", hits: [{}, {}] }).tier, "luna");
-  assert.equal(model.chooseModel({ text: "对比 CBAM 与 PCF 的差异", hits: [{}, {}] }).tier, "sol");
-  assert.equal(model.chooseModel({ text: "short", hits: [{}, {}, {}] }).tier, "sol");
+  assert.equal(model.chooseModel({ text: "short", hits: [{}, {}], lunaEnabled: true }).tier, "luna");
+  assert.equal(model.chooseModel({ text: "对比 CBAM 与 PCF 的差异", hits: [{}, {}], lunaEnabled: true }).tier, "sol");
+  assert.equal(model.chooseModel({ text: "short", hits: [{}, {}, {}], lunaEnabled: true }).tier, "sol");
 });

@@ -11,9 +11,12 @@ import {
   shouldSendStoreFalse,
 } from "./advisor-gateway.js";
 
-const LUNA = process.env.ADVISOR_MODEL_LUNA || "gpt-4.1-mini";
-// Prefer a fast Sol by default; slow Sol models cause Beta No-Go under client budget.
-const SOL = process.env.ADVISOR_MODEL_SOL || "deepseek/deepseek-v4-flash";
+const configuredLuna = process.env.ADVISOR_MODEL_LUNA || "gpt-6-luna";
+const configuredSol = process.env.ADVISOR_MODEL_SOL || "deepseek/deepseek-v4-flash";
+// Migrate the confirmed unhealthy Luna route without requiring a secret rotation. #104
+const LUNA = configuredLuna === "anthropic/claude-haiku-5.5" ? "gpt-6-luna" : configuredLuna;
+const SOL = configuredSol;
+const LUNA_ENABLED = process.env.ADVISOR_LUNA_ENABLED === "1";
 const CONTACT_URL = "/apps/site/contact.html";
 
 function apiKey() {
@@ -48,7 +51,9 @@ export function chooseModel({
   hits = [],
   luna = LUNA,
   sol = SOL,
+  lunaEnabled = LUNA_ENABLED,
 } = {}) {
+  if (!lunaEnabled) return { id: sol, tier: "sol" };
   const long = String(text).length > 280;
   const multi = hits.length >= 3;
   const complex = /对比|比较|差异|区别|and also|compare|versus|vs\./i.test(text);
@@ -199,6 +204,20 @@ async function callResponsesApi({ model, key, lang, text, sourcesBlock, signal, 
 }
 
 async function callChatCompletionsApi({ model, key, lang, text, sourcesBlock, signal, grounded, request }) {
+  const body = {
+    model: model.id,
+    messages: [
+      { role: "system", content: systemPrompt(lang, grounded, request) },
+      { role: "user", content: userPrompt(lang, text, sourcesBlock, grounded, request) },
+    ],
+  };
+  // Third-party gateways guarantee Chat Completions, but not OpenAI JSON mode.
+  // The prompts require raw JSON and parseModelJson validates the result locally.
+  if (new URL(apiBaseUrl()).hostname === "api.openai.com") {
+    body.temperature = 0.2;
+    body.max_tokens = 2400;
+    body.response_format = { type: "json_object" };
+  }
   const upstream = await fetch(`${apiBaseUrl()}/chat/completions`, {
     method: "POST",
     headers: {
@@ -206,18 +225,7 @@ async function callChatCompletionsApi({ model, key, lang, text, sourcesBlock, si
       "Content-Type": "application/json",
     },
     signal,
-    body: JSON.stringify({
-      model: model.id,
-      temperature: 0.2,
-      // Compatible gateways may count hidden reasoning against this budget;
-      // 1200 previously truncated valid JSON before the closing quote/brace.
-      max_tokens: 2400,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: systemPrompt(lang, grounded, request) },
-        { role: "user", content: userPrompt(lang, text, sourcesBlock, grounded, request) },
-      ],
-    }),
+    body: JSON.stringify(body),
   });
   if (!upstream.ok) {
     const detail = await upstream.text().catch(() => "");

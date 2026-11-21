@@ -94,20 +94,41 @@ test("classifyUpstreamHttpError distinguishes auth, rate limit, and upstream fai
   assert.match(gw.classifyUpstreamHttpError(405, "openai_error"), /model_http_405/);
 });
 
-test("chooseModel routes Luna vs Sol", async () => {
+test("chooseModel supports explicit Luna opt-out", async () => {
   const model = await loadModel();
   const luna = "luna-test-model";
   const sol = "sol-test-model";
-  assert.deepEqual(model.chooseModel({ text: "What is CBAM?", hits: [{ id: 1 }], luna, sol }), {
+  assert.deepEqual(model.chooseModel({ text: "What is CBAM?", hits: [{ id: 1 }], luna, sol, lunaEnabled: true }), {
     id: luna,
     tier: "luna",
   });
-  assert.deepEqual(model.chooseModel({ text: "Please compare CBAM versus PCF", hits: [{ id: 1 }], luna, sol }), {
+  assert.deepEqual(model.chooseModel({ text: "What is CBAM?", hits: [{ id: 1 }], luna, sol, lunaEnabled: false }), {
     id: sol,
     tier: "sol",
   });
-  assert.equal(model.chooseModel({ text: "x", hits: [{}, {}, {}], luna, sol }).tier, "sol");
-  assert.equal(model.chooseModel({ text: "a".repeat(281), hits: [{ id: 1 }], luna, sol }).tier, "sol");
+  assert.deepEqual(model.chooseModel({ text: "Please compare CBAM versus PCF", hits: [{ id: 1 }], luna, sol, lunaEnabled: true }), {
+    id: sol,
+    tier: "sol",
+  });
+  assert.equal(model.chooseModel({ text: "x", hits: [{}, {}, {}], luna, sol, lunaEnabled: true }).tier, "sol");
+  assert.equal(model.chooseModel({ text: "a".repeat(281), hits: [{ id: 1 }], luna, sol, lunaEnabled: true }).tier, "sol");
+});
+
+test("known unhealthy Luna id migrates without overriding the proven Sol route", async () => {
+  const previous = {
+    luna: process.env.ADVISOR_MODEL_LUNA,
+    sol: process.env.ADVISOR_MODEL_SOL,
+  };
+  try {
+    process.env.ADVISOR_MODEL_LUNA = "anthropic/claude-haiku-5.5";
+    process.env.ADVISOR_MODEL_SOL = "deepseek/deepseek-v4-flash";
+    const model = await loadModel();
+    assert.equal(model.ADVISOR_MODELS.LUNA, "gpt-6-luna");
+    assert.equal(model.ADVISOR_MODELS.SOL, "deepseek/deepseek-v4-flash");
+  } finally {
+    if (previous.luna == null) delete process.env.ADVISOR_MODEL_LUNA; else process.env.ADVISOR_MODEL_LUNA = previous.luna;
+    if (previous.sol == null) delete process.env.ADVISOR_MODEL_SOL; else process.env.ADVISOR_MODEL_SOL = previous.sol;
+  }
 });
 
 test("public flags expose storage_policy instead of blanket store:false", async () => {
@@ -148,7 +169,7 @@ test("generateGroundedAnswer maps gateway 401/429/500 and does not send store:fa
     mode: process.env.ADVISOR_OPENAI_API_MODE,
     luna: process.env.ADVISOR_MODEL_LUNA,
     sol: process.env.ADVISOR_MODEL_SOL,
-    sol: process.env.ADVISOR_MODEL_SOL,
+    lunaEnabled: process.env.ADVISOR_LUNA_ENABLED,
     enabled: process.env.ADVISOR_MODEL_ENABLED,
   };
   process.env.ADVISOR_OPENAI_API_KEY = "sk-test";
@@ -156,6 +177,7 @@ test("generateGroundedAnswer maps gateway 401/429/500 and does not send store:fa
   process.env.ADVISOR_OPENAI_API_MODE = "chat";
   process.env.ADVISOR_MODEL_LUNA = "luna-mock";
   process.env.ADVISOR_MODEL_SOL = "sol-mock";
+  process.env.ADVISOR_LUNA_ENABLED = "1";
   process.env.ADVISOR_MODEL_ENABLED = "1";
 
   const originalFetch = globalThis.fetch;
@@ -197,7 +219,9 @@ test("generateGroundedAnswer maps gateway 401/429/500 and does not send store:fa
       const body = JSON.parse(init.body);
       assert.equal(body.model, "luna-mock");
       assert.equal(body.store, undefined);
-      assert.equal(body.response_format?.type, "json_object");
+      assert.equal(body.temperature, undefined);
+      assert.equal(body.max_tokens, undefined);
+      assert.equal(body.response_format, undefined);
       return {
         ok: true,
         status: 200,
@@ -252,6 +276,7 @@ test("generateGroundedAnswer maps gateway 401/429/500 and does not send store:fa
       ADVISOR_OPENAI_API_MODE: prev.mode,
       ADVISOR_MODEL_LUNA: prev.luna,
       ADVISOR_MODEL_SOL: prev.sol,
+      ADVISOR_LUNA_ENABLED: prev.lunaEnabled,
       ADVISOR_MODEL_ENABLED: prev.enabled,
     })) {
       if (value == null) delete process.env[key];
@@ -280,7 +305,8 @@ test("generateGeneralAnswer uses model capability when no published source match
       const body = JSON.parse(init.body);
       assert.equal(body.model, "sol-general-mock");
       assert.equal(body.store, undefined);
-      assert.equal(body.max_tokens, 2400);
+      assert.equal(body.temperature, undefined);
+      assert.equal(body.max_tokens, undefined);
       const system = body.messages[0].content;
       const user = body.messages[1].content;
       assert.match(system, /运用自身能力直接回答/);
