@@ -276,6 +276,75 @@ test("unmatched questions reach the general model path when the model is configu
   }
 });
 
+test("SSE sends a useful provisional answer before forwarding real model deltas", async () => {
+  const previous = {
+    beta: process.env.ADVISOR_PUBLIC_BETA,
+    enabled: process.env.ADVISOR_MODEL_ENABLED,
+    key: process.env.ADVISOR_OPENAI_API_KEY,
+    base: process.env.ADVISOR_OPENAI_BASE_URL,
+    mode: process.env.ADVISOR_OPENAI_API_MODE,
+    sol: process.env.ADVISOR_MODEL_SOL,
+  };
+  const originalFetch = globalThis.fetch;
+  process.env.ADVISOR_PUBLIC_BETA = "1";
+  process.env.ADVISOR_MODEL_ENABLED = "1";
+  process.env.ADVISOR_OPENAI_API_KEY = "sk-test";
+  process.env.ADVISOR_OPENAI_BASE_URL = "https://aiberm.com/v1";
+  process.env.ADVISOR_OPENAI_API_MODE = "chat";
+  process.env.ADVISOR_MODEL_SOL = "sol-stream-mock";
+  try {
+    const encoder = new TextEncoder();
+    globalThis.fetch = async () => ({
+      ok: true,
+      status: 200,
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"具体"}}]}\n\n'));
+          controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"答案"}}]}\n\n'));
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
+        },
+      }),
+    });
+    const file = pathToFileURL(path.join(root, "api/advisor.js")).href;
+    const mod = await import(`${file}?t=${Date.now()}-${Math.random()}`);
+    const writes = [];
+    const res = {
+      status() { return this; },
+      setHeader() {},
+      flushHeaders() { writes.push("headers"); },
+      write(value) { writes.push(String(value)); },
+      end() { writes.push("end"); },
+    };
+    await mod.default({
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.98", accept: "text/event-stream" },
+      body: { text: "如何组织一个新的合规项目？", lang: "zh", surface: "public" },
+      query: { stream: "1" },
+      on() {},
+    }, res);
+    const output = writes.join("");
+    assert.ok(output.indexOf("event: provisional") < output.indexOf('"text":"具体"'));
+    assert.match(output, /先确认三个事实/);
+    assert.match(output, /"text":"具体"/);
+    assert.match(output, /"text":"答案"/);
+    assert.match(output, /event: advisor/);
+    assert.match(output, /"answer":"具体答案"/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const [key, value] of Object.entries({
+      ADVISOR_PUBLIC_BETA: previous.beta,
+      ADVISOR_MODEL_ENABLED: previous.enabled,
+      ADVISOR_OPENAI_API_KEY: previous.key,
+      ADVISOR_OPENAI_BASE_URL: previous.base,
+      ADVISOR_OPENAI_API_MODE: previous.mode,
+      ADVISOR_MODEL_SOL: previous.sol,
+    })) {
+      if (value == null) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});
+
 test("stale model reference dates degrade to a safe actionable result", async () => {
   const previous = {
     beta: process.env.ADVISOR_PUBLIC_BETA,

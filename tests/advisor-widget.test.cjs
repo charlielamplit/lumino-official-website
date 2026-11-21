@@ -124,7 +124,11 @@ test("advisor widget preserves keyboard, privacy and current-tab recovery contro
   assert.match(source, /DETERMINISTIC_DELAY_MAX_MS\s*=\s*4000/);
   assert.match(source, /waitForDelay\(deterministicDelayMs\(\), delayController\.signal\)/);
   assert.match(source, /general_model/);
-  assert.match(source, /Buffer stream text only|deliberation/);
+  assert.match(source, /provisional\(data\)/);
+  assert.match(source, /textNode\.textContent = printed/);
+  assert.match(source, /receivingModel/);
+  assert.match(source, /alreadyStreamed/);
+  assert.match(source, /finalPayload\.__streamed = receivingModel/);
 });
 
 test("advisor contact attribution carries only bounded non-PII routing fields", () => {

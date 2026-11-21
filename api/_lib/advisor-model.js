@@ -61,7 +61,7 @@ export function chooseModel({
   return { id: luna, tier: "luna" };
 }
 
-function systemPrompt(lang, grounded = true, request = {}) {
+function systemPrompt(lang, grounded = true, request = {}, structured = true) {
   if (request.surface === "portal") {
     const draft = request.taskMode === "draft";
     if (lang === "en") {
@@ -72,7 +72,7 @@ function systemPrompt(lang, grounded = true, request = {}) {
         draft ? "Produce an editable draft only and label assumptions or missing facts." : "Give a practical answer and state any missing fact needed for a reliable next step.",
         grounded ? "Prioritise the supplied published sources and distinguish sourced facts from model knowledge." : "Use general knowledge carefully and identify the reference date and assumptions for regulatory statements.",
         "Never invent laws, dates, codes, clients, object states, prices or certifications. Ask at most one next question.",
-        "Return raw JSON only matching the schema. No markdown, no code fences.",
+        structured ? "Return raw JSON only matching the schema. No markdown, no code fences." : "Return only the answer body as plain text. No JSON wrapper, markdown or reasoning trace.",
       ].join(" ");
     }
     return [
@@ -82,7 +82,7 @@ function systemPrompt(lang, grounded = true, request = {}) {
       draft ? "只输出可编辑草稿，并明确假设和缺失事实。" : "给出可执行的合理解答，并指出下一步可靠判断仍缺少的事实。",
       grounded ? "优先使用所提供的已发布来源，并区分来源事实与模型知识。" : "谨慎使用通用知识；涉及法规时说明参考日期和关键前提。",
       "不得编造法规、日期、编码、客户事实、对象状态、价格或认证结论；最多追问一个问题。",
-      "只返回符合 schema 的原始 JSON，不要 Markdown，不要代码围栏。",
+      structured ? "只返回符合 schema 的原始 JSON，不要 Markdown，不要代码围栏。" : "只输出回答正文，不要 JSON、Markdown 或推理过程。",
     ].join("");
   }
   if (lang === "en") {
@@ -96,7 +96,7 @@ function systemPrompt(lang, grounded = true, request = {}) {
         ? "Distinguish conclusions supported by the supplied sources from model knowledge that needs external verification, then continue with what the user can do next."
         : "Do not stop at 'I cannot confirm' or only redirect to contact. Give at least one actionable result first. If the question is outside Lumino's scope, state the boundary briefly and show how to reframe it.",
       "Keep answers short (about 80-160 words). Ask at most one next question.",
-      "Return raw JSON only matching the schema. No markdown, no code fences.",
+      structured ? "Return raw JSON only matching the schema. No markdown, no code fences." : "Return only the answer body as plain text. No JSON wrapper, markdown or reasoning trace.",
     ].join(" ");
   }
   return [
@@ -109,7 +109,7 @@ function systemPrompt(lang, grounded = true, request = {}) {
       ? "应区分由所提供来源支持的结论与需要外部复核的模型知识，同时继续说明用户现在可以做什么。"
       : "不能只说无法确认或只让用户联系人工；必须先给出至少一个可执行结果。问题超出 Lumino 范围时，简要说明边界，并告诉用户可以怎样重新描述。",
     "回答控制在约 150–300 字，最多追问一个问题。",
-    "只返回符合 schema 的原始 JSON，不要 Markdown，不要代码围栏。",
+    structured ? "只返回符合 schema 的原始 JSON，不要 Markdown，不要代码围栏。" : "只输出回答正文，不要 JSON、Markdown 或推理过程。",
   ].join("");
 }
 
@@ -142,7 +142,7 @@ function responseSchema() {
   };
 }
 
-function userPrompt(lang, text, sourcesBlock, grounded = true, request = {}) {
+function userPrompt(lang, text, sourcesBlock, grounded = true, request = {}, structured = true) {
   const portal = request.surface === "portal";
   const contextBlock = portal ? JSON.stringify(request.context || {}) : "";
   const historyBlock = portal
@@ -155,8 +155,8 @@ function userPrompt(lang, text, sourcesBlock, grounded = true, request = {}) {
       : `门户上下文（仅作非权威定位）：\n${contextBlock}\n\n最近对话：\n${historyBlock}\n\n模式：${request.taskMode || "ask"}\n\n`)
     : "";
   return lang === "en"
-    ? `${portalBlock}Reference date: ${referenceDate}\n\nQuestion:\n${text}\n\n${grounded ? `Published sources:\n${sourcesBlock}` : "No published source matched this question. Use your own capabilities and identify the basis, reference date and assumptions for any regulatory conclusion."}\n\nRespond with JSON fields: intent, answer, confidence, next_question, primary_service_id, secondary_service_id, handoff.`
-    : `${portalBlock}参考日期：${referenceDate}\n\n用户问题：\n${text}\n\n${grounded ? `已发布来源：\n${sourcesBlock}` : "没有匹配到已发布资料。请运用自身能力回答；如给出法规结论，请说明依据、参考时点和前提。"}\n\n请只返回 JSON，字段：intent, answer, confidence, next_question, primary_service_id, secondary_service_id, handoff。`;
+    ? `${portalBlock}Reference date: ${referenceDate}\n\nQuestion:\n${text}\n\n${grounded ? `Published sources:\n${sourcesBlock}` : "No published source matched this question. Use your own capabilities and identify the basis, reference date and assumptions for any regulatory conclusion."}${structured ? "\n\nRespond with JSON fields: intent, answer, confidence, next_question, primary_service_id, secondary_service_id, handoff." : ""}`
+    : `${portalBlock}参考日期：${referenceDate}\n\n用户问题：\n${text}\n\n${grounded ? `已发布来源：\n${sourcesBlock}` : "没有匹配到已发布资料。请运用自身能力回答；如给出法规结论，请说明依据、参考时点和前提。"}${structured ? "\n\n请只返回 JSON，字段：intent, answer, confidence, next_question, primary_service_id, secondary_service_id, handoff。" : ""}`;
 }
 
 function isTimeoutError(error) {
@@ -203,14 +203,44 @@ async function callResponsesApi({ model, key, lang, text, sourcesBlock, signal, 
   return extractOutputText(await upstream.json());
 }
 
-async function callChatCompletionsApi({ model, key, lang, text, sourcesBlock, signal, grounded, request }) {
+async function readChatStream(upstream, onDelta) {
+  if (!upstream.body?.getReader) throw new Error("model_stream_unavailable");
+  const reader = upstream.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let answer = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    for (const line of lines) {
+      if (!line.startsWith("data:")) continue;
+      const data = line.slice(5).trim();
+      if (!data || data === "[DONE]") continue;
+      let payload;
+      try { payload = JSON.parse(data); } catch (_) { continue; }
+      const delta = payload?.choices?.[0]?.delta?.content;
+      if (typeof delta !== "string" || !delta) continue;
+      answer += delta;
+      onDelta(delta);
+    }
+  }
+  if (!answer.trim()) throw new Error("model_empty_output");
+  return answer;
+}
+
+async function callChatCompletionsApi({ model, key, lang, text, sourcesBlock, signal, grounded, request, onDelta }) {
+  const streaming = typeof onDelta === "function";
   const body = {
     model: model.id,
     messages: [
-      { role: "system", content: systemPrompt(lang, grounded, request) },
-      { role: "user", content: userPrompt(lang, text, sourcesBlock, grounded, request) },
+      { role: "system", content: systemPrompt(lang, grounded, request, !streaming) },
+      { role: "user", content: userPrompt(lang, text, sourcesBlock, grounded, request, !streaming) },
     ],
   };
+  if (streaming) body.stream = true;
   // Third-party gateways guarantee Chat Completions, but not OpenAI JSON mode.
   // The prompts require raw JSON and parseModelJson validates the result locally.
   if (new URL(apiBaseUrl()).hostname === "api.openai.com") {
@@ -231,6 +261,7 @@ async function callChatCompletionsApi({ model, key, lang, text, sourcesBlock, si
     const detail = await upstream.text().catch(() => "");
     throw new Error(classifyUpstreamHttpError(upstream.status, detail));
   }
+  if (streaming) return readChatStream(upstream, onDelta);
   const payload = await upstream.json();
   const extracted = extractChatMessageContent(payload);
   if (extracted.empty) {
@@ -239,9 +270,9 @@ async function callChatCompletionsApi({ model, key, lang, text, sourcesBlock, si
   return extracted.raw;
 }
 
-async function invokeModel({ model, key, lang, text, sourcesBlock, signal, mode, policy, grounded = true, request }) {
+async function invokeModel({ model, key, lang, text, sourcesBlock, signal, mode, policy, grounded = true, request, onDelta }) {
   return mode === "chat"
-    ? callChatCompletionsApi({ model, key, lang, text, sourcesBlock, signal, grounded, request })
+    ? callChatCompletionsApi({ model, key, lang, text, sourcesBlock, signal, grounded, request, onDelta })
     : callResponsesApi({ model, key, lang, text, sourcesBlock, signal, policy, grounded, request });
 }
 
@@ -394,7 +425,7 @@ export async function generateGroundedAnswer({ text, lang, hits, signal, request
   });
 }
 
-export async function generateGeneralAnswer({ text, lang, signal, request = {} }) {
+export async function generateGeneralAnswer({ text, lang, signal, request = {}, onDelta }) {
   if (!modelConfigured()) return null;
   // Open questions may require a direct regulatory explanation and a complete
   // structured result. Use the capable fast Sol route instead of a Luna model
@@ -420,9 +451,11 @@ export async function generateGeneralAnswer({ text, lang, signal, request = {} }
       policy,
       grounded: false,
       request,
+      onDelta,
     });
   } catch (error) {
-    const canFallback = LUNA
+    const canFallback = !onDelta
+      && LUNA
       && LUNA !== primary.id
       && isTimeoutError(error);
     if (!canFallback) throw error;
@@ -443,7 +476,15 @@ export async function generateGeneralAnswer({ text, lang, signal, request = {} }
     });
   }
 
-  const parsed = parseModelJson(raw);
+  const parsed = onDelta ? {
+    intent: "general_guidance",
+    answer: raw,
+    confidence: "medium",
+    next_question: null,
+    primary_service_id: null,
+    secondary_service_id: null,
+    handoff: "none",
+  } : parseModelJson(raw);
   return buildGeneralPayload({
     parsed,
     model: usedModel,
