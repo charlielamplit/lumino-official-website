@@ -348,13 +348,14 @@ test("stale model reference dates degrade to a safe actionable result", async ()
   }
 });
 
-test("portal free text bypasses public fixed routing and uses contextual model output", async () => {
+test("portal grounded questions use contextual model output when enrichment is enabled", async () => {
   const previous = {
     beta: process.env.ADVISOR_PUBLIC_BETA,
     enabled: process.env.ADVISOR_MODEL_ENABLED,
     key: process.env.ADVISOR_OPENAI_API_KEY,
     base: process.env.ADVISOR_OPENAI_BASE_URL,
     mode: process.env.ADVISOR_OPENAI_API_MODE,
+    grounded: process.env.ADVISOR_GROUNDED_MODEL_ENABLED,
   };
   const originalFetch = globalThis.fetch;
   process.env.ADVISOR_PUBLIC_BETA = "1";
@@ -362,6 +363,7 @@ test("portal free text bypasses public fixed routing and uses contextual model o
   process.env.ADVISOR_OPENAI_API_KEY = "sk-test";
   process.env.ADVISOR_OPENAI_BASE_URL = "https://aiberm.com/v1";
   process.env.ADVISOR_OPENAI_API_MODE = "chat";
+  process.env.ADVISOR_GROUNDED_MODEL_ENABLED = "1";
   let modelCalled = false;
   try {
     globalThis.fetch = async (_url, init) => {
@@ -433,6 +435,7 @@ test("portal free text bypasses public fixed routing and uses contextual model o
       ADVISOR_OPENAI_API_KEY: previous.key,
       ADVISOR_OPENAI_BASE_URL: previous.base,
       ADVISOR_OPENAI_API_MODE: previous.mode,
+      ADVISOR_GROUNDED_MODEL_ENABLED: previous.grounded,
     })) {
       if (value == null) delete process.env[key];
       else process.env[key] = value;

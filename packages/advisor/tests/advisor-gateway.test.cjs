@@ -114,7 +114,7 @@ test("chooseModel supports explicit Luna opt-out", async () => {
   assert.equal(model.chooseModel({ text: "a".repeat(281), hits: [{ id: 1 }], luna, sol, lunaEnabled: true }).tier, "sol");
 });
 
-test("known unhealthy gateway model ids migrate to current cost-effective routes", async () => {
+test("known unhealthy Luna id migrates without overriding the proven Sol route", async () => {
   const previous = {
     luna: process.env.ADVISOR_MODEL_LUNA,
     sol: process.env.ADVISOR_MODEL_SOL,
@@ -124,7 +124,7 @@ test("known unhealthy gateway model ids migrate to current cost-effective routes
     process.env.ADVISOR_MODEL_SOL = "deepseek/deepseek-v4-flash";
     const model = await loadModel();
     assert.equal(model.ADVISOR_MODELS.LUNA, "gpt-6-luna");
-    assert.equal(model.ADVISOR_MODELS.SOL, "gpt-6.1-terra");
+    assert.equal(model.ADVISOR_MODELS.SOL, "deepseek/deepseek-v4-flash");
   } finally {
     if (previous.luna == null) delete process.env.ADVISOR_MODEL_LUNA; else process.env.ADVISOR_MODEL_LUNA = previous.luna;
     if (previous.sol == null) delete process.env.ADVISOR_MODEL_SOL; else process.env.ADVISOR_MODEL_SOL = previous.sol;

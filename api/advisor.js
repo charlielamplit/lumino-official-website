@@ -256,6 +256,18 @@ async function resolveOpenQuestion(request, signal) {
     return { result, source: "actionable_fallback", modelAttempted: false, modelFailed: false };
   }
 
+  if (process.env.ADVISOR_GROUNDED_MODEL_ENABLED !== "1") {
+    const grounded = buildGroundedFallback(hits, request.lang);
+    grounded.degradation_reason = null;
+    grounded.ui_state = "ok";
+    return {
+      result: grounded,
+      source: "retrieval_grounded",
+      modelAttempted: false,
+      modelFailed: false,
+    };
+  }
+
   if (modelConfigured()) {
     try {
       const generated = await generateGroundedAnswer({
