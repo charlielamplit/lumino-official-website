@@ -2,7 +2,7 @@
   "use strict";
 
   const SESSION_KEY = "lumino.advisor.state.v1";
-  const CLIENT_TIMEOUT_MS = 12000;
+  const CLIENT_TIMEOUT_MS = 22000;
   const THINK_ROTATE_MS = 900;
   const DETERMINISTIC_DELAY_MIN_MS = 1000;
   const DETERMINISTIC_DELAY_MAX_MS = 4000;
