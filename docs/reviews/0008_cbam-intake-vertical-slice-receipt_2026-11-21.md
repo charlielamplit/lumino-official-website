@@ -4,6 +4,8 @@
 
 目标分支：`feature/cbam-intake-vertical-slice`（基于 `origin/dev@e2c7ba2`）
 
+评审入口：GitHub PR [#118](https://github.com/charlielamplit/lumino-official-website/pull/118)，base=`dev`
+
 结论：已形成可评审的浏览器内原型；尚未接入生产对象存储、异步 Worker 或生产数据库。
 
 ## 1. 本次解决的问题
