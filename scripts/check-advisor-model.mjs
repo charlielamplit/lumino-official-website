@@ -6,7 +6,7 @@ if (!/^https?:\/\//.test(base)) {
   process.exit(2);
 }
 
-const expectedSources = new Set(["general_model", "retrieval_model"]);
+const expectedSources = new Set(["general_model"]);
 const maxAttempts = 4;
 let lastFailure = "no response";
 
@@ -16,11 +16,10 @@ for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
-        text: "我应该如何组织一次合规项目启动会？",
+        text: "如何组织跨部门合规项目启动会？",
         lang: "zh",
         asOf: new Date().toISOString().slice(0, 10),
-        surface: "portal",
-        context: { serviceId: "cbam", workstream: "current_work", pageId: "agent-smoke" },
+        surface: "public",
       }),
       signal: AbortSignal.timeout(20_000),
     });

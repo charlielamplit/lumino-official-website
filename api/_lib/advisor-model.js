@@ -12,11 +12,11 @@ import {
 } from "./advisor-gateway.js";
 
 const configuredLuna = process.env.ADVISOR_MODEL_LUNA || "gpt-6-luna";
-const configuredSol = process.env.ADVISOR_MODEL_SOL || "gpt-6.1-terra";
-// Migrate known unhealthy/retired gateway IDs without requiring a secret rotation. #104
+const configuredSol = process.env.ADVISOR_MODEL_SOL || "deepseek/deepseek-v4-flash";
+// Migrate the confirmed unhealthy Luna route without requiring a secret rotation. #104
 const LUNA = configuredLuna === "anthropic/claude-haiku-5.5" ? "gpt-6-luna" : configuredLuna;
-const SOL = configuredSol === "deepseek/deepseek-v4-flash" ? "gpt-6.1-terra" : configuredSol;
-const LUNA_ENABLED = process.env.ADVISOR_LUNA_ENABLED !== "0";
+const SOL = configuredSol;
+const LUNA_ENABLED = process.env.ADVISOR_LUNA_ENABLED === "1";
 const CONTACT_URL = "/apps/site/contact.html";
 
 function apiKey() {
