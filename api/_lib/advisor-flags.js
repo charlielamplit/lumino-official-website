@@ -78,12 +78,12 @@ export function getPublicFlags() {
     storage_policy,
     store_requested: shouldSendStoreFalse(storage_policy),
     beta_label: {
-      zh: "公开试用",
-      en: "Public beta",
+      zh: "在线服务",
+      en: "Online service",
     },
     boundary: {
-      zh: "初步判断，不替代正式合规结论；不收集联系方式或客户文件。第三方模型网关的日志与训练策略以 Provider 合同为准，公开 Beta 前须书面确认。",
-      en: "Preliminary guidance only — not a formal compliance conclusion. No contact details or client files are collected by Lumino. Third-party gateway logging/training is governed by the Provider contract and must be confirmed before public Beta.",
+      zh: "初步判断，不替代正式合规结论；不收集联系方式或客户文件。第三方模型网关的日志与训练策略以 Provider 合同为准。",
+      en: "Preliminary guidance only — not a formal compliance conclusion. No contact details or client files are collected by Lumino. Third-party gateway logging and training are governed by the Provider contract.",
     },
   };
 }

@@ -159,12 +159,15 @@ test("staff login rejects invalid credentials and returns the configured key for
   }
 });
 
-test("public lead copy does not claim formal database delivery", () => {
+test("public lead copy distinguishes database persistence, notification and demo outcomes", () => {
   const fs = require("node:fs");
   const contact = fs.readFileSync(path.join(__dirname, "../apps/site/site/contact.js"), "utf8");
   const calculator = fs.readFileSync(path.join(__dirname, "../apps/site/calculator/app.js"), "utf8");
-  for (const source of [contact, calculator]) {
-    assert.doesNotMatch(source, /已写入线索库|商务可在 Portal 线索箱查看/);
-    assert.match(source, /不代表正式数据库回执|未确认进入正式数据库/);
-  }
+  assert.match(contact, /已保存至数据库/);
+  assert.match(contact, /通知已发送|通知已进入发送队列/);
+  assert.doesNotMatch(contact, /演示|demo/i);
+  assert.doesNotMatch(contact, /商务可在 Portal 线索箱查看/);
+  assert.match(calculator, /已保存至数据库/);
+  assert.match(calculator, /通知已发送|通知已进入发送队列/);
+  assert.doesNotMatch(calculator, /演示|demo/i);
 });
