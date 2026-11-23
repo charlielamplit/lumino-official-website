@@ -644,3 +644,113 @@ test("advisor API disables when public beta is off", async () => {
     else process.env.ADVISOR_PUBLIC_BETA = prev;
   }
 });
+
+test("ambiguous public questions ask one useful follow-up without forcing contact", async () => {
+  const previous = process.env.ADVISOR_PUBLIC_BETA;
+  process.env.ADVISOR_PUBLIC_BETA = "1";
+  try {
+    const file = pathToFileURL(path.join(root, "api/advisor.js")).href;
+    const mod = await import(`${file}?t=${Date.now()}-${Math.random()}`);
+    const out = { statusCode: 0, body: "" };
+    const res = {
+      status(code) { out.statusCode = code; return this; },
+      setHeader() {},
+      end(body) { out.body = body || ""; },
+      write() {},
+    };
+    await mod.default({
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.101" },
+      body: { text: "我们要做碳合规，应该做什么？", lang: "zh" },
+      query: {},
+      on() {},
+    }, res);
+    const data = JSON.parse(out.body);
+    assert.equal(data.outcome_type, "clarify");
+    assert.equal(data.handoff, "none");
+    assert.match(data.next_question, /谁|什么|什么时候/);
+    assert.equal(data.links.some((item) => item.type === "contact"), false);
+    assert.equal(data.runtime.source, "clarification");
+  } finally {
+    if (previous == null) delete process.env.ADVISOR_PUBLIC_BETA;
+    else process.env.ADVISOR_PUBLIC_BETA = previous;
+  }
+});
+
+test("explicit human-review requests return a scoped contact CTA", async () => {
+  const previous = process.env.ADVISOR_PUBLIC_BETA;
+  process.env.ADVISOR_PUBLIC_BETA = "1";
+  try {
+    const file = pathToFileURL(path.join(root, "api/advisor.js")).href;
+    const mod = await import(`${file}?t=${Date.now()}-${Math.random()}`);
+    const out = { statusCode: 0, body: "" };
+    const res = {
+      status(code) { out.statusCode = code; return this; },
+      setHeader() {},
+      end(body) { out.body = body || ""; },
+      write() {},
+    };
+    await mod.default({
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.102" },
+      body: { text: "我们两周后要提交 CBAM 报告，希望顾问做一次人工复核。", lang: "zh" },
+      query: {},
+      on() {},
+    }, res);
+    const data = JSON.parse(out.body);
+    assert.equal(data.outcome_type, "handoff");
+    assert.equal(data.handoff, "expert_required");
+    assert.equal(data.service_matches[0].service_id, "cbam");
+    assert.match(data.links[0].url, /serviceId=cbam/);
+    assert.equal(data.runtime.source, "human_handoff");
+  } finally {
+    if (previous == null) delete process.env.ADVISOR_PUBLIC_BETA;
+    else process.env.ADVISOR_PUBLIC_BETA = previous;
+  }
+});
+
+test("model timeout returns an actionable fallback with retry or contact next steps", async () => {
+  const previous = {
+    beta: process.env.ADVISOR_PUBLIC_BETA,
+    enabled: process.env.ADVISOR_MODEL_ENABLED,
+    key: process.env.ADVISOR_OPENAI_API_KEY,
+  };
+  const originalFetch = globalThis.fetch;
+  process.env.ADVISOR_PUBLIC_BETA = "1";
+  process.env.ADVISOR_MODEL_ENABLED = "1";
+  process.env.ADVISOR_OPENAI_API_KEY = "sk-test";
+  globalThis.fetch = async () => { throw new Error("advisor_timeout"); };
+  try {
+    const file = pathToFileURL(path.join(root, "api/advisor.js")).href;
+    const mod = await import(`${file}?t=${Date.now()}-${Math.random()}`);
+    const out = { statusCode: 0, body: "" };
+    const res = {
+      status(code) { out.statusCode = code; return this; },
+      setHeader() {},
+      end(body) { out.body = body || ""; },
+      write() {},
+    };
+    await mod.default({
+      method: "POST",
+      headers: { "x-forwarded-for": "198.51.100.103" },
+      body: { text: "xyzzy-no-match completely unrelated tax question", lang: "zh" },
+      query: {},
+      on() {},
+    }, res);
+    const data = JSON.parse(out.body);
+    assert.equal(data.runtime.degradation_reason, "model_timeout");
+    assert.equal(data.runtime.ui_state, "basic_mode");
+    assert.equal(data.outcome_type, "clarify");
+    assert.ok(data.next_question);
+    assert.ok(data.links.length > 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const [key, value] of Object.entries({
+      ADVISOR_PUBLIC_BETA: previous.beta,
+      ADVISOR_MODEL_ENABLED: previous.enabled,
+      ADVISOR_OPENAI_API_KEY: previous.key,
+    })) {
+      if (value == null) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});

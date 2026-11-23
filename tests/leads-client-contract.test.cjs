@@ -95,7 +95,9 @@ test("public submission accepts v1 success without caching contact PII locally",
       requestId: "REQ-CREATE",
       data: {
         leadId: "LM-20261118-0001",
+        persisted: true,
         notified: false,
+        notifyStatus: "queued",
         lead: {
           id: "LM-20261118-0001",
           status: "new",
@@ -110,6 +112,8 @@ test("public submission accepts v1 success without caching contact PII locally",
   assert.equal(result.channel, "api");
   assert.equal(result.leadId, "LM-20261118-0001");
   assert.equal(result.lead.localOnly, false);
+  assert.equal(result.persisted, true);
+  assert.equal(result.notifyStatus, "queued");
   assert.equal(client.readLocal().length, 0);
 });
 

@@ -103,7 +103,7 @@
       <button class="dialog-close" id="closeLead" type="button" aria-label="关闭">×</button>
       <p class="mono">UNLOCK THE COMPARISON</p>
       <h2 id="leadTitle">解锁实测路径对比。</h2>
-      <p class="dialog-intro">本页为本地演示。填写仅用于解锁对比；不会向外部 CRM 自动发送。正式咨询请使用联系页。</p>
+      <p class="dialog-intro">提交后将保存本次试算摘要和联系信息，用于安排顾问跟进；只有保存成功后才会解锁对比。</p>
       <form id="leadForm">
         <label><span>公司名称 *</span><input id="leadCompany" name="company" required maxlength="80" placeholder="公司全称"></label>
         <div class="field-row">
@@ -111,7 +111,7 @@
           <label><span>手机号 *</span><input name="phone" required pattern="1[3-9][0-9]{9}" maxlength="11" inputmode="numeric" placeholder="11 位手机号"></label>
         </div>
         <label><span>企业邮箱 <small>选填</small></span><input name="email" type="email" maxlength="100" placeholder="name@company.com"></label>
-        <label class="consent"><input name="consent" type="checkbox" required><span>我理解本页为本地演示，填写仅用于解锁对比，不会自动外发。</span></label>
+        <label class="consent"><input name="consent" type="checkbox" required><span>我同意 Lumino 为本次试算跟进处理上述联系信息和试算摘要。</span></label>
         <button class="primary-button" id="leadSubmit" type="submit">解锁实测对比</button>
         <p class="form-status" id="leadStatus" role="status"></p>
       </form>

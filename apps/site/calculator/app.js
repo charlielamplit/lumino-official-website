@@ -312,31 +312,21 @@ async function submitLead(event) {
       }),
     });
     const payload = await response.json().catch(() => ({}));
-    if (response.ok) {
-      const leadHint = payload.leadId ? `演示编号 ${payload.leadId}。` : "";
-      const notifyHint = payload.notified
-        ? "已向对接人发送通知；该编号不代表正式数据库回执。"
-        : "未确认进入正式数据库或商务处理流程；正式咨询请使用联系页。";
-      status.textContent = `已记录本次试算演示上下文。${leadHint}${notifyHint}`;
+    const result = payload?.data && typeof payload.data === "object" ? payload.data : payload;
+    if (response.ok && result.persisted === true && result.leadId) {
+      const notifyHint = result.notified || result.notifyStatus === "sent"
+        ? "对接人通知已发送。"
+        : result.notifyStatus === "queued"
+          ? "对接人通知已进入发送队列。"
+          : "通知状态暂未确认；无需重复提交。";
+      status.textContent = `试算需求已保存至数据库（编号 ${result.leadId}）。${notifyHint}`;
       status.classList.add("success");
       unlockComparison();
       return;
     }
-    // 本地原型：接口不可用时仍解锁对比，不伪造顾问跟进
-    if (response.status >= 500 || response.status === 404) {
-      status.textContent = "本页为本地演示：未向服务端线索库发送。已解锁实测对比；正式咨询请使用联系页。";
-      status.classList.add("success");
-      unlockComparison();
-      return;
-    }
-    throw new Error(payload.error || "提交失败");
+    const apiMessage = payload?.error?.message || payload?.error;
+    throw new Error(typeof apiMessage === "string" ? apiMessage : "本次需求未正式保存，请稍后重试");
   } catch (error) {
-    if (error instanceof TypeError) {
-      status.textContent = "本页为本地演示：未向外部系统发送。已解锁实测对比；正式咨询请使用联系页。";
-      status.classList.add("success");
-      unlockComparison();
-      return;
-    }
     status.innerHTML = `${escapeHtml(error.message || "提交失败")} <a href="../contact.html">改用预约诊断 →</a>`;
     status.classList.add("error");
     button.disabled = false;

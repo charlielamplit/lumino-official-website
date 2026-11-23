@@ -46,7 +46,7 @@
         <h2 data-i18n-zh="3. 处理目的与依据" data-i18n-en="3. Purposes and legal bases"></h2>
         <ul>
           <li data-i18n-zh="回复咨询，判断适用服务，准备资料清单、范围、周期和报价。" data-i18n-en="Respond to enquiries and prepare service recommendations, data lists, scope, timing and quotes."></li>
-          <li data-i18n-zh="按你的请求提供试算、诊断、演示或客户支持。" data-i18n-en="Provide calculators, diagnostics, demos or support at your request."></li>
+          <li data-i18n-zh="按你的请求提供试算、诊断或客户支持。" data-i18n-en="Provide calculators, diagnostics or support at your request."></li>
           <li data-i18n-zh="订立和履行服务合同，完成数据采集、核算、报告、复核和交付。" data-i18n-en="Enter into and perform service contracts, including collection, calculation, reporting, review and delivery."></li>
           <li data-i18n-zh="管理账户、权限和项目，并保障网站、Portal 与接口安全。" data-i18n-en="Manage accounts, permissions and engagements, and secure the website, portal and APIs."></li>
           <li data-i18n-zh="履行法律、监管、审计和争议处理义务；在取得必要同意或具有其他合法依据时改进服务。" data-i18n-en="Meet legal, regulatory, audit and dispute obligations, and improve services where consent or another lawful basis applies."></li>
@@ -56,7 +56,7 @@
 
       <article>
         <h2 data-i18n-zh="4. 线索处理与通知" data-i18n-en="4. Lead handling and notifications"></h2>
-        <p data-i18n-zh="咨询线索可能写入 Lumino 服务端线索库，在授权的商务或运营线索收件箱中展示，并通过已配置的 Webhook 或邮件服务通知指定对接人。静态演示环境可能把记录暂存于当前浏览器并明确标记为本机记录。正式环境只有在服务端持久化成功后才应显示正式线索编号。" data-i18n-en="Enquiries may be stored in Lumino's server-side lead store, shown in an authorised BD or Ops inbox, and notified to designated staff through a configured webhook or email service. A static demo may keep a clearly labelled local record in the current browser. Production should show a formal lead ID only after server-side persistence succeeds."></p>
+        <p data-i18n-zh="咨询线索在服务端持久化成功后写入 Lumino 线索库，在授权的商务或运营收件箱中展示，并通过已配置的通知服务提醒指定对接人。未成功持久化时，页面会明确提示未正式提交，并保留输入供你重试。" data-i18n-en="Enquiries enter Lumino's lead store only after successful server-side persistence, appear in an authorised BD or Ops inbox, and notify designated staff through the configured notification service. If persistence fails, the page clearly states that the enquiry was not submitted and preserves the input for retry."></p>
       </article>
 
       <article>
@@ -91,7 +91,7 @@
 
       <article>
         <h2 data-i18n-zh="11. Cookie 与本地存储" data-i18n-en="11. Cookies and local storage"></h2>
-        <p data-i18n-zh="当前官网没有启用分析、广告或跨站追踪 Cookie。必要的 localStorage 和 sessionStorage 用于语言、会话、核心功能、本地演示线索及重复提交控制。若以后启用分析、营销、会话回放或第三方媒体嵌入，我们会在其运行前提供分目的选择，并使拒绝和撤回与接受同样容易。" data-i18n-en="The current site does not use analytics, advertising or cross-site tracking cookies. Necessary localStorage and sessionStorage support language, sessions, core features, local demo leads and duplicate-submission control. If analytics, marketing, session replay or third-party media are later enabled, we will offer purpose-based choices before they run and make refusal and withdrawal as easy as acceptance."></p>
+        <p data-i18n-zh="当前官网没有启用分析、广告或跨站追踪 Cookie。必要的 localStorage 和 sessionStorage 用于语言、会话、核心功能及重复提交控制，不在浏览器中保存公开表单的联系信息。若以后启用分析、营销、会话回放或第三方媒体嵌入，我们会在其运行前提供分目的选择，并使拒绝和撤回与接受同样容易。" data-i18n-en="The current site does not use analytics, advertising or cross-site tracking cookies. Necessary localStorage and sessionStorage support language, sessions, core features and duplicate-submission control; public-form contact details are not stored in the browser. If analytics, marketing, session replay or third-party media are later enabled, we will offer purpose-based choices before they run and make refusal and withdrawal as easy as acceptance."></p>
         <p><a class="m-link" href="cookies.html" data-i18n-zh="查看 Cookie 与本地存储清单 →" data-i18n-en="View the cookie and local-storage list →"></a></p>
       </article>
 
