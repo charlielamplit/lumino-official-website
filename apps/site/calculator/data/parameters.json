@@ -1,5 +1,10 @@
 {
-  "certificatePrice": 75.36,
+  "certificatePrices2026": [
+    { "quarter": "Q1", "price": 75.36, "published": "2026-04-07" },
+    { "quarter": "Q2", "price": 75.28, "published": "2026-07-06" },
+    { "quarter": "Q3", "price": 82.32, "published": "2026-10-05" },
+    { "quarter": "Q4", "price": null, "published": "2027-01-04" }
+  ],
   "exchangeRate": 7.8,
   "displayCurrency": "CNY",
   "cscf": 1.0,

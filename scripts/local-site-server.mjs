@@ -31,14 +31,6 @@ function loadEnvFile(filePath) {
 
 loadEnvFile(path.join(root, ".env"));
 
-if (!process.env.RELEASE_SHA) {
-  try {
-    process.env.RELEASE_SHA = fs.readFileSync(path.join(root, ".release-sha"), "utf8").trim();
-  } catch {
-    // Local development has no release marker; production deployment writes one.
-  }
-}
-
 const mimeTypes = {
   ".css": "text/css; charset=utf-8",
   ".html": "text/html; charset=utf-8",
@@ -59,6 +51,7 @@ const apiRoutes = {
   "/api/advisor-ping": "api/advisor-ping.js",
   "/api/knowledge": "api/knowledge.js",
   "/api/leads": "api/leads.js",
+  "/api/precursors": "api/precursors.js",
   "/api/release": "api/release.js",
   "/api/staff-login": "api/staff-login.js",
 };

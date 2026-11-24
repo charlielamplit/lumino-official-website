@@ -159,15 +159,12 @@ test("staff login rejects invalid credentials and returns the configured key for
   }
 });
 
-test("public lead copy distinguishes database persistence, notification and demo outcomes", () => {
+test("public lead copy claims database delivery only after confirmed persistence", () => {
   const fs = require("node:fs");
   const contact = fs.readFileSync(path.join(__dirname, "../apps/site/site/contact.js"), "utf8");
   const calculator = fs.readFileSync(path.join(__dirname, "../apps/site/calculator/app.js"), "utf8");
-  assert.match(contact, /已保存至数据库/);
-  assert.match(contact, /通知已发送|通知已进入发送队列/);
-  assert.doesNotMatch(contact, /演示|demo/i);
-  assert.doesNotMatch(contact, /商务可在 Portal 线索箱查看/);
-  assert.match(calculator, /已保存至数据库/);
-  assert.match(calculator, /通知已发送|通知已进入发送队列/);
-  assert.doesNotMatch(calculator, /演示|demo/i);
+  assert.match(contact, /result\.channel === "api" && result\.persisted/);
+  assert.match(contact, /本次咨询未正式提交/);
+  assert.match(calculator, /payload\.data\?\.persisted === true/);
+  assert.match(calculator, /线索未确认写入/);
 });
