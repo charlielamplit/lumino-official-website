@@ -30,6 +30,10 @@ function loadEnvFile(filePath) {
 }
 
 loadEnvFile(path.join(root, ".env"));
+if (!process.env.RELEASE_SHA) {
+  const releaseFile = path.join(root, ".release-sha");
+  if (fs.existsSync(releaseFile)) process.env.RELEASE_SHA = fs.readFileSync(releaseFile, "utf8").trim();
+}
 
 const mimeTypes = {
   ".css": "text/css; charset=utf-8",

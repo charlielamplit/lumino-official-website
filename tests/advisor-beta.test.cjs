@@ -329,7 +329,7 @@ test("SSE sends a useful provisional answer before forwarding real model deltas"
     assert.match(output, /"text":"具体"/);
     assert.match(output, /"text":"答案"/);
     assert.match(output, /event: advisor/);
-    assert.match(output, /"answer":"具体答案"/);
+    assert.match(output, /"answer":"通用参考，未匹配到可引用资料。具体答案"/);
   } finally {
     globalThis.fetch = originalFetch;
     for (const [key, value] of Object.entries({

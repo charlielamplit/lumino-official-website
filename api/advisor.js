@@ -149,6 +149,31 @@ function inferServiceId(text) {
   return "";
 }
 
+function cbamDefinitionPayload(request) {
+  if (request.surface === "portal") return null;
+  const compact = String(request.text || "").toLowerCase().replace(/[\s？?。.!！]/g, "");
+  if (!["cbam", "cbam是什么", "cbam是什么意思", "什么是cbam", "whatiscbam"].includes(compact)) return null;
+  const en = request.lang === "en";
+  const url = "https://taxation-customs.ec.europa.eu/carbon-border-adjustment-mechanism_en";
+  return {
+    intent: "cbam_definition",
+    answer_mode: "fixed",
+    outcome_type: "answer",
+    answer: en
+      ? "CBAM is the EU Carbon Border Adjustment Mechanism. Its definitive period began on 1 January 2026. Authorised declarants report embedded emissions and surrender CBAM certificates through an annual declaration; it is not a quarterly import tax rate. Product scope, emissions and certificate needs depend on the actual goods and reporting data."
+      : "CBAM 是欧盟碳边境调节机制。正式实施期自 2026 年 1 月 1 日开始；获授权的申报人按年度申报嵌入排放并清缴 CBAM 证书，并非按季度缴纳的进口税率。具体商品范围、排放和证书需求需结合实际货物及申报数据判断。",
+    confidence: "high",
+    service_matches: [{ service_id: "cbam", reason: en ? "CBAM definition." : "CBAM 基础定义。", priority: 1 }],
+    next_question: null,
+    suggested_replies: [],
+    sources: [{ title: en ? "European Commission: CBAM" : "欧盟委员会：CBAM 概览", url }],
+    links: [{ type: "link", label: en ? "EU CBAM overview" : "查看欧委会 CBAM 概览", url }],
+    handoff: "none",
+    degradation_reason: null,
+    ui_state: "ok",
+  };
+}
+
 function asksForHumanService(text) {
   return /(人工|顾问|专家).{0,12}(复核|审核|联系|咨询|协助|服务)|(?:预约|委托|报价).{0,12}(顾问|咨询|复核|服务)|(?:联系|找).{0,8}(人工|顾问|专家)|(?:human|expert|consultant).{0,16}(review|help|service|contact)|(?:contact|talk to|quote).{0,16}(human|expert|consultant)/i.test(String(text || ""));
 }
@@ -316,6 +341,9 @@ async function resolveOpenQuestion(request, signal, onDelta) {
         if (generated?.answer) {
           if (hasStaleReferenceDate(generated.answer, request.asOf)) return staleModelFallback(request, hits);
           const { runtime_model: runtimeModel, ...rest } = generated;
+          rest.answer = request.lang === "en"
+            ? `General reference; no published source matched this question. ${rest.answer}`
+            : `通用参考，未匹配到可引用资料。${rest.answer}`;
           rest.degradation_reason = "no_published_sources";
           rest.ui_state = "ok";
           return {
@@ -479,6 +507,9 @@ export default async function handler(request, response) {
     } else if (needsClarification(sanitized.request.text)) {
       result = clarificationPayload(sanitized.request);
       source = "clarification";
+    } else if (cbamDefinitionPayload(sanitized.request)) {
+      result = cbamDefinitionPayload(sanitized.request);
+      source = "official_fixed";
     } else {
       const portalOpenQuestion = sanitized.request.surface === "portal" && sanitized.request.text;
       result = portalOpenQuestion ? null : routeDeterministic(sanitized.request);
