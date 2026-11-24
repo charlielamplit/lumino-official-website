@@ -115,7 +115,9 @@
   function safeUrl(value) {
     try {
       const url = new URL(value, location.origin);
-      if (url.origin !== location.origin) return "#";
+      if (url.origin !== location.origin) {
+        return url.protocol === "https:" && url.hostname === "taxation-customs.ec.europa.eu" ? url.href : "#";
+      }
       return `${url.pathname}${url.search}${url.hash}`;
     } catch (_) { return "#"; }
   }

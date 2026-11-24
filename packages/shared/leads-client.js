@@ -211,7 +211,9 @@
         leadId,
         lead,
         channel: "api",
+        persisted: data.persisted === true && data.isDemo !== true && data.lead?.isDemo !== true,
         notified: Boolean(data.notified),
+        notifyStatus: String(data.notifyStatus || (data.notified ? "sent" : "unknown")),
       };
     } catch (_) {
       return networkError();

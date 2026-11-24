@@ -1090,7 +1090,16 @@ lumino-header {
 .m-form { display: grid; gap: 16px; }
 .m-form__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .m-field { display: grid; gap: 6px; font-size: var(--type-ui); color: var(--ink); }
-.m-field span { color: var(--muted); font-size: var(--type-meta); }
+.m-field__label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  color: var(--ink);
+  font-size: var(--type-ui);
+  line-height: 1.4;
+}
+.m-field__label--muted { color: var(--ink-secondary); }
+.m-field__req { color: var(--muted); font-size: var(--type-meta); font-weight: 400; }
 .m-field input,
 .m-field select,
 .m-field textarea {
@@ -1110,8 +1119,52 @@ lumino-header {
   outline-offset: 0;
   border-color: var(--green);
 }
-.m-form__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 8px; }
-.m-form__hint { font-size: var(--type-meta); color: var(--muted); max-width: 42ch; }
+.m-field--check {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+}
+.m-field--check input[type="checkbox"] {
+  appearance: auto;
+  width: 1em;
+  height: 1em;
+  min-height: 0 !important;
+  margin: 0.28em 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+.m-field__check-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--ink);
+  font-size: var(--type-ui);
+  line-height: 1.55;
+}
+.m-field__check-copy a { color: var(--green-2); }
+.m-form__actions { display: flex; flex-wrap: nowrap; align-items: center; gap: 16px; margin-top: 8px; }
+.m-form__hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--type-meta);
+  color: var(--muted);
+  white-space: nowrap;
+  max-width: none;
+}
+.contact-card .m-form__actions {
+  flex-wrap: nowrap;
+  align-items: center;
+}
+.contact-card .m-form__hint {
+  white-space: nowrap;
+  max-width: none;
+  overflow: visible;
+}
 .m-form__message { padding: 12px 14px; border-radius: var(--radius); font-size: var(--type-ui); background: var(--green-soft); color: var(--green-2); }
 .m-form__message[data-tone="error"] { background: var(--danger-soft); color: var(--danger); }
 .m-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 0; }
@@ -1280,6 +1333,9 @@ lumino-header {
   .m-section__copy h2 { font-size: 24px; line-height: 32px; }
 }
 @media (max-width: 560px) {
+  .m-form__actions { flex-wrap: wrap; }
+  .m-form__hint,
+  .contact-card .m-form__hint { white-space: normal; }
   .m-panel__channels { grid-template-columns: 1fr; }
   .m-hero__actions { display: grid; }
   .m-hero__actions .button { width: 100%; }
@@ -1726,7 +1782,7 @@ lumino-header {
 .contact-card {
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);
-  padding: 22px 24px;
+  padding: 18px 20px;
 }
 .svc-chip-pick { display: flex; gap: 8px; flex-wrap: wrap; }
 .svc-chip-pick button {
@@ -2915,9 +2971,14 @@ html.js-reveal .m-reveal.is-in {
 .pf-stack { gap: 16px; }
 .pf-h2 { margin: 0; font-size: clamp(20px, 2.2vw, 26px); line-height: 1.3; }
 .m-closing { padding-block: 0; gap: 16px 28px; }
-.contact-steps { gap: 14px; }
-.contact-card .m-form { gap: 12px; }
-.contact-card .m-form__grid { gap: 12px; }
+.contact-steps { gap: 12px; }
+.contact-card .m-form { gap: 8px; }
+.contact-card .m-form__grid { gap: 8px 12px; }
+.contact-card .m-field { gap: 4px; }
+.contact-card .m-field textarea { min-height: 104px; }
+.contact-card .m-form__actions { margin-top: 4px; gap: 12px; }
+.contact-card .svc-chip-pick { gap: 6px; }
+.contact-card .svc-chip-pick button { padding: 0 12px; }
 .m-page-hero--compact { padding: clamp(22px, 3vw, 32px) 0 clamp(18px, 2.2vw, 26px); }
 .m-page-hero--compact .crumb { margin-bottom: 8px; }
 .m-page-hero--compact + .m-section { padding-top: clamp(28px, 3.5vw, 44px); }

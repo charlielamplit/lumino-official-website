@@ -31,18 +31,18 @@
         <div class="contact-step"><span class="n">03</span><div><strong data-i18n-zh="确定方案与报价" data-i18n-en="Scope and quote"></strong><span data-i18n-zh="确认范围、周期与费用后开始项目。" data-i18n-en="We agree scope, timing and fees, then begin."></span></div></div>
         <div style="padding-top:14px;border-top:1px solid var(--line);font-size:var(--type-ui);color:var(--ink-secondary);display:grid;gap:4px">
           <a href="mailto:contact@lumino.tech">contact@lumino.tech</a>
-          <span data-i18n-zh="或通过本页表单提交，线索将进入服务团队收件箱" data-i18n-en="Or use this form — leads go to the service inbox"></span>
+          <span data-i18n-zh="或通过本页表单提交；提交结果会明确说明是否已保存及通知状态" data-i18n-en="Or use this form — the result will state whether it was saved and whether the team was notified"></span>
           <span data-i18n-zh="上海铄垣环保科技有限公司" data-i18n-en="Shanghai Shuoyuan Environmental Technology"></span>
           <a href="legal/privacy.html" data-i18n-zh="隐私与数据处理说明 →" data-i18n-en="Privacy &amp; data →"></a>
         </div>
       </aside>
       <form class="contact-card m-form" id="contactForm" novalidate>
         <div class="m-form__grid">
-          <label class="m-field">姓名 <span>必填</span><input name="name" autocomplete="name" required></label>
-          <label class="m-field">公司 <span>必填</span><input name="company" autocomplete="organization" required></label>
-          <label class="m-field">工作邮箱<input name="email" type="email" autocomplete="email" placeholder="name@company.com"></label>
-          <label class="m-field">电话 / 微信<input name="phone" autocomplete="tel" placeholder="手机或微信号"></label>
-          <label class="m-field">行业
+          <label class="m-field"><span class="m-field__label">姓名 <span class="m-field__req">必填</span></span><input name="name" autocomplete="name" required></label>
+          <label class="m-field"><span class="m-field__label">公司 <span class="m-field__req">必填</span></span><input name="company" autocomplete="organization" required></label>
+          <label class="m-field"><span class="m-field__label">工作邮箱</span><input name="email" type="email" autocomplete="email" placeholder="name@company.com"></label>
+          <label class="m-field"><span class="m-field__label">电话 / 微信</span><input name="phone" autocomplete="tel" placeholder="手机或微信号"></label>
+          <label class="m-field"><span class="m-field__label">行业</span>
             <select name="industry" id="industrySelect">
               <option value="">请选择</option>
               <option value="steel">钢铁</option>
@@ -56,7 +56,7 @@
           </label>
         </div>
         <div class="m-field">
-          <span style="color:var(--ink-secondary)">关注的服务（可多选）</span>
+          <span class="m-field__label m-field__label--muted">关注的服务（可多选）</span>
           <div class="svc-chip-pick" id="svcChips">
             <button type="button" data-svc="cbam">欧盟碳边境调节</button>
             <button type="button" data-svc="pcf">产品碳足迹</button>
@@ -67,13 +67,13 @@
           </div>
           <input type="hidden" name="serviceId" id="serviceSelect" value="">
         </div>
-        <label class="m-field">时间要求<input name="timeline" id="timelineField" placeholder="例如：本季度 / 客户要求 12 月前"></label>
-        <label class="m-field">需求说明 <span>必填</span>
+        <label class="m-field"><span class="m-field__label">时间要求</span><input name="timeline" id="timelineField" placeholder="例如：本季度 / 客户要求 12 月前"></label>
+        <label class="m-field"><span class="m-field__label">需求说明 <span class="m-field__req">必填</span></span>
           <textarea name="note" required placeholder="例如：欧盟客户要求 12 月前提供热轧钢卷的排放数据"></textarea>
         </label>
-        <label class="m-field m-field--check" style="display:flex;gap:10px;align-items:flex-start;flex-direction:row">
-          <input type="checkbox" name="consent" value="on" required style="margin-top:4px">
-          <span>我同意 Lumino 就本次咨询联系我，并已阅读 <a href="legal/privacy.html">隐私与数据处理说明</a>。<span style="color:var(--ink-secondary)">必填</span></span>
+        <label class="m-field m-field--check">
+          <input type="checkbox" name="consent" value="on" required>
+          <span class="m-field__check-copy">我同意 Lumino 就本次咨询联系我，并已阅读 <a href="legal/privacy.html">隐私与数据处理说明</a>。<span class="m-field__req">必填</span></span>
         </label>
         <input type="hidden" name="requestType" value="service-consultation">
         <input type="hidden" name="source" id="sourceField" value="public-contact">

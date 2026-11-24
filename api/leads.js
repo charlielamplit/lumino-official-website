@@ -10,6 +10,7 @@
  * Responses follow Platform API Response Contract v1.
  */
 import { createLead, getLead, listLeads, updateLead } from "./_lib/leads-store.js";
+import { calculatorAiAccessConfigured, issueCalculatorAiAccess } from "./_lib/calculator-ai-access.js";
 import { platformDb } from "./_lib/platform-db.js";
 import {
   createRequestId,
@@ -92,7 +93,7 @@ function isWecomWebhook(url) {
 }
 
 function buildWecomMarkdown(lead) {
-  const portalBase = String(process.env.PUBLIC_SITE_URL || "").replace(/\/$/, "") || "https://www.luminoyou.cn";
+  const portalBase = String(process.env.PUBLIC_SITE_URL || "").replace(/\/$/, "") || "https://www.luminoyou.com";
   const services = (lead.services || []).join("、") || "—";
   return [
     `## 新线索 <font color="warning">${lead.id}</font>`,
@@ -261,6 +262,11 @@ export default async function handler(request, response) {
   const consent = body.consent === true || body.consent === "on" || body.consent === "true" || body.consent === "1";
   const requestType = String(body.requestType || "service-consultation").slice(0, 80);
 
+  if (body.source === "lumino-cbam-calculator" && requestType === "calculator-ai"
+    && (!calculatorAiAccessConfigured() || !/^\d{8}$/.test(String(body.context?.cnCode || "")))) {
+    return sendError(response, "DEPENDENCY_UNAVAILABLE", { requestId });
+  }
+
   const fieldErrors = [];
   if (!company) fieldErrors.push({ field: "company", code: "REQUIRED", messageKey: "api.field_required" });
   if (!name) fieldErrors.push({ field: "name", code: "REQUIRED", messageKey: "api.field_required" });
@@ -314,6 +320,9 @@ export default async function handler(request, response) {
     console.error("[lumino-lead] persist failed", error && error.code ? error.code : "error");
     return sendError(response, "DEPENDENCY_UNAVAILABLE", { requestId });
   }
+  if (created.persisted !== true || !created.lead?.id) {
+    return sendError(response, "DEPENDENCY_UNAVAILABLE", { requestId });
+  }
 
   let notify = { notified: false, notifyStatus: "queued", results: { wecom: "queued" } };
   try {
@@ -325,10 +334,13 @@ export default async function handler(request, response) {
   return sendSuccess(response, {
     leadId: created.lead.id,
     status: created.lead.status,
-    persisted: true,
+    persisted: created.persisted,
     notified: notify.notified,
     notifyStatus: notify.notifyStatus || "queued",
     notify: notify.results,
     lead: created.lead,
+    ...(record.source === "lumino-cbam-calculator" && calculatorAiAccessConfigured() && /^\d{8}$/.test(String(record.context?.cnCode || ""))
+      ? { aiAccessToken: issueCalculatorAiAccess(created.lead.id, record.context?.cnCode) }
+      : {}),
   }, { requestId, revision: created.lead.revision });
 }

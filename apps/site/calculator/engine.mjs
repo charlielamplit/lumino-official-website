@@ -1,3 +1,6 @@
+import { resolveCertificatePrice } from "./certificate-prices.mjs";
+import { computeRealtimeCost } from "./realtime-cost.mjs";
+
 const round = (value, decimals = 2) =>
   Math.round(value * 10 ** decimals) / 10 ** decimals;
 
@@ -62,16 +65,32 @@ export function createCalculator(data) {
       direct: entry.direct ?? entry.total ?? seeWithMarkup,
       total: entry.total ?? entry.direct ?? seeWithMarkup,
       usingGlobalWorst,
+      isGlobalWorst: usingGlobalWorst,
     };
   };
 
   const getBenchmark = (cnCode, useColumnA = false) => {
-    const entries = benchmarkByCode.get(cnCode) || [];
+    const entries = benchmarkByCode.get(cnCode) || benchmarkByCode.get(String(cnCode).slice(0, 8)) || [];
     const preferred = useColumnA ? "columnA" : "columnB";
     const fallback = useColumnA ? "columnB" : "columnA";
     for (const item of entries) if (item[preferred] > 0) return item[preferred];
     for (const item of entries) if (item[fallback] > 0) return item[fallback];
     return 0;
+  };
+
+  const getPrecursorBenchmark = (cnCode) => {
+    const entries = benchmarks.filter((item) => item.cnCode === cnCode);
+    const firstNonNull = (pick) => {
+      for (const entry of entries) {
+        const value = pick(entry);
+        if (value != null && value > 0) return value;
+      }
+      return null;
+    };
+    return {
+      columnA: firstNonNull((entry) => entry.columnA),
+      columnB: firstNonNull((entry) => entry.columnB),
+    };
   };
 
   const getCbamFactor = (year) => {
@@ -86,6 +105,18 @@ export function createCalculator(data) {
     return source.byCnCode[cnCode] || source._fallbackByCategory[info.aggregatedCategory] || null;
   };
 
+  const getCnCodeInfo = (cnCode) => cnByCode.get(cnCode) || null;
+
+  const costedSeeFromDefault = (emission, noIndirectCost) => {
+    if (noIndirectCost && emission.total > 0) {
+      return {
+        see: emission.seeWithMarkup * (emission.direct / emission.total),
+        indirectForReport: emission.seeWithMarkup - emission.seeWithMarkup * (emission.direct / emission.total),
+      };
+    }
+    return { see: emission.seeWithMarkup, indirectForReport: 0 };
+  };
+
   const calculateBasis = ({ year, cnCode, country = "China", source = "default" }) => {
     const info = cnByCode.get(cnCode);
     if (!info) throw new Error("请选择有效的 CN Code");
@@ -93,31 +124,47 @@ export function createCalculator(data) {
     let see;
     let indirectForReport = 0;
     let usingGlobalWorst = false;
+    let maxSee = null;
+    let minSee = 0;
 
     if (source === "default") {
       const emission = getDefaultEmission(cnCode, country, year);
       if (!emission) throw new Error("该产品暂无可用缺省值，请联系顾问处理。");
       usingGlobalWorst = emission.usingGlobalWorst;
-      if (noIndirectCost && emission.total > 0) {
-        see = emission.seeWithMarkup * (emission.direct / emission.total);
-        indirectForReport = emission.seeWithMarkup - see;
-      } else {
-        see = emission.seeWithMarkup;
-      }
+      const costed = costedSeeFromDefault(emission, noIndirectCost);
+      see = costed.see;
+      indirectForReport = costed.indirectForReport;
+      maxSee = see;
+    } else if (source === "actualEstimate") {
+      const actual = getActual(cnCode, actualValues);
+      if (!actual) throw new Error("该产品暂无实测参考值。");
+      see = actual.direct + (noIndirectCost ? 0 : actual.indirect || 0);
+      if (noIndirectCost) indirectForReport = actual.indirect || 0;
+
+      // An industry process estimate may exceed the published default. Do not
+      // clip it or force a whole-chain value into a process-only estimate.
     } else {
-      const actual = getActual(cnCode, source === "actualFull" ? actualFull : actualValues);
+      const actual = getActual(cnCode, actualFull);
       if (!actual) throw new Error("该产品暂无实测参考值。");
       see = actual.direct + (noIndirectCost ? 0 : actual.indirect || 0);
       if (noIndirectCost) indirectForReport = actual.indirect || 0;
     }
+
+    const bm = getBenchmark(cnCode, false);
+    const bmA = source === "actualEstimate" ? (getBenchmark(cnCode, true) || bm) : null;
 
     return {
       info,
       see,
       indirectForReport,
       usingGlobalWorst,
-      benchmark: getBenchmark(cnCode, source !== "default"),
+      benchmark: bm,
+      bm,
+      bmA,
+      maxSee: Number.isFinite(maxSee) ? maxSee : null,
+      minSee,
       noIndirectCost,
+      source,
     };
   };
 
@@ -128,33 +175,59 @@ export function createCalculator(data) {
     const exchangeRate = Number(input.exchangeRate) || parameters.exchangeRate;
     const basis = calculateBasis(input);
     const cbamFactor = getCbamFactor(year);
-    const sefa = input.freeAllocationEnabled === false
-      ? 0
-      : cbamFactor * parameters.cscf * basis.benchmark;
-    const netEmissionPerTon = Math.max(0, basis.see - sefa);
-    const totalCertificates = netEmissionPerTon * quantity;
-    const carbonOffsetPerTon = carbonPricePaid / exchangeRate;
-    const unitNetPriceEur = Math.max(0, parameters.certificatePrice - carbonOffsetPerTon);
-    const totalCostEur = totalCertificates * unitNetPriceEur;
-    const totalCostLocal = totalCostEur * exchangeRate;
+    const sefaFactor = cbamFactor * parameters.cscf;
+    const certificatePrice = resolveCertificatePrice(parameters, year, input.priceQuarter);
+    const computed = computeRealtimeCost({
+      ...basis, sefaFactor, certificatePrice,
+    }, {
+      quantity, carbonPricePaid, exchangeRate,
+      freeAllocationEnabled: input.freeAllocationEnabled !== false,
+    });
 
     return {
       ...basis,
       year,
       quantity,
       cbamFactor,
-      sefa: round(sefa),
+      sefaFactor,
+      sefa: round(computed.sefaApplied),
       see: round(basis.see),
+      bm: round(basis.bm),
+      bmA: basis.bmA != null ? round(basis.bmA) : null,
+      maxSee: basis.maxSee != null && Number.isFinite(basis.maxSee) ? round(basis.maxSee) : basis.maxSee,
+      minSee: round(basis.minSee),
       indirectForReport: round(basis.indirectForReport),
-      netEmissionPerTon: round(netEmissionPerTon),
-      totalCertificates: round(totalCertificates),
-      totalCostEur: round(totalCostEur),
-      totalCostLocal: round(totalCostLocal),
-      unitCostLocal: round(quantity ? totalCostLocal / quantity : 0),
-      certificatePrice: parameters.certificatePrice,
+      netEmissionPerTon: round(computed.netEmissionPerTon),
+      totalCertificates: round(computed.totalCertificates),
+      totalCostEur: round(computed.totalCostEur),
+      totalCostLocal: round(computed.totalCostLocal),
+      unitCostLocal: round(computed.unitCostLocal),
+      certificatePrice,
       exchangeRate,
       exempt: quantity <= parameters.deMinimisThreshold,
       threshold: parameters.deMinimisThreshold,
+    };
+  };
+
+  /** 供 realtime-cost 使用的 CostBasis（配额按 fa=true 计算） */
+  const buildCostBasis = (input) => {
+    const result = calculateBasis(input);
+    const factor = getCbamFactor(Number(input.year)) * parameters.cscf;
+    return {
+      see: result.see,
+      sefa: result.bm * factor,
+      certificatePrice: resolveCertificatePrice(parameters, Number(input.year), input.priceQuarter),
+      bm: result.bm,
+      bmA: result.bmA,
+      sefaFactor: factor,
+      maxSee: result.maxSee,
+      minSee: result.minSee,
+      info: result.info,
+      year: Number(input.year),
+      indirectForReport: result.indirectForReport,
+      usingGlobalWorst: result.usingGlobalWorst,
+      noIndirectCost: result.noIndirectCost,
+      source: result.source,
     };
   };
 
@@ -176,5 +249,15 @@ export function createCalculator(data) {
     };
   };
 
-  return { calculate, compare, getDefaultEmission, getBenchmark };
+  return {
+    calculate,
+    compare,
+    buildCostBasis,
+    getDefaultEmission,
+    getBenchmark,
+    getPrecursorBenchmark,
+    getCnCodeInfo,
+    getCbamFactor,
+    parameters,
+  };
 }

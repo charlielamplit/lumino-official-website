@@ -94,17 +94,16 @@
       return;
     }
 
-    sessionStorage.setItem("lumino-contact-last", fingerprint);
-    if (result.channel === "api") {
-      const notifyHint = result.notified
-        ? "已向对接人发送通知；该编号不代表正式数据库回执。"
-        : "当前未确认进入正式数据库或商务处理流程。正式咨询请发送邮件至 contact@lumino.tech。";
-      show(`已生成演示记录（编号 ${result.leadId}）。${notifyHint}`, "success");
+    if (result.channel === "api" && result.persisted) {
+      sessionStorage.setItem("lumino-contact-last", fingerprint);
+      const notifyHint = result.notified || result.notifyStatus === "sent"
+        ? "对接人通知已发送。"
+        : result.notifyStatus === "queued"
+          ? "对接人通知已进入发送队列。"
+          : "对接人通知状态暂未确认；无需重复提交，请保留该编号。";
+      show(`需求已保存至数据库（编号 ${result.leadId}）。${notifyHint}`, "success");
     } else {
-      show(
-        `已生成本机演示记录（编号 ${result.leadId}），未向正式数据库或商务处理流程发送。正式咨询请发送邮件至 contact@lumino.tech。`,
-        "success"
-      );
+      show("本次咨询未正式提交。输入内容仍保留在页面中，请稍后重试或发送邮件至 contact@lumino.tech。", "error");
     }
     button.disabled = false;
     button.textContent = originalLabel;

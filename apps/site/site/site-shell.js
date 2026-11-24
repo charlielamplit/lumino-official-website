@@ -111,7 +111,7 @@
       const resource = [
         { zh: "我们的平台", en: "Platform", href: "/apps/site/platform.html" },
         { zh: "解决方案", en: "Industries", href: "/apps/site/industries/" },
-        { zh: "项目案例", en: "Project cases", href: "/apps/site/cases/" },
+        { zh: "典型服务场景", en: "Typical scenarios", href: "/apps/site/cases/" },
         { zh: "合规工具", en: "Compliance tools", href: "/apps/site/tools/" },
         { zh: "行业知识库", en: "Insights", href: "/apps/site/knowledge/" },
       ];
