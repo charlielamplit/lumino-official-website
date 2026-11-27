@@ -45,11 +45,16 @@ async function main() {
     return result.result.value;
   };
   const waitFor = async (expression, label) => {
+    let lastError;
     for (let index = 0; index < 80; index += 1) {
-      if (await evaluate(expression)) { process.stdout.write(`PASS ${label}\n`); return; }
+      try {
+        if (await evaluate(expression)) { process.stdout.write(`PASS ${label}\n`); return; }
+      } catch (error) {
+        lastError = error;
+      }
       await pause(150);
     }
-    throw new Error(`FAIL ${label}`);
+    throw new Error(`FAIL ${label}${lastError ? `: ${lastError.message}` : ""}`);
   };
   const key = async (name) => {
     const code = name === ' ' ? 'Space' : name;
