@@ -138,6 +138,102 @@ function outOfScopePayload(lang) {
   };
 }
 
+function inferServiceId(text) {
+  const value = String(text || "").toLowerCase();
+  if (/\bcbam\b|碳边境|cn code|进口商/.test(value)) return "cbam";
+  if (/\bpcf\b|产品碳足迹|生命周期/.test(value)) return "pcf";
+  if (/scope\s*[123]|碳盘查|温室气体|\bghg\b/.test(value)) return "inventory";
+  if (/\besg\b|可持续报告/.test(value)) return "esg";
+  if (/绿电|绿证|i-?rec|碳资产/.test(value)) return "assets";
+  if (/eudr|csddd|出口合规|尽职调查/.test(value)) return "export";
+  return "";
+}
+
+function cbamDefinitionPayload(request) {
+  if (request.surface === "portal") return null;
+  const compact = String(request.text || "").toLowerCase().replace(/[\s？?。.!！]/g, "");
+  if (!["cbam", "cbam是什么", "cbam是什么意思", "什么是cbam", "whatiscbam"].includes(compact)) return null;
+  const en = request.lang === "en";
+  const url = "https://taxation-customs.ec.europa.eu/carbon-border-adjustment-mechanism_en";
+  return {
+    intent: "cbam_definition",
+    answer_mode: "fixed",
+    outcome_type: "answer",
+    answer: en
+      ? "CBAM is the EU Carbon Border Adjustment Mechanism. Its definitive period began on 1 January 2026. Authorised declarants report embedded emissions and surrender CBAM certificates through an annual declaration; it is not a quarterly import tax rate. Product scope, emissions and certificate needs depend on the actual goods and reporting data."
+      : "CBAM 是欧盟碳边境调节机制。正式实施期自 2026 年 1 月 1 日开始；获授权的申报人按年度申报嵌入排放并清缴 CBAM 证书，并非按季度缴纳的进口税率。具体商品范围、排放和证书需求需结合实际货物及申报数据判断。",
+    confidence: "high",
+    service_matches: [{ service_id: "cbam", reason: en ? "CBAM definition." : "CBAM 基础定义。", priority: 1 }],
+    next_question: null,
+    suggested_replies: [],
+    sources: [{ title: en ? "European Commission: CBAM" : "欧盟委员会：CBAM 概览", url }],
+    links: [{ type: "link", label: en ? "EU CBAM overview" : "查看欧委会 CBAM 概览", url }],
+    handoff: "none",
+    degradation_reason: null,
+    ui_state: "ok",
+  };
+}
+
+function asksForHumanService(text) {
+  return /(人工|顾问|专家).{0,12}(复核|审核|联系|咨询|协助|服务)|(?:预约|委托|报价).{0,12}(顾问|咨询|复核|服务)|(?:联系|找).{0,8}(人工|顾问|专家)|(?:human|expert|consultant).{0,16}(review|help|service|contact)|(?:contact|talk to|quote).{0,16}(human|expert|consultant)/i.test(String(text || ""));
+}
+
+function needsClarification(text) {
+  const value = String(text || "").trim();
+  if (!/(碳合规|碳管理|可持续合规|出口合规|carbon compliance|sustainability compliance|export compliance)/i.test(value)) return false;
+  return !/(cbam|pcf|产品|客户|进口商|报告|盘查|scope|ghg|esg|eudr|csddd|文件|模板|截止|国家|市场|行业|product|customer|report|deadline|country|market|industry)/i.test(value);
+}
+
+function humanServicePayload(request) {
+  const lang = request.lang;
+  const serviceId = inferServiceId(request.text);
+  return {
+    topic_id: "human-service",
+    intent: "human_service",
+    answer_mode: "fixed",
+    outcome_type: "handoff",
+    answer: lang === "en"
+      ? "A scoped human review is appropriate. Before contacting Lumino, keep the original request, product or organisation boundary, reporting period and deadline together so the reviewer can act without asking you to repeat the basics."
+      : "这个场景适合转人工复核。进入联系页前，请把原始要求、产品或组织边界、报告期间和截止时间放在一起，顾问即可据此开展有范围的复核，避免让你重复说明基础信息。",
+    confidence: "high",
+    service_matches: serviceId ? [{
+      service_id: serviceId,
+      reason: lang === "en" ? "Matched from the requested review topic." : "根据申请复核的主题匹配。",
+      priority: 1,
+    }] : [],
+    next_question: null,
+    suggested_replies: [],
+    sources: [],
+    links: [{
+      type: "contact",
+      label: lang === "en" ? "Request a human review" : "申请人工复核",
+      url: `${CONTACT_URL}?source=homepage-advisor&topic=human-service${serviceId ? `&serviceId=${serviceId}` : ""}`,
+    }],
+    cta: {
+      type: "contact",
+      label: lang === "en" ? "Request a human review" : "申请人工复核",
+      url: `${CONTACT_URL}?source=homepage-advisor&topic=human-service${serviceId ? `&serviceId=${serviceId}` : ""}`,
+    },
+    handoff: "expert_required",
+    degradation_reason: null,
+    ui_state: "ok",
+  };
+}
+
+function clarificationPayload(request) {
+  const result = routeDeterministic({ text: "", lang: request.lang });
+  result.intent = "service_clarification";
+  result.outcome_type = "clarify";
+  result.handoff = "none";
+  result.links = [{
+    type: "link",
+    label: request.lang === "en" ? "View service areas" : "查看服务范围",
+    url: "/apps/site/home.html#services",
+  }];
+  result.cta = result.links[0];
+  return result;
+}
+
 function inferOutcomeType(result) {
   if (["answer", "clarify", "tool", "handoff"].includes(result?.outcome_type)) return result.outcome_type;
   if (result?.answer_mode === "tool_route") return "tool";
@@ -207,12 +303,13 @@ async function resolveUpstreamQuestion(request, signal) {
 }
 
 async function resolveOpenQuestion(request, signal, onDelta) {
+  const inferredServiceId = inferServiceId(request.text);
   const hits = retrievePublishedKnowledge({
     text: request.text,
     lang: request.lang,
     asOf: request.asOf,
     limit: 3,
-    serviceId: request.context?.serviceId || "",
+    serviceId: request.context?.serviceId || inferredServiceId,
   });
   if (advisorUpstreamUrl()) {
     try {
@@ -244,6 +341,9 @@ async function resolveOpenQuestion(request, signal, onDelta) {
         if (generated?.answer) {
           if (hasStaleReferenceDate(generated.answer, request.asOf)) return staleModelFallback(request, hits);
           const { runtime_model: runtimeModel, ...rest } = generated;
+          rest.answer = request.lang === "en"
+            ? `General reference; no published source matched this question. ${rest.answer}`
+            : `通用参考，未匹配到可引用资料。${rest.answer}`;
           rest.degradation_reason = "no_published_sources";
           rest.ui_state = "ok";
           return {
@@ -401,6 +501,15 @@ export default async function handler(request, response) {
     } else if (sanitized.outOfScope) {
       result = outOfScopePayload(sanitized.request.lang);
       source = "out_of_scope";
+    } else if (asksForHumanService(sanitized.request.text)) {
+      result = humanServicePayload(sanitized.request);
+      source = "human_handoff";
+    } else if (needsClarification(sanitized.request.text)) {
+      result = clarificationPayload(sanitized.request);
+      source = "clarification";
+    } else if (cbamDefinitionPayload(sanitized.request)) {
+      result = cbamDefinitionPayload(sanitized.request);
+      source = "official_fixed";
     } else {
       const portalOpenQuestion = sanitized.request.surface === "portal" && sanitized.request.text;
       result = portalOpenQuestion ? null : routeDeterministic(sanitized.request);

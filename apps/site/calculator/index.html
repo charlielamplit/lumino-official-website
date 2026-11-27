@@ -38,21 +38,36 @@
 
         <label><span>行业</span><select id="sector" name="sector" required></select></label>
         <label><span>产品 / CN Code</span><select id="cnCode" name="cnCode" required></select></label>
+        <label><span>工艺与直接外购投入 <small>供 AI 前体推算使用，选填</small></span><textarea id="productionRoute" name="productionRoute" maxlength="400" rows="3" placeholder="例如：外购不锈钢锭后锻造；或外购铬铁、镍铁冶炼成钢锭"></textarea></label>
 
         <p class="form-error" id="formError" role="alert" hidden></p>
         <button class="primary-button calc-button" type="submit" disabled>计算碳成本 <span>→</span></button>
 
-        <div class="adjustment-block">
-          <div class="adjustment-title"><span>调整参数</span><small>结果实时更新</small></div>
-          <label><span>年出口欧盟量 <small>吨</small></span><input id="quantity" name="quantity" type="number" value="10000" min="0.01" step="0.01" inputmode="decimal" required></label>
-          <label><span>境外已付碳价 <small>¥/tCO₂e</small></span><input id="carbonPrice" name="carbonPrice" type="number" value="0" min="0" step="1" inputmode="decimal"></label>
+        <details class="adjustment-block" id="adjustmentBlock">
+          <summary class="adjustment-title">
+            <span class="adjustment-label">调整参数</span>
+            <div class="param-chips" id="parameterSummary" aria-label="当前调整参数摘要">
+              <div class="param-chip"><span>出口量</span><strong id="summaryQty">1 吨</strong></div>
+              <div class="param-chip"><span>证书价</span><strong id="summaryPrice">€77.65</strong></div>
+              <div class="param-chip"><span>已付碳价</span><strong id="summaryCarbon">¥0</strong></div>
+            </div>
+          </summary>
+          <div class="adjustment-fields">
+          <label><span>年出口欧盟量 <small>吨</small></span><input id="quantity" name="quantity" type="number" value="1" min="0.01" step="0.01" inputmode="decimal" required></label>
+          <label><span>证书价格口径 <small>€/张</small></span><select id="priceQuarter" name="priceQuarter"></select></label>
+          <div class="certificate-prices" id="certificatePrices" aria-label="欧盟公布的 2026 年 CBAM 证书季度价格"></div>
+          <label><span>境外有效已付碳价 <small>¥/tCO₂e</small></span><input id="carbonPrice" name="carbonPrice" type="number" value="0" min="0" step="1" inputmode="decimal"></label>
+          <p class="price-help">已付碳价按覆盖全部嵌入排放、扣除退税后的有效价格估算；正式抵扣需要相应证明。欧盟 2027 年起改为每周公布价格。</p>
           <label class="switch-row" for="freeAllocation">
             <span><strong>扣减欧盟免费配额</strong><small>关闭后可对比未扣减成本</small></span>
             <input id="freeAllocation" type="checkbox" checked><i aria-hidden="true"></i>
           </label>
+          </div>
+        </details>
+        <div class="form-footnotes">
+          <p class="privacy-line">基础试算在浏览器内完成。AI 推算须先提交咨询信息；确认保存后，所选 CN 码和你填写的工艺说明会发送至模型服务。请勿填写敏感生产底稿。</p>
+          <p class="data-version" id="dataVersion">默认值依据：（EU）2025/2621，经（EU）2026/1740 校正 · Excel 2026-08-10</p>
         </div>
-        <p class="privacy-line">基础试算在浏览器内完成，不上传企业参数。</p>
-        <p class="data-version" id="dataVersion">默认值依据：（EU）2025/2621，经（EU）2026/1740 校正 · Excel 2026-08-10</p>
       </form>
       </aside>
 
@@ -70,27 +85,45 @@
             <div class="summary-metric accent"><span>单位成本</span><strong id="unitCost">—</strong></div>
           </section>
 
-          <button class="ai-cta" id="openLead" type="button"><span>✦</span> AI 推算实测成本 <small id="savingPreview">对比真实供应链成本</small></button>
+          <button class="ai-cta" id="openLead" type="button"><span>✦</span> AI 推算参考情景 <small id="savingPreview">对比供应链参考成本</small></button>
+
+          <nav class="result-tabs" id="resultTabs" hidden role="tablist" aria-label="结果口径">
+            <button type="button" role="tab" data-tab="default" class="is-on" aria-selected="true">官方默认值</button>
+            <button type="button" role="tab" data-tab="scenarios" aria-selected="false">AI 参考情景</button>
+          </nav>
+
+          <section class="scenario-board" id="scenarioBoard" hidden>
+            <header>
+              <div>
+                <h3>三种核算情景</h3>
+                <p>AI 推测的是行业参考工艺和前体，企业实际投入量、原产地、工艺与核查数据需要确认。点选情景后图表同步切换。</p>
+              </div>
+            </header>
+            <div class="scenario-grid" id="scenarioGrid" role="listbox" aria-label="核算情景"></div>
+            <p class="scenario-note" id="scenarioNote"></p>
+            <div class="precursor-review" id="precursorReview"></div>
+          </section>
 
           <div class="chart-grid">
             <section class="chart-card cost-chart"><header><h3>成本扣减过程</h3><span>CNY</span></header><div class="vertical-bars">
               <div><span id="costGrossLabel">—</span><i id="costGrossBar"></i><small>总碳成本</small></div>
-              <div><span id="costDeductLabel">—</span><i class="yellow" id="costDeductBar"></i><small>配额扣减</small></div>
+              <div><span id="costDeductLabel">—</span><i class="yellow" id="costDeductBar"></i><small>配额及碳价扣减</small></div>
               <div><span id="costNetLabel">—</span><i class="green" id="costNetBar"></i><small>净成本</small></div>
             </div></section>
             <section class="chart-card"><header><h3>排放构成</h3><span>tCO₂e</span></header><div class="donut-wrap"><div class="donut" id="emissionDonut"><div><strong id="donutTotal">—</strong><span>tCO₂e</span></div></div><div class="legend"><span><b></b>净排放</span><span><b></b>免费配额</span></div></div></section>
             <section class="chart-card"><header><h3>嵌入排放拆解</h3><span>tCO₂e / t</span></header><div class="emission-column"><strong id="see">—</strong><div><i id="emissionStack"></i></div><small>每吨排放</small><p>净排放 <b id="netEmission">—</b> tCO₂e/t</p></div></section>
             <section class="chart-card"><header><h3>免费配额成本趋势</h3><span>随退坡下降</span></header><div class="timeline-bars" id="allocationBars"></div></section>
             <section class="chart-card"><header><h3>碳价敏感性</h3><span>已付碳价 → 单位成本</span></header><div class="line-chart" id="sensitivityChart"></div></section>
-            <section class="chart-card"><header><h3>单位成本年度趋势</h3><span>¥ / 吨</span></header><div class="line-chart" id="yearTrendChart"></div></section>
+            <section class="chart-card"><header><h3>单位成本年度趋势</h3><span>固定所选证书价格 · ¥/吨</span></header><div class="line-chart" id="yearTrendChart"></div></section>
           </div>
 
           <div class="result-notes">
+            <button class="calculator-contact" id="contactAdvisor" type="button">需要人工复核？留下咨询信息 →</button>
+            <p class="form-status" id="consultationStatus" role="status"></p>
             <p class="scope-notice" id="dataCite">默认值数据包 v2 · 欧委会实施条例（EU）2025/2621，经（EU）2026/1740 校正；信息用 Excel 发布日 2026-08-10。具有法律约束力的数值以实施条例为准。</p>
             <p class="scope-notice" id="scopeNotice" hidden></p>
             <p class="scope-notice warning" id="exemptNotice" hidden>当前数量低于模型的最小起征参考阈值；实际豁免资格需按进口方全年累计情况判定。</p>
           </div>
-          <section class="unlocked" id="unlockedComparison" hidden><div><span>实测参考成本</span><strong id="actualCost"></strong></div><div><span>潜在成本差额</span><strong id="potentialSaving"></strong></div><p>此处为行业参考估算，不是企业法定实测值。顾问将根据你的产品及供应链说明下一步要取哪些数。</p></section>
           <a class="project-cta" id="projectCta" href="/apps/portal?source=calculator">
             <span><small>需要形成正式申报材料？</small><strong>进入客户门户建立年度 CBAM 项目</strong></span><b aria-hidden="true">→</b>
           </a>
@@ -98,12 +131,24 @@
       </section>
   </main>
 
+  <div class="ai-overlay" id="aiOverlay" hidden>
+    <div class="ai-overlay-card" role="status" aria-live="polite">
+      <div class="ai-orbit" aria-hidden="true">
+        <i></i><i></i><i></i>
+        <span class="ai-core"></span>
+      </div>
+      <strong>AI 正在推算前体排放</strong>
+      <p>分析上游工艺路线与消耗量，请稍候…</p>
+      <p class="ai-loading-note" id="aiLoadingNote" hidden></p>
+    </div>
+  </div>
+
   <div class="dialog-backdrop" id="leadDialog" hidden>
     <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="leadTitle">
       <button class="dialog-close" id="closeLead" type="button" aria-label="关闭">×</button>
-      <p class="mono">UNLOCK THE COMPARISON</p>
-      <h2 id="leadTitle">解锁实测路径对比。</h2>
-      <p class="dialog-intro">本页为本地演示。填写仅用于解锁对比；不会向外部 CRM 自动发送。正式咨询请使用联系页。</p>
+      <p class="mono" id="leadEyebrow">REQUEST HUMAN REVIEW</p>
+      <h2 id="leadTitle">申请人工复核</h2>
+      <p class="dialog-intro" id="leadIntro">留下联系方式，供我们就当前 CBAM 试算与前体假设联系您。</p>
       <form id="leadForm">
         <label><span>公司名称 *</span><input id="leadCompany" name="company" required maxlength="80" placeholder="公司全称"></label>
         <div class="field-row">
@@ -111,8 +156,8 @@
           <label><span>手机号 *</span><input name="phone" required pattern="1[3-9][0-9]{9}" maxlength="11" inputmode="numeric" placeholder="11 位手机号"></label>
         </div>
         <label><span>企业邮箱 <small>选填</small></span><input name="email" type="email" maxlength="100" placeholder="name@company.com"></label>
-        <label class="consent"><input name="consent" type="checkbox" required><span>我理解本页为本地演示，填写仅用于解锁对比，不会自动外发。</span></label>
-        <button class="primary-button" id="leadSubmit" type="submit">解锁实测对比</button>
+        <label class="consent"><input name="consent" type="checkbox" required><span>我同意 Lumino 为本次试算或人工复核联系我并保存上述信息。</span></label>
+        <button class="primary-button" id="leadSubmit" type="submit">提交咨询</button>
         <p class="form-status" id="leadStatus" role="status"></p>
       </form>
     </section>
