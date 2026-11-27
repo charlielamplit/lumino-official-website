@@ -145,6 +145,11 @@
     $("#customerProductionLinkForm").reset();
     delete $("#customerProductionLinkForm").dataset.recordId;
     for (const name of ["productId", "facilityId"]) $("#customerProductionLinkForm").elements.namedItem(name).replaceChildren();
+    $("#customerMaterialPlanHint").textContent = "";
+    $("#customerMaterialPlanFeedback").textContent = "";
+    $("#customerMaterialPlanList").replaceChildren();
+    $("#customerMaterialPlanForm").reset();
+    $("#customerMaterialPlanForm").elements.facilityId.replaceChildren();
     $("#customerTenantName").value = "";
     $("#customerSetupForm").reset();
     $("#customerTenantDisplayName").textContent = "";
@@ -448,6 +453,29 @@
         item.append(edit);
       }
       linksList.append(item);
+    }
+
+    const linkedFacilityIds = new Set(links.map((link) => link.facilityId));
+    const linkedFacilities = facilities.filter((facility) => linkedFacilityIds.has(facility.id));
+    const planForm = $("#customerMaterialPlanForm");
+    const previousFacility = planForm.elements.facilityId.value;
+    const previousQuarter = planForm.elements.quarter.value;
+    planForm.hidden = !canEditLinks || linkedFacilities.length === 0;
+    planForm.elements.facilityId.replaceChildren(new Option("请选择设施", ""), ...linkedFacilities.map((facility) => new Option(facility.name, facility.id)));
+    if (linkedFacilityIds.has(previousFacility)) planForm.elements.facilityId.value = previousFacility;
+    planForm.elements.quarter.value = previousQuarter;
+    const materialRequests = projectRecords.filter((record) => record.kind === "material_request" && record.dataItemCode === "NATURAL_GAS_NM3");
+    $("#customerMaterialPlanHint").textContent = !project
+      ? "先建立年度项目和生产关系。"
+      : !linkedFacilities.length
+        ? "先建立产品与设施的生产关系，再确定要收集的资料。"
+        : materialRequests.length ? `已有 ${materialRequests.length} 条材料计划草稿。` : "只为实际使用天然气的设施建立草稿；无需一次列齐所有资料。";
+    const materialList = $("#customerMaterialPlanList");
+    materialList.replaceChildren();
+    for (const request of materialRequests) {
+      const item = document.createElement("li");
+      item.textContent = `${request.title} · 草稿，尚未发送`;
+      materialList.append(item);
     }
 
     renderTenantGlobalPages(data, project, projectRecords, links);
@@ -846,6 +874,31 @@
       resetCustomerProductionLinkForm();
       showCustomerWorkspace(await portalCustomerApi("/api/portal-workspace", { token }));
       feedback.textContent = recordId ? "生产关系已更新。" : "生产关系已保存。";
+    } catch (error) {
+      feedback.textContent = error.message || "保存失败，请重试。";
+    } finally {
+      submit.disabled = false;
+    }
+  });
+  $("#customerMaterialPlanForm")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const feedback = $("#customerMaterialPlanFeedback");
+    const submit = form.querySelector('button[type="submit"]');
+    const token = window.sessionStorage.getItem(portalCustomerTokenKey);
+    const projectId = customerPortalData?.projects?.[0]?.id;
+    if (!projectId) { feedback.textContent = "请先建立年度项目。"; return; }
+    try {
+      submit.disabled = true;
+      feedback.textContent = "";
+      const result = await portalCustomerApi("/api/portal-workspace", {
+        method: "PUT", token,
+        body: { operation: "create_material_request", projectId, facilityId: form.elements.facilityId.value, quarter: Number(form.elements.quarter.value) },
+      });
+      showCustomerWorkspace(await portalCustomerApi("/api/portal-workspace", { token }));
+      feedback.textContent = result.created ? "材料计划草稿已保存，尚未发送。" : "该设施与季度的草稿已在计划中。";
+      feedback.tabIndex = -1;
+      feedback.focus({ preventScroll: true });
     } catch (error) {
       feedback.textContent = error.message || "保存失败，请重试。";
     } finally {

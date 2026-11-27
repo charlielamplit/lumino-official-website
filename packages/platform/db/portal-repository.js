@@ -219,11 +219,7 @@ function validatedRecord(kind, raw) {
     if (processSummary.length > 500) throw portalError("VALIDATION_FAILED", 400, "工艺说明不能超过 500 字符");
     return { productId, facilityId, processSummary };
   }
-  if (kind === "material_request") {
-    const assigneeEmail = value("assigneeEmail", 254).toLowerCase();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(assigneeEmail)) throw portalError("VALIDATION_FAILED", 400, "责任人邮箱格式不正确");
-    return { title: value("title"), assigneeEmail };
-  }
+  if (kind === "material_request") throw portalError("VALIDATION_FAILED", 400, "请通过设施与季度建立材料计划");
   throw portalError("VALIDATION_FAILED", 400, "记录类型不正确");
 }
 
@@ -270,6 +266,64 @@ async function createPortalProjectRecord(session, { projectId, kind, record, req
       [session.tenantId, session.userId, session.email, row.id, JSON.stringify({ projectId, kind, requestId })],
     );
     return { id: row.id, projectId: row.project_id, kind: row.kind, ...row.payload, createdAt: row.created_at };
+  }, options);
+}
+
+async function createPortalMaterialRequest(session, { projectId, facilityId, quarter, requestId = null } = {}, options = {}) {
+  if (!session?.userId || !session.tenantId) throw portalError("AUTH_REQUIRED", 401, "请先登录");
+  if (!/^[0-9a-f-]{36}$/i.test(String(projectId || "")) || !/^[0-9a-f-]{36}$/i.test(String(facilityId || ""))) {
+    throw portalError("VALIDATION_FAILED", 400, "请选择当前项目的生产设施");
+  }
+  const periodQuarter = Number(quarter);
+  if (!Number.isInteger(periodQuarter) || periodQuarter < 1 || periodQuarter > 4) throw portalError("VALIDATION_FAILED", 400, "请选择 Q1 至 Q4");
+  return withTransaction(async (client) => {
+    const project = (await client.query(
+      `SELECT p.service_year FROM portal_annual_projects p
+       JOIN tenant_memberships m ON m.tenant_id = p.tenant_id AND m.user_id = $3
+       JOIN tenants t ON t.id = p.tenant_id JOIN users u ON u.id = m.user_id
+       WHERE p.id = $1 AND p.tenant_id = $2 AND p.status = 'SETUP_DRAFT'
+         AND NOT t.is_demo AND t.archived_at IS NULL
+         AND m.is_active AND m.archived_at IS NULL AND u.is_active AND u.archived_at IS NULL
+         AND m.roles && $4::text[] FOR UPDATE OF p`,
+      [projectId, session.tenantId, session.userId, ["customer_admin", "customer_owner"]],
+    )).rows[0];
+    if (!project) throw portalError("RESOURCE_NOT_FOUND", 404, "项目不存在或不可编辑");
+    const facility = (await client.query(
+      `SELECT payload->>'name' AS name FROM portal_project_records
+       WHERE id = $1 AND tenant_id = $2 AND project_id = $3 AND kind = 'facility'`,
+      [facilityId, session.tenantId, projectId],
+    )).rows[0];
+    if (!facility) throw portalError("RESOURCE_NOT_FOUND", 404, "设施不属于当前项目");
+    const linked = (await client.query(
+      `SELECT 1 FROM portal_project_records WHERE tenant_id = $1 AND project_id = $2
+       AND kind = 'production_link' AND payload->>'facilityId' = $3 LIMIT 1`,
+      [session.tenantId, projectId, facilityId],
+    )).rows[0];
+    if (!linked) throw portalError("VALIDATION_FAILED", 400, "请先建立设施与产品的生产关系");
+    const period = `${project.service_year}-Q${periodQuarter}`;
+    const dataItemCode = "NATURAL_GAS_NM3";
+    const payload = {
+      facilityId, period, dataItemCode, status: "DRAFT",
+      title: `${facility.name} · ${period} 天然气用量资料`,
+    };
+    const inserted = (await client.query(
+      `INSERT INTO portal_project_records (tenant_id, project_id, kind, payload, created_by)
+       VALUES ($1, $2, 'material_request', $3::jsonb, $4) ON CONFLICT DO NOTHING
+       RETURNING id, project_id, kind, payload, created_at`,
+      [session.tenantId, projectId, JSON.stringify(payload), session.userId],
+    )).rows[0];
+    const row = inserted || (await client.query(
+      `SELECT id, project_id, kind, payload, created_at FROM portal_project_records
+       WHERE tenant_id = $1 AND project_id = $2 AND kind = 'material_request'
+         AND payload->>'facilityId' = $3 AND payload->>'period' = $4 AND payload->>'dataItemCode' = $5`,
+      [session.tenantId, projectId, facilityId, period, dataItemCode],
+    )).rows[0];
+    if (inserted) await client.query(
+      `INSERT INTO audit_events (tenant_id, actor_user_id, actor_email_snapshot, action, entity_type, entity_id, payload)
+       VALUES ($1, $2, $3, 'portal.material_request.draft.create', 'portal_project_record', $4, $5::jsonb)`,
+      [session.tenantId, session.userId, session.email, row.id, JSON.stringify({ projectId, facilityId, period, dataItemCode, requestId })],
+    );
+    return { record: { id: row.id, projectId: row.project_id, kind: row.kind, ...row.payload, createdAt: row.created_at }, created: Boolean(inserted) };
   }, options);
 }
 
@@ -385,4 +439,4 @@ async function updatePortalProjectRecord(session, { recordId, kind, record, requ
   }, options);
 }
 
-module.exports = { CUSTOMER_ROLES, provisionPortalAccount, authenticatePortal, resolvePortalSession, revokePortalSession, portalWorkspace, createPortalAnnualProject, createPortalProjectRecord, createPortalProductBatch, renamePortalTenant, updatePortalProjectRecord };
+module.exports = { CUSTOMER_ROLES, provisionPortalAccount, authenticatePortal, resolvePortalSession, revokePortalSession, portalWorkspace, createPortalAnnualProject, createPortalProjectRecord, createPortalMaterialRequest, createPortalProductBatch, renamePortalTenant, updatePortalProjectRecord };
