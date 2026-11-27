@@ -41,6 +41,7 @@
             contentSha256,
             tenantId: input.tenantId,
             annualCaseId: input.annualCaseId,
+            facilityAssetId: input.facilityAssetId || null,
             year: String(input.year),
             quarter: input.quarter,
             storedAt: new Date(clock()).toISOString(),

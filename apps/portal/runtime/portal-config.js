@@ -231,7 +231,17 @@
     serviceOrder: ["SO-2026-018-R2", "serviceOrder"], workPackage: ["WP-CALC-026", "workPackage"], handoff: ["HO-2026-043", "handoff"], approval: ["AP-2026-014", "approval"],
   };
 
-  const workflowEngine = new window.LuminoWorkflow.WorkflowEngine({ storage: window.localStorage });
+  const demoModeAtLoad = window.sessionStorage.getItem("lumino-portal-session-mode");
+  const demoRoleAtLoad = new URLSearchParams(window.location.search).get("demoRole");
+  const portalDemoBootstrap = (demoModeAtLoad === "demo" && ["127.0.0.1", "localhost"].includes(window.location.hostname))
+    || (demoModeAtLoad === "portal-demo" && Boolean(window.sessionStorage.getItem("lumino-portal-customer-token")))
+    || (["127.0.0.1", "localhost"].includes(window.location.hostname) && Boolean(roleConfig[demoRoleAtLoad]));
+  const portalPrototypeStorage = portalDemoBootstrap ? window.localStorage : (() => {
+    const values = new Map();
+    return { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, String(value)), removeItem: (key) => values.delete(key) };
+  })();
+
+  const workflowEngine = new window.LuminoWorkflow.WorkflowEngine({ storage: portalPrototypeStorage });
   workflowEngine.seed([
     { id: "AUTH-CBAM-2027-001", type: "serviceActivation", status: "PENDING_CUSTOMER_CONFIRMATION", owner: "周岚", year: "2027", scope: "华星钢铁 CBAM 2027 服务启动", metadata: { serviceId: "cbam", legalEntity: "华星钢铁有限公司", modules: ["年度范围", "季度数据", "计算与报告"], customerOwner: "周岚", luminoOwner: "林晓", luminoApprovedBy: "王晨", luminoApprovedAt: "2026-11-13T09:30:00+08:00", prototypeOnly: true } },
     { id: "SO-CBAM-2027-ONBOARDING", type: "serviceOrder", status: "ACTIVE", owner: "周岚", year: "2027", scope: "CBAM 2027 开通期演示", metadata: { serviceId: "cbam", prototypeOnly: true } },
@@ -316,9 +326,9 @@
     } },
   ]);
 
-  const assetRegistry = new window.LuminoAssets.AssetRegistry({ storage: window.localStorage });
+  const assetRegistry = new window.LuminoAssets.AssetRegistry({ storage: portalPrototypeStorage });
   const agentTaskEngine = new window.LuminoAgentRuntime.AgentTaskEngine({
-    storage: window.localStorage,
+    storage: portalPrototypeStorage,
     capabilities: window.LuminoAgentCapabilities,
   });
   // shortcut: evidence bytes and candidates live only for this page session; replace with #74 services for production.
@@ -463,7 +473,7 @@
   } : null;
   const portalStateStorageKey = "lumino-multiservice-portal-ui-v2";
   let restoredPortalState = {};
-  try { restoredPortalState = JSON.parse(window.localStorage.getItem(portalStateStorageKey) || "{}"); } catch (_) { restoredPortalState = {}; }
+  try { restoredPortalState = JSON.parse(portalPrototypeStorage.getItem(portalStateStorageKey) || "{}"); } catch (_) { restoredPortalState = {}; }
   const state = {
     role: "customer_owner", page: "services-hub", currentService: null, year: "2026", quarter: "Q3", loggedIn: false, answer: null,
     importedTrial, uploadAdded: false, factConfirmed: false, outputConfirmed: false, findingResolved: false,
@@ -483,7 +493,7 @@
     productYears: [], productCnCodes: [], questionHelpOpen: false, findingChoiceOpen: false, dataPathChoice: null,
     drawer: null, assetFacet: "attention", taskTab: "open", delivFilter: "all", dataCat: "all", dieselDone: false, settingsSection: "members", periodData: {}, productOverrides: {}, configurationDrafts: {}, facilities: [], invitedMembers: [], consultationRequests: [], publicLeads: [], selectedLeadId: null, leadsSource: "local", knowledgeArticles: [], selectedKnowledgeId: null, knowledgeSource: "local", knowledgeHydrated: false, actionBusy: false,
     pcfCalculationFailed: incoming.get("scenario") === "pcf-calculation-failed",
-    onboardingDismissed: window.localStorage.getItem("lumino-portal-onboarding") === "dismissed", online: navigator.onLine,
+    onboardingDismissed: portalPrototypeStorage.getItem("lumino-portal-onboarding") === "dismissed", online: navigator.onLine,
     organization: (() => {
       const org = assetRegistry.get("ORG-HX-001");
       return {

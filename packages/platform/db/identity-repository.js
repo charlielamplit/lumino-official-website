@@ -328,7 +328,8 @@ async function countActiveStaffUsers(options = {}) {
        WHERE u.is_active = true
          AND u.archived_at IS NULL
          AND m.is_active = true
-         AND m.archived_at IS NULL`,
+         AND m.archived_at IS NULL
+         AND m.roles && ARRAY['sales','ops','admin']::text[]`,
     );
     return result.rows[0].c;
   }, options);
@@ -359,6 +360,7 @@ async function authenticateStaff({ email, password, requestId = null }, options 
          AND m.is_active = true
          AND m.archived_at IS NULL
          AND t.archived_at IS NULL
+         AND m.roles && ARRAY['sales','ops','admin']::text[]
        ORDER BY m.created_at ASC
        LIMIT 1`,
       [user.id],

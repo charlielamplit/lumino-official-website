@@ -3,6 +3,7 @@
 const pool = require("./pool");
 const migrate = require("./migrate");
 const identity = require("./identity-repository");
+const portal = require("./portal-repository");
 const leads = require("./leads-repository");
 const outboxNotify = require("./outbox-notify");
 const leadsJsonImport = require("./leads-json-import");
@@ -28,6 +29,7 @@ module.exports = {
   ...pool,
   ...migrate,
   ...identity,
+  ...portal,
   ...leads,
   ...outboxNotify,
   ...leadsJsonImport,

@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const intake = require("../domain/intake-model.js");
 
-const request = { id: "MR-1", tenantId: "TNT-0018", status: "READY" };
+const request = { id: "MR-1", tenantId: "TNT-0018", status: "READY", metadata: { intakeStatus: "AWAITING_CONFIRMATION", candidateId: "CAND-1", evidenceId: "EVD-1", candidateRevision: 1 } };
 const evidence = { evidenceId: "EVD-1", requestId: "MR-1", tenantId: "TNT-0018" };
 const candidate = { id: "CAND-1", revision: 1, status: "READY_FOR_REVIEW", requestId: "MR-1", evidenceId: "EVD-1", tenantId: "TNT-0018" };
 

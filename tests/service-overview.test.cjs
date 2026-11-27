@@ -25,7 +25,7 @@ test("service overview lists the complete catalog without availability groups", 
   const overview = page.slice(page.indexOf("function serviceOverviewContent"), page.indexOf("function workbenchGreeting"));
 
   assert.match(overview, /Object\.values\(serviceRegistry\)/);
-  assert.match(overview, /services\.map\(serviceOverviewCard\)/);
+  assert.match(overview, /services\.map\(\(service\) => serviceOverviewCard\(service(?:, tenant)?\)\)/);
   assert.doesNotMatch(overview, /已开通/);
   assert.doesNotMatch(overview, /尚未开通/);
   assert.doesNotMatch(overview, /规划中/);

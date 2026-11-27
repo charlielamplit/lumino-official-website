@@ -100,6 +100,7 @@ function validateManifest(manifest) {
     if (!['roadmap', 'epic', 'feature'].includes(issue.kind)) errors.push(`${prefix}: kind 非法`);
     if (!['open', 'closed'].includes(issue.state)) errors.push(`${prefix}: state 非法`);
     if (!issue.title?.trim()) errors.push(`${prefix}: title 不能为空`);
+    if (issue.updatedAt && !/^\d{4}-\d{2}-\d{2}$/.test(issue.updatedAt)) errors.push(`${prefix}: updatedAt 必须为 YYYY-MM-DD`);
     if (!issue.summary?.trim()) errors.push(`${prefix}: summary 不能为空`);
     if (!Array.isArray(issue.scope) || !issue.scope.length) errors.push(`${prefix}: scope 不能为空`);
     if (!Array.isArray(issue.acceptance) || issue.acceptance.length < 2) errors.push(`${prefix}: 至少需要 2 条验收标准`);
@@ -307,7 +308,7 @@ async function sync(manifest, { apply }) {
 
   let createdIssues = 0;
   let updatedIssues = 0;
-  const sorted = sortIssues(manifest.issues).map((issue) => ({ ...issue, manifestUpdatedAt: manifest.updatedAt }));
+  const sorted = sortIssues(manifest.issues).map((issue) => ({ ...issue, manifestUpdatedAt: issue.updatedAt || manifest.updatedAt }));
 
   for (const issue of sorted) {
     if (issueById.has(issue.id)) continue;

@@ -35,9 +35,12 @@
     submitButton.textContent = label;
   }
 
-  function loginUsesSso(email) {
-    const domain = String(email || "").split("@")[1]?.toLowerCase() || "";
-    return domain === "huaxing-steel.cn";
+  function bytesToBase64(bytes) {
+    let binary = "";
+    for (let index = 0; index < bytes.length; index += 32768) {
+      binary += String.fromCharCode(...bytes.subarray(index, index + 32768));
+    }
+    return btoa(binary);
   }
 
   function isStaffEmail(email) {
@@ -100,6 +103,505 @@
     return parsed.data;
   }
 
+  const portalCustomerTokenKey = "lumino-portal-customer-token";
+  const localDemoPreview = ["127.0.0.1", "localhost"].includes(window.location.hostname);
+  let customerCnCatalog = [];
+  let customerCnCatalogPromise;
+  let customerCnExisting = new Set();
+  const customerCnSelected = new Set();
+  let customerWorkspaceStep = null;
+  let customerPortalView = "home";
+  let customerProductTab = "products";
+  let customerDataTab = "data";
+  let customerPortalData = null;
+  const realCustomerPages = Array.from(document.querySelectorAll("#customerPages [data-customer-view-panel]"));
+  const customerSectorLabels = { "Iron and Steel": "钢铁", Aluminium: "铝", Cement: "水泥", Fertiliser: "化肥", Hydrogen: "氢" };
+
+  function mountRealCustomerPages() {
+    if (realCustomerPages[0]?.parentElement === $("#main")) return;
+    $("#main").replaceChildren(...realCustomerPages);
+  }
+
+  function unmountRealCustomerPages() {
+    const bank = $("#customerPages");
+    if (realCustomerPages[0]?.parentElement === bank) return;
+    bank.append(...realCustomerPages);
+    $("#portal").classList.remove("portal--real-customer");
+  }
+
+  function clearRealCustomerViewData() {
+    customerPortalData = null;
+    customerCnExisting = new Set();
+    customerCnSelected.clear();
+    customerProductTab = "products";
+    customerDataTab = "data";
+    for (const panel of realCustomerPages) {
+      if (!["setup", "cbam"].includes(panel.dataset.customerViewPanel)) panel.replaceChildren();
+    }
+    $("#customerCbamWorkFrame").replaceChildren();
+    $("#customerProductionLinksHint").textContent = "";
+    $("#customerProductionLinkFeedback").textContent = "";
+    $("#customerProductionLinksList").replaceChildren();
+    $("#customerProductionLinkForm").reset();
+    delete $("#customerProductionLinkForm").dataset.recordId;
+    for (const name of ["productId", "facilityId"]) $("#customerProductionLinkForm").elements.namedItem(name).replaceChildren();
+    $("#customerTenantName").value = "";
+    $("#customerSetupForm").reset();
+    $("#customerTenantDisplayName").textContent = "";
+    $("#customerTenantEditForm").reset();
+    $("#customerProjectDetail").textContent = "";
+    delete $("#customerProjectSummary").dataset.projectId;
+    $("#customerProductList").replaceChildren();
+    $("#customerFacilityList").replaceChildren();
+    $("#customerProductCount").textContent = "";
+    $("#customerFacilityCount").textContent = "";
+    document.querySelectorAll("[data-customer-record]").forEach(resetCustomerRecordForm);
+    $("#customerCnSelected").replaceChildren();
+    $("#customerCnResults").replaceChildren();
+    $("#customerCnSelectedCount").textContent = "0";
+    $("#customerCnSearch").value = "";
+    $("#customerCnPaste").value = "";
+    for (const selector of ["#customerCnSearchStatus", "#customerCnPasteFeedback", "#customerCnSaveFeedback", "#customerOverviewHint", "#customerSetupError"]) $(selector).textContent = "";
+    $("#customerOverviewProducts").textContent = "0";
+    $("#customerOverviewFacilities").textContent = "0";
+  }
+
+  function alignCustomerRail() {
+    if (!customerPortalData || !window.matchMedia("(max-width: 820px)").matches) return;
+    const rail = $("#shellRail");
+    const active = rail.querySelector('[aria-current="page"]');
+    if (!active) return;
+    const railRect = rail.getBoundingClientRect();
+    const activeRect = active.getBoundingClientRect();
+    if (activeRect.left < railRect.left || activeRect.right > railRect.right) {
+      rail.scrollLeft += activeRect.left - railRect.left - (railRect.width - activeRect.width) / 2;
+    }
+  }
+
+  window.addEventListener("resize", () => window.requestAnimationFrame(alignCustomerRail));
+
+  function syncRealCustomerShell(view, project) {
+    const portal = $("#portal");
+    portal.classList.add("portal--real-customer");
+    $("#demoWorkspaceLabel").hidden = true;
+    $("#companyName").textContent = customerPortalData.tenant.name;
+    $("#companyMark").textContent = customerPortalData.tenant.name.slice(0, 1);
+    $("#companyContextLabel").hidden = true;
+    $("#profileName").textContent = customerPortalData.user.name;
+    $("#profileInitial").textContent = customerPortalData.user.name.slice(0, 1);
+    $("#profileRole").textContent = customerPortalData.user.roles.includes("customer_admin") ? "企业管理员" : "企业成员";
+    $("#projectPeriod").hidden = true;
+    $("#agentTopbarSlot").replaceChildren();
+    $("#serviceOverviewLayer").hidden = true;
+    $("#serviceOverviewLayer").replaceChildren();
+    $("#serviceOverviewDock").hidden = true;
+    document.body.classList.remove("service-overview-open");
+    $("#drawerLayer").hidden = true;
+    $("#drawerBody").replaceChildren();
+    $("#cmdkLayer").hidden = true;
+    $("#cmdkResults").replaceChildren();
+    $("#agentRuntimeLayer").hidden = true;
+    $("#agentRuntimeLayer").replaceChildren();
+    const cbamViews = new Set(["cbam", "annual", "products", "data-calculation", "cbam-deliverables", "setup"]);
+    const inCbam = cbamViews.has(view);
+    const railItems = customerGlobalNav.map(([demoPage, icon, label, short]) => [({ workbench: "home", "shared-tasks": "tasks", "shared-files": "assets", "shared-deliverables": "deliverables" })[demoPage], icon, label, short]);
+    const customerRailButton = ([target, icon, label, short]) => railButton(target, icon, label, {
+      customerView: target, short, code: target === "cbam" ? "CBAM" : null,
+      active: target === view || (target === "cbam" && inCbam),
+    });
+    $("#shellRail").innerHTML = railItems.map(customerRailButton).join("")
+      + '<span class="rail-divider" aria-hidden="true"></span>'
+      + customerRailButton(["cbam", "CBAM", "欧盟碳边境合规", "CBAM"])
+      + customerRailButton(["services", customerRailExtras.services[1], "服务目录", "服务"]);
+    alignCustomerRail();
+    const showSecondary = Boolean(project && inCbam);
+    $("#sidebar").hidden = !showSecondary;
+    document.querySelector(".portal-layout").classList.toggle("portal-layout--rail-only", !showSecondary);
+    $("#sidebarChannel").hidden = !showSecondary;
+    if (showSecondary) {
+      $("#sidebarChannel").innerHTML = `<p class="sidebar-channel__eyebrow">CBAM · 已开通</p><strong>${safe(serviceRegistry.cbam.name)}</strong><span>${safe(project.year)} 年度项目</span>`;
+      const pageMap = { work: "cbam", "annual-project": "annual", products: "products", "data-calculation": "data-calculation", deliverables: "cbam-deliverables" };
+      $("#roleNav").innerHTML = serviceRegistry.cbam.nav.map(([demoPage, icon, label]) => {
+        const target = pageMap[demoPage];
+        return serviceNavButton(demoPage, icon, label, { customerView: target, active: target === view || (view === "setup" && target === "annual") });
+      }).join("");
+    } else $("#roleNav").replaceChildren();
+    document.title = `${inCbam ? "CBAM" : "企业工作台"} · Lumino`;
+  }
+
+  async function loadCustomerCnCatalog() {
+    if (customerCnCatalog.length) return customerCnCatalog;
+    if (!customerCnCatalogPromise) customerCnCatalogPromise = fetch("/calculator/data/cn-codes.json")
+      .then((response) => { if (!response.ok) throw new Error("CN 目录加载失败，请刷新重试"); return response.json(); })
+      .then((rows) => {
+        if (!Array.isArray(rows) || !rows.every((item) => item.cnCode && item.zh && item.sector)) throw new Error("CN 目录格式不正确");
+        customerCnCatalog = rows;
+        const datalist = $("#customerCnOptions");
+        datalist.replaceChildren(...rows.map((item) => new Option(`${item.cnCode} · ${item.zh}`, item.cnCode)));
+        if (state.importedTrial?.cnCode && rows.some((item) => item.cnCode === state.importedTrial.cnCode) && !customerCnExisting.has(state.importedTrial.cnCode)) customerCnSelected.add(state.importedTrial.cnCode);
+        renderCustomerCnPicker();
+        renderCustomerProductSectors();
+        return rows;
+      })
+      .catch((error) => { customerCnCatalogPromise = null; $("#customerCnSearchStatus").textContent = error.message; throw error; });
+    return customerCnCatalogPromise;
+  }
+
+  function renderCustomerCnPicker() {
+    if (!customerCnCatalog.length) return;
+    const query = $("#customerCnSearch").value.trim().toLowerCase();
+    const codeQuery = query.replace(/\s+/g, "");
+    const results = $("#customerCnResults");
+    results.replaceChildren();
+    const matches = !query ? [] : customerCnCatalog.filter((item) =>
+      item.cnCode.includes(codeQuery) || item.zh.toLowerCase().includes(query) || item.description.toLowerCase().includes(query)
+    );
+    $("#customerCnSearchStatus").textContent = !query
+      ? `目录有 ${customerCnCatalog.length} 条编码。输入品名或编码查看候选，也可批量粘贴完整编码。`
+      : matches.length ? `找到 ${matches.length} 条候选${matches.length > 30 ? "，显示前 30 条，请继续缩小范围" : ""}。点击“加入”可连续选择。` : "没有找到匹配编码，请核对报关资料或更换关键词。";
+    for (const item of matches.slice(0, 30)) {
+      const row = document.createElement("li");
+      const label = document.createElement("div");
+      const code = document.createElement("strong");
+      code.textContent = item.cnCode;
+      const name = document.createElement("small");
+      name.textContent = `${customerSectorLabels[item.sector] || item.sector} · ${item.zh}`;
+      label.append(code, name);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "button button--secondary";
+      button.disabled = customerCnExisting.has(item.cnCode);
+      button.textContent = button.disabled ? "已保存" : customerCnSelected.has(item.cnCode) ? "移除" : "加入";
+      button.setAttribute("aria-label", `${button.textContent} CN ${item.cnCode} ${item.zh}`);
+      button.addEventListener("click", (event) => {
+        if (customerCnSelected.has(item.cnCode)) customerCnSelected.delete(item.cnCode);
+        else if (customerCnSelected.size < 50) customerCnSelected.add(item.cnCode);
+        else { $("#customerCnSaveFeedback").textContent = "每次最多选择 50 个 CN 码，请先保存当前清单。"; return; }
+        renderCustomerCnPicker();
+        if (event.detail === 0) $("#customerCnSearch").focus();
+      });
+      row.append(label, button);
+      results.append(row);
+    }
+    const selectedList = $("#customerCnSelected");
+    selectedList.replaceChildren();
+    for (const code of customerCnSelected) {
+      const item = customerCnCatalog.find((row) => row.cnCode === code);
+      if (!item) continue;
+      const row = document.createElement("li");
+      const label = document.createElement("span");
+      label.textContent = `${code} · ${customerSectorLabels[item.sector] || item.sector} · ${item.zh}`;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "link-button";
+      remove.textContent = "移除";
+      remove.setAttribute("aria-label", `移除 CN ${code}`);
+      remove.addEventListener("click", (event) => {
+        customerCnSelected.delete(code);
+        renderCustomerCnPicker();
+        if (event.detail === 0) $("#customerCnSearch").focus();
+      });
+      row.append(label, remove);
+      selectedList.append(row);
+    }
+    $("#customerCnSelectedCount").textContent = String(customerCnSelected.size);
+    $("#customerCnSelection").hidden = customerCnSelected.size === 0;
+    $("#customerCnSave").disabled = customerCnSelected.size === 0;
+  }
+
+  function renderCustomerProductSectors() {
+    if (!customerPortalData || !customerCnCatalog.length) return;
+    for (const label of document.querySelectorAll("[data-product-id]")) {
+      const record = customerPortalData.records?.find((item) => item.id === label.dataset.productId);
+      const code = record?.cnCode;
+      const catalog = customerCnCatalog.find((item) => item.cnCode === code);
+      if (record && catalog) label.textContent = `CN ${code} · ${customerSectorLabels[catalog.sector] || catalog.sector} · ${record.name}`;
+    }
+  }
+
+  async function portalCustomerApi(path, { method = "GET", body, token } = {}) {
+    const response = await fetch(path, {
+      method,
+      headers: {
+        ...(body ? { "Content-Type": "application/json" } : {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    }).catch(() => { throw Object.assign(new Error("网络连接失败，请检查网络后重试"), { code: "NETWORK_ERROR" }); });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.ok !== true) {
+      const code = payload.error?.code || "INTERNAL_ERROR";
+      if (code === "AUTH_REQUIRED" && path === "/api/portal-workspace" && method !== "DELETE") {
+        clearPortalCustomerSession();
+        window.sessionStorage.removeItem("lumino-portal-session-mode");
+        unmountRealCustomerPages();
+        clearRealCustomerViewData();
+        $("#portal").hidden = true;
+        $("#loginScreen").hidden = false;
+        setLoginStep("email", true);
+      }
+      const message = code === "AUTH_REQUIRED" ? "账号或密码错误，或登录已失效"
+        : code === "RATE_LIMITED" ? "尝试次数过多，请 15 分钟后再试"
+          : code === "DEPENDENCY_UNAVAILABLE" ? `${path === "/api/portal-login" ? "企业登录服务" : "项目服务"}暂不可用，请稍后重试或联系管理员`
+            : code === "VALIDATION_FAILED" ? "请检查填写内容"
+              : "服务暂时不可用，请稍后重试";
+      throw Object.assign(new Error(message), { code, status: response.status });
+    }
+    return payload.data;
+  }
+
+  function clearPortalCustomerSession() {
+    window.sessionStorage.removeItem(portalCustomerTokenKey);
+    customerWorkspaceStep = null;
+  }
+
+  async function revokePortalCustomerSession() {
+    const token = window.sessionStorage.getItem(portalCustomerTokenKey);
+    clearPortalCustomerSession();
+    unmountRealCustomerPages();
+    clearRealCustomerViewData();
+    if (token) {
+      try { await portalCustomerApi("/api/portal-workspace", { method: "DELETE", token }); } catch (_) { /* Session expires server-side. */ }
+    }
+  }
+
+  function resetCustomerRecordForm(form) {
+    form.reset();
+    delete form.dataset.recordId;
+    form.querySelector('button[type="submit"]').textContent = {
+      product: "保存产品", facility: "保存设施",
+    }[form.dataset.customerRecord];
+    form.querySelector("[data-customer-cancel]").hidden = true;
+    if (form.dataset.customerRecord === "product") $("#customerProductManual").open = false;
+  }
+
+  function setCustomerPortalView(view, focus = false) {
+    const cbamViews = new Set(["cbam", "annual", "products", "data-calculation", "cbam-deliverables"]);
+    if (cbamViews.has(view) && !customerPortalData?.projects?.length) {
+      customerWorkspaceStep = "identity";
+      setCustomerWorkspaceStep("identity");
+      view = "setup";
+    }
+    if (!["home", "services", "cbam", "annual", "products", "data-calculation", "cbam-deliverables", "tasks", "assets", "deliverables", "setup"].includes(view)) return;
+    customerPortalView = view;
+    document.querySelectorAll("[data-customer-view-panel]").forEach((panel) => { panel.hidden = panel.dataset.customerViewPanel !== view; });
+    const project = customerPortalData?.projects?.[0];
+    syncRealCustomerShell(view, project);
+    if (focus) {
+      const panel = document.querySelector(`[data-customer-view-panel="${view}"]`);
+      const title = panel?.querySelector("h1");
+      if (title) { title.tabIndex = -1; title.focus({ preventScroll: true }); }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
+  function renderCustomerPortalPages(data, project, counts) {
+    renderTenantWorkbench(data, project, counts);
+    document.querySelector('[data-customer-view-panel="services"]').innerHTML = servicesHubMarkup(data);
+    renderTenantCbamWork(data, project, counts);
+    const projectRecords = project ? (data.records || []).filter((record) => record.projectId === project.id) : [];
+    const products = projectRecords.filter((record) => record.kind === "product");
+    const facilities = projectRecords.filter((record) => record.kind === "facility");
+    const links = projectRecords.filter((record) => record.kind === "production_link");
+    const linkForm = $("#customerProductionLinkForm");
+    const canEditLinks = project?.status === "SETUP_DRAFT" && data.user.roles.some((role) => ["customer_admin", "customer_owner"].includes(role));
+    const canLink = canEditLinks && products.length > 0 && facilities.length > 0;
+    linkForm.hidden = !canLink;
+    $("#customerProductionLinksSetup").hidden = !canEditLinks || canLink;
+    $("#customerProductionLinksHint").textContent = !project
+      ? "先启动年度项目，再建立产品与设施关系。"
+      : !products.length || !facilities.length
+        ? "请先保存至少一个产品 CN 码和一座生产设施。"
+        : links.length ? `已建立 ${links.length} 条生产关系，可继续补充或修改。` : "选择一个产品和实际生产它的设施；一个产品可以关联多座设施。";
+    for (const [name, records, label] of [
+      ["productId", products, (record) => `${record.cnCode} · ${record.name}`],
+      ["facilityId", facilities, (record) => `${record.name} · ${record.location}`],
+    ]) {
+      const select = linkForm.elements.namedItem(name);
+      const previous = select.value;
+      select.replaceChildren(new Option("请选择", ""), ...records.map((record) => new Option(label(record), record.id)));
+      if (records.some((record) => record.id === previous)) select.value = previous;
+    }
+    const linksList = $("#customerProductionLinksList");
+    linksList.replaceChildren();
+    for (const link of links) {
+      const product = products.find((record) => record.id === link.productId);
+      const facility = facilities.find((record) => record.id === link.facilityId);
+      const item = document.createElement("li");
+      const label = document.createElement("span");
+      label.textContent = `${product?.cnCode || "产品待核对"} · ${facility?.name || "设施待核对"}${link.processSummary ? ` · ${link.processSummary}` : ""}`;
+      item.append(label);
+      if (canLink) {
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "text-button";
+        edit.textContent = "修改";
+        edit.addEventListener("click", () => {
+          linkForm.dataset.recordId = link.id;
+          linkForm.elements.productId.value = link.productId;
+          linkForm.elements.facilityId.value = link.facilityId;
+          linkForm.elements.processSummary.value = link.processSummary || "";
+          linkForm.querySelector('button[type="submit"]').textContent = "保存修改";
+          $("#customerProductionLinkCancel").hidden = false;
+          linkForm.elements.productId.focus();
+        });
+        item.append(edit);
+      }
+      linksList.append(item);
+    }
+
+    renderTenantGlobalPages(data, project, projectRecords, links);
+    renderTenantCbamDetails(data, project, projectRecords, counts, customerProductTab, customerDataTab);
+  }
+
+  function setCustomerWorkspaceStep(step, focus = false) {
+    const hasProject = !$("#customerProjectSummary").hidden;
+    if (!hasProject && step !== "identity") return;
+    customerWorkspaceStep = step;
+    document.querySelectorAll("[data-customer-step]").forEach((button) => {
+      button.disabled = !hasProject && button.dataset.customerStep !== "identity";
+      if (button.dataset.customerStep === step) button.setAttribute("aria-current", "step");
+      else button.removeAttribute("aria-current");
+    });
+    document.querySelectorAll("[data-customer-step-panel]").forEach((panel) => {
+      panel.hidden = panel.dataset.customerStepPanel !== step;
+    });
+    if (focus) {
+      const target = hasProject ? document.querySelector(`[data-customer-step-panel="${step}"] h3`) : $("#customerSetupForm h2");
+      if (target) { target.tabIndex = -1; target.focus({ preventScroll: true }); }
+      $("#customerSetupNav").scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    }
+  }
+
+  function showCustomerWorkspace(data) {
+    customerPortalData = data;
+    mountRealCustomerPages();
+    $("#loginScreen").hidden = true;
+    $("#portal").hidden = false;
+    $("#customerWorkspaceTitle").textContent = "启动 CBAM 年度项目";
+    $("#customerWorkspaceIntro").textContent = "分步建立项目范围，完成后进入 CBAM 项目继续工作。";
+    $("#customerTenantName").value = data.tenant.name;
+    const project = data.projects?.[0];
+    $("#customerSetupForm").hidden = Boolean(project);
+    $("#customerProjectSummary").hidden = !project;
+    const projectRecords = project ? (data.records || []).filter((record) => record.projectId === project.id) : [];
+    const counts = Object.fromEntries(["product", "facility", "material_request", "production_link"].map((kind) => [kind, projectRecords.filter((record) => record.kind === kind).length]));
+    for (const [step, label] of Object.entries({
+      identity: project ? "已确认" : "待确认",
+      product: counts.product ? `已保存 ${counts.product}` : "待设置",
+      facility: counts.facility ? `已保存 ${counts.facility}` : "待设置",
+      review: counts.product && counts.facility ? "可进入" : "待核对",
+    })) $(`[data-customer-step-status="${step}"]`).textContent = label;
+    if (!customerWorkspaceStep || (!project && customerWorkspaceStep !== "identity")) customerWorkspaceStep = !project ? "identity" : !counts.product ? "product" : !counts.facility ? "facility" : "review";
+    renderCustomerPortalPages(data, project, counts);
+    if (project) {
+      $("#customerProjectDetail").textContent = `${data.tenant.name} · CBAM ${project.year} 年度项目 · ${counts.product && counts.facility ? "基础范围已建立" : "范围待完善"}`;
+      $("#customerProjectSummary").dataset.projectId = project.id;
+      const canEdit = project.status === "SETUP_DRAFT" && data.user.roles.some((role) => ["customer_admin", "customer_owner"].includes(role));
+      document.querySelectorAll("[data-customer-record]").forEach((form) => { form.hidden = !canEdit; });
+      $("#customerCnPicker").hidden = !canEdit;
+      $("#customerProductManual").hidden = !canEdit;
+      $("#customerTenantDisplay").hidden = false;
+      $("#customerTenantDisplayName").textContent = data.tenant.name;
+      $("#customerTenantEditButton").hidden = !canEdit;
+      $("#customerTenantEditForm").hidden = true;
+      $("#customerTenantEditForm").elements.tenantName.value = data.tenant.name;
+      const descriptions = {
+        product: (record) => `CN ${record.cnCode} · ${record.name}`,
+        facility: (record) => `${record.name} · ${record.location}`,
+      };
+      for (const [kind, listId, countId] of [
+        ["product", "customerProductList", "customerProductCount"],
+        ["facility", "customerFacilityList", "customerFacilityCount"],
+      ]) {
+        const records = (data.records || []).filter((record) => record.projectId === project.id && record.kind === kind);
+        const list = $(`#${listId}`);
+        list.replaceChildren();
+        for (const record of records) {
+          const item = document.createElement("li");
+          const label = document.createElement("span");
+          label.textContent = descriptions[kind](record);
+          if (kind === "product") label.dataset.productId = record.id;
+          item.append(label);
+          if (canEdit) {
+            const edit = document.createElement("button");
+            edit.type = "button";
+            edit.className = "link-button";
+            edit.textContent = "修改";
+            edit.setAttribute("aria-label", `修改${descriptions[kind](record)}`);
+            edit.addEventListener("click", () => {
+              const form = document.querySelector(`[data-customer-record="${kind}"]`);
+              for (const [key, value] of Object.entries(record)) {
+                const input = form.elements.namedItem(key);
+                if (input) input.value = value;
+              }
+              form.dataset.recordId = record.id;
+              if (kind === "product") $("#customerProductManual").open = true;
+              form.querySelector('button[type="submit"]').textContent = "保存修改";
+              form.querySelector("[data-customer-cancel]").hidden = false;
+              form.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            });
+            item.append(edit);
+          }
+          list.append(item);
+        }
+        $(`#${countId}`).textContent = `已保存 ${records.length} 项`;
+      }
+      customerCnExisting = new Set((data.records || []).filter((record) => record.projectId === project.id && record.kind === "product").map((record) => record.cnCode));
+      for (const code of customerCnExisting) customerCnSelected.delete(code);
+      if (canEdit) void loadCustomerCnCatalog().catch(() => {});
+      renderCustomerCnPicker();
+      renderCustomerProductSectors();
+      $("#customerOverviewProducts").textContent = String(counts.product);
+      $("#customerOverviewFacilities").textContent = String(counts.facility);
+      $("#customerOverviewHint").textContent = counts.product && counts.facility
+        ? "产品与生产设施已保存。核对后进入项目，查看范围与材料准备状态。"
+        : "请先保存至少一个产品 CN 码和一座生产设施，才能完成引导。";
+      $("#customerCompleteSetup").disabled = !counts.product || !counts.facility;
+    }
+    setCustomerWorkspaceStep(customerWorkspaceStep);
+    setCustomerPortalView(customerPortalView);
+    window.sessionStorage.setItem("lumino-portal-session-mode", "customer");
+    window.sessionStorage.removeItem("lumino-portal-session-role");
+  }
+
+  async function restorePortalCustomerSession({ focus = false } = {}) {
+    const token = window.sessionStorage.getItem(portalCustomerTokenKey);
+    if (!token) return false;
+    try {
+      const data = await portalCustomerApi("/api/portal-workspace", { token });
+      if (data.tenant.isDemo) {
+        if (!portalDemoBootstrap) {
+          window.sessionStorage.setItem("lumino-portal-session-mode", "portal-demo");
+          window.location.reload();
+          return true;
+        }
+        login("customer_owner", { demo: true, sessionMode: "portal-demo", restore: true });
+      } else {
+        showCustomerWorkspace(data);
+        if (focus) setCustomerPortalView("home", true);
+      }
+      return true;
+    } catch (_) {
+      clearPortalCustomerSession();
+      window.sessionStorage.removeItem("lumino-portal-session-mode");
+      return false;
+    }
+  }
+
+  async function portalCustomerPasswordLogin(email, password) {
+    const session = await portalCustomerApi("/api/portal-login", { method: "POST", body: { email, password } });
+    const url = new URL(window.location.href);
+    for (const key of ["demoRole", "demoYear", "demoPage"]) url.searchParams.delete(key);
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+    window.sessionStorage.setItem(portalCustomerTokenKey, session.token);
+    customerPortalView = "home";
+    customerWorkspaceStep = null;
+    customerProductTab = "products";
+    customerDataTab = "data";
+    if (!await restorePortalCustomerSession({ focus: true })) throw new Error("登录已建立，但工作区读取失败，请重试");
+  }
+
   window.addEventListener("lumino:staff-session-expired", () => {
     clearStaffSession();
     if (["sales", "ops"].includes(state.role)) {
@@ -126,18 +628,16 @@
       if (submit) submit.disabled = true;
       return;
     }
-    if (loginUsesSso(value)) {
-      hint.textContent = "huaxing-steel.cn 已启用企业 SSO，继续后跳转到企业登录";
-    } else if (isStaffEmail(value)) {
-      hint.textContent = "Lumino 员工账号：继续后输入密码，登录后可查看真实线索";
+    if (isStaffEmail(value)) {
+      hint.textContent = "员工账号：继续后输入密码";
     } else {
-      hint.textContent = "继续后输入密码";
+      hint.textContent = "继续后输入密码；登录后进入企业工作台";
       hint.classList.add("is-muted");
     }
     if (submit) submit.disabled = false;
   }
 
-  function setLoginStep(step) {
+  function setLoginStep(step, focus = false) {
     const screen = $("#loginScreen");
     const form = $("#loginForm");
     if (screen) screen.dataset.loginStep = step;
@@ -145,19 +645,20 @@
     form?.querySelectorAll("[data-step-panel]").forEach((panel) => {
       panel.hidden = panel.dataset.stepPanel !== step;
     });
-    const email = ($("#loginEmail")?.value || "").trim() || "zhoulan@huaxing-steel.cn";
+    const email = ($("#loginEmail")?.value || "").trim();
     if (step === "email") updateLoginEmailHint(email);
-    if (step === "workspace") {
-      const lead = $("#workspaceLead");
-      if (lead) lead.textContent = `${email} 在 3 个工作区有权限`;
+    if (step === "setup" && $("#setupEmailLabel")) $("#setupEmailLabel").textContent = email;
+    if (focus) {
+      const panel = form?.querySelector(`[data-step-panel="${step}"]`);
+      const target = panel?.querySelector("input:not([type=checkbox])") || panel?.querySelector("h2");
+      if (target?.tagName === "H2") target.tabIndex = -1;
+      window.setTimeout(() => target?.focus(), 0);
     }
   }
 
   function syncLoginEmailLabels(email) {
-    ["ssoEmailLabel", "passwordEmailLabel"].forEach((id) => {
-      const node = document.getElementById(id);
-      if (node) node.textContent = email;
-    });
+    const node = document.getElementById("passwordEmailLabel");
+    if (node) node.textContent = email;
   }
 
   $("#loginEmail")?.addEventListener("input", (event) => updateLoginEmailHint(event.target.value));
@@ -168,10 +669,13 @@
     if (step === "email") {
       if (!isValidWorkEmail(email)) { updateLoginEmailHint(email || " "); toast("请输入有效的工作邮箱"); return; }
       syncLoginEmailLabels(email);
-      setLoginStep(loginUsesSso(email) ? "sso" : "password");
+      setLoginStep("password", true);
       return;
     }
     if (step === "password") {
+      const errorNode = $("#loginPasswordError");
+      errorNode.hidden = true;
+      errorNode.textContent = "";
       const password = $("#loginPassword")?.value || "";
       if (password.length < 6) { toast("请输入至少 6 位密码"); return; }
       if (isStaffEmail(email)) {
@@ -181,7 +685,7 @@
           if (submit) { submit.disabled = true; submit.textContent = "登录中…"; }
           const profile = await staffPasswordLogin(email, password);
           saveStaffSession(profile);
-          login(profile.role);
+          login(profile.role, { demo: false });
           toast(`已登录 ${profile.name || profile.email}，可查看线索收件箱`);
         } catch (error) {
           clearStaffSession();
@@ -191,48 +695,234 @@
         }
         return;
       }
-      setLoginStep("workspace");
+      const submit = $("#loginForm")?.querySelector('[data-step-panel="password"] button[type="submit"]');
+      const original = submit?.textContent || "登录";
+      try {
+        if (submit) { submit.disabled = true; submit.textContent = "登录中…"; }
+        await portalCustomerPasswordLogin(email, password);
+      } catch (error) {
+        errorNode.textContent = error.message || "登录失败，请重试";
+        errorNode.hidden = false;
+        toast(error.message || "登录失败");
+      } finally {
+        if (submit) { submit.disabled = false; submit.textContent = original; }
+      }
       return;
     }
   });
-  $("#ssoContinue")?.addEventListener("click", () => setLoginStep("workspace"));
-  $("#usePasswordInstead")?.addEventListener("click", () => setLoginStep("password"));
   document.querySelectorAll("[data-login-back]").forEach((button) => {
-    button.addEventListener("click", () => setLoginStep("email"));
+    button.addEventListener("click", () => setLoginStep("email", true));
   });
-  document.querySelectorAll("[data-workspace-role]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const role = button.dataset.workspaceRole;
-      const home = button.dataset.workspaceHome;
-      login(role);
-      if (home) {
-        if (customerRoles.has(role)) setCustomerDestination(null, home);
-        else state.page = home;
-        render();
-      }
-      toast("已进入工作区（原型）");
-    });
-  });
+  if (!localDemoPreview && $("#demoRoleSelect")) $("#demoRoleSelect").closest(".demo-role-select").hidden = true;
   $("#demoRoleSelect")?.addEventListener("change", (event) => {
+    if (!localDemoPreview) return;
     const role = event.target.value;
-    if (!role) return;
-    if (["sales", "ops"].includes(role) && !window.LuminoLeadsClient?.hasStaffSession()) {
-      toast("演示角色可进面板；查看真实线索请用 ops@lumino.tech / sales@lumino.tech 登录");
-    }
-    login(role);
+    if (!role || !roleConfig[role]) return;
     event.target.value = "";
+    if (!portalDemoBootstrap) {
+      window.sessionStorage.setItem("lumino-portal-session-mode", "demo");
+      window.sessionStorage.setItem("lumino-portal-session-role", role);
+      window.location.reload();
+      return;
+    }
+    login(role, { demo: true });
   });
   const sendResetToast = () => {
-    const email = ($("#loginEmail")?.value || "").trim() || "工作邮箱";
-    toast(`重置链接已发送到 ${email}（原型模拟，30 分钟内有效）。`);
+    toast("密码重置尚未开放，请联系企业管理员或 Lumino 服务人员。");
   };
   $("#forgotPassword")?.addEventListener("click", sendResetToast);
   $("#forgotPasswordInline")?.addEventListener("click", sendResetToast);
   $("#activateInvite")?.addEventListener("click", () => {
-    toast("正式环境会打开邀请链接；原型中请用演示角色「数据贡献者」进入。");
+    setLoginStep("setup", true);
   });
   setLoginStep("email");
 
+  $("#customerSetupForm")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const submit = form.querySelector('button[type="submit"]');
+    const errorNode = $("#customerSetupError");
+    errorNode.hidden = true;
+    if (!$("#customerTenantConfirmed").checked) { errorNode.textContent = "请先核对企业名称"; errorNode.hidden = false; return; }
+    try {
+      submit.disabled = true;
+      const token = window.sessionStorage.getItem(portalCustomerTokenKey);
+      await portalCustomerApi("/api/portal-workspace", {
+        method: "POST", token,
+        body: { serviceYear: Number($("#customerServiceYear").value), confirmedTenantName: $("#customerTenantName").value },
+      });
+      customerWorkspaceStep = "product";
+      showCustomerWorkspace(await portalCustomerApi("/api/portal-workspace", { token }));
+      setCustomerWorkspaceStep("product", true);
+    } catch (error) {
+      errorNode.textContent = error.message || "创建失败，请重试";
+      errorNode.hidden = false;
+      if (error.code === "AUTH_REQUIRED") { await revokePortalCustomerSession(); $("#portal").hidden = true; $("#loginScreen").hidden = false; setLoginStep("email"); }
+    } finally {
+      submit.disabled = false;
+    }
+  });
+  document.querySelectorAll("[data-customer-step], [data-customer-step-target]").forEach((button) => {
+    button.addEventListener("click", () => setCustomerWorkspaceStep(button.dataset.customerStep || button.dataset.customerStepTarget, true));
+  });
+  $("#portal")?.addEventListener("click", (event) => {
+    if (!$("#portal").classList.contains("portal--real-customer")) return;
+    const tab = event.target.closest("[data-customer-tab]");
+    if (tab && customerPortalData) {
+      const [view, section] = tab.dataset.customerTab.split(":");
+      if (view === "products" && ["products", "facilities", "changes"].includes(section)) customerProductTab = section;
+      else if (view === "data-calculation" && ["data", "results", "cost"].includes(section)) customerDataTab = section;
+      else return;
+      const project = customerPortalData.projects?.[0];
+      const records = (customerPortalData.records || []).filter((record) => record.projectId === project?.id);
+      const counts = Object.fromEntries(["product", "facility", "material_request", "production_link"].map((kind) => [kind, records.filter((record) => record.kind === kind).length]));
+      renderTenantCbamDetails(customerPortalData, project, records, counts, customerProductTab, customerDataTab);
+      document.querySelector(`[data-customer-tab="${view}:${section}"]`)?.focus();
+      return;
+    }
+    const button = event.target.closest("[data-customer-view]");
+    if (!button) return;
+    if (button.dataset.customerSetupStep) setCustomerWorkspaceStep(button.dataset.customerSetupStep);
+    setCustomerPortalView(button.dataset.customerView, true);
+  });
+  $("#customerTenantEditButton")?.addEventListener("click", () => {
+    $("#customerTenantDisplay").hidden = true;
+    $("#customerTenantEditForm").hidden = false;
+    $("#customerTenantEditForm").elements.tenantName.focus();
+  });
+  $("#customerTenantEditCancel")?.addEventListener("click", () => {
+    $("#customerTenantEditForm").hidden = true;
+    $("#customerTenantDisplay").hidden = false;
+    $("#customerTenantEditButton").focus();
+  });
+  $("#customerTenantEditForm")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const errorNode = form.querySelector('[role="alert"]');
+    const submit = form.querySelector('button[type="submit"]');
+    errorNode.hidden = true;
+    try {
+      submit.disabled = true;
+      const token = window.sessionStorage.getItem(portalCustomerTokenKey);
+      await portalCustomerApi("/api/portal-workspace", { method: "PATCH", token, body: { operation: "rename_tenant", tenantName: form.elements.tenantName.value } });
+      showCustomerWorkspace(await portalCustomerApi("/api/portal-workspace", { token }));
+      $("#customerTenantEditButton").focus();
+    } catch (error) {
+      errorNode.textContent = error.message || "修改失败，请重试";
+      errorNode.hidden = false;
+    } finally {
+      submit.disabled = false;
+    }
+  });
+  function resetCustomerProductionLinkForm() {
+    const form = $("#customerProductionLinkForm");
+    form.reset();
+    delete form.dataset.recordId;
+    form.querySelector('button[type="submit"]').textContent = "保存生产关系";
+    $("#customerProductionLinkCancel").hidden = true;
+  }
+  $("#customerProductionLinkCancel")?.addEventListener("click", () => {
+    resetCustomerProductionLinkForm();
+    $("#customerProductionLinkForm").elements.productId.focus();
+  });
+  $("#customerProductionLinkForm")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const feedback = $("#customerProductionLinkFeedback");
+    const submit = form.querySelector('button[type="submit"]');
+    const recordId = form.dataset.recordId;
+    const token = window.sessionStorage.getItem(portalCustomerTokenKey);
+    const projectId = customerPortalData?.projects?.[0]?.id;
+    if (!projectId) { feedback.textContent = "请先建立年度项目。"; return; }
+    try {
+      submit.disabled = true;
+      feedback.textContent = "";
+      await portalCustomerApi("/api/portal-workspace", {
+        method: recordId ? "PATCH" : "PUT", token,
+        body: recordId
+          ? { operation: "update_record", recordId, kind: "production_link", record: Object.fromEntries(new FormData(form)) }
+          : { projectId, kind: "production_link", record: Object.fromEntries(new FormData(form)) },
+      });
+      resetCustomerProductionLinkForm();
+      showCustomerWorkspace(await portalCustomerApi("/api/portal-workspace", { token }));
+      feedback.textContent = recordId ? "生产关系已更新。" : "生产关系已保存。";
+    } catch (error) {
+      feedback.textContent = error.message || "保存失败，请重试。";
+    } finally {
+      submit.disabled = false;
+    }
+  });
+  $("#customerCnSearch")?.addEventListener("input", renderCustomerCnPicker);
+  $("#customerCnPasteAdd")?.addEventListener("click", () => {
+    const raw = $("#customerCnPaste").value.trim();
+    const tokens = [...new Set(raw.split(/[\s,，;；、]+/).filter(Boolean))];
+    if (!customerCnCatalog.length) { $("#customerCnPasteFeedback").textContent = "CN 目录仍在加载，请稍后重试。"; return; }
+    const known = new Set(customerCnCatalog.map((item) => item.cnCode));
+    const missing = tokens.filter((code) => !known.has(code));
+    const already = tokens.filter((code) => known.has(code) && (customerCnExisting.has(code) || customerCnSelected.has(code)));
+    const valid = tokens.filter((code) => known.has(code) && !customerCnExisting.has(code) && !customerCnSelected.has(code));
+    const room = 50 - customerCnSelected.size;
+    for (const code of valid.slice(0, room)) customerCnSelected.add(code);
+    $("#customerCnPasteFeedback").textContent = [
+      `已加入 ${Math.min(valid.length, room)} 个待保存编码。`,
+      already.length ? `${already.length} 个已保存或已在待保存清单中。` : "",
+      missing.length ? `${missing.length} 个未在目录中找到：${missing.slice(0, 5).join("、")}${missing.length > 5 ? "…" : ""}。` : "",
+      valid.length > room ? "本次最多保存 50 个，请先保存当前清单。" : "",
+    ].filter(Boolean).join(" ");
+    renderCustomerCnPicker();
+  });
+  $("#customerCnSave")?.addEventListener("click", async () => {
+    const button = $("#customerCnSave");
+    const feedback = $("#customerCnSaveFeedback");
+    const token = window.sessionStorage.getItem(portalCustomerTokenKey);
+    const projectId = $("#customerProjectSummary").dataset.projectId;
+    const cnCodes = [...customerCnSelected];
+    try {
+      button.disabled = true;
+      const result = await portalCustomerApi("/api/portal-workspace", { method: "PUT", token, body: { operation: "add_products", projectId, cnCodes } });
+      customerCnSelected.clear();
+      showCustomerWorkspace(await portalCustomerApi("/api/portal-workspace", { token }));
+      feedback.textContent = `已保存 ${result.created.length} 个产品${result.skippedCodes.length ? `，${result.skippedCodes.length} 个已在项目中` : ""}。可在上方逐项修改企业内部名称。`;
+      feedback.tabIndex = -1;
+      feedback.focus({ preventScroll: true });
+    } catch (error) {
+      feedback.textContent = error.message || "保存失败，请重试。";
+      if (error.code === "AUTH_REQUIRED") { await revokePortalCustomerSession(); $("#portal").hidden = true; $("#loginScreen").hidden = false; setLoginStep("email"); }
+    } finally {
+      button.disabled = customerCnSelected.size === 0;
+    }
+  });
+  document.querySelectorAll("[data-customer-record]").forEach((form) => {
+    form.querySelector("[data-customer-cancel]").addEventListener("click", () => resetCustomerRecordForm(form));
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const errorNode = form.querySelector('[role="alert"]');
+      const submit = form.querySelector('button[type="submit"]');
+      errorNode.hidden = true;
+      const token = window.sessionStorage.getItem(portalCustomerTokenKey);
+      const projectId = $("#customerProjectSummary").dataset.projectId;
+      const kind = form.dataset.customerRecord;
+      const recordId = form.dataset.recordId;
+      try {
+        submit.disabled = true;
+        const record = Object.fromEntries(new FormData(form));
+        if (kind === "product" && !(await loadCustomerCnCatalog()).some((item) => item.cnCode === record.cnCode)) throw new Error("该 CN 码不在当前目录中，请先搜索并核对完整编码。");
+        await portalCustomerApi("/api/portal-workspace", {
+          method: recordId ? "PATCH" : "PUT", token,
+          body: { ...(recordId ? { operation: "update_record", recordId } : { projectId }), kind, record },
+        });
+        resetCustomerRecordForm(form);
+        showCustomerWorkspace(await portalCustomerApi("/api/portal-workspace", { token }));
+        if (kind === "product") $("#customerProductManual summary").focus();
+      } catch (error) {
+        errorNode.textContent = error.message || "保存失败，请重试";
+        errorNode.hidden = false;
+        if (error.code === "AUTH_REQUIRED") { await revokePortalCustomerSession(); $("#portal").hidden = true; $("#loginScreen").hidden = false; setLoginStep("email"); }
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  });
   function closeAccountMenu() {
     const panel = $("#accountMenu");
     if (!panel) return;
@@ -250,12 +940,11 @@
   $("#accountMenu")?.addEventListener("click", (event) => {
     const item = event.target.closest("[data-account-action], #logoutButton");
     if (!item) return;
-    if (item.id === "logoutButton") { closeAccountMenu(); clearStaffSession(); logout(); setLoginStep("email"); return; }
+    if (item.id === "logoutButton") { closeAccountMenu(); clearStaffSession(); void revokePortalCustomerSession(); logout(); setLoginStep("email"); return; }
     if (item.dataset.accountAction === "workspace") {
       closeAccountMenu();
       logout();
-      setLoginStep("workspace");
-      syncLoginEmailLabels(($("#loginEmail")?.value || "").trim() || "zhoulan@huaxing-steel.cn");
+      setLoginStep("email");
       return;
     }
     if (item.dataset.accountAction === "settings") {
@@ -357,7 +1046,7 @@
   }
 
   function openCmdk() {
-    if ($("#portal")?.hidden) return;
+    if ($("#portal")?.hidden || $("#portal").classList.contains("portal--real-customer")) return;
     $("#cmdkLayer").hidden = false;
     $("#cmdkInput").value = "";
     renderCmdk("");
@@ -400,6 +1089,7 @@
     render();
   });
   document.querySelector(".company-switch").addEventListener("click", () => {
+    if ($("#portal").classList.contains("portal--real-customer")) return;
     if (canManageOrganization()) {
       state.currentService = null;
       state.page = "org-settings";
@@ -411,6 +1101,9 @@
   });
   $("#roleSelect").addEventListener("change", (event) => {
     state.role = event.target.value;
+    state.demoWorkspace = true;
+    window.sessionStorage.setItem("lumino-portal-session-role", state.role);
+    window.sessionStorage.setItem("lumino-portal-session-mode", "demo");
     if (customerRoles.has(state.role)) { state.year = "2026"; state.quarter = "Q3"; }
     state.currentService = null;
     state.page = defaultPages[state.role];
@@ -473,7 +1166,10 @@
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     }
   });
-  document.addEventListener("click", (event) => {
+  document.addEventListener("click", async (event) => {
+    // Tenant pages own their controls. Demo handlers below must never interpret
+    // a real customer's button as a sample workflow or open a sample drawer.
+    if ($("#portal").classList.contains("portal--real-customer") && event.target.closest("#portal")) return;
     if (window.LuminoAgentRuntime?.handleAgentEvent?.(event)) return;
     const overviewAction = event.target.closest("[data-service-overview]");
     if (overviewAction) {
@@ -895,9 +1591,14 @@
         } catch (error) { toast(error.recovery || error.message); }
       }
       if (action === "cbam-reset-demo") {
-        const accepted = window.confirm("将清除本浏览器中的 Portal 演示工作流、Agent 任务与界面草稿，然后恢复 2027 开通期与固定 Q3 场景。继续吗？");
+        const accepted = window.confirm("将清除本浏览器的 Portal 演示状态和本机服务保存的 CBAM 账单，再恢复固定演示场景。继续吗？");
         if (!accepted) return;
-        ["lumino-multiservice-workflow-v2", "lumino-agent-tasks-v1", "lumino-multiservice-portal-ui-v2"].forEach((key) => window.localStorage.removeItem(key));
+        try {
+          for (const request of workflowEngine.list({ type: "workPackage" }).filter((item) => item.metadata?.evidenceId)) {
+            await saveIntakeRecord("delete", { requestId: request.id });
+          }
+        } catch (error) { toast(error.message || "本机证据清除失败，演示未重置。"); return; }
+        ["lumino-multiservice-workflow-v2", "lumino-agent-tasks-v1", "lumino-multiservice-portal-ui-v2"].forEach((key) => portalPrototypeStorage.removeItem(key));
         window.location.reload();
         return;
       }
@@ -1240,9 +1941,9 @@
             : `原型复核流程已完成。演示报告 Rev 1 已锁定 ${reportLock.items.length} 项输入，不可对外交付。`);
         } catch (error) { toast(error.message); }
       }
-      if (action === "dismiss-onboarding") { state.onboardingDismissed = true; window.localStorage.setItem("lumino-portal-onboarding", "dismissed"); render(); toast("快速引导已收起；可随时从“操作指南”查看完整流程。"); }
-      if (action === "start-onboarding") { state.onboardingDismissed = true; window.localStorage.setItem("lumino-portal-onboarding", "dismissed"); render(); document.querySelector(".agent-task")?.scrollIntoView({ behavior: "smooth", block: "center" }); }
-      if (action === "replay-onboarding") { state.onboardingDismissed = false; window.localStorage.removeItem("lumino-portal-onboarding"); state.page = "work"; render(); document.querySelector(".onboarding-guide")?.scrollIntoView({ behavior: "smooth", block: "start" }); }
+      if (action === "dismiss-onboarding") { state.onboardingDismissed = true; portalPrototypeStorage.setItem("lumino-portal-onboarding", "dismissed"); render(); toast("快速引导已收起；可随时从“操作指南”查看完整流程。"); }
+      if (action === "start-onboarding") { state.onboardingDismissed = true; portalPrototypeStorage.setItem("lumino-portal-onboarding", "dismissed"); render(); document.querySelector(".agent-task")?.scrollIntoView({ behavior: "smooth", block: "center" }); }
+      if (action === "replay-onboarding") { state.onboardingDismissed = false; portalPrototypeStorage.removeItem("lumino-portal-onboarding"); state.page = "work"; render(); document.querySelector(".onboarding-guide")?.scrollIntoView({ behavior: "smooth", block: "start" }); }
       if (isLockedYear() && ["mock-upload", "toggle-product-form", "add-configuration", "edit-product", "confirm-fact", "resolve-finding"].includes(action)) { toast("锁定年度为不可变快照；请通过更正申请创建新修订版。"); return; }
       if (action === "open-year-setup") { state.page = "annual-setup"; render(); }
       if (action === "enter-program") {
@@ -1277,7 +1978,7 @@
           if (!canPerformPortalAction("cbam-confirm-quarter-data")) throw Object.assign(new Error(portalActionDenial("cbam-confirm-quarter-data")), { code: "FORBIDDEN" });
           const request = currentIntakeRequest();
           if (!request) throw Object.assign(new Error("当前期间没有可确认的材料请求。"), { code: "MATERIAL_REQUEST_REQUIRED" });
-          const candidate = intakeCandidateStore.latest({ requestId: request.id, tenantId: intakeTenantId, year: state.year, quarter: state.quarter });
+          const candidate = currentIntakeCandidate(request.id);
           if (!candidate) throw Object.assign(new Error("当前页面会话没有待确认候选，请重新上传演示账单。"), { code: "CANDIDATE_NOT_FOUND" });
           const evidenceId = candidate.evidenceId;
           const factId = `FACT-${state.year}-${state.quarter}-GAS`;
@@ -1285,16 +1986,21 @@
           const actor = { ...intakeActor(), reason: "确认能源账单演示提取结果并写入企业资产池" };
           const evidence = intakeEvidenceStore.get({ evidenceId, tenantId: intakeTenantId, actor });
           window.LuminoIntakeModel.assertConfirmAllowed({ candidate, evidence, request: { ...request, tenantId: request.metadata?.tenantId || intakeTenantId }, actor, expectedRevision: candidate.revision });
-          if (!assetRegistry.get(evidenceId) || !assetRegistry.get(gasAssetId)) throw Object.assign(new Error("候选资产不完整，请重新上传演示账单。"), { code: "INTAKE_ASSET_MISSING" });
+          const evidenceAsset = assetRegistry.get(evidenceId);
+          const gasAsset = assetRegistry.get(gasAssetId);
+          const gasBindingId = `BIND-${candidate.id}`;
+          const gasBinding = assetRegistry.bindings({ id: gasBindingId })[0];
+          if (!evidenceAsset || !gasAsset || !gasBinding) throw Object.assign(new Error("候选资产或绑定不完整，请重新上传演示账单。"), { code: "INTAKE_ASSET_MISSING" });
+          if (evidenceAsset.subjectRefs?.facilityId !== candidate.facilityAssetId || gasAsset.subjectRefs?.facilityId !== candidate.facilityAssetId || gasBinding.scopeId !== candidate.facilityAssetId || gasBinding.assetId !== gasAssetId || gasAsset.payload?.originalValue !== candidate.proposedPatch.originalValue || gasAsset.provenance?.sourceAssetIds?.[0] !== evidenceId) throw Object.assign(new Error("候选与设施、证据或资产不一致，请重新上传。"), { code: "INTAKE_ASSET_MISMATCH" });
+          await saveIntakeRecord("confirm", { requestId: request.id, candidateId: candidate.id, revision: candidate.revision, actor: actor.actor });
           if (assetRegistry.get(gasAssetId)?.status !== "CONFIRMED") {
             assetRegistry.confirm(gasAssetId, { ...actor, basis: "核对候选数值、单位、账期与设施" });
           }
           if (assetRegistry.get(evidenceId)?.status !== "CONFIRMED") assetRegistry.confirm(evidenceId, { ...actor, basis: "核对文件摘要、账期与材料请求" });
-          const gasBindingId = `BIND-${candidate.id}`;
           if (assetRegistry.bindings({ id: gasBindingId })[0]?.status !== "CONFIRMED") assetRegistry.confirmBinding(gasBindingId, { ...actor, basis: "确认当前候选纳入 CBAM 季度核算" });
           moveWorkflow(evidenceId, ["CLASSIFIED", "LINKED", "REVIEWED", "ACCEPTED"], "具名客户确认证据、候选和材料请求血缘", { requestId: request.id, candidateId: candidate.id, candidateRevision: candidate.revision });
           ensureWorkflowObject({ id: factId, type: "fact", status: "MISSING", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: "天然气用量", metadata: { serviceId: "cbam" } });
-          workflowEngine.patch(factId, { metadata: { serviceId: "cbam", requestId: request.id, evidenceId, candidateId: candidate.id, candidateRevision: candidate.revision, assetId: gasAssetId, value: candidate.proposedPatch.originalValue, unit: candidate.proposedPatch.originalUnit } }, { ...workflowActor(), reason: "将当前候选版本绑定到业务事实" });
+          workflowEngine.patch(factId, { scope: `${assetRegistry.get(candidate.facilityAssetId)?.name || candidate.facilityAssetId}天然气用量`, metadata: { serviceId: "cbam", requestId: request.id, evidenceId, candidateId: candidate.id, candidateRevision: candidate.revision, assetId: gasAssetId, facilityAssetId: candidate.facilityAssetId, value: candidate.proposedPatch.originalValue, unit: candidate.proposedPatch.originalUnit, confirmedBy: actor.actor } }, { ...workflowActor(), reason: "将当前候选版本绑定到业务事实" });
           moveWorkflow(factId, ["PROPOSED", "NEEDS_CONFIRMATION", "CONFIRMED"], "已将通过复核的候选确认为本期业务事实", { requestId: request.id, evidenceId, candidateId: candidate.id, candidateRevision: candidate.revision, assetId: gasAssetId });
           workflowEngine.invalidateDependents(factId, { ...workflowActor(), reason: `事实 ${factId} 已确认，原当前计算版本失效` });
           intakeCandidateStore.confirm({ candidateId: candidate.id, tenantId: intakeTenantId, expectedRevision: candidate.revision, actor });
@@ -1563,32 +2269,40 @@
       }
       if (id === "upload-evidence") {
         const file = formData.get("file");
+        const extractionMode = String(formData.get("extractionMode") || "model");
         const requestId = String(formData.get("requestId") || "");
         const request = currentIntakeRequest(requestId);
         const facilityName = String(formData.get("facility") || "设施待确认");
         const facilityAsset = assetRegistry.catalog({ tenantId: "TNT-0018", role: state.role, type: "facility" }).find((item) => item.name === facilityName);
-        const facilityAssetId = facilityAsset?.id || "FAC-JS-02";
+        const facilityAssetId = facilityAsset?.id;
+        let submittedEvidenceId = null;
+        let submittedTaskId = null;
         try {
           if (!canPerformPortalAction("cbam-upload-evidence")) throw Object.assign(new Error(portalActionDenial("cbam-upload-evidence")), { code: "FORBIDDEN" });
-          window.LuminoIntakeModel.assertUploadAllowed(request, { name: file?.name, size: file?.size, year: state.year, quarter: state.quarter });
+          if (!facilityAssetId) throw Object.assign(new Error("请选择当前企业有权访问的设施。"), { code: "FACILITY_REQUIRED" });
+          if (!["model", "fixture"].includes(extractionMode)) throw new Error("请选择有效的提取方式。");
+          window.LuminoIntakeModel.assertUploadAllowed(request, { name: file?.name, size: file?.size, year: state.year, quarter: state.quarter, extractionMode });
           const actor = intakeActor();
           const bytes = new Uint8Array(await file.arrayBuffer());
-          const evidence = await intakeEvidenceStore.put({ requestId: request.id, annualCaseId: request.metadata?.annualCaseId || `CASE-CBAM-${state.year}`, year: state.year, quarter: state.quarter, filename: file.name, mediaType: file.type || "text/plain", bytes, tenantId: intakeTenantId, actor });
+          const evidence = await intakeEvidenceStore.put({ requestId: request.id, annualCaseId: request.metadata?.annualCaseId || `CASE-CBAM-${state.year}`, year: state.year, quarter: state.quarter, facilityAssetId, filename: file.name, mediaType: file.type || "text/plain", bytes, tenantId: intakeTenantId, actor });
+          await saveIntakeRecord("putEvidence", { evidence, base64: bytesToBase64(bytes) });
           const evidenceId = evidence.evidenceId;
+          submittedEvidenceId = evidenceId;
+          workflowEngine.patch(request.id, { metadata: { ...request.metadata, facilityAssetId, evidenceId, candidateId: null, candidateRevision: null, intakeStatus: "SUBMITTED" } }, { ...workflowActor(), reason: "新文件已提交，先前候选不可再确认" });
+          const serialNo = `cbam-gas-${extractionMode}-${evidenceId}-r${workflowEngine.get(request.id).revision}`;
           if (!assetRegistry.get(evidenceId)) {
             assetRegistry.register({
               id: evidenceId, type: "evidence", status: "NEEDS_CONFIRMATION", tenantId: intakeTenantId, ownerOrganizationId: "ORG-HX-001",
               name: `${facilityName} ${state.year} ${state.quarter} 能源账单`,
               subjectRefs: { facilityId: facilityAssetId },
               temporal: { periodStart: `${state.year}-07-01`, periodEnd: `${state.year}-09-30`, recordedAt: new Date().toISOString() },
-              payload: { fileName: evidence.filename, documentType: "energy_invoice_demo", mediaType: evidence.mediaType, materialType: String(formData.get("type") || "能源账单"), requestId: request.id, contentSha256: evidence.contentSha256, byteLength: evidence.byteLength, extractionMode: "demo_fixture" },
+              payload: { fileName: evidence.filename, documentType: "energy_invoice", mediaType: evidence.mediaType, materialType: String(formData.get("type") || "能源账单"), requestId: request.id, contentSha256: evidence.contentSha256, byteLength: evidence.byteLength, extractionMode: extractionMode === "model" ? "model_gateway" : "demo_fixture" },
               access: { confidentiality: "sensitive", visibility: "enterprise", allowedRoles: [], metadataVisible: true },
             }, { ...workflowActor(), reason: "上传证据文件进入企业资产池" });
           }
-          ensureWorkflowObject({ id: evidenceId, type: "evidence", status: "UPLOADED", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: facilityName, metadata: { serviceId: "cbam", requestId: request.id, annualCaseId: evidence.annualCaseId, filename: evidence.filename, contentSha256: evidence.contentSha256, byteLength: evidence.byteLength, extractionMode: "demo_fixture", materialType: String(formData.get("type") || "能源账单"), facilityAssetId, assetId: evidenceId, tenantId: intakeTenantId, agentSerialNo: `cbam-gas-${evidenceId}` } });
-          moveWorkflow(evidenceId, ["SECURITY_SCANNED"], "演示文件已读取并计算摘要，提交 Agent 提取任务", { filename: evidence.filename, facilityAssetId, requestId: request.id, contentSha256: evidence.contentSha256 });
+          ensureWorkflowObject({ id: evidenceId, type: "evidence", status: "UPLOADED", owner: roleConfig[state.role].name, year: state.year, quarter: state.quarter, scope: facilityName, metadata: { serviceId: "cbam", requestId: request.id, annualCaseId: evidence.annualCaseId, filename: evidence.filename, contentSha256: evidence.contentSha256, byteLength: evidence.byteLength, extractionMode: extractionMode === "model" ? "model_gateway" : "demo_fixture", materialType: String(formData.get("type") || "能源账单"), facilityAssetId, assetId: evidenceId, tenantId: intakeTenantId, agentSerialNo: serialNo } });
+          moveWorkflow(evidenceId, ["SECURITY_SCANNED"], extractionMode === "model" ? "文件已读取并计算摘要，提交模型提取任务" : "演示文件已读取并计算摘要，提交本地规则提取任务", { filename: evidence.filename, facilityAssetId, requestId: request.id, contentSha256: evidence.contentSha256 });
 
-          const serialNo = `cbam-gas-${evidenceId}`;
           const task = agentTaskEngine.submit({
             serialNo,
             businessType: "CBAM_ENERGY_INVOICE_EXTRACT",
@@ -1596,31 +2310,50 @@
             caseId: request.metadata?.annualCaseId || `CASE-CBAM-${state.year}`,
             input: { requestId: request.id, evidenceId, filename: evidence.filename, contentSha256: evidence.contentSha256, facilityAssetId, year: state.year, quarter: state.quarter },
           }, { actor: roleConfig[state.role].name });
+          submittedTaskId = task.id;
 
-          const extracted = window.LuminoEnergyInvoiceExtractor.extractEnergyInvoice({ evidenceMeta: evidence, bytes, facilityAssetId, facilityName, caseId: request.metadata?.annualCaseId || `CASE-CBAM-${state.year}`, actor, temporal: { periodStart: `${state.year}-07-01`, periodEnd: `${state.year}-09-30`, recordedAt: new Date().toISOString() } });
+          let modelResult = null;
+          if (extractionMode === "model") {
+            setSubmitBusyLabel(submitButton, "模型提取中…");
+            const reply = await fetch("/api/portal-intake-extract", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ filename: file.name, base64: bytesToBase64(bytes), facilityName, year: state.year, quarter: state.quarter }),
+            });
+            const payload = await reply.json().catch(() => null);
+            if (!reply.ok || !payload?.extraction) throw Object.assign(new Error(payload?.message || "模型提取失败，请核对本地模型配置。"), { code: payload?.error || "MODEL_REQUEST_FAILED" });
+            if (payload.contentSha256 !== evidence.contentSha256 || payload.extractionMode !== "model_gateway") throw new Error("模型提取结果与上传文件摘要不一致。");
+            modelResult = payload;
+          }
+          const extracted = window.LuminoEnergyInvoiceExtractor.extractEnergyInvoice({ evidenceMeta: evidence, bytes, facilityAssetId, facilityName, caseId: request.metadata?.annualCaseId || `CASE-CBAM-${state.year}`, actor, modelExtraction: modelResult?.extraction, modelName: modelResult?.model, temporal: { periodStart: `${state.year}-07-01`, periodEnd: `${state.year}-09-30`, recordedAt: new Date().toISOString() } });
           const pendingResult = { proposals: extracted.proposals, summary: extracted.summary, warnings: extracted.warnings, partial: !extracted.proposals.length, allowEmpty: true };
           setSubmitBusyLabel(submitButton, "提取中…");
-          toast(`Agent 任务 ${task.id} 已提交（${serialNo}），正在轮询状态…`);
+          toast(`${extractionMode === "model" ? "模型" : "本地规则"}任务 ${task.id} 已提交，正在处理…`);
           runAgentTaskWithPolling({
             taskId: task.id,
             pendingResult,
-            onStatus: (snapshot) => setSubmitBusyLabel(submitButton, snapshot.status === "PROCESSING" ? "Agent 处理中…" : "任务提交中…"),
-            onReady: (completed) => {
+            onStatus: (snapshot) => setSubmitBusyLabel(submitButton, snapshot.status === "PROCESSING" ? "候选写入中…" : "任务提交中…"),
+            onReady: async (completed) => {
               try {
+                if (workflowEngine.get(request.id)?.metadata?.evidenceId !== evidenceId) {
+                  state.actionBusy = false;
+                  return;
+                }
                 if (completed.result.proposals.length) window.LuminoProposalBridge.applyTaskResult(assetRegistry, completed, {
                   tenantId: intakeTenantId,
                   ownerOrganizationId: "ORG-HX-001",
-                  reason: "Agent 任务产出待确认活动数据提议",
+                  reason: `${extractionMode === "model" ? "模型" : "本地规则"}任务产出待确认活动数据提议`,
                 });
                 const candidate = extracted.candidate ? intakeCandidateStore.put(extracted.candidate) : null;
-                moveWorkflow(evidenceId, ["PARSED"], candidate ? `Agent 任务 ${completed.id} 已就绪（proposal_only）` : `Agent 任务 ${completed.id} 无法识别演示字段`, { agentTaskId: completed.id, requestId: request.id, candidateId: candidate?.id || null, candidateRevision: candidate?.revision || null, candidateStatus: candidate?.status || "UNPARSEABLE", activityAssetId: candidate?.assetId || null, bindingId: candidate ? `BIND-${candidate.id}` : null });
-                workflowEngine.patch(request.id, { metadata: { ...request.metadata, evidenceId, candidateId: candidate?.id || null, candidateRevision: candidate?.revision || null, intakeStatus: candidate ? "AWAITING_CONFIRMATION" : "RETURNED" } }, { ...workflowActor(), reason: candidate ? "材料请求进入候选确认" : "演示提取无法识别，等待重新提交" });
+                if (candidate) await saveIntakeRecord("putCandidate", { candidate });
+                moveWorkflow(evidenceId, ["PARSED"], candidate ? `${extractionMode === "model" ? "模型" : "本地规则"}任务 ${completed.id} 已就绪（proposal_only）` : `本地规则任务 ${completed.id} 无法识别演示字段`, { agentTaskId: completed.id, requestId: request.id, candidateId: candidate?.id || null, candidateRevision: candidate?.revision || null, candidateStatus: candidate?.status || "UNPARSEABLE", activityAssetId: candidate?.assetId || null, bindingId: candidate ? `BIND-${candidate.id}` : null });
+                workflowEngine.patch(request.id, { metadata: { ...workflowEngine.get(request.id).metadata, candidateId: candidate?.id || null, candidateRevision: candidate?.revision || null, intakeStatus: candidate ? "AWAITING_CONFIRMATION" : "RETURNED" } }, { ...workflowActor(), reason: candidate ? "材料请求进入候选确认" : "演示提取无法识别，等待重新提交" });
                 state.uploadAdded = Boolean(candidate);
                 persistPortalState();
                 state.actionBusy = false;
                 closeDrawer(); render();
                 toast(candidate
-                  ? "演示提取完成。Agent 已提交待确认候选，不会自动写成正式事实。"
+                  ? `${extractionMode === "model" ? "模型" : "本地规则"}提取完成，已生成待确认候选；不会自动写成正式事实。`
                   : "文件已登记，但演示提取无法识别 NATURAL_GAS_NM3；请修正 TXT/CSV 后重新提交。");
               } catch (error) {
                 state.actionBusy = false;
@@ -1629,12 +2362,20 @@
               }
             },
             onError: (snapshot, error) => {
+              if (workflowEngine.get(request.id)?.metadata?.evidenceId === evidenceId) workflowEngine.patch(request.id, { metadata: { ...workflowEngine.get(request.id).metadata, intakeStatus: "RETURNED" } }, { ...workflowActor(), reason: "演示提取失败，等待重新提交" });
               state.actionBusy = false;
               if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }
               toast(error?.message || snapshot?.errorMessage || "Agent 提取任务失败");
             },
           });
         } catch (error) {
+          if (submittedTaskId) {
+            try { agentTaskEngine.fail(submittedTaskId, error.code || "EXTRACTION_FAILED", error.message); } catch (_) {}
+          }
+          if (submittedEvidenceId && workflowEngine.get(request?.id)?.metadata?.evidenceId === submittedEvidenceId) {
+            workflowEngine.patch(request.id, { metadata: { ...workflowEngine.get(request.id).metadata, intakeStatus: "RETURNED" } }, { ...workflowActor(), reason: "账单提取失败，等待重新提交" });
+            render();
+          }
           state.actionBusy = false;
           if (submitButton) { submitButton.disabled = false; submitButton.textContent = submitButton.dataset.originalLabel; }
           toast(error.message || "Agent 提取任务失败");

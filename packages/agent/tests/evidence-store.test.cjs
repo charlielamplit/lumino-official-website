@@ -22,3 +22,14 @@ test("evidence lookup hides objects from another tenant", async () => {
   assert.equal(store.get({ evidenceId: record.evidenceId, tenantId: "TNT-OTHER", actor: other }), null);
   assert.equal(store.getBytes({ evidenceId: record.evidenceId, tenantId: "TNT-OTHER", actor: other }), null);
 });
+
+test("same invoice bytes under another facility create a distinct evidence and candidate", async () => {
+  const store = createMemoryEvidenceStore();
+  const bytes = new TextEncoder().encode("NATURAL_GAS_NM3=22100\n");
+  const input = { requestId: "MR-1", annualCaseId: "CASE-1", year: "2026", quarter: "Q3", filename: "bill.csv", bytes, tenantId: "TNT-0018", actor };
+  const first = await store.put({ ...input, facilityAssetId: "FAC-A" });
+  const second = await store.put({ ...input, facilityAssetId: "FAC-B" });
+  assert.notEqual(first.evidenceId, second.evidenceId);
+  assert.equal(store.get({ evidenceId: first.evidenceId, tenantId: "TNT-0018", actor }).facilityAssetId, "FAC-A");
+  assert.equal(store.get({ evidenceId: second.evidenceId, tenantId: "TNT-0018", actor }).facilityAssetId, "FAC-B");
+});

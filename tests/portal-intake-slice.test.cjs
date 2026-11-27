@@ -45,12 +45,16 @@ test("confirm consumes candidate lineage without role elevation", () => {
   assert.doesNotMatch(confirm, /originalValue:\s*"18420"/);
 });
 
-test("Portal labels fixture extraction and rejects unsupported invoice formats", () => {
+test("Portal distinguishes model extraction from the optional rule fixture", () => {
   const core = read("apps/portal/runtime/portal-core.js");
-  assert.match(core, /内容感知的演示提取/);
-  assert.match(core, /accept="\.txt,\.csv,text\/plain,text\/csv"/);
-  assert.match(core, /当前不解析 PDF、XLSX 或图片/);
-  assert.match(core, /刷新页面后演示文件不可恢复/);
+  const events = read("apps/portal/runtime/portal-events.js");
+  const localServer = read("scripts/local-site-server.mjs");
+  assert.match(core, /模型提取 · aiberm\.com/);
+  assert.match(core, /本地规则演示/);
+  assert.match(core, /扫描件、图片和 XLSX 暂不支持/);
+  assert.match(core, /原文：/);
+  assert.match(events, /fetch\("\/api\/portal-intake-extract"/);
+  assert.match(localServer, /"\/api\/portal-intake-extract"/);
 });
 
 test("annual flow copy allows collection before monitoring-plan lock", () => {
