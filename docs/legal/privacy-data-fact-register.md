@@ -1,7 +1,7 @@
 # Lumino 隐私与数据事实登记（内部）
 
 > 状态：上线前工作文件，不对外发布  
-> 更新日期：2026-11-02
+> 更新日期：2026-11-26（Portal E-02 本机预览补充；其他条目仍需按现行部署复核）
 
 ## 1. 已确认事实
 
@@ -16,6 +16,7 @@
 | 本地线索回退 | `lumino.public.leads.v1`，最多 200 条 | `packages/shared/leads-client.js` | 生产必要性、期限和清除入口待定 |
 | 网站语言 | `lumino.lang` | `apps/site/site/i18n.js` | 已确认 |
 | Portal 本地状态 | 角色、引导、工作流、资产与演示状态 | `apps/portal/runtime/*` | 当前为演示/原型；生产存储架构待确认 |
+| Portal E-02 本机预览 | 合成/测试账单原文件、候选与确认摘要写入本机 `.local-data/portal-intake/`；工作流事实仍在浏览器 `localStorage`；模型模式向 aiberm.com 发送账单文字 | `api/_lib/portal-intake-store.js`、`apps/portal/README.md` | 仅回环地址的本机演示；无生产身份、租户授权、对象存储或留存协议，不接收真实客户资料 |
 | 文件上传类型 | PDF、XLSX、CSV、JPG/PNG；账单、台账、供应商资料等 | `apps/portal/runtime/portal-core.js` | UI 已存在；后端真实上传链路待确认 |
 | 分析/广告追踪 | 未发现 | 全仓 `document.cookie`、常见 SDK 扫描 | 当前无；新增时触发复审 |
 
@@ -40,6 +41,7 @@ Serverless `/tmp`、进程内存和仓库 `data/leads.json` 都不能作为可�
 ### P0-PRIV-03：正式文件上传链路未确认
 
 Portal 显示多类业务文件上传，但当前证据主要为前端/演示工作流。上线前必须确认实际对象存储、恶意文件扫描、加密、租户隔离、下载授权、日志、保存和删除。
+本机 E-02 磁盘记录只用于测试刷新恢复，不能作为该阻断项的关闭证据；对外启用前还需核实 aiberm.com 的账单文字处理与留存条款，并同步公开隐私说明。
 
 ## 3. 待公司确认的事实
 

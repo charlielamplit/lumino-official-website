@@ -41,7 +41,14 @@
     return null;
   }
 
-  function serviceOverviewFacts(service) {
+  function serviceOverviewFacts(service, tenant = null) {
+    if (tenant) {
+      if (service.id !== "cbam") return [["服务状态", "尚未开通"]];
+      const project = tenant.projects?.[0];
+      const records = (tenant.records || []).filter((record) => record.projectId === project?.id);
+      const count = (kind) => records.filter((record) => record.kind === kind).length;
+      return [["年度项目", project ? `${project.year} 年` : "待建立"], ["产品范围", `${count("product")} 个`], ["生产设施", `${count("facility")} 座`]];
+    }
     if (service.id === "cbam") return [
       ["产品范围", "4 个"],
       ["生产设施", "2 座"],
@@ -64,7 +71,8 @@
     return scope[service.id] || [["工作范围", "待确认"], ["数据对象", "待确认"], ["交付方向", "服务成果"]];
   }
 
-  function serviceOverviewAction(service) {
+  function serviceOverviewAction(service, tenant = null) {
+    if (tenant) return service.id === "cbam" ? 'data-customer-view="cbam"' : "disabled";
     const page = serviceEntryPage(service.id);
     if (page) return `data-service-enter="${safe(service.id)}" data-page-target="${safe(page)}"`;
     return `data-drawer="service-consultation" data-service-id="${safe(service.id)}" data-drawer-label="${safe(service.name)}"`;
@@ -83,12 +91,12 @@
     return `<span class="service-overview-card__icon" aria-hidden="true"><i style="-webkit-mask-image:url(${url});mask-image:url(${url})"></i></span>`;
   }
 
-  function serviceOverviewCard(service) {
-    const facts = serviceOverviewFacts(service);
+  function serviceOverviewCard(service, tenant = null) {
+    const facts = serviceOverviewFacts(service, tenant);
     return `<article class="service-overview-card">
       <header>
         <span class="service-overview-card__identity">${serviceOverviewIcon(service)}<span class="service-overview-card__code">${safe(service.code)}</span></span>
-        <button class="service-overview-card__enter" type="button" ${serviceOverviewAction(service)} aria-label="查看${safe(service.name)}">查看服务 <span aria-hidden="true">→</span></button>
+        <button class="service-overview-card__enter" type="button" ${serviceOverviewAction(service, tenant)} aria-label="${tenant && service.id !== "cbam" ? "尚未开通" : `查看${safe(service.name)}`}">${tenant && service.id !== "cbam" ? "尚未开通" : "查看服务"} <span aria-hidden="true">→</span></button>
       </header>
       <div class="service-overview-card__copy">
         <h3>${safe(service.name)}</h3>
@@ -113,7 +121,7 @@
             <button type="button" data-service-overview="close" aria-label="关闭服务总览"><span aria-hidden="true">×</span><em>关闭</em></button>
           </div>
         </header>
-        <div class="service-overview-grid">${services.map(serviceOverviewCard).join("")}</div>
+        <div class="service-overview-grid">${services.map((service) => serviceOverviewCard(service)).join("")}</div>
         <footer class="service-overview-foot">
           <span>统计范围：华星钢铁 · 2026 年当前演示数据</span>
           <button class="text-button" type="button" data-service-overview="close">进入工作台 →</button>
@@ -151,13 +159,17 @@
     if (mode === "closed") queueMicrotask(() => $("#main")?.focus({ preventScroll: true }));
   }
 
-  function renderServicesHub() {
+  function servicesHubMarkup(tenant = null) {
     const services = Object.values(serviceRegistry);
-    $("#main").innerHTML = `
+    return `
       <div class="service-hub-shell">
         ${pageHeader(`${services.length} 项企业服务`, "服务总览")}
-        <div class="service-overview-grid service-overview-grid--page">${services.map(serviceOverviewCard).join("")}</div>
+        <div class="service-overview-grid service-overview-grid--page">${services.map((service) => serviceOverviewCard(service, tenant)).join("")}</div>
       </div>`;
+  }
+
+  function renderServicesHub() {
+    $("#main").innerHTML = servicesHubMarkup();
   }
 
   function workbenchGreeting(name) {
@@ -232,7 +244,11 @@
         </button>`
       : "";
 
-    $("#main").innerHTML = `
+    $("#main").innerHTML = workbenchMarkup({ crumb, actor, nextAction, queuePreview, serviceCards, consultLink });
+  }
+
+  function workbenchMarkup({ crumb, actor, nextAction, queuePreview, serviceCards, consultLink = "", taskAction = 'data-page="shared-tasks"' }) {
+    return `
       <div class="workbench" data-template="T1">
         <header class="workbench__head">
           <div>
@@ -247,7 +263,7 @@
           <section class="ds-card workbench-todo" aria-labelledby="workbenchQueueTitle">
             <header class="ds-card__head">
               <h2 id="workbenchQueueTitle">我的待办 · 所有服务</h2>
-              <button class="text-button" type="button" data-page="shared-tasks">全部任务 →</button>
+              <button class="text-button" type="button" ${taskAction}>全部任务 →</button>
             </header>
             ${queuePreview}
           </section>

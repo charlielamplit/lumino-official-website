@@ -4,7 +4,7 @@
 |---|---|
 | promptId | `cbam.extract_energy_invoice` |
 | businessType | `CBAM_ENERGY_INVOICE_EXTRACT` |
-| version | `extract-gas@1.0.0` |
+| version | `extract-gas@1.1.0` |
 | stages | `data-prep` |
 | completionMode | `proposal_only` |
 

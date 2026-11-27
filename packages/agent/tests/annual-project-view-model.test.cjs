@@ -31,6 +31,8 @@ test("annual project view is derived from project objects rather than template c
   assert.equal(view.monitoringPlan.id, "MP-CBAM-2031-R4");
   assert.equal(view.monitoringPlan.revision, 4);
   assert.equal(view.materialRequests.count, 2);
+  assert.equal(view.materialRequests.items.length, 2);
+  assert.equal(view.materialRequests.items[0].status, "READY");
   assert.deepEqual(view.members, [{ name: "陈琳", role: "客户确认" }]);
 });
 

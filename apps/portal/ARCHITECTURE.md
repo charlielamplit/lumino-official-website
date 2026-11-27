@@ -1,6 +1,6 @@
 # Lumino CBAM Portal 前端模块说明
 
-> 更新日期：2026-11-16
+> 更新日期：2026-11-27
 > 适用范围：`Demo/lumino-site/apps/portal/`（内核在 `packages/agent/`）
 
 ## 1. 当前结构
@@ -24,11 +24,13 @@
 | `runtime/asset-view-model.js` | 企业数据资产的授权只读投影 | 页面 DOM 与写命令 |
 | `runtime/shared-center-view-model.js` | 跨服务任务与受控交付物的授权只读投影 | 平行工作流状态与页面 DOM |
 | `runtime/portal-core.js` | 状态持久化、Shell、共享组件、Drawer、门禁 ctx 投影 | 具体角色页面 |
-| `pages/multi-service-pages.js` | 服务总览、企业数据资产、PCF 频道 | CBAM 客户主流程细节 |
-| `pages/customer-pages.js` | 客户企业各角色页面（含 CBAM 产品/数据/设置） | 平台角色页面与全局事件 |
+| `pages/multi-service-pages.js` | 共用工作台和服务目录模板、跨服务页面、PCF 频道 | CBAM 客户主流程细节 |
+| `pages/customer-pages.js` | 共用 CBAM 页面组件、演示工作流页面、真实租户页面投影 | 平台角色页面与全局事件 |
 | `pages/role-pages.js` | 专家、复核、运营、商务、外部与平台治理页面 | 客户主流程实现 |
 | `runtime/portal-events.js` | 登录、导航、表单、Drawer、资产绑定确认与工作流操作事件 | 页面大段 HTML |
 | `app.js` | 查询参数启动、在线/离线入口 | 业务规则、页面模板、组件样式 |
+
+Portal 的顶部栏、导航轨、CBAM 二级导航和主内容容器只有一套。演示身份读取浏览器样例状态；企业身份通过服务端会话读取当前租户记录，并把页面挂到同一主内容容器。两种身份共用工作台、服务目录、CBAM 当前工作及基础页面组件。演示工作流中的进阶操作尚未接入真实租户的持久化业务对象；真实租户页面对此显示准确空态，不得显示样例结论。
 
 ## 2. 脚本装载顺序
 

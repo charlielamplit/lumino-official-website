@@ -65,6 +65,14 @@
     const verifications = serviceObjects(workflow, "verification", year);
     const findings = serviceObjects(workflow, "finding", year);
     const materialRequests = serviceObjects(workflow, "workPackage", year).filter((item) => item.metadata?.basis === "annual_scope_and_monitoring_draft");
+    const materialRequestItems = materialRequests.map((item) => ({
+      id: item.id,
+      period: item.quarter,
+      owner: item.owner,
+      status: item.metadata?.intakeStatus || (item.status === "BLOCKED" ? "BLOCKED" : "READY"),
+      evidenceId: item.metadata?.evidenceId || null,
+      candidateId: item.metadata?.candidateId || null,
+    }));
     const activation = serviceObjects(workflow, "serviceActivation", year)[0] || null;
     const draft = annualCase?.metadata?.wizardDraft || {};
     const closeDate = annualCase?.metadata?.targetCloseDate || `${closeYear}-03-31`;
@@ -122,7 +130,14 @@
         status: monitoringPlan?.status || "DRAFT",
         owner: monitoringPlan?.owner || "未分配",
       },
-      materialRequests: { count: materialRequests.length, period: materialRequests[0]?.quarter || currentPeriod },
+      materialRequests: {
+        count: materialRequests.length,
+        period: materialRequests[0]?.quarter || currentPeriod,
+        items: materialRequestItems,
+        awaitingConfirmation: materialRequestItems.filter((item) => item.status === "AWAITING_CONFIRMATION").length,
+        confirmed: materialRequestItems.filter((item) => item.status === "CONFIRMED").length,
+        returned: materialRequestItems.filter((item) => item.status === "RETURNED").length,
+      },
       members,
       lifecycle: stageLabels.map(([label, timing], index) => ({ label, timing, state: index < stageIndex ? "done" : index === stageIndex ? "current" : "upcoming" })),
       openFindingCount: findings.filter((item) => !["RESOLVED", "CLOSED"].includes(item.status)).length,

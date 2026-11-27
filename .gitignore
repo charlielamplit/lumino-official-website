@@ -6,6 +6,7 @@ node_modules/
 .vercel
 *.zip
 .firecrawl/
+.local-data/
 
 # Knowledge-library source binaries (INDEX.md / README stay tracked)
 docs/knowledge-library/sources/**/*.pdf

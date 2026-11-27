@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#0E7A52">
   <title>Lumino · 企业工作门户</title>
-  <meta name="description" content="Lumino 多服务企业工作门户交互原型。">
+  <meta name="description" content="Lumino 多服务企业工作门户。">
   <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,7 +36,7 @@
       </div>
       <div class="trust-note">
         <span aria-hidden="true">✓</span>
-        <p><strong>正式项目区</strong><br>企业数据、证据和交付文件仅对获授权成员开放。</p>
+        <p><strong>企业工作区</strong><br>登录后先进入工作台；首次使用 CBAM 时再建立年度项目。</p>
       </div>
     </section>
 
@@ -47,17 +47,17 @@
         <form id="loginForm" data-step="email">
           <div class="login-step" data-step-panel="email">
             <h2 id="loginPanelTitle">登录工作门户</h2>
-            <p class="muted" id="loginPanelHint">使用企业分配的工作邮箱</p>
-            <label>工作邮箱<input id="loginEmail" type="email" value="zhoulan@huaxing-steel.cn" autocomplete="username" required placeholder="name@company.com"></label>
-            <p class="login-email-hint" id="loginEmailHint" aria-live="polite">huaxing-steel.cn 已启用企业 SSO，继续后跳转到企业登录</p>
+            <p class="muted" id="loginPanelHint">使用已开通的企业或员工账号</p>
+            <label>工作邮箱<input id="loginEmail" type="email" autocomplete="username" required placeholder="name@company.com"></label>
+            <p class="login-email-hint" id="loginEmailHint" aria-live="polite"></p>
             <button class="button button--primary button--large login-continue" type="submit">继续 <span aria-hidden="true">→</span></button>
             <div class="login-alt-divider" aria-hidden="true"><span>其他方式</span></div>
             <div class="login-alt-actions">
-              <button class="button button--secondary" type="button" id="activateInvite">收到邀请 · 激活账号</button>
+              <button class="button button--secondary" type="button" id="activateInvite">账号开通说明</button>
               <button class="button button--secondary" type="button" id="forgotPassword">忘记密码</button>
             </div>
             <label class="demo-role-select">
-              <span>原型演示 · 以角色身份直接进入</span>
+              <span>演示工作区 · 选择角色查看样例数据</span>
               <select id="demoRoleSelect" aria-label="选择演示角色">
                 <option value="">选择角色…</option>
                 <optgroup label="客户企业">
@@ -80,40 +80,147 @@
               </select>
             </label>
           </div>
-          <div class="login-step" data-step-panel="sso" hidden>
-            <p class="login-email-chip"><span id="ssoEmailLabel">zhoulan@huaxing-steel.cn</span> <button class="link-button" type="button" data-login-back>更换</button></p>
-            <h2>使用企业账号登录</h2>
-            <p class="muted login-step-copy">huaxing-steel.cn 由华星钢铁统一管理登录。正式环境会跳转到企业身份系统，原型中直接模拟成功。</p>
-            <p class="login-sso-card"><span class="login-sso-card__mark" aria-hidden="true">华</span><span><strong>华星钢铁 统一身份认证</strong><small>sso.huaxing-steel.cn · 模拟</small></span></p>
-            <button class="button button--primary button--large login-continue" type="button" id="ssoContinue">前往企业登录 <span aria-hidden="true">→</span></button>
-            <button class="link-button login-secondary-link" type="button" id="usePasswordInstead">改用 Lumino 密码登录</button>
+          <div class="login-step" data-step-panel="setup" hidden>
+            <p class="login-email-chip"><span id="setupEmailLabel"></span> <button class="link-button" type="button" data-login-back>更换</button></p>
+            <h2>账号尚未开通</h2>
+            <p class="muted login-step-copy">企业账号需要由管理员开通。开通后先进入工作台，再从 CBAM 服务启动年度项目。</p>
+            <ol class="customer-setup-steps">
+              <li><strong>验证账号与企业权限</strong><span>使用企业邀请或由管理员分配的账号。</span></li>
+              <li><strong>确认企业基础资料</strong><span>核对企业名称、生产设施与项目负责人。</span></li>
+              <li><strong>按需启动 CBAM 年度项目</strong><span>从工作台进入 CBAM 服务，确认年度与产品范围。</span></li>
+            </ol>
+            <p class="login-email-hint login-email-hint--muted">请先向企业管理员或 Lumino 取得账号。登录后可确认企业名称并创建年度项目；此说明页不收集企业资料。</p>
+            <button class="button button--secondary button--large login-continue" type="button" data-login-back>返回入口</button>
           </div>
           <div class="login-step" data-step-panel="password" hidden>
-            <p class="login-email-chip"><span id="passwordEmailLabel">zhoulan@huaxing-steel.cn</span> <button class="link-button" type="button" data-login-back>更换</button></p>
+            <p class="login-email-chip"><span id="passwordEmailLabel"></span> <button class="link-button" type="button" data-login-back>更换</button></p>
             <h2>输入密码</h2>
-            <label>密码<input id="loginPassword" type="password" value="lumino-demo" autocomplete="current-password" minlength="6" placeholder="至少 12 位"></label>
+            <label>密码<input id="loginPassword" type="password" autocomplete="current-password" minlength="6" placeholder="输入员工账号密码"></label>
             <div class="login-options"><label class="check"><input type="checkbox" checked> 在此设备保持登录</label><button class="link-button" type="button" id="forgotPasswordInline">忘记密码</button></div>
-            <p class="login-email-hint login-email-hint--muted">员工账号用发放的密码；客户演示可用任意 6 位以上密码</p>
+            <p class="login-email-hint login-email-hint--muted">使用管理员发放的密码。登录后进入企业工作台，可从 CBAM 服务启动年度项目。</p>
+            <p class="login-email-hint is-error" id="loginPasswordError" role="alert" hidden></p>
             <button class="button button--primary button--large login-continue" type="submit">登录</button>
-          </div>
-          <div class="login-step" data-step-panel="workspace" hidden>
-            <h2>选择工作区</h2>
-            <p class="muted login-workspace-lead" id="workspaceLead">zhoulan@huaxing-steel.cn 在 3 个工作区有权限</p>
-            <div class="workspace-list" role="list">
-              <button type="button" class="workspace-card" data-workspace-role="customer_owner" data-workspace-home="workbench"><span class="workspace-card__mark" aria-hidden="true">华</span><span><strong>华星钢铁有限公司</strong><small>企业 · 项目协调人 → 工作台</small></span><span aria-hidden="true">→</span></button>
-              <button type="button" class="workspace-card" data-workspace-role="customer_approver" data-workspace-home="approvals"><span class="workspace-card__mark" aria-hidden="true">精</span><span><strong>华星精密部件</strong><small>企业 · 内部审批人 → 待我审批</small></span><span aria-hidden="true">→</span></button>
-              <button type="button" class="workspace-card" data-workspace-role="importer" data-workspace-home="received-packages"><span class="workspace-card__mark workspace-card__mark--ext" aria-hidden="true">N</span><span><strong>NordWerk GmbH 共享空间</strong><small>外部 · 只读 → 收到的数据包</small></span><span aria-hidden="true">→</span></button>
-            </div>
-            <p class="login-workspace-foot">登录后可在顶栏随时切换，不需要重新登录</p>
           </div>
         </form>
       </div>
     </section>
     <footer class="login-footer">
-      <span>企业数据、证据和交付文件仅对获授权成员开放 · 这是交互原型，不连接真实账号</span>
+      <span>演示工作区使用固定样例数据 · 企业账号使用独立项目数据</span>
       <span>隐私政策 · 服务条款 · 安全说明</span>
     </footer>
   </main>
+
+  <div id="customerPages" hidden>
+        <section class="customer-portal__page" data-customer-view-panel="home" aria-label="工作台"></section>
+        <section class="customer-portal__page" data-customer-view-panel="services" aria-label="服务目录" hidden></section>
+        <section class="customer-portal__page" data-customer-view-panel="cbam" aria-label="CBAM 当前工作" hidden>
+          <div id="customerCbamWorkFrame"></div>
+          <section class="customer-portal__panel customer-portal__next" aria-labelledby="customerProductionLinksTitle">
+            <div><small>下一步 · 生产关系</small><h2 id="customerProductionLinksTitle">哪些设施生产哪些产品？</h2><p>先把已选产品与实际生产设施对应起来，并补充主要工艺或外购前体。后续材料准备才能指向正确对象。</p></div>
+            <p id="customerProductionLinksHint"></p>
+            <form id="customerProductionLinkForm" hidden>
+              <label>产品 / CN 码<select name="productId" required></select></label>
+              <label>实际生产设施<select name="facilityId" required></select></label>
+              <label class="customer-portal__wide-field">主要工艺或外购前体（可稍后补充）<textarea name="processSummary" rows="3" maxlength="500" placeholder="例如：本厂轧制；上游钢坯外购，供应商资料待确认"></textarea></label>
+              <div class="customer-portal__form-actions"><button class="button button--primary" type="submit">保存生产关系</button><button class="button button--secondary" type="button" id="customerProductionLinkCancel" hidden>取消修改</button></div>
+            </form>
+            <p id="customerProductionLinkFeedback" role="status"></p>
+            <ul id="customerProductionLinksList"></ul>
+            <button type="button" class="text-button" id="customerProductionLinksSetup" data-customer-view="setup" hidden>先补充产品与设施 →</button>
+          </section>
+        </section>
+        <section class="customer-portal__page" data-customer-view-panel="annual" aria-label="CBAM 年度项目" hidden></section>
+        <section class="customer-portal__page" data-customer-view-panel="products" aria-label="CBAM 产品与设施" hidden></section>
+        <section class="customer-portal__page" data-customer-view-panel="data-calculation" aria-label="CBAM 数据与核算" hidden></section>
+        <section class="customer-portal__page" data-customer-view-panel="cbam-deliverables" aria-label="CBAM 报告与交付" hidden></section>
+        <section class="customer-portal__page" data-customer-view-panel="tasks" aria-label="我的任务" hidden></section>
+        <section class="customer-portal__page" data-customer-view-panel="assets" aria-label="数据资产" hidden></section>
+        <section class="customer-portal__page" data-customer-view-panel="deliverables" aria-label="交付中心" hidden></section>
+        <section class="customer-portal__page" data-customer-view-panel="setup" aria-labelledby="customerWorkspaceTitle" hidden>
+          <div class="customer-workspace__body">
+      <small>CBAM 项目设置</small>
+      <h1 id="customerWorkspaceTitle">启动 CBAM 年度项目</h1>
+      <p id="customerWorkspaceIntro"></p>
+      <nav class="customer-setup-nav" id="customerSetupNav" aria-label="项目设置步骤">
+        <button type="button" data-customer-step="identity" aria-controls="customerIdentityStep"><span>01</span><strong>企业与年度</strong><small data-customer-step-status="identity">待确认</small></button>
+        <button type="button" data-customer-step="product" aria-controls="customerProductStep"><span>02</span><strong>产品与 CN 码</strong><small data-customer-step-status="product">待设置</small></button>
+        <button type="button" data-customer-step="facility" aria-controls="customerFacilityStep"><span>03</span><strong>生产设施</strong><small data-customer-step-status="facility">待设置</small></button>
+        <button type="button" data-customer-step="review" aria-controls="customerOverviewStep"><span>04</span><strong>确认并进入</strong><small data-customer-step-status="review">待确认</small></button>
+      </nav>
+      <form id="customerSetupForm" class="customer-workspace__card" hidden>
+        <div class="customer-workspace__step-head"><small>第一步 · 确认项目归属</small><h2>这是谁的哪一年度项目？</h2><p>先核对企业名称与年度。下一步再选择产品范围；此处不需要准备排放数据。</p></div>
+        <label>企业名称<input id="customerTenantName" type="text" minlength="2" maxlength="120" required></label>
+        <label>项目年度<select id="customerServiceYear" required><option value="2026">2026</option><option value="2027">2027</option></select></label>
+        <label class="customer-workspace__check"><input id="customerTenantConfirmed" type="checkbox" required>我已核对企业名称</label>
+        <button class="button button--primary" type="submit">创建项目，继续选择产品 →</button>
+        <p id="customerSetupError" role="alert" hidden></p>
+      </form>
+      <section id="customerProjectSummary" class="customer-workspace__card" hidden aria-live="polite">
+        <p id="customerProjectDetail" class="customer-workspace__project-context"></p>
+        <div class="customer-workspace__steps">
+          <section class="customer-workspace__step" id="customerIdentityStep" data-customer-step-panel="identity" aria-labelledby="customerIdentityTitle">
+            <div class="customer-workspace__step-head"><small>第一步 · 企业与年度</small><h3 id="customerIdentityTitle">确认项目归属</h3><p>请核对企业名称和年度。名称有误时点击编辑；调整后不会改变已保存的项目范围。</p></div>
+            <div class="customer-workspace__tenant-display" id="customerTenantDisplay"><span id="customerTenantDisplayName"></span><button class="text-button" type="button" id="customerTenantEditButton">编辑</button></div>
+            <form id="customerTenantEditForm" class="customer-workspace__tenant-edit" hidden>
+              <label>企业名称<input name="tenantName" type="text" minlength="2" maxlength="120" required></label>
+              <button class="text-button" type="submit">保存</button>
+              <button class="text-button" type="button" id="customerTenantEditCancel">取消</button>
+              <p role="alert" hidden></p>
+            </form>
+            <div class="customer-workspace__step-actions"><button type="button" class="button button--primary" data-customer-step-target="product">继续选择产品 →</button></div>
+          </section>
+          <section class="customer-workspace__step" id="customerProductStep" data-customer-step-panel="product" aria-labelledby="customerProductTitle">
+            <div class="customer-workspace__step-head"><small>第二步 · 产品范围</small><h3 id="customerProductTitle">产品与 CN 码 <span id="customerProductCount"></span></h3><p>产品范围决定后续要收集哪些工厂和材料数据。企业内部产品名称可以稍后补充。</p></div>
+            <p class="customer-cn__guide">搜索并连续选择多个 CN 码，或批量粘贴已有清单。最终归类请按企业报关资料核对。</p>
+            <div id="customerCnPicker" class="customer-cn">
+              <label class="customer-cn__search">搜索 CN 目录<input id="customerCnSearch" type="search" autocomplete="off" placeholder="输入 CN 码、中文或英文品名" aria-controls="customerCnResults"></label>
+              <p id="customerCnSearchStatus" role="status">正在加载 CN 目录…</p>
+              <ul id="customerCnResults" class="customer-cn__results" aria-label="CN 码候选"></ul>
+              <details class="customer-cn__paste"><summary>已有 CN 码清单？批量粘贴</summary>
+                <label>每行一个完整编码，也可用逗号分隔<textarea id="customerCnPaste" rows="3" placeholder="例如：72085120, 72189980"></textarea></label>
+                <button id="customerCnPasteAdd" class="button button--secondary" type="button">加入待保存清单</button>
+                <p id="customerCnPasteFeedback" role="status"></p>
+              </details>
+              <div class="customer-cn__selection" id="customerCnSelection" hidden><strong>待保存 <span id="customerCnSelectedCount">0</span> 个 CN 码</strong><ul id="customerCnSelected" aria-label="待保存 CN 码"></ul><button id="customerCnSave" class="button button--primary" type="button" disabled>保存所选产品</button></div>
+              <p id="customerCnSaveFeedback" role="status"></p>
+            </div>
+            <ul id="customerProductList" class="customer-workspace__records"></ul>
+            <details id="customerProductManual" class="customer-cn__manual"><summary>需要自定义企业内部产品名称？单项补充或修改</summary>
+              <p>从目录选码后会先使用目录名称；企业内部名称可以在此修改。若已有具体产品名，也可逐项填写。</p>
+              <form data-customer-record="product">
+                <label>企业内部产品名称<input name="name" required maxlength="120" placeholder="例如：热轧钢板 A 型"></label>
+                <label>CN 码<input name="cnCode" required inputmode="numeric" pattern="[0-9]{8}([0-9]{2})?" maxlength="10" list="customerCnOptions" placeholder="8 位或目录中的 10 位编码"></label>
+                <datalist id="customerCnOptions"></datalist>
+                <button class="button button--primary" type="submit">保存产品</button>
+                <button class="button button--secondary" type="button" data-customer-cancel hidden>取消修改</button>
+                <p role="alert" hidden></p>
+              </form>
+            </details>
+            <div class="customer-workspace__step-actions"><button type="button" class="button button--secondary" data-customer-step-target="identity">← 返回企业信息</button><button type="button" class="button button--primary" data-customer-step-target="facility">继续登记生产设施 →</button></div>
+          </section>
+          <section class="customer-workspace__step" id="customerFacilityStep" data-customer-step-panel="facility" aria-labelledby="customerFacilityTitle">
+            <div class="customer-workspace__step-head"><small>第三步 · 生产地点</small><h3 id="customerFacilityTitle">生产设施 <span id="customerFacilityCount"></span></h3><p>填写实际生产这些产品的工厂或设施。可以先登记主要设施，之后再补充。</p></div>
+            <ul id="customerFacilityList" class="customer-workspace__records"></ul>
+            <form data-customer-record="facility">
+              <label>设施名称<input name="name" required maxlength="120" placeholder="例如：上海一厂"></label>
+              <label>所在地<input name="location" required maxlength="120" placeholder="例如：中国上海"></label>
+              <button class="button button--primary" type="submit">保存设施</button>
+              <button class="button button--secondary" type="button" data-customer-cancel hidden>取消修改</button>
+              <p role="alert" hidden></p>
+            </form>
+            <div class="customer-workspace__step-actions"><button type="button" class="button button--secondary" data-customer-step-target="product">← 返回产品范围</button><button type="button" class="button button--primary" data-customer-step-target="review">核对范围并进入项目 →</button></div>
+          </section>
+          <section class="customer-workspace__step" id="customerOverviewStep" data-customer-step-panel="review" aria-labelledby="customerOverviewTitle">
+            <div class="customer-workspace__step-head"><small>第四步 · 核对范围</small><h3 id="customerOverviewTitle">项目基础信息</h3><p id="customerOverviewHint"></p></div>
+            <div class="customer-workspace__overview"><button type="button" data-customer-step-target="product"><strong id="customerOverviewProducts">0</strong><span>产品与 CN 码</span><small>查看或补充 →</small></button><button type="button" data-customer-step-target="facility"><strong id="customerOverviewFacilities">0</strong><span>生产设施</span><small>查看或补充 →</small></button></div>
+            <p class="customer-workspace__review-note">进入项目后可在工作台继续查看范围和待办。材料需求要结合生产工艺、能源与前体路径确定；此处无需猜测材料名称或填写一个邮箱。</p>
+            <div class="customer-workspace__step-actions"><button type="button" class="button button--secondary" data-customer-step-target="facility">← 返回生产设施</button><button type="button" class="button button--primary" id="customerCompleteSetup" data-customer-view="cbam">完成引导，进入 CBAM 项目 →</button></div>
+          </section>
+        </div>
+      </section>
+          </div>
+        </section>
+  </div>
 
   <div class="portal" id="portal" hidden>
     <header class="topbar">
@@ -121,6 +228,7 @@
       <div class="topbar-brand">
         <a class="brand" href="/apps/site/home.html" aria-label="返回 Lumino 官网"><img src="/apps/site/site/assets/brand/mark-128.png" width="44" height="32" alt=""><span>LUMiNO</span></a>
       </div>
+      <span class="demo-workspace-label" id="demoWorkspaceLabel" hidden>演示工作区 · 样例数据</span>
       <button class="company-switch" type="button" title="切换工作区">
         <span class="company-switch__mark" id="companyMark" aria-hidden="true">华</span>
         <span class="company-switch__copy"><strong id="companyName">华星钢铁有限公司</strong><small id="companyContextLabel" hidden></small></span>
@@ -223,6 +331,9 @@
   <div class="agent-runtime-layer" id="agentRuntimeLayer" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <script src="../../packages/agent/domain/workflow-engine.js?v=20261027-5" defer></script>
+  <script src="../../packages/agent/domain/intake-model.js?v=20261126-agent1" defer></script>
+  <script src="../../packages/agent/domain/evidence-store.js?v=20261126-intake1" defer></script>
+  <script src="../../packages/agent/domain/energy-invoice-extractor.js?v=20261126-agent1" defer></script>
   <script src="../../packages/agent/domain/annual-project-view-model.js?v=20261116-1" defer></script>
   <script src="../../packages/agent/domain/agent-context.js?v=20261116-1" defer></script>
   <script src="../../packages/agent/domain/cbam-golden-path.js?v=20261112-1" defer></script>
@@ -247,13 +358,13 @@
   <script src="/apps/portal/runtime/portal-config.js?v=20261112-agent1" defer></script>
   <script src="/apps/portal/runtime/asset-view-model.js?v=20261109-shared1" defer></script>
   <script src="/apps/portal/runtime/shared-center-view-model.js?v=20261109-shared1" defer></script>
-  <script src="/apps/portal/runtime/portal-core.js?v=20261112-agent1" defer></script>
+  <script src="/apps/portal/runtime/portal-core.js?v=20261126-agent2" defer></script>
   <script src="/apps/portal/runtime/agent-catalog.js?v=20261112-agent1" defer></script>
   <script src="/apps/portal/runtime/agent-runtime.js?v=20261112-agent2" defer></script>
   <script src="/apps/portal/pages/multi-service-pages.js?v=20261110-pcfval1" defer></script>
-  <script src="/apps/portal/pages/customer-pages.js?v=20261112-agent1" defer></script>
+  <script src="/apps/portal/pages/customer-pages.js?v=20261126-agent1" defer></script>
   <script src="/apps/portal/pages/role-pages.js?v=20261109-fw5" defer></script>
-  <script src="/apps/portal/runtime/portal-events.js?v=20261118-api1" defer></script>
+  <script src="/apps/portal/runtime/portal-events.js?v=20261126-agent2" defer></script>
   <script src="/apps/portal/app.js?v=20261027-4" defer></script>
 </body>
 </html>

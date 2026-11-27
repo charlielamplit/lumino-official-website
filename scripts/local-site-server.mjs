@@ -30,6 +30,8 @@ function loadEnvFile(filePath) {
 }
 
 loadEnvFile(path.join(root, ".env"));
+process.env.PORTAL_INTAKE_DATA_DIR ||= path.join(root, ".local-data", "portal-intake");
+
 if (!process.env.RELEASE_SHA) {
   const releaseFile = path.join(root, ".release-sha");
   if (fs.existsSync(releaseFile)) process.env.RELEASE_SHA = fs.readFileSync(releaseFile, "utf8").trim();
@@ -58,6 +60,10 @@ const apiRoutes = {
   "/api/precursors": "api/precursors.js",
   "/api/release": "api/release.js",
   "/api/staff-login": "api/staff-login.js",
+  "/api/portal-login": "api/portal-login.js",
+  "/api/portal-workspace": "api/portal-workspace.js",
+  "/api/portal-intake-extract": "api/_lib/portal-intake-local.js",
+  "/api/portal-intake-record": "api/_lib/portal-intake-record-local.js",
 };
 
 const vercelConfig = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
@@ -100,9 +106,14 @@ function wrapResponse(response) {
   };
 }
 
-async function readBody(request) {
+async function readBody(request, maxBytes = Infinity) {
   const chunks = [];
-  for await (const chunk of request) chunks.push(chunk);
+  let total = 0;
+  for await (const chunk of request) {
+    total += chunk.length;
+    if (total > maxBytes) throw Object.assign(new Error("request_too_large"), { statusCode: 413 });
+    chunks.push(chunk);
+  }
   if (!chunks.length) return undefined;
   const raw = Buffer.concat(chunks).toString("utf8");
   if (!String(request.headers["content-type"] || "").includes("application/json")) return raw;
@@ -161,10 +172,18 @@ const server = http.createServer(async (request, response) => {
   try {
     const apiFile = apiRoutes[url.pathname];
     if (apiFile) {
+      if (url.pathname.startsWith("/api/portal-intake-") && (
+        request.headers.host !== `127.0.0.1:${port}`
+        || (request.headers.origin && request.headers.origin !== `http://127.0.0.1:${port}`)
+      )) {
+        response.status(403).json({ error: "local_only" });
+        return;
+      }
+      if (url.pathname.startsWith("/api/portal-intake-")) request.localPreview = true;
       const handler = await loadHandler(apiFile);
       request.query = Object.fromEntries(url.searchParams.entries());
       request.body = ["PATCH", "POST", "PUT"].includes(String(request.method || "").toUpperCase())
-        ? await readBody(request)
+        ? await readBody(request, url.pathname === "/api/portal-intake-record" ? 42 * 1024 * 1024 : url.pathname === "/api/portal-intake-extract" ? 3 * 1024 * 1024 : Infinity)
         : undefined;
       await handler(request, response);
       return;
@@ -173,11 +192,11 @@ const server = http.createServer(async (request, response) => {
   } catch (error) {
     console.error("[local-site-server]", error);
     if (!response.headersSent) {
-      response.statusCode = 500;
+      response.statusCode = error.statusCode || 500;
       response.setHeader("Content-Type", "application/json; charset=utf-8");
     }
     if (!response.writableEnded) {
-      response.end(JSON.stringify({ error: "local_server_error" }));
+      response.end(JSON.stringify({ error: error.statusCode === 413 ? "request_too_large" : "local_server_error" }));
     }
   }
 });

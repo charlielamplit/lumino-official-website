@@ -116,7 +116,7 @@ npx vercel --prod   # 生产
 - `/` → 首页（经 `index.html` 跳转）
 - `/site` → 首页
 - `/calculator` → CBAM 成本试算器
-- `/portal` → 登录后 CBAM 工作门户原型
+- `/portal` → 登录后统一企业工作门户（含 CBAM 服务频道原型）
 - `/quote` → 报价器入口
 
 ### 线索接收配置

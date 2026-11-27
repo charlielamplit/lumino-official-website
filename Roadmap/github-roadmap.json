@@ -253,6 +253,7 @@
     },
     {
       "id": "E02",
+      "updatedAt": "2026-11-27",
       "kind": "epic",
       "title": "[Epic] 多服务 Portal 与共享中心",
       "state": "open",
@@ -261,19 +262,20 @@
         "type/epic",
         "status/in-progress",
         "priority/P0",
-        "area/portal",
-        "scope/prototype"
+        "area/portal"
       ],
-      "summary": "在统一门户壳层中承载服务频道，并以权限过滤后的任务、数据资产和交付中心跨服务协作。",
+      "summary": "在同一门户壳层和页面体系中承载演示与企业租户，按身份、权限和数据来源展示服务频道、任务、数据资产与交付中心。",
       "scope": [
         "服务总览和服务频道",
         "我的任务、资料中心、交付中心",
-        "企业、角色、对象和服务范围过滤"
+        "企业、角色、对象和服务范围过滤",
+        "演示样例与真实租户数据隔离"
       ],
       "acceptance": [
         "四类客户角色看到正确服务和动作",
         "共享中心不泄露无权对象",
-        "深链、刷新、无效参数和恢复动作可验证"
+        "深链、刷新、无效参数和恢复动作可验证",
+        "演示与企业身份进入同一 Portal，真实账号不展示演示业务事实"
       ],
       "references": [
         "docs/portal-shared-center-contract.md",
@@ -282,6 +284,7 @@
     },
     {
       "id": "F02-01",
+      "updatedAt": "2026-11-27",
       "kind": "feature",
       "parentId": "E02",
       "title": "[Feature] 统一门户壳层、服务注册表与深链",
@@ -301,7 +304,7 @@
         "角色化服务入口"
       ],
       "acceptance": [
-        "登录默认进入服务总览",
+        "已登录客户默认进入工作台，服务总览由服务目录进入；演示身份可独立查看样例服务总览",
         "刷新恢复当前服务和页面",
         "无效服务参数安全回退"
       ],
@@ -312,6 +315,7 @@
     },
     {
       "id": "F02-02",
+      "updatedAt": "2026-11-27",
       "kind": "feature",
       "parentId": "E02",
       "title": "[Feature] 完成跨服务任务、资料与交付中心",
@@ -325,7 +329,7 @@
         "area/data-assets",
         "scope/prototype"
       ],
-      "summary": "以共享投影展示跨服务对象，同时保留服务事实、确认状态和计算血缘隔离。",
+      "summary": "在演示原型中以共享投影展示跨服务对象，同时保留服务事实、确认状态和计算血缘隔离；真实租户数据接线由后续 Feature 承接。",
       "scope": [
         "我的任务",
         "资料中心",
@@ -344,6 +348,7 @@
     },
     {
       "id": "F02-03",
+      "updatedAt": "2026-11-27",
       "kind": "feature",
       "parentId": "E02",
       "title": "[Feature] Portal 角色权限、异常恢复与移动端收口",
@@ -361,7 +366,7 @@
       "scope": [
         "四类客户角色和内部角色",
         "服务深链与共享中心",
-        "390px 与键盘路径"
+        "320 / 390 / 768 / 1440px 与键盘路径"
       ],
       "acceptance": [
         "负向权限测试通过",
@@ -371,6 +376,43 @@
       "references": [
         "scripts/check-portal-guards.mjs",
         "outputs/review/portal-guard-audit.json"
+      ]
+    },
+    {
+      "id": "F02-04",
+      "updatedAt": "2026-11-27",
+      "kind": "feature",
+      "parentId": "E02",
+      "title": "[Feature] Portal 共用页面与企业租户数据投影",
+      "state": "open",
+      "labels": [
+        "Roadmap",
+        "type/feature",
+        "status/in-progress",
+        "priority/P0",
+        "area/portal",
+        "area/platform",
+        "scope/production"
+      ],
+      "summary": "让演示身份与真实企业身份进入同一个 Portal 页面体系，使用各自的数据源；首次 CBAM 项目设置只在真实企业需要时出现。",
+      "scope": [
+        "共用顶部栏、全局导航、CBAM 二级导航和基础页面组件",
+        "企业账号进入工作台，首次进入 CBAM 时启动项目设置，后续回到同一 CBAM 工作区",
+        "企业、年度、产品 CN 码、设施与生产关系按租户和项目持久化；演示角色继续使用样例数据",
+        "真实客户的 Agent、核算与报告正式业务接线由 #23、#25、#26、#73 和 #74 承接，不以演示结论替代"
+      ],
+      "acceptance": [
+        "同一页面结构下，演示角色保留原有入口和操作，真实客户不读取演示业务事实",
+        "真实客户登录先进入工作台；首次进入 CBAM 才看到引导，完成后有五项 CBAM 二级导航和持续操作入口",
+        "产品、设施和生产关系刷新后按当前租户恢复，跨租户读取和写入被服务端拒绝",
+        "320 / 390 / 768 / 1440px、键盘主路径、失败恢复和演示与真实账号切换均有浏览器验收证据"
+      ],
+      "dependencies": [
+        "F06-01"
+      ],
+      "references": [
+        "apps/portal/README.md",
+        "tests/portal-framework.test.cjs"
       ]
     },
     {

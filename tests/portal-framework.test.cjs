@@ -20,6 +20,45 @@ test("framework shell markers exist in markup and styles", () => {
   assert.match(css, /\.system-state--locked/);
 });
 
+test("customer entry authenticates separately and never grants a sample workspace", () => {
+  const html = read("index.html");
+  const events = read("runtime/portal-events.js");
+  const core = read("runtime/portal-core.js");
+  const config = read("runtime/portal-config.js");
+  const boot = read("app.js");
+  assert.match(html, /data-step-panel="setup"/);
+  assert.match(html, /id="customerTenantEditForm"/);
+  assert.match(html, /data-customer-record="product"/);
+  assert.match(html, /id="customerCnSearch"/);
+  assert.match(html, /id="customerCnPaste"/);
+  assert.match(html, /id="customerCnSave"/);
+  assert.match(html, /data-customer-record="facility"/);
+  assert.match(html, /id="customerPages"/);
+  assert.doesNotMatch(html, /id="customerWorkspace"/);
+  assert.match(events, /serviceRegistry\.cbam\.nav\.map/);
+  assert.match(html, /data-customer-view-panel="home"/);
+  assert.match(html, /data-customer-view-panel="cbam"/);
+  assert.match(html, /data-customer-view-panel="tasks"/);
+  assert.match(html, /data-customer-view-panel="deliverables"/);
+  assert.match(html, /id="customerProductionLinkForm"/);
+  assert.doesNotMatch(html, /id="customerCnSector"/);
+  assert.match(html, /演示工作区 · 选择角色查看样例数据/);
+  assert.match(html, /id="demoRoleSelect"/);
+  const demoSelect = html.match(/<select id="demoRoleSelect"[\s\S]*?<\/select>/)?.[0] || "";
+  const demoOptions = [...demoSelect.matchAll(/<option value="(customer_owner|customer_admin|customer_contrib|customer_approver|expert|reviewer|ops|sales|importer|verifier|supplier)"/g)].map((match) => match[1]);
+  assert.deepEqual(demoOptions, ["customer_owner", "customer_admin", "customer_contrib", "customer_approver", "expert", "reviewer", "ops", "sales", "importer", "verifier", "supplier"]);
+  assert.doesNotMatch(html, /data-workspace-role=/);
+  assert.match(events, /setLoginStep\("password", true\)/);
+  assert.match(events, /portalCustomerPasswordLogin\(email, password\)/);
+  assert.match(events, /showCustomerWorkspace\(data\)/);
+  assert.match(events, /login\(profile\.role, \{ demo: false \}\)/);
+  assert.match(events, /login\(role, \{ demo: true \}\)/);
+  assert.match(core, /lumino-portal-session-mode/);
+  assert.match(config, /portalDemoBootstrap \? window\.localStorage/);
+  assert.match(boot, /lumino-portal-customer-token/);
+  assert.match(boot, /sessionMode === "staff" && window\.LuminoLeadsClient\?\.hasStaffSession\(\)/);
+});
+
 test("workflow, locked and STALE helpers are wired", () => {
   const core = read("runtime/portal-core.js");
   const pcf = read("pages/multi-service-pages.js");

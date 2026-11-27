@@ -81,7 +81,7 @@
       rtStarted: state.rtStarted, agentLog: state.agentLog,
       agentSessions: state.agentSessions || {}, agentContext: state.agentContext || null, agentContextKey: state.agentContextKey || null,
     };
-    window.localStorage.setItem(portalStateStorageKey, JSON.stringify(persisted));
+    portalPrototypeStorage.setItem(portalStateStorageKey, JSON.stringify(persisted));
   }
 
   const assetTypeLabels = {
@@ -305,6 +305,69 @@
     return { actor: profile.name, role: state.role };
   }
 
+  const intakeTenantId = "TNT-0018";
+  function intakeActor() { return { ...workflowActor(), tenantId: intakeTenantId }; }
+  function intakeRequests() {
+    return workflowEngine.list({ type: "workPackage", year: state.year, quarter: state.quarter })
+      .filter((item) => item.metadata?.basis === "annual_scope_and_monitoring_draft");
+  }
+  function currentIntakeRequest(requestId = null) {
+    const requests = intakeRequests();
+    return requestId ? requests.find((item) => item.id === requestId) || null : requests[0] || null;
+  }
+  async function saveIntakeRecord(operation, payload) {
+    const response = await fetch("/api/portal-intake-record", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ operation, ...payload }),
+    }).catch(() => { throw new Error("本机证据服务不可用，请检查预览服务。"); });
+    const result = await response.json().catch(() => null);
+    if (!response.ok || !result?.stored) throw new Error(result?.message || "本地证据保存失败，请检查预览服务。");
+    return result;
+  }
+  async function restoreIntakeRecords() {
+    const requests = workflowEngine.list({ type: "workPackage" }).filter((item) =>
+      item.metadata?.basis === "annual_scope_and_monitoring_draft" && item.metadata.evidenceId);
+    for (const request of requests) {
+      const response = await fetch(`/api/portal-intake-record?requestId=${encodeURIComponent(request.id)}`).catch(() => null);
+      if (!response) throw new Error("本机证据服务不可用，文件与候选尚未恢复。");
+      if (response.status === 404) continue;
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        throw new Error(error?.message || "本机证据恢复失败，请检查预览服务。");
+      }
+      const record = await response.json();
+      if (record.evidence?.evidenceId !== request.metadata.evidenceId || record.requestId !== request.id) continue;
+      if (workflowEngine.get(request.id)?.metadata?.evidenceId !== record.evidence.evidenceId) continue;
+      const bytes = Uint8Array.from(atob(record.base64), (character) => character.charCodeAt(0));
+      const evidence = await intakeEvidenceStore.put({ ...record.evidence, bytes, actor: intakeActor() });
+      if (evidence.contentSha256 !== record.evidence.contentSha256) throw new Error("恢复的证据文件摘要不匹配。");
+      if (record.candidate?.id === request.metadata.candidateId && record.candidate.revision === request.metadata.candidateRevision
+        && !intakeCandidateStore.get({ candidateId: record.candidate.id, tenantId: intakeTenantId })) {
+        intakeCandidateStore.put(record.candidate);
+      }
+    }
+  }
+  function currentIntakeCandidate(requestId = null) {
+    const request = currentIntakeRequest(requestId);
+    if (request?.metadata?.intakeStatus !== "AWAITING_CONFIRMATION" || !request.metadata.candidateId) return null;
+    const candidate = intakeCandidateStore.get({ candidateId: request.metadata.candidateId, tenantId: intakeTenantId });
+    return candidate?.status === "READY_FOR_REVIEW" && candidate.requestId === request.id
+      && candidate.evidenceId === request.metadata.evidenceId
+      && candidate.revision === request.metadata.candidateRevision ? candidate : null;
+  }
+  function currentIntakeEvidence(candidate = currentIntakeCandidate()) {
+    return candidate ? intakeEvidenceStore.get({ evidenceId: candidate.evidenceId, tenantId: intakeTenantId, actor: intakeActor() }) : null;
+  }
+  function currentIntakeFact(requestId = null) {
+    const request = currentIntakeRequest(requestId);
+    if (request?.metadata?.intakeStatus !== "CONFIRMED") return null;
+    return workflowEngine.list({ type: "fact", year: state.year, quarter: state.quarter }).find((item) =>
+      item.status === "CONFIRMED" && item.metadata?.requestId === request.id
+      && item.metadata?.candidateId === request.metadata.candidateId
+      && item.metadata?.evidenceId === request.metadata.evidenceId) || null;
+  }
+
   function workflowObject(flowId) {
     const reference = workflowObjectRefs[flowId];
     if (!reference) return null;
@@ -336,11 +399,12 @@
   }
 
   function syncUiFromWorkflow() {
-    const evidence = workflowEngine.get(`EVD-${state.year}-${state.quarter}-GAS`);
-    const fact = workflowEngine.get(`FACT-${state.year}-${state.quarter}-GAS`);
+    const candidate = currentIntakeCandidate();
+    const evidence = candidate ? workflowEngine.get(candidate.evidenceId) : null;
+    const fact = currentIntakeFact();
     const finding = workflowEngine.get("FND-PRE-004");
     state.uploadAdded = Boolean(evidence && !["UPLOADED", "SECURITY_SCANNED"].includes(evidence.status));
-    state.factConfirmed = Boolean(fact && ["CONFIRMED", "APPROVED", "VERIFIED"].includes(fact.status));
+    state.factConfirmed = Boolean(fact);
     state.findingResolved = Boolean(finding && ["RESPONSE_SUBMITTED", "VALIDATING", "RESOLVED", "CLOSED"].includes(finding.status));
   }
 
@@ -667,6 +731,7 @@
 
   function login(role, options = {}) {
     state.role = role || "customer_owner";
+    state.demoWorkspace = options.demo !== false;
     if (customerRoles.has(state.role)) { state.year = "2026"; state.quarter = "Q3"; }
     if (state.role === "customer_owner" && state.importedTrial && years[state.importedTrial.year]) state.year = state.importedTrial.year;
     if (isCustomer()) {
@@ -679,6 +744,7 @@
     state.serviceOverviewMode = isCustomer() ? "open" : "closed";
     state.loggedIn = true;
     window.sessionStorage.setItem("lumino-portal-session-role", state.role);
+    window.sessionStorage.setItem("lumino-portal-session-mode", options.sessionMode || (state.demoWorkspace ? "demo" : "staff"));
     loadPeriodState(); syncUiFromWorkflow();
     $("#loginScreen").hidden = true;
     $("#portal").hidden = false;
@@ -693,6 +759,7 @@
     state.currentService = null;
     state.page = "services-hub";
     window.sessionStorage.removeItem("lumino-portal-session-role");
+    window.sessionStorage.removeItem("lumino-portal-session-mode");
     if (isCustomer()) window.history.replaceState({}, "", window.location.pathname);
     $("#portal").hidden = true;
     $("#loginScreen").hidden = false;
@@ -706,8 +773,10 @@
   }
 
   function railButton(id, icon, label, opts = {}) {
-    const active = opts.active || state.page === id || (opts.service && state.currentService === opts.service);
-    const attrs = opts.service
+    const active = opts.active ?? (state.page === id || (opts.service && state.currentService === opts.service));
+    const attrs = opts.customerView
+      ? `data-customer-view="${safe(opts.customerView)}"`
+      : opts.service
       ? `data-service-enter="${opts.service}" data-page-target="${opts.pageTarget || ""}"`
       : `data-page="${id}"`;
     const short = opts.short || label;
@@ -724,8 +793,17 @@
     </button>`;
   }
 
+  function serviceNavButton(id, icon, label, opts = {}) {
+    const active = opts.active ?? state.page === id;
+    const attrs = opts.customerView ? `data-customer-view="${safe(opts.customerView)}"` : `data-page="${safe(id)}"`;
+    return `<button class="nav-item ${active ? "active" : ""}" type="button" ${attrs} ${active ? 'aria-current="page"' : ""}>
+      <span class="nav-icon" aria-hidden="true">${safe(icon)}</span><span>${safe(label)}</span>${opts.badge ? `<span class="nav-badge">${safe(opts.badge)}</span>` : ""}
+    </button>`;
+  }
+
   function syncShell() {
     const config = roleConfig[state.role];
+    if ($("#demoWorkspaceLabel")) $("#demoWorkspaceLabel").hidden = !state.demoWorkspace;
     const agentSlot = $("#agentTopbarSlot");
     if (agentSlot) {
       agentSlot.innerHTML = (isCustomer() && state.loggedIn && window.LuminoAgentRuntime?.agentBtnHtml)
@@ -865,10 +943,7 @@
         channel.hidden = false;
         channel.innerHTML = `<p class="sidebar-channel__eyebrow">${safe(service.code)} · ${safe(service.statusLabel || "已开通")}</p><strong>${safe(service.name)}</strong>`;
         const nav = activeServiceNav();
-        $("#roleNav").innerHTML = nav.map(([id, icon, label, badge]) => `
-          <button class="nav-item ${state.page === id ? "active" : ""}" type="button" data-page="${id}" ${state.page === id ? 'aria-current="page"' : ""}>
-            <span class="nav-icon" aria-hidden="true">${icon}</span><span>${label}</span>${badge ? `<span class="nav-badge">${badge}</span>` : ""}
-          </button>`).join("");
+        $("#roleNav").innerHTML = nav.map(([id, icon, label, badge]) => serviceNavButton(id, icon, label, { badge })).join("");
       } else {
         sidebar.hidden = false;
         layout?.classList.remove("portal-layout--rail-only");
@@ -962,12 +1037,13 @@
       if (!facilities.length) return '<option value="">请选择</option><option>上海一厂</option><option>江苏二厂</option>';
       return `<option value="">请选择</option>${facilities.map((facility) => `<option value="${safe(facility.name)}">${safe(facility.name)}</option>`).join("")}`;
     })();
+    const materialRequestOptions = intakeRequests().map((request) => `<option value="${safe(request.id)}">${safe(request.scope)} · ${safe(request.owner)}</option>`).join("");
     const pcfCase = workflowEngine.get("PCF-2026-001");
     const pcfCalculation = pcfCase?.metadata?.calculation || {};
     const pcfDeclaration = pcfCase?.metadata?.declaration || {};
     const pcfBoundary = pcfCase?.metadata?.boundary || {};
     const templates = {
-      "upload-evidence": ["QUARTERLY EVIDENCE", `上传 ${state.year} ${state.quarter} 材料`, drawerForm("upload-evidence", "上传后先进入 Agent 提取区。只有你确认账期、设施和数值后，材料才会进入正式事实建议。", `${formField("材料类型", '<select name="type"><option>能源账单</option><option>产量台账</option><option>发运台账</option><option>供应商排放数据</option><option>其他证明</option></select>')}${formField("所属设施", `<select name="facility">${facilitySelectOptions}</select>`)}${formField("数据期间", `<input name="period" value="${state.year} ${state.quarter}" readonly>`)}<label class="upload-drop"><input name="file" type="file" required><strong>选择文件或拖到这里</strong><small>PDF、XLSX、CSV、JPG；单个文件不超过 30 MB</small></label>${formField("补充说明", '<textarea name="note" rows="3" placeholder="例如：账单同时覆盖两座设施"></textarea>')}`, "上传并交给 Agent")],
+      "upload-evidence": ["QUARTERLY EVIDENCE", `上传 ${state.year} ${state.quarter} 材料`, drawerForm("upload-evidence", "本机预览会把原始文件和提取候选保存到本机服务的数据目录。模型模式还会将账单文字发送至 aiberm.com 提取字段；只有账单明确覆盖完整季度且原文、期间、设施均通过校验，才进入待确认区。规则模式只在浏览器内识别固定标记。", `${formField("材料请求", `<select name="requestId" required>${materialRequestOptions || '<option value="">当前期间没有可用材料请求</option>'}</select>`)}${formField("材料类型", '<select name="type"><option>能源账单</option></select>')}${formField("所属设施", `<select name="facility">${facilitySelectOptions}</select>`)}${formField("数据期间", `<input name="period" value="${state.year} ${state.quarter}" readonly>`)}${formField("提取方式", '<select name="extractionMode"><option value="model">模型提取 · aiberm.com</option><option value="fixture">本地规则演示</option></select>')}<label class="upload-drop"><input name="file" type="file" accept=".txt,.csv,.pdf,text/plain,text/csv,application/pdf" required><strong>选择 TXT、CSV 或文字版 PDF 季度汇总账单</strong><small>需覆盖完整季度；模型模式上限 2 MB；扫描件、图片和 XLSX 暂不支持</small></label>${formField("补充说明", '<textarea name="note" rows="3" placeholder="例如：账单同时覆盖两座设施"></textarea>')}`, "上传并提取")],
       "new-product": ["ENTERPRISE PRODUCT MASTER", "新增产品主档", drawerForm("new-product", "产品属于企业长期主档，不必绑定某一年。可以先创建，再由 Agent 或关务人员补充 CN Code。", `${formField("产品名称", '<input name="productName" value="冷轧非合金钢板" required>')}${formField("内部编码", '<input name="internalCode" value="CRS-02" required>')}${formField("CN Code 候选", '<input name="cnCodes" placeholder="如 72091690；多个用逗号分隔">', "可留空；候选不会自动成为已确认编码")}<fieldset class="drawer-field drawer-fieldset"><legend>初始年度范围（可选）</legend><div class="check-grid">${newProductYearChecks}</div><small>这里只列出已创建且未锁定的年度；也可以稍后再纳入。</small></fieldset>`, "创建产品主档")],
       "edit-product": ["PRODUCT MASTER", "编辑产品主档", drawerForm("edit-product", "主档变更会形成新版本，不覆盖锁定年度中的历史快照。", `${formField("产品名称", `<input name="productName" value="${safe(context.name || "热轧非合金钢卷")}" required>`)}${formField("内部编码", `<input name="internalCode" value="${safe(context.code || "HRC-01")}" required>`)}${formField("变更生效日", '<input name="effectiveDate" type="date" value="2026-10-10">')}${formField("变更原因", '<textarea name="reason" rows="4" required placeholder="说明为何修改产品主档"></textarea>')}`, "保存为新版本")],
       "manage-cn": ["CN CODE MANAGEMENT", "管理 CN Code", drawerForm("manage-cn", "同一企业产品可以保留多个候选编码。最终确认需要记录依据、确认人和有效期。", `<div class="code-candidate"><div><strong>72083900</strong><small>候选 · Agent 根据产品说明建议</small></div><span class="record-state warn">待关务确认</span></div><div class="code-candidate"><div><strong>72083800</strong><small>历史候选 · 2026 年使用</small></div><span class="record-state">历史</span></div>${formField("新增候选 CN Code", '<input name="cnCode" inputmode="numeric" placeholder="8 位 CN Code">')}${formField("建议依据", '<textarea name="basis" rows="3" placeholder="产品说明、材质、规格或关务意见"></textarea>')}`, "保存候选")],
@@ -1055,25 +1131,29 @@
           </div>`];
       })(),
       "extract-energy": (() => {
-        const rows = [
-          ["7 月 购入电力", "电力账单 7 月 · 第 1 页", "4,120 MWh", false],
-          ["8 月 购入电力", "电力账单 8 月 · 第 1 页", "4,260 MWh", false],
-          ["9 月 购入电力", "电力账单 9 月 · 含 8 月补抄", "4,100 MWh", true],
-          ["Q3 天然气", "天然气计量表 · 汇总行", "1.86 百万 m³", false],
-        ].map(([k, src, v, flag]) => `
+        const candidate = currentIntakeCandidate();
+        const evidence = currentIntakeEvidence(candidate);
+        const facility = candidate ? assetRegistry.get(candidate.facilityAssetId) : null;
+        const rows = candidate ? [[
+          `${state.quarter} 天然气`,
+          `${evidence?.filename || candidate.evidenceId} · ${candidate.locator || "内容标记"}`,
+          `${candidate.proposedPatch.originalValue} ${candidate.proposedPatch.originalUnit}`,
+          false,
+        ]] : [["尚无可确认候选", "请先上传 TXT/CSV 演示账单", "—", true]];
+        const rowHtml = rows.map(([k, src, v, flag]) => `
           <li class="cbam-extract__row ${flag ? "is-warn" : ""}">
             <span><strong>${safe(k)}</strong><small>${safe(src)}</small></span>
             <b>${safe(v)}</b>
             <button class="text-button" type="button" data-action="demo-fix-field" data-field="${safe(k)}">修正</button>
           </li>`).join("");
-        return ["CBAM · 能源确认", "核对 Q3 能源用量", `
+        return [candidate?.extractionMode === "model_gateway" ? "CBAM · 模型提取核对" : "CBAM · 规则提取核对", "核对 Q3 天然气用量", `
           <div class="drawer-detail" data-template="T3">
-            <p class="drawer-lead">Agent 从你上传的文件中提取了以下用量。逐项核对，有误的点“修正”。</p>
-            <ul class="cbam-extract">${rows}</ul>
-            <p class="drawer-note">确认后生成企业事实新版本，并用于 Q3 计算；依赖旧版本的计算会标记为需要重算。</p>
+            <p class="drawer-lead">${candidate?.extractionMode === "model_gateway" ? `模型 ${safe(candidate.model || "—")} 从账单文字提取候选，并通过原文与期间校验。请核对后再确认。` : "本地规则从已保存的 TXT/CSV 中读取 NATURAL_GAS_NM3 数值；未调用模型 Agent。请核对后再确认。"}</p>
+            <ul class="cbam-extract">${rowHtml}</ul>
+            <p class="drawer-note">所属设施：${safe(facility?.name || candidate?.facilityAssetId || "—")} · 账期：${safe(candidate?.invoicePeriodStart && candidate?.invoicePeriodEnd ? `${candidate.invoicePeriodStart} 至 ${candidate.invoicePeriodEnd}` : `${candidate?.year || "—"} ${candidate?.quarter || "—"}`)}。${candidate?.sourceQuote ? `原文：${safe(candidate.sourceQuote)}。` : ""}候选 ${safe(candidate?.id || "—")} · Rev ${safe(candidate?.revision || "—")} · 证据 ${safe(candidate?.evidenceId || "—")}。本机预览刷新后可恢复文件和候选；正式项目仍需服务端身份与权限。</p>
             <footer class="drawer-actions">
               <button class="button button--secondary" type="button" data-close-drawer>关闭</button>
-              <button class="button button--primary" type="button" data-action="confirm-fact">确认提取结果</button>
+              <button class="button button--primary" type="button" data-action="confirm-fact" ${candidate ? "" : "disabled"}>确认提取结果</button>
             </footer>
           </div>`];
       })(),
@@ -1172,6 +1252,11 @@
   }
 
   function cbamDataItemDetail(itemId) {
+    const request = currentIntakeRequest();
+    const gasFact = currentIntakeFact();
+    const gasEvidence = gasFact ? intakeEvidenceStore.get({ evidenceId: gasFact.metadata.evidenceId, tenantId: intakeTenantId, actor: intakeActor() }) : null;
+    const powerAsset = assetRegistry.get("REC-HX-POWER-2026Q3");
+    const powerEvidence = assetRegistry.get("EVD-HX-POWER-2026Q3");
     const catalog = {
       "out-qty": {
         cat: "产量", name: "热轧非合金钢卷 · Q3 产量",
@@ -1185,17 +1270,15 @@
       },
       "en-power": {
         cat: "能源", name: "购入电力",
-        fields: [["Q3 数值", state.factConfirmed ? "12,480 MWh" : "—"], ["来源", state.uploadAdded ? "电力账单 7–9 月" : "未上传"], ["确认人", state.factConfirmed ? "周岚 · 今天" : "—"], ["被谁使用", "Q3 计算间接排放"]],
-        history: state.factConfirmed
-          ? [{ v: "v3", t: "企业已确认", d: "今天" }, { v: "v2", t: "中期预估", d: "10 月 15 日" }]
-          : [{ v: "—", t: "等待上传或确认", d: "—" }],
+        fields: [["Q3 数值", powerAsset ? `${powerAsset.payload.originalValue} ${powerAsset.payload.originalUnit}（演示种子）` : "—"], ["来源", powerEvidence?.payload.fileName || "未提供"], ["确认人", powerAsset?.provenance?.confirmedBy || "—"], ["被谁使用", "演示参考 · 不由 E-02 天然气确认改变"]],
+        history: [{ v: powerAsset?.versionId || "—", t: "演示种子，独立于天然气材料请求", d: "—" }],
       },
       "en-gas": {
         cat: "能源", name: "天然气",
-        fields: [["Q3 数值", state.factConfirmed ? "1.86 百万 m³" : "—"], ["来源", state.uploadAdded ? "天然气计量表" : "未上传"], ["确认人", state.factConfirmed ? "周岚 · 今天" : "—"], ["被谁使用", "Q3 计算直接排放"]],
-        history: state.factConfirmed
-          ? [{ v: "v1", t: "企业已确认", d: "今天" }]
-          : [{ v: "—", t: "等待上传或确认", d: "—" }],
+        fields: [["Q3 数值", gasFact ? `${gasFact.metadata.value} ${gasFact.metadata.unit}` : "—"], ["来源", gasEvidence ? `${gasEvidence.filename} · ${gasEvidence.evidenceId}` : (request?.metadata?.intakeStatus === "RETURNED" ? "提取失败，待重交" : "未确认")], ["所属设施", gasFact?.metadata?.facilityAssetId || request?.metadata?.facilityAssetId || "—"], ["确认人", gasFact?.metadata?.confirmedBy || "—"], ["被谁使用", "Q3 计算直接排放（演示）"]],
+        history: gasFact
+          ? [{ v: `Rev ${gasFact.revision}`, t: `${gasFact.metadata.value} ${gasFact.metadata.unit} · ${gasFact.metadata.confirmedBy}`, d: gasFact.updatedAt || "—" }]
+          : [{ v: "—", t: request?.metadata?.intakeStatus === "RETURNED" ? "提取失败，待重交" : "等待确认", d: "—" }],
       },
       "en-diesel": {
         cat: "能源", name: "厂内运输柴油",

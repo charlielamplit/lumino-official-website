@@ -25,6 +25,7 @@
     "cbam-review-monitoring-plan": Object.freeze(["reviewer"]),
     "cbam-sign-monitoring-plan": Object.freeze(["customer_admin", "customer_owner"]),
     "cbam-draft-invitations": Object.freeze(["customer_admin", "customer_owner"]),
+    "cbam-upload-evidence": Object.freeze(["customer_admin", "customer_owner", "customer_contrib"]),
     "cbam-confirm-quarter-data": Object.freeze(["customer_admin", "customer_owner"]),
     "cbam-run-calculation": Object.freeze(["system"]),
     "cbam-review-calculation": Object.freeze(["reviewer"]),

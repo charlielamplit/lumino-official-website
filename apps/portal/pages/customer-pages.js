@@ -235,15 +235,161 @@
         </aside>
       </div>`;
 
-    $("#main").innerHTML = `
-      <div class="cbam-work" data-template="T1">
-        ${pageHeader(`${org} / CBAM`, "当前工作", `<div class="head-actions">${window.LuminoAgentRuntime?.agentPageAction?.() || ""}${statusChip(`${state.year} · ${years[state.year]?.short || profile.position}`, years[state.year]?.chip === "warn" ? "warn" : years[state.year]?.chip === "locked" ? "locked" : "")}</div>`)}
-        ${state.online ? "" : '<div class="offline-banner" role="status"><strong>当前处于离线状态</strong><span>你仍可查看本页，但上传、分享和状态变更将在恢复网络后才能提交。</span></div>'}
-        ${state.importedTrial && state.year === String(state.importedTrial.year) ? `<section class="trial-handoff"><div><small>来自免费成本试算</small><strong>${safe(state.importedTrial.cnCode)} · ${safe(state.importedTrial.quantity.toLocaleString("zh-CN"))} 吨</strong><p>估算成本 ¥${safe(state.importedTrial.estimatedCostCny.toLocaleString("zh-CN"))}。这只是线索，确认产品与工厂后才会建立正式事实。</p></div><button class="button button--secondary" type="button" data-action="review-trial">核对并转为项目</button></section>` : ""}
-        ${cbamWorkNext(profile, openCount || queue.length)}
-        ${yearStateCard}
-        ${queueCard}
+    $("#main").innerHTML = cbamWorkPageMarkup({
+      org,
+      aside: `<div class="head-actions">${window.LuminoAgentRuntime?.agentPageAction?.() || ""}${statusChip(`${state.year} · ${years[state.year]?.short || profile.position}`, years[state.year]?.chip === "warn" ? "warn" : years[state.year]?.chip === "locked" ? "locked" : "")}</div>`,
+      before: `${state.online ? "" : '<div class="offline-banner" role="status"><strong>当前处于离线状态</strong><span>你仍可查看本页，但上传、分享和状态变更将在恢复网络后才能提交。</span></div>'}${state.importedTrial && state.year === String(state.importedTrial.year) ? `<section class="trial-handoff"><div><small>来自免费成本试算</small><strong>${safe(state.importedTrial.cnCode)} · ${safe(state.importedTrial.quantity.toLocaleString("zh-CN"))} 吨</strong><p>估算成本 ¥${safe(state.importedTrial.estimatedCostCny.toLocaleString("zh-CN"))}。这只是线索，确认产品与工厂后才会建立正式事实。</p></div><button class="button button--secondary" type="button" data-action="review-trial">核对并转为项目</button></section>` : ""}`,
+      nextAction: cbamWorkNext(profile, openCount || queue.length),
+      stateCard: yearStateCard,
+      board: queueCard,
+    });
+  }
+
+  function cbamWorkPageMarkup({ org, aside = "", before = "", nextAction = "", stateCard = "", board = "" }) {
+    return `<div class="cbam-work" data-template="T1">
+      ${pageHeader(`${safe(org)} / CBAM`, "当前工作", aside)}
+      ${before}${nextAction}${stateCard}${board}
+    </div>`;
+  }
+
+  function renderTenantWorkbench(data, project, counts) {
+    const nextTitle = !project ? "启动 CBAM 年度项目"
+      : !counts.production_link ? "关联产品与实际生产设施" : "核对材料准备范围";
+    const nextDetail = !project ? "首次进入 CBAM 服务时，按步骤确认企业、年度、产品与设施。"
+      : !counts.production_link ? "生产关系明确后，材料需求才能指向正确的产品和设施。"
+        : "生产关系已建立；下一步结合工艺、能源与前体路径确认所需材料。";
+    const nextAction = `<section class="next-action" aria-labelledby="workbenchFocusTitle">
+      <div class="next-action__copy"><small class="next-action__kicker">下一步 · CBAM</small><strong id="workbenchFocusTitle">${safe(nextTitle)}</strong><span>${safe(nextDetail)}</span></div>
+      <button class="button button--primary" type="button" data-customer-view="cbam">进入 CBAM <span aria-hidden="true">→</span></button>
+    </section>`;
+    const queuePreview = counts.material_request
+      ? `<p class="workbench-quiet">${counts.material_request} 条材料请求草稿，尚未分配或发送。</p>`
+      : '<p class="workbench-quiet">暂无已分配任务。</p>';
+    const meta = project ? `${project.year} · ${counts.product} 项产品 · ${counts.facility} 座设施` : "待建立年度项目";
+    const serviceCards = `<button class="workbench-service-card" type="button" data-customer-view="cbam">
+      <span class="workbench-service-card__top"><span class="mono workbench-service-card__code">CBAM · 已开通</span><span class="workbench-service-card__meta">${safe(meta)}</span></span>
+      <strong>${safe(serviceRegistry.cbam.name)}</strong>
+      <span class="workbench-service-card__foot"><span>${safe(project ? "项目范围持续完善中" : "从企业年度项目开始")}</span><span class="workbench-service-card__go">进入频道 →</span></span>
+    </button>`;
+    document.querySelector('[data-customer-view-panel="home"]').innerHTML = workbenchMarkup({
+      crumb: orgShortName(data.tenant.name), actor: data.user.name, nextAction, queuePreview, serviceCards,
+      consultLink: '<button class="workbench-consult-link" type="button" data-customer-view="services"><span>其他企业服务</span><span>查看全部服务 →</span></button>',
+      taskAction: 'data-customer-view="tasks"',
+    });
+  }
+
+  function renderTenantCbamDetails(data, project, records, counts, productTab, dataTab) {
+    const org = safe(data.tenant.name);
+    const year = safe(project?.year || "待建立");
+    const products = records.filter((record) => record.kind === "product");
+    const facilities = records.filter((record) => record.kind === "facility");
+    const links = records.filter((record) => record.kind === "production_link");
+    const scopeAction = '<button class="text-button" type="button" data-customer-view="setup">查看或补充项目范围 →</button>';
+
+    document.querySelector('[data-customer-view-panel="annual"]').innerHTML = `
+      ${pageHeader(`${org} / CBAM`, `${year} 年度项目`, statusChip(project ? "项目范围草稿" : "待建立", "warn"))}
+      <section class="annual-project-shell annual-established">
+        <header class="annual-est-overview ds-card">
+          <div class="annual-est-overview__lead"><div><small>${project ? `CBAM ${year}` : "年度项目待建立"}</small></div>
+            <h2>${project ? "先确认产品与设施，再准备季度数据" : "尚未建立年度项目"}</h2>
+            <p>这里显示本企业已保存的范围。监测方法、季度数据和正式结论需在后续工作中确认。</p></div>
+          <div class="annual-est-overview__actions">${scopeAction}</div>
+          <dl class="annual-est-overview__facts"><div><dt>产品 CN 码</dt><dd>${counts.product} 项</dd></div>
+            <div><dt>生产设施</dt><dd>${counts.facility} 座</dd></div><div><dt>生产关系</dt><dd>${counts.production_link} 条</dd></div>
+            <div><dt>材料请求</dt><dd>${counts.material_request} 条草稿</dd></div></dl>
+        </header>
+        <section class="annual-parallel ds-card" aria-label="本年度并行工作">
+          <header><div><small>本年度工作</small><h2>按已确认的项目范围逐步收集事实</h2></div></header>
+          <div class="annual-parallel__rows">
+            <article><div><small>年度主档</small><strong>产品、CN 码与设施</strong><p>${counts.product} 项产品、${counts.facility} 座设施已登记。</p></div>${statusChip(counts.product && counts.facility ? "基础范围已保存" : "待补充", counts.product && counts.facility ? "" : "warn")}<button class="text-button" type="button" data-customer-view="products">查看范围 →</button></article>
+            <article><div><small>生产路线</small><strong>产品与设施关系</strong><p>${counts.production_link} 条关系已登记；工艺与前体仍可补充。</p></div>${statusChip(counts.production_link ? "已登记" : "待建立", counts.production_link ? "" : "warn")}<button class="text-button" type="button" data-customer-view="cbam">继续处理 →</button></article>
+            <article><div><small>季度数据</small><strong>材料与核算</strong><p>材料清单、活动数据和正式计算尚待确认。</p></div>${statusChip("未开始", "warn")}<button class="text-button" type="button" data-customer-view="data-calculation">查看状态 →</button></article>
+          </div>
+        </section>
+      </section>`;
+
+    const productRows = products.map((record) => `<div class="prod-row"><div class="prod-row__name"><strong>${safe(record.name)}</strong><small>企业已登记</small></div>
+      <span class="prod-row__cn">${safe(record.cnCode)}</span><div class="prod-row__cfg"><span>${links.filter((link) => link.productId === record.id).map((link) => facilities.find((facility) => facility.id === link.facilityId)?.name || "设施待核对").map(safe).join("、") || "生产设施待关联"}</span><small>工艺与前体以生产关系记录为准</small></div><div class="prod-row__scope">${statusChip("范围草稿", "warn")}</div></div>`).join("");
+    const facilityRows = facilities.map((record) => `<div class="prod-fac"><div class="prod-fac__top"><strong>${safe(record.name)}</strong>${statusChip("已登记")}</div><small class="prod-fac__code">${safe(record.location)}</small><span class="prod-fac__proc">关联 ${links.filter((link) => link.facilityId === record.id).length} 项产品</span></div>`).join("");
+    const productContent = productTab === "products"
+      ? `<section class="panel prod-table"><div class="panel-head"><div><h2>出口欧盟的产品与 CN 编码</h2><small>报关归类仍需企业具名核对。</small></div></div>
+          <div class="prod-table__head" aria-hidden="true"><span>产品</span><span>CN Code</span><span>生产配置</span><span>状态</span></div>
+          <div class="prod-table__body">${productRows || '<p class="workbench-quiet">尚未登记产品 CN 码。</p>'}</div></section>`
+      : productTab === "facilities"
+        ? `<section class="panel prod-facilities"><div class="panel-head"><h2>生产设施与路线</h2></div>${facilityRows || '<p class="workbench-quiet">尚未登记生产设施。</p>'}</section>`
+        : systemStatePanel({ title: "尚无导入与变更记录", reason: "产品与设施的变更记录会随正式导入和确认形成。", primary: { label: "查看项目范围", attrs: 'data-customer-view="setup"' } });
+    document.querySelector('[data-customer-view-panel="products"]').innerHTML = `
+      ${pageHeader(`${org} / CBAM`, "产品与设施", statusChip(`${year} · 范围草稿`, "warn"))}
+      ${cbamSectionTabs([["products", "产品与 CN 编码"], ["facilities", "设施与生产路线"], ["changes", "导入与变更记录"]], productTab, "产品与设施内部页面", "products")}
+      <section class="prod-page" aria-label="产品与设施"><p class="prod-intro">本页只显示当前企业已保存的产品、设施和生产关系。</p>${productContent}${scopeAction}</section>`;
+
+    const dataReason = !links.length ? "先在“当前工作”建立产品与实际生产设施的关系，再准备季度活动数据。"
+      : `已建立 ${links.length} 条生产关系。季度活动数据采集与正式核算尚未启动。`;
+    const dataTitle = { data: "尚无已确认的季度数据", results: "尚无正式计算结果", cost: "尚无成本情景" }[dataTab];
+    document.querySelector('[data-customer-view-panel="data-calculation"]').innerHTML = `
+      ${pageHeader(`${org} / CBAM`, "数据与核算", statusChip(`${year} · 尚未核算`, "warn"))}
+      ${cbamSectionTabs([["data", "材料与数据"], ["results", "计算结果"], ["cost", "成本情景"]], dataTab, "数据与核算内部页面", "data-calculation")}
+      ${systemStatePanel({ title: dataTitle, reason: dataTab === "data" ? dataReason : "本企业尚未完成受控数据采集、计算与复核，因此不能显示正式结果或成本。", primary: { label: "返回当前工作", attrs: 'data-customer-view="cbam"' } })}`;
+
+    document.querySelector('[data-customer-view-panel="cbam-deliverables"]').innerHTML = `
+      <div class="cbam-reports" data-template="T2">${pageHeader(`${org} / CBAM`, "报告与交付", statusChip(`${year} · 尚无交付物`, "warn"))}
+        <section class="ds-table shared-list shared-list--deliverables cbam-reports__table" aria-label="CBAM 交付物"><table><thead><tr><th>服务</th><th>交付物</th><th>接收方 · 更新</th><th>状态</th><th></th></tr></thead>
+          <tbody><tr class="shared-empty-row"><td colspan="5">${systemStatePanel({ title: "暂无 CBAM 交付文件", reason: "项目尚未完成数据采集、核算与复核。", primary: { label: "返回当前工作", attrs: 'data-customer-view="cbam"' } })}</td></tr></tbody></table></section>
       </div>`;
+  }
+
+  function renderTenantCbamWork(data, project, counts) {
+    const projectReady = Boolean(counts.product && counts.facility);
+    const cbamNext = `<section class="next-action" aria-labelledby="customerCbamNextTitle">
+      <div class="next-action__copy"><small class="next-action__kicker">下一步 · 项目范围</small>
+        <strong id="customerCbamNextTitle">${project ? "核对产品与生产设施" : "建立 CBAM 年度项目"}</strong>
+        <span>${project ? "范围可持续补充；正式数据与结论需在后续工作中确认。" : "先确认企业、年度、产品 CN 码与实际生产设施。"}</span></div>
+      <button class="button button--primary" type="button" id="customerCbamProjectAction" data-customer-view="setup">${project ? "管理项目范围" : "启动项目"} <span aria-hidden="true">→</span></button>
+    </section>`;
+    const cbamBoard = `<div class="cbam-work__board">
+      <section class="cbam-work__queue ds-card" aria-label="项目范围"><header class="ds-card__head"><h2>产品与设施</h2><span>${projectReady ? "基础范围已保存" : "范围待完善"}</span></header>
+        <div class="tenant-scope-summary"><p>${counts.product} 项产品 CN 码 · ${counts.facility} 座生产设施 · ${counts.production_link} 条生产关系。</p>
+        <button class="text-button" type="button" data-customer-view="products">查看项目数据 →</button></div></section>
+      <aside class="cbam-work__progress ds-card" aria-label="材料准备"><strong>材料准备</strong>
+        <p>先确认产品的生产工艺、能源使用和前体路径，再安排资料与责任人。</p>
+        <button class="text-button" type="button" data-customer-view="tasks">查看任务 →</button></aside>
+    </div>`;
+    $("#customerCbamWorkFrame").innerHTML = cbamWorkPageMarkup({
+      org: data.tenant.name,
+      aside: statusChip(`${project?.year || "待建立"} · ${projectReady ? "基础范围已保存" : "范围待完善"}`, projectReady ? "" : "warn"),
+      nextAction: cbamNext,
+      board: cbamBoard,
+    });
+  }
+
+  function renderTenantGlobalPages(data, project, projectRecords, links) {
+    const drafts = projectRecords.filter((record) => record.kind === "material_request");
+    const taskState = systemStatePanel({ title: "暂无已分配任务", reason: links.length
+      ? "已建立生产关系。材料需求仍需结合工艺、能源及前体情况确认，当前尚未分配任务。"
+      : "请先在 CBAM 项目中关联产品与实际生产设施，再确认材料用途、采集期间和具名责任人。",
+      primary: { label: "查看 CBAM 当前工作", attrs: 'data-customer-view="cbam"' } });
+    const draftNote = drafts.length ? `<section class="ds-card customer-portal__panel"><h2>材料请求草稿 · ${drafts.length}</h2><p>草稿未发送，需核对用途、设施、期间和具名责任人。</p><ul>${drafts.map((record) => `<li>${safe(record.title)} · ${safe(record.assigneeEmail || "责任人待核对")}</li>`).join("")}</ul></section>` : "";
+    document.querySelector('[data-customer-view-panel="tasks"]').innerHTML = listPageShell({
+      meta: `${safe(data.tenant.name)} / 我的任务`, title: "待处理", aside: statusChip("0 项已分配"),
+      body: `<section class="ds-table shared-list shared-list--tasks" aria-label="已授权任务"><table><thead><tr><th>服务</th><th>任务</th><th>截止</th><th>状态</th><th></th></tr></thead><tbody><tr class="shared-empty-row"><td colspan="5">${taskState}</td></tr></tbody></table></section>${draftNote}`,
+    });
+
+    const assetRecords = projectRecords.filter((record) => ["product", "facility"].includes(record.kind));
+    const assetRows = assetRecords.map((record) => `<tr class="shared-row"><td data-label="资产"><small class="shared-type">${record.kind === "product" ? "产品主档" : "设施主档"}</small><strong>${safe(record.name)}</strong><small>${safe(record.kind === "product" ? `CN ${record.cnCode}` : record.location)}</small></td>
+      <td data-label="期间 · 责任"><strong>${safe(project?.year || "待建立")} 年度</strong><small>${safe(data.tenant.name)}</small></td>
+      <td data-label="服务使用"><span class="mono">CBAM</span></td><td data-label="状态">${statusChip("范围草稿", "warn")}</td>
+      <td data-label="操作"><button class="text-button" type="button" data-customer-view="setup" data-customer-setup-step="${record.kind}">查看 →</button></td></tr>`).join("");
+    const assetEmpty = `<tr class="shared-empty-row"><td colspan="5">${systemStatePanel({ title: "尚无产品或设施", reason: "进入 CBAM 项目设置后，可连续选择产品 CN 码并登记生产设施。", primary: { label: "前往项目设置", attrs: 'data-customer-view="setup"' } })}</td></tr>`;
+    document.querySelector('[data-customer-view-panel="assets"]').innerHTML = listPageShell({
+      meta: `${safe(data.tenant.name)} / 数据资产`, title: "数据资产", aside: statusChip(`${assetRecords.length} 项已登记`),
+      body: `<section class="ds-table shared-list shared-list--assets" aria-label="数据资产列表"><table><thead><tr><th>资产</th><th>期间 · 责任</th><th>服务使用</th><th>状态</th><th></th></tr></thead><tbody>${assetRows || assetEmpty}</tbody></table></section>`,
+    });
+
+    document.querySelector('[data-customer-view-panel="deliverables"]').innerHTML = listPageShell({
+      meta: `${safe(data.tenant.name)} / 交付中心`, title: "交付中心", aside: statusChip("0 项交付物", "warn"),
+      body: `<section class="ds-table shared-list shared-list--deliverables" aria-label="交付文件列表"><table><thead><tr><th>服务</th><th>交付物</th><th>接收方 · 更新</th><th>状态</th><th></th></tr></thead><tbody><tr class="shared-empty-row"><td colspan="5">${systemStatePanel({ title: "暂无交付文件", reason: "正式文件会在数据确认、核算与复核后形成。", primary: { label: "查看 CBAM 项目", attrs: 'data-customer-view="cbam"' } })}</td></tr></tbody></table></section>`,
+    });
+
   }
 
   function renderCustomerSecondary() {
@@ -315,7 +461,13 @@
     const planStage = cbamGoldenPath.stage("p04");
     const scopeLabel = scopeStage.state === "done" ? "已确认" : "待确认";
     const planLabel = planStage.state === "done" ? "已签收" : planStage.state === "waiting_human" ? `等待 ${planStage.assignee}` : "待制备";
-    const requestLabel = annual.materialRequests.count ? `${annual.materialRequests.count} 项首轮材料` : "待生成首轮清单";
+    const requestLabel = annual.materialRequests.awaitingConfirmation
+      ? `${annual.materialRequests.awaitingConfirmation} 项待确认`
+      : annual.materialRequests.returned
+        ? `${annual.materialRequests.returned} 项待重交`
+        : annual.materialRequests.confirmed
+          ? `${annual.materialRequests.confirmed} 项已确认`
+          : annual.materialRequests.count ? `${annual.materialRequests.count} 项首轮材料` : "待生成首轮清单";
     $("#main").innerHTML = `
       ${pageHeader(`${safe(annual.organizationName)} / CBAM`, `${safe(annual.year)} 年度项目`, `<div class="head-actions">${window.LuminoAgentRuntime?.agentPageAction?.("协助本年度收资") || ""}${statusChip(annual.project.statusLabel)}</div>`)}
       <section class="annual-project-shell annual-started">
@@ -325,7 +477,7 @@
           <div class="annual-parallel__rows">
             <article><div><small>年度主档确认</small><strong>产品、CN Code 与设施范围</strong><p>引用上一年度受控版本，仅确认新增、停用和变化。</p></div><span class="status-chip ${scopeStage.state === "done" ? "" : "warn"}">${scopeLabel}</span><button class="text-button" type="button" data-page="products">处理年度变化 →</button></article>
             <article><div><small>监测方法</small><strong>${safe(annual.monitoringPlan.id)} · Rev ${annual.monitoringPlan.revision}</strong><p>与数据采集同步维护；数据发现可以触发方法修订。</p></div><span class="status-chip ${planStage.state === "done" ? "" : "warn"}">${safe(planLabel)}</span><button class="text-button" type="button" data-page="monitoring-plan">查看监测计划 →</button></article>
-            <article><div><small>首轮材料与协作</small><strong>${safe(annual.materialRequests.period)} 数据与证明材料</strong><p>Agent 从本节点开始协助生成清单、提取数据和追踪缺项。</p></div><span class="status-chip ${annual.materialRequests.count ? "" : "warn"}">${safe(requestLabel)}</span><button class="text-button" type="button" data-page="data-calculation">进入材料与数据 →</button></article>
+            <article><div><small>首轮材料与协作</small><strong>${safe(annual.materialRequests.period)} 数据与证明材料</strong><p>从材料请求开始收集与核对数据；E-02 天然气账单可在本地预览中使用模型提取。</p></div><span class="status-chip ${annual.materialRequests.count ? "" : "warn"}">${safe(requestLabel)}</span><button class="text-button" type="button" data-page="data-calculation">进入材料与数据 →</button></article>
           </div>
         </section>
         <p class="annual-crossyear-note">${safe(annual.year)} 申报年度通常在 ${safe(annual.closeYear)} 年完成全年关账、报告、核查与整改；年度归属不会因自然年切换而改变。${annual.importer ? ` 首个计划交付对象：${safe(annual.importer)}。` : ""}</p>
@@ -353,6 +505,11 @@
             <ol>${lifecycle}</ol>
           </div>
         </details>`;
+    const intakeRequest = annual.materialRequests.items.find((item) => item.period === state.quarter);
+    const intakeFact = currentIntakeFact(intakeRequest?.id);
+    const intakeLabel = intakeRequest
+      ? `E-02 天然气材料：${({ AWAITING_CONFIRMATION: "待确认", RETURNED: "待重交", CONFIRMED: "已确认", SUBMITTED: "提取中" })[intakeRequest.status] || "待上传"}${intakeFact ? ` · ${intakeFact.metadata.value} ${intakeFact.metadata.unit}` : ""}`
+      : "";
     $("#main").innerHTML = `
       ${pageHeader(`${safe(annual.organizationName)} / CBAM`, `${safe(annual.year)} 年度项目`, statusControl)}
       <section class="annual-project-shell annual-established">
@@ -374,7 +531,7 @@
           </dl>
         </header>
 
-        ${locked ? "" : `<p class="annual-crossyear-note"><strong>跨年度执行：</strong>${safe(annual.year)} 年数据在 ${safe(annual.closeYear)} 年关账并形成年度材料包；核查 Finding 可能要求补证、重算和修订交付，项目不会在 ${safe(annual.year)} 年 12 月 31 日自动结束。</p>`}
+        ${locked ? "" : `<p class="annual-crossyear-note"><strong>跨年度执行：</strong>${safe(annual.year)} 年数据在 ${safe(annual.closeYear)} 年关账并形成年度材料包；核查 Finding 可能要求补证、重算和修订交付，项目不会在 ${safe(annual.year)} 年 12 月 31 日自动结束。</p>${intakeLabel ? `<p class="annual-crossyear-note">${safe(intakeLabel)} · <button class="text-button" type="button" data-page="data-calculation">查看材料与数据 →</button></p>` : ""}`}
 
         <div class="annual-established__body">
           <article class="annual-scope ds-card">
@@ -403,8 +560,8 @@
       </section>`;
   }
 
-  function cbamSectionTabs(items, current, label) {
-    return `<nav class="cbam-section-tabs" aria-label="${safe(label)}">${items.map(([id, text]) => `<button type="button" class="${current === id ? "is-active" : ""}" data-cbam-section="${id}" aria-current="${current === id ? "page" : "false"}">${safe(text)}</button>`).join("")}</nav>`;
+  function cbamSectionTabs(items, current, label, tenantView = "") {
+    return `<nav class="cbam-section-tabs" aria-label="${safe(label)}">${items.map(([id, text]) => `<button type="button" class="${current === id ? "is-active" : ""}" ${tenantView ? `data-customer-tab="${safe(tenantView)}:${safe(id)}"` : `data-cbam-section="${safe(id)}"`} aria-current="${current === id ? "page" : "false"}">${safe(text)}</button>`).join("")}</nav>`;
   }
 
   function renderDataCalculation() {
@@ -513,7 +670,7 @@
     $("#main").innerHTML = `
       ${pageHeader(`${state.year} · ASSIGNED TO ME`, "分配给我的工作", statusChip("仅显示上海一厂范围"))}
       <div class="privacy-band"><strong>你当前是数据贡献者</strong><span>可以回答和上传自己负责的材料；无法查看其他设施、完整报告或成员权限。</span></div>
-      <section class="panel task-focus"><div><small>${state.quarter} · 今天到期 · 约 3 分钟</small><h2>请上传上海一厂 ${quarterMeta[state.quarter].endMonth}天然气账单</h2><p>Agent 会提取账期与用量；上传结果先进入待确认区，不会直接进入正式核算。</p></div><button class="button button--primary" type="button" data-action="mock-upload">上传账单</button></section>
+      <section class="panel task-focus"><div><small>${state.quarter} · 今天到期 · 约 3 分钟</small><h2>请上传上海一厂 ${quarterMeta[state.quarter].endMonth}天然气账单</h2><p>模型模式识别文字版账单的用量、账期和设施；结果须经原文校验与人工确认。</p></div><button class="button button--primary" type="button" data-action="mock-upload">上传账单</button></section>
       <section class="panel wide-panel"><div class="panel-head"><h2>我的任务</h2><span>2 项</span></div><div class="record-list"><article class="record"><span class="record-code">GAS</span><div><strong>${quarterMeta[state.quarter].endMonth}天然气账单</strong><p>${state.year} ${state.quarter} · 上海一厂 · 今天到期</p></div><span class="record-state warn">待上传</span></article><article class="record"><span class="record-code">LINE</span><div><strong>确认热轧线 2 是否检修</strong><p>只需回答实际发生的情况</p></div><span class="record-state">待回答</span></article></div></section>`;
   }
 
@@ -579,7 +736,7 @@
       },
       {
         n: "02", t: "监测计划", when: `${y} 年 1–2 月`,
-        d: "每类数据用什么方法、从哪里来、由谁负责；默认值的使用条件也在这里约定。锁定后生成每季度的材料请求。",
+        d: "每类数据用什么方法、从哪里来、由谁负责；与首轮收资并行维护，数据发现可触发方法修订。",
         who: "王晨 制备 · 李娜 复核 · 你确认",
         outs: [`监测计划 MP-${y} v2`, "数据源分工 9 项", "默认值使用规则"],
         gate: "需要年度范围确认",
@@ -589,7 +746,7 @@
         d: "每季度重复：材料请求 → 上传与 Agent 提取 → 你确认 → 计算与复核 → 数据包共享给进口商并回执。",
         who: "你 · 数据贡献者 · Lumino 专家",
         quarters: true,
-        gate: "需要监测计划锁定",
+        gate: "年度项目启动后即可收资；正式计算前需确认范围与方法版本",
       },
       {
         n: "04", t: "年度排放报告", when: `${y + 1} 年 1–2 月`,
@@ -649,7 +806,7 @@
       } else if (year === "2025") {
         quarters = ["Q1", "Q2", "Q3", "Q4"].map((q) => ({ q, st: "已回执", chip: "ok", d: "已封存", live: false }));
       } else {
-        quarters = ["Q1", "Q2", "Q3", "Q4"].map((q) => ({ q, st: "未开始", chip: "locked", d: "监测计划锁定后开启", live: false }));
+        quarters = ["Q1", "Q2", "Q3", "Q4"].map((q) => ({ q, st: "未开始", chip: "locked", d: "年度项目创建后开启收资", live: false }));
       }
     }
 
@@ -807,8 +964,16 @@
   }
 
   function cbamDataModel() {
-    const energyDone = state.uploadAdded && state.factConfirmed;
-    const energyReview = state.uploadAdded && !state.factConfirmed;
+    const request = currentIntakeRequest();
+    const candidate = currentIntakeCandidate();
+    const gasFact = currentIntakeFact();
+    const gasEvidence = gasFact
+      ? intakeEvidenceStore.get({ evidenceId: gasFact.metadata.evidenceId, tenantId: intakeTenantId, actor: intakeActor() })
+      : currentIntakeEvidence(candidate);
+    const powerAsset = assetRegistry.get("REC-HX-POWER-2026Q3");
+    const powerEvidence = assetRegistry.get("EVD-HX-POWER-2026Q3");
+    const energyDone = Boolean(gasFact);
+    const energyReview = Boolean(candidate);
     const outputDone = Boolean(state.outputConfirmed);
     const fndOk = Boolean(state.findingResolved);
     const tone = (label, kind) => {
@@ -817,11 +982,14 @@
       if (kind === "danger") return { state: label, tone: "danger", go: label.includes("缺") ? "上传 →" : "处理 →" };
       return { state: label, tone: "locked", go: label.includes("补充") ? "上传 →" : "查看" };
     };
-    const energySt = energyDone
-      ? { ...tone("已确认", "ok"), src: "电力账单 · 天然气计量表", v: "12,480 MWh", vc: "", open: "" }
+    const powerSt = powerAsset
+      ? { ...tone("演示参考", "warn"), src: powerEvidence?.payload.fileName || "演示种子", v: `${powerAsset.payload.originalValue} ${powerAsset.payload.originalUnit}`, vc: "", open: "" }
+      : { ...tone("缺材料", "danger"), src: "未上传", v: "—", vc: "is-muted", open: 'data-action="mock-upload"' };
+    const gasSt = energyDone
+      ? { ...tone("已确认", "ok"), src: gasEvidence?.filename || gasFact.metadata.evidenceId, v: `${gasFact.metadata.value} ${gasFact.metadata.unit}`, vc: "", open: "" }
       : energyReview
-        ? { ...tone("待确认", "warn"), go: "核对 →", src: "Agent 提取 · 2 份文件", v: "…", vc: "is-warn", open: 'data-drawer="extract-energy"' }
-        : { ...tone("缺材料", "danger"), go: "上传 →", src: "未上传", v: "—", vc: "is-muted", open: 'data-action="mock-upload"' };
+        ? { ...tone("待确认", "warn"), go: "核对 →", src: gasEvidence?.filename || candidate.evidenceId, v: `${candidate.proposedPatch.originalValue} ${candidate.proposedPatch.originalUnit}`, vc: "is-warn", open: 'data-drawer="extract-energy"' }
+        : { ...tone(request?.metadata?.intakeStatus === "RETURNED" ? "待重交" : "缺材料", "danger"), go: "上传 →", src: request?.metadata?.intakeStatus === "RETURNED" ? "提取失败" : "未上传", v: "—", vc: "is-muted", open: 'data-action="mock-upload"' };
     const outSt = outputDone
       ? { ...tone("已确认", "ok"), src: "生产月报 7–9 月.xlsx", v: "38,400 t", vc: "", open: "" }
       : { ...tone("待确认", "warn"), go: "核对 →", src: "Agent 提取 · 生产月报 7–9 月", v: "38,400 t", vc: "is-warn", open: 'data-drawer="extract-output"' };
@@ -849,8 +1017,8 @@
       {
         id: "energy", label: "能源", note: "直接与间接排放",
         items: [
-          mk("en-power", "能源", "购入电力", "必填 · 按月", { ...energySt, v: energyDone ? "12,480 MWh" : energySt.v }),
-          mk("en-gas", "能源", "天然气", "必填 · 季度汇总", { ...energySt, v: energyDone ? "1.86 百万 m³" : energySt.v }),
+          mk("en-power", "能源", "购入电力", "必填 · 按月", powerSt),
+          mk("en-gas", "能源", "天然气 · E-02", "必填 · 季度汇总", gasSt),
           mk("en-diesel", "能源", "厂内运输柴油", "可选 · Agent 建议补充", dieselSt),
         ],
       },
@@ -889,7 +1057,7 @@
     }));
     const done = all.filter((i) => i.state === "已确认").length;
     const flow = [
-      { n: "1", t: `企业事实 · ${done}/${all.length} 已确认`, d: "Agent 提取后由你确认，原文件不可修改", ok: true },
+      { n: "1", t: `企业事实 · ${done}/${all.length} 已确认`, d: "提取候选由你确认，原文件不可修改", ok: true },
       { n: "2", t: "Q3 计算 Run", d: !fndOk ? "被前体缺口阻塞" : !energyDone || !outputDone ? "等待能源与产量确认" : "可以运行 · 生成新版本", ok: false },
       { n: "3", t: "NordWerk 数据包", d: "10 月 31 日 · 共享后等待回执", ok: false },
     ];
@@ -898,7 +1066,7 @@
       cats,
       flow,
       next: !energyDone
-        ? { kicker: "本季度数据 · 下一步", title: energyReview ? "核对 Q3 能源用量" : "上传 Q3 能源材料", desc: energyReview ? "Agent 已提取电力与天然气用量，确认后写入企业事实。" : "上传电力账单与天然气计量表，Agent 提取后由你确认。", label: energyReview ? "去核对" : "上传材料", attrs: energyReview ? 'data-drawer="extract-energy"' : 'data-action="mock-upload"' }
+        ? { kicker: "本季度数据 · 下一步", title: energyReview ? "核对 Q3 天然气用量" : "上传 E-02 天然气账单", desc: energyReview ? `${candidate?.extractionMode === "model_gateway" ? "模型" : "本地规则"}已生成天然气用量候选，确认后写入演示事实。` : "选择 E-02 材料请求，上传 TXT、CSV 或文字版 PDF；模型提取结果需人工确认。", label: energyReview ? "去核对" : "上传材料", attrs: energyReview ? 'data-drawer="extract-energy"' : 'data-action="mock-upload"' }
         : !outputDone
           ? { kicker: "本季度数据 · 下一步", title: "确认 Q3 产量提取结果", desc: "产量确认后用于计算分母，并更新发往欧盟的数量口径。", label: "去确认", attrs: 'data-drawer="extract-output"' }
           : !fndOk

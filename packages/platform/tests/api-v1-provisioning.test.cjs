@@ -500,6 +500,7 @@ test("API contract returns 401 403 and 503 envelopes", async () => {
 
   const forbiddenEmail = `viewer-${crypto.randomBytes(2).toString("hex")}@lumino.tech`;
   const forbiddenPassword = "ViewerTest-123456";
+  const viewerToken = crypto.randomBytes(32).toString("base64url");
   await db.withClient(async (client) => {
     const tenant = await db.ensureDefaultTenant(client);
     const user = await client.query(
@@ -515,16 +516,18 @@ test("API contract returns 401 403 and 503 envelopes", async () => {
        DO UPDATE SET roles = EXCLUDED.roles, is_active = true, archived_at = NULL`,
       [tenant.id, user.rows[0].id, ["viewer"]],
     );
+    await client.query(
+      `INSERT INTO staff_sessions (token_hash, user_id, tenant_id, expires_at)
+       VALUES ($1, $2, $3, now() + interval '1 hour')`,
+      [db.hashToken(viewerToken), user.rows[0].id, tenant.id],
+    );
   });
-  const forbiddenSession = await db.authenticateStaff({
-    email: forbiddenEmail,
-    password: forbiddenPassword,
-  });
+  await assert.rejects(() => db.authenticateStaff({ email: forbiddenEmail, password: forbiddenPassword }), { code: "TENANT_FORBIDDEN" });
 
   const forbidden = mockResponse();
   await leadsHandler({
     method: "GET",
-    headers: { authorization: `Bearer ${forbiddenSession.token}` },
+    headers: { authorization: `Bearer ${viewerToken}` },
     query: {},
     body: {},
   }, forbidden);
