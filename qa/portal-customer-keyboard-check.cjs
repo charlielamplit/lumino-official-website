@@ -9,6 +9,7 @@ const cdpUrl = process.env.CHROME_CDP_URL || 'http://127.0.0.1:9229/json';
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function main() {
+  await db.migrate();
   const suffix = crypto.randomBytes(4).toString('hex');
   const email = `keyboard-${suffix}@example.com`;
   const password = `Keyboard-${suffix}-2026!`;
@@ -138,6 +139,10 @@ async function main() {
     await waitFor('document.querySelector("#customerProductionLinkFeedback").textContent.includes("暂不可用") && document.querySelector("#customerProductionLinkForm").elements.productId.value', 'failed write preserves form and shows retryable error');
     await activate('#customerProductionLinkForm button[type=submit]');
     await waitFor('document.querySelectorAll("#customerProductionLinksList li").length===1', 'retry saves one production relationship');
+    await waitFor('!document.querySelector("#customerMaterialPlanForm").hidden', 'linked facility unlocks material plan');
+    await evaluate(`(() => { const f=document.querySelector('#customerMaterialPlanForm'); f.elements.facilityId.selectedIndex=1; f.elements.quarter.value='1'; })()`);
+    await activate('#customerMaterialPlanForm button[type=submit]');
+    await waitFor('document.querySelectorAll("#customerMaterialPlanList li").length===1 && document.querySelector("#customerMaterialPlanFeedback").textContent.includes("尚未发送")', 'material request saves as an unsent draft');
     for (const width of [320, 390, 768, 1440]) {
       await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 821 });
       await pause(150);
@@ -180,7 +185,7 @@ async function main() {
     await waitFor('document.querySelector("#portal").classList.contains("portal--real-customer") && !document.querySelector("[data-customer-view-panel=home]").hidden', 'refresh restores real tenant after demo');
     await activate('#shellRail [data-customer-view=cbam]');
     await waitFor('!document.querySelector("[data-customer-view-panel=cbam]").hidden', 'real CBAM project reopens');
-    await waitFor('document.querySelectorAll("#roleNav button").length===5 && document.querySelector("#customerProductCount").textContent.includes("1") && document.querySelector("#customerFacilityCount").textContent.includes("1") && document.querySelectorAll("#customerProductionLinksList li").length===1', 'refresh restores product, facility and production relationship');
+    await waitFor('document.querySelectorAll("#roleNav button").length===5 && document.querySelector("#customerProductCount").textContent.includes("1") && document.querySelector("#customerFacilityCount").textContent.includes("1") && document.querySelectorAll("#customerProductionLinksList li").length===1 && document.querySelectorAll("#customerMaterialPlanList li").length===1', 'refresh restores product, facility, production relationship and material draft');
     await evaluate(`(() => {
       const original=window.fetch.bind(window);
       window.__failSessionOnce=true;

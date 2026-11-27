@@ -62,8 +62,18 @@ test("customer session is tenant scoped and does not pass staff authentication",
   await assert.rejects(() => db.createPortalProjectRecord(otherResolved, { projectId: project.id, kind: "production_link", record: { productId: product.id, facilityId: facility.id } }), { code: "FORBIDDEN_ROLE" });
   const updatedLink = await db.updatePortalProjectRecord(refreshed, { recordId: link.id, kind: "production_link", record: { productId: product.id, facilityId: facility.id, processSummary: "工艺路线待核对" } });
   assert.equal(updatedLink.processSummary, "工艺路线待核对");
-  const request = await db.createPortalProjectRecord(refreshed, { projectId: project.id, kind: "material_request", record: { title: "天然气账单", assigneeEmail: "data@example.com" } });
-  assert.deepEqual(new Set((await db.portalWorkspace(refreshed)).records.map((row) => row.id)), new Set([product.id, ...batch.created.map((row) => row.id), facility.id, link.id, request.id]));
+  await assert.rejects(() => db.createPortalProjectRecord(refreshed, { projectId: project.id, kind: "material_request", record: { title: "天然气账单", assigneeEmail: "data@example.com" } }), { code: "VALIDATION_FAILED" });
+  await assert.rejects(() => db.createPortalMaterialRequest(refreshed, { projectId: project.id, facilityId: other.tenant.id, quarter: 1 }), { code: "RESOURCE_NOT_FOUND" });
+  await assert.rejects(() => db.createPortalMaterialRequest(refreshed, { projectId: project.id, facilityId: facility.id, quarter: 5 }), { code: "VALIDATION_FAILED" });
+  const material = await db.createPortalMaterialRequest(refreshed, { projectId: project.id, facilityId: facility.id, quarter: 1 });
+  assert.equal(material.created, true);
+  assert.equal(material.record.period, "2026-Q1");
+  assert.equal(material.record.status, "DRAFT");
+  assert.equal((await db.createPortalMaterialRequest(refreshed, { projectId: project.id, facilityId: facility.id, quarter: 1 })).record.id, material.record.id);
+  await assert.rejects(() => db.createPortalMaterialRequest(otherResolved, { projectId: project.id, facilityId: facility.id, quarter: 1 }), { code: "RESOURCE_NOT_FOUND" });
+  assert.deepEqual(new Set((await db.portalWorkspace(refreshed)).records.map((row) => row.id)), new Set([product.id, ...batch.created.map((row) => row.id), facility.id, link.id, material.record.id]));
+  const unlinked = await db.createPortalProjectRecord(refreshed, { projectId: project.id, kind: "facility", record: { name: "未关联设施", location: "中国江苏" } });
+  await assert.rejects(() => db.createPortalMaterialRequest(refreshed, { projectId: project.id, facilityId: unlinked.id, quarter: 1 }), { code: "VALIDATION_FAILED" });
   const changed = await db.updatePortalProjectRecord(refreshed, { recordId: product.id, kind: "product", record: { name: "热轧卷板", cnCode: "72085120" } });
   assert.equal(changed.name, "热轧卷板");
   await db.renamePortalTenant(refreshed, { tenantName: "测试钢铁企业（最终）" });
@@ -147,6 +157,25 @@ test("Portal API rejects missing sessions and ignores forged tenant fields", asy
   await workspaceHandler({ method: "PATCH", headers: { authorization: `Bearer ${token}` }, body: { operation: "rename_tenant", tenantName: "另一钢铁企业（修正）" } }, renamed);
   assert.equal(renamed.statusCode, 200);
   assert.equal((await db.portalWorkspace(await db.resolvePortalSession(token))).tenant.name, "另一钢铁企业（修正）");
+
+  const ownSession = await db.resolvePortalSession(token);
+  const ownProduct = await db.createPortalProjectRecord(ownSession, { projectId: own.projects[0].id, kind: "product", record: { name: "热轧钢板", cnCode: "72085120" } });
+  const ownFacilityId = JSON.parse(recordCreated.body).data.record.id;
+  await db.createPortalProjectRecord(ownSession, { projectId: own.projects[0].id, kind: "production_link", record: { productId: ownProduct.id, facilityId: ownFacilityId } });
+  const materialCreated = response();
+  await workspaceHandler({ method: "PUT", headers: { authorization: `Bearer ${token}` }, body: {
+    operation: "create_material_request", projectId: own.projects[0].id,
+    facilityId: ownFacilityId, quarter: 2, tenantId: customer.tenant.id,
+  } }, materialCreated);
+  assert.equal(materialCreated.statusCode, 201);
+  assert.equal(JSON.parse(materialCreated.body).data.record.period, "2027-Q2");
+  const materialRetried = response();
+  await workspaceHandler({ method: "PUT", headers: { authorization: `Bearer ${token}` }, body: {
+    operation: "create_material_request", projectId: own.projects[0].id, facilityId: ownFacilityId, quarter: 2,
+  } }, materialRetried);
+  assert.equal(materialRetried.statusCode, 200);
+  assert.equal(JSON.parse(materialRetried.body).data.record.id, JSON.parse(materialCreated.body).data.record.id);
+  assert.equal((await db.portalWorkspace(await db.resolvePortalSession(customerToken))).records.some((row) => row.id === JSON.parse(materialCreated.body).data.record.id), false);
 
   const revoked = response();
   await workspaceHandler({ method: "DELETE", headers: { authorization: `Bearer ${token}` } }, revoked);

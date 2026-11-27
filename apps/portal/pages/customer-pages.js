@@ -368,7 +368,7 @@
       ? "已建立生产关系。材料需求仍需结合工艺、能源及前体情况确认，当前尚未分配任务。"
       : "请先在 CBAM 项目中关联产品与实际生产设施，再确认材料用途、采集期间和具名责任人。",
       primary: { label: "查看 CBAM 当前工作", attrs: 'data-customer-view="cbam"' } });
-    const draftNote = drafts.length ? `<section class="ds-card customer-portal__panel"><h2>材料请求草稿 · ${drafts.length}</h2><p>草稿未发送，需核对用途、设施、期间和具名责任人。</p><ul>${drafts.map((record) => `<li>${safe(record.title)} · ${safe(record.assigneeEmail || "责任人待核对")}</li>`).join("")}</ul></section>` : "";
+    const draftNote = drafts.length ? `<section class="ds-card customer-portal__panel"><h2>材料计划草稿 · ${drafts.length}</h2><p>草稿仅记录收集范围；尚未分配责任人或发送材料请求。</p><ul>${drafts.map((record) => `<li>${safe(record.title)} · 尚未发送</li>`).join("")}</ul></section>` : "";
     document.querySelector('[data-customer-view-panel="tasks"]').innerHTML = listPageShell({
       meta: `${safe(data.tenant.name)} / 我的任务`, title: "待处理", aside: statusChip("0 项已分配"),
       body: `<section class="ds-table shared-list shared-list--tasks" aria-label="已授权任务"><table><thead><tr><th>服务</th><th>任务</th><th>截止</th><th>状态</th><th></th></tr></thead><tbody><tr class="shared-empty-row"><td colspan="5">${taskState}</td></tr></tbody></table></section>${draftNote}`,

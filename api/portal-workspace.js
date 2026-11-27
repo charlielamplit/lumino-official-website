@@ -28,6 +28,15 @@ export default async function handler(request, response) {
       return sendSuccess(response, { project }, { requestId, httpStatus: project.created ? 201 : 200 });
     }
     if (request.method === "PUT") {
+      if (request.body?.operation === "create_material_request") {
+        const result = await platformDb.createPortalMaterialRequest(session, {
+          projectId: request.body?.projectId,
+          facilityId: request.body?.facilityId,
+          quarter: request.body?.quarter,
+          requestId,
+        });
+        return sendSuccess(response, result, { requestId, httpStatus: result.created ? 201 : 200 });
+      }
       if (request.body?.operation === "add_products") {
         const result = await platformDb.createPortalProductBatch(session, {
           projectId: request.body?.projectId,
