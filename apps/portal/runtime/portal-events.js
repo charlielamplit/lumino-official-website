@@ -150,6 +150,12 @@
     $("#customerMaterialPlanList").replaceChildren();
     $("#customerMaterialPlanForm").reset();
     $("#customerMaterialPlanForm").elements.facilityId.replaceChildren();
+    $("#customerEvidenceForm").reset();
+    $("#customerEvidenceForm").elements.materialRequestId.replaceChildren();
+    $("#customerEvidenceForm").hidden = true;
+    $("#customerEvidenceHint").textContent = "先建立材料计划草稿。";
+    $("#customerEvidenceFeedback").textContent = "";
+    $("#customerEvidenceList").replaceChildren();
     $("#customerTenantName").value = "";
     $("#customerSetupForm").reset();
     $("#customerTenantDisplayName").textContent = "";
@@ -476,6 +482,36 @@
       const item = document.createElement("li");
       item.textContent = `${request.title} · 草稿，尚未发送`;
       materialList.append(item);
+    }
+    const evidenceForm = $("#customerEvidenceForm");
+    const priorRequestId = evidenceForm.elements.materialRequestId.value;
+    const uploadEnabled = Boolean(data.capabilities?.evidenceUpload);
+    const canUploadEvidence = ["SETUP_DRAFT", "ACTIVE"].includes(project?.status)
+      && data.user.roles.some((role) => ["customer_admin", "customer_owner", "customer_contrib"].includes(role));
+    evidenceForm.hidden = !uploadEnabled || !materialRequests.length || !canUploadEvidence;
+    evidenceForm.elements.materialRequestId.replaceChildren(new Option("请选择设施与季度", ""),
+      ...materialRequests.map((request) => new Option(request.title, request.id)));
+    if (materialRequests.some((request) => request.id === priorRequestId)) evidenceForm.elements.materialRequestId.value = priorRequestId;
+    $("#customerEvidenceHint").textContent = !uploadEnabled
+      ? "正式文件上传尚未开通，请先保存材料计划；资料不会存入浏览器缓存。"
+      : !materialRequests.length ? "先建立材料计划草稿，再上传对应设施和季度的文件。"
+        : "每次上传都会保留一个新版本。上传后仍需核对用量，文件不会自动成为申报数据。";
+    const evidenceList = $("#customerEvidenceList");
+    evidenceList.replaceChildren();
+    for (const evidence of (data.evidence || []).filter((item) => item.projectId === project?.id)) {
+      const request = materialRequests.find((item) => item.id === evidence.materialRequestId);
+      if (!request) continue;
+      const item = document.createElement("li");
+      const label = document.createElement("span");
+      label.textContent = `${request.title} · ${evidence.filename} · 版本 ${evidence.version}`;
+      const download = document.createElement("button");
+      download.type = "button";
+      download.className = "text-button";
+      download.textContent = uploadEnabled ? "下载" : "暂不可下载";
+      download.disabled = !uploadEnabled;
+      download.addEventListener("click", () => downloadCustomerEvidence(evidence, download));
+      item.append(label, download);
+      evidenceList.append(item);
     }
 
     renderTenantGlobalPages(data, project, projectRecords, links);
@@ -904,6 +940,58 @@
     } finally {
       submit.disabled = false;
     }
+  });
+  async function downloadCustomerEvidence(evidence, button) {
+    const feedback = $("#customerEvidenceFeedback");
+    const token = window.sessionStorage.getItem(portalCustomerTokenKey);
+    try {
+      button.disabled = true;
+      feedback.textContent = "正在下载文件…";
+      const response = await fetch(`/api/portal-evidence?evidenceId=${encodeURIComponent(evidence.id)}`, {
+        headers: { Authorization: `Bearer ${token}` }, cache: "no-store",
+      });
+      if (!response.ok) throw new Error("文件下载失败，请重新登录或稍后重试。");
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = objectUrl;
+      anchor.download = evidence.filename;
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      feedback.textContent = "文件已下载。";
+    } catch (error) { feedback.textContent = error.message || "文件下载失败。"; }
+    finally { button.disabled = false; }
+  }
+  $("#customerEvidenceForm")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const feedback = $("#customerEvidenceFeedback");
+    const button = form.querySelector('button[type="submit"]');
+    const file = form.elements.evidenceFile.files?.[0];
+    if (!file || file.size < 1 || file.size > 2097152 || !/\.(txt|csv)$/i.test(file.name)) {
+      feedback.textContent = "请选择不超过 2 MiB 的 TXT 或 CSV 文件。";
+      return;
+    }
+    try {
+      button.disabled = true;
+      feedback.textContent = "正在上传文件…";
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result).split(",", 2)[1] || "");
+        reader.onerror = () => reject(new Error("无法读取文件，请重试。"));
+        reader.readAsDataURL(file);
+      });
+      await portalCustomerApi("/api/portal-evidence", {
+        method: "POST", token: window.sessionStorage.getItem(portalCustomerTokenKey),
+        body: { materialRequestId: form.elements.materialRequestId.value, filename: file.name, base64 },
+      });
+      form.elements.evidenceFile.value = "";
+      showCustomerWorkspace(await portalCustomerApi("/api/portal-workspace", { token: window.sessionStorage.getItem(portalCustomerTokenKey) }));
+      feedback.textContent = "文件已保存为新版本，请核对用量。";
+    } catch (error) { feedback.textContent = error.message || "上传失败，请重试。"; }
+    finally { button.disabled = false; }
   });
   $("#customerCnSearch")?.addEventListener("input", renderCustomerCnPicker);
   $("#customerCnPasteAdd")?.addEventListener("click", () => {

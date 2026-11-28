@@ -12,6 +12,7 @@
     "test:db": "node --test packages/platform/tests/postgres-*.test.cjs"
   },
   "dependencies": {
+    "cos-nodejs-sdk-v5": "^3.0.0",
     "pg": "^8.16.0"
   }
 }

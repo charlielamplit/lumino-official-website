@@ -148,7 +148,114 @@ async function portalWorkspace(session, options = {}) {
        WHERE r.tenant_id = $1 AND p.tenant_id = $1 ORDER BY r.created_at, r.id`,
       [session.tenantId],
     );
-    return { user: { name: session.name, email: session.email, roles: session.roles }, tenant: { id: session.tenantId, name: session.tenantName, isDemo: session.isDemo }, projects: projects.rows.map((row) => ({ id: row.id, year: row.service_year, status: row.status, revision: row.revision, createdAt: row.created_at })), records: records.rows.map((row) => ({ id: row.id, projectId: row.project_id, kind: row.kind, ...row.payload, createdAt: row.created_at })) };
+    const evidence = options.includeEvidence === false ? { rows: [] } : await client.query(
+      `SELECT e.id, e.project_id, e.material_request_id, e.version, e.filename, e.media_type,
+              e.byte_length, e.sha256, e.created_at, e.stored_at
+       FROM portal_evidence e JOIN portal_annual_projects p ON p.id = e.project_id
+       WHERE e.tenant_id = $1 AND p.tenant_id = $1 AND e.status = 'STORED'
+       ORDER BY e.created_at DESC, e.id DESC`,
+      [session.tenantId],
+    );
+    return { user: { name: session.name, email: session.email, roles: session.roles }, tenant: { id: session.tenantId, name: session.tenantName, isDemo: session.isDemo }, projects: projects.rows.map((row) => ({ id: row.id, year: row.service_year, status: row.status, revision: row.revision, createdAt: row.created_at })), records: records.rows.map((row) => ({ id: row.id, projectId: row.project_id, kind: row.kind, ...row.payload, createdAt: row.created_at })), evidence: evidence.rows.map((row) => ({ id: row.id, projectId: row.project_id, materialRequestId: row.material_request_id, version: row.version, filename: row.filename, mediaType: row.media_type, byteLength: row.byte_length, sha256: row.sha256, createdAt: row.created_at, storedAt: row.stored_at })) };
+  }, options);
+}
+
+async function reservePortalEvidence(session, { materialRequestId, filename, mediaType, byteLength, sha256, requestId = null }, options = {}) {
+  if (!session?.userId || !session.tenantId) throw portalError("AUTH_REQUIRED", 401, "请先登录");
+  if (!/^[0-9a-f-]{36}$/i.test(String(materialRequestId || ""))) throw portalError("VALIDATION_FAILED", 400, "材料计划标识不正确");
+  if (typeof filename !== "string" || !filename || filename.length > 180 || /[\\/\x00-\x1f\x7f]/.test(filename)) throw portalError("VALIDATION_FAILED", 400, "文件名不正确");
+  if (!Number.isInteger(byteLength) || byteLength < 1 || byteLength > 2097152 || !/^[0-9a-f]{64}$/.test(String(sha256 || ""))
+    || !["text/plain; charset=utf-8", "text/csv; charset=utf-8"].includes(mediaType)) throw portalError("VALIDATION_FAILED", 400, "文件内容不符合上传要求");
+  return withTransaction(async (client) => {
+    const request = (await client.query(
+      `SELECT r.project_id FROM portal_project_records r
+       JOIN portal_annual_projects p ON p.id = r.project_id AND p.tenant_id = r.tenant_id
+       JOIN tenants t ON t.id = r.tenant_id
+       JOIN tenant_memberships m ON m.tenant_id = r.tenant_id AND m.user_id = $3
+       JOIN users u ON u.id = m.user_id
+       WHERE r.id = $1 AND r.tenant_id = $2 AND r.kind = 'material_request'
+         AND r.payload->>'status' = 'DRAFT' AND r.payload->>'dataItemCode' = 'NATURAL_GAS_NM3'
+         AND p.status IN ('SETUP_DRAFT', 'ACTIVE') AND NOT t.is_demo AND t.archived_at IS NULL
+         AND m.is_active AND m.archived_at IS NULL AND u.is_active AND u.archived_at IS NULL
+         AND m.roles && $4::text[] FOR UPDATE OF r`,
+      [materialRequestId, session.tenantId, session.userId, ["customer_admin", "customer_owner", "customer_contrib"]],
+    )).rows[0];
+    if (!request) throw portalError("RESOURCE_NOT_FOUND", 404, "材料计划不存在或当前账号无权上传");
+    const evidenceId = crypto.randomUUID();
+    const usage = (await client.query(
+      `SELECT coalesce(max(version), 0) + 1 AS next_version,
+              count(*) FILTER (WHERE status = 'STORED')::int AS stored_count,
+              count(*) FILTER (WHERE created_at > now() - interval '1 day')::int AS recent_count
+       FROM portal_evidence WHERE material_request_id = $1`,
+      [materialRequestId],
+    )).rows[0];
+    if (usage.stored_count >= 20) throw portalError("VALIDATION_FAILED", 400, "同一材料计划最多保存 20 个文件版本");
+    if (usage.recent_count >= 40) throw portalError("RATE_LIMITED", 429, "今日上传尝试过多，请稍后再试");
+    const version = Number(usage.next_version);
+    const objectKey = `portal-evidence/${session.tenantId}/${request.project_id}/${materialRequestId}/${evidenceId}`;
+    const row = (await client.query(
+      `INSERT INTO portal_evidence (id, tenant_id, project_id, material_request_id, version, object_key,
+         filename, media_type, byte_length, sha256, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING id, project_id, material_request_id, version, object_key, filename, media_type, byte_length, sha256`,
+      [evidenceId, session.tenantId, request.project_id, materialRequestId, version, objectKey, filename, mediaType, byteLength, sha256, session.userId],
+    )).rows[0];
+    await client.query(
+      `INSERT INTO audit_events (tenant_id, actor_user_id, actor_email_snapshot, action, entity_type, entity_id, payload)
+       VALUES ($1, $2, $3, 'portal.evidence.reserve', 'portal_evidence', $4, $5::jsonb)`,
+      [session.tenantId, session.userId, session.email, evidenceId, JSON.stringify({ materialRequestId, version, sha256, byteLength, requestId })],
+    );
+    return { id: row.id, projectId: row.project_id, materialRequestId: row.material_request_id, version: row.version,
+      objectKey: row.object_key, filename: row.filename, mediaType: row.media_type, byteLength: row.byte_length, sha256: row.sha256 };
+  }, options);
+}
+
+async function setPortalEvidenceStatus(session, evidenceId, status, requestId = null, options = {}) {
+  if (!session?.userId || !session.tenantId) throw portalError("AUTH_REQUIRED", 401, "请先登录");
+  if (!["STORED", "FAILED"].includes(status)) throw portalError("VALIDATION_FAILED", 400, "证据状态不正确");
+  return withTransaction(async (client) => {
+    const row = (await client.query(
+      `UPDATE portal_evidence SET status = $4, stored_at = CASE WHEN $4 = 'STORED' THEN now() ELSE NULL END
+       WHERE id = $1 AND tenant_id = $2 AND created_by = $3 AND status = 'PENDING'
+       RETURNING id, project_id, material_request_id, version, filename, media_type, byte_length, sha256, stored_at`,
+      [evidenceId, session.tenantId, session.userId, status],
+    )).rows[0];
+    if (!row) throw portalError("RESOURCE_NOT_FOUND", 404, "待上传文件不存在");
+    await client.query(
+      `INSERT INTO audit_events (tenant_id, actor_user_id, actor_email_snapshot, action, entity_type, entity_id, payload)
+       VALUES ($1, $2, $3, $4, 'portal_evidence', $5, $6::jsonb)`,
+      [session.tenantId, session.userId, session.email, `portal.evidence.${status.toLowerCase()}`, evidenceId, JSON.stringify({ requestId })],
+    );
+    return { id: row.id, projectId: row.project_id, materialRequestId: row.material_request_id, version: row.version,
+      filename: row.filename, mediaType: row.media_type, byteLength: row.byte_length, sha256: row.sha256, storedAt: row.stored_at };
+  }, options);
+}
+
+async function getPortalEvidence(session, evidenceId, requestId = null, options = {}) {
+  if (!session?.userId || !session.tenantId) throw portalError("AUTH_REQUIRED", 401, "请先登录");
+  if (!/^[0-9a-f-]{36}$/i.test(String(evidenceId || ""))) throw portalError("VALIDATION_FAILED", 400, "文件标识不正确");
+  return withTransaction(async (client) => {
+    const row = (await client.query(
+      `SELECT e.id, e.object_key, e.filename, e.media_type, e.byte_length, e.sha256
+       FROM portal_evidence e
+       JOIN portal_annual_projects p ON p.id = e.project_id AND p.tenant_id = e.tenant_id
+       JOIN tenants t ON t.id = e.tenant_id
+       JOIN tenant_memberships m ON m.tenant_id = e.tenant_id AND m.user_id = $3
+       JOIN users u ON u.id = m.user_id
+       WHERE e.id = $1 AND e.tenant_id = $2 AND e.status = 'STORED'
+         AND NOT t.is_demo AND t.archived_at IS NULL
+         AND m.is_active AND m.archived_at IS NULL AND u.is_active AND u.archived_at IS NULL
+         AND m.roles && $4::text[]`,
+      [evidenceId, session.tenantId, session.userId, CUSTOMER_ROLES],
+    )).rows[0];
+    if (!row) throw portalError("RESOURCE_NOT_FOUND", 404, "文件不存在或当前账号无权访问");
+    await client.query(
+      `INSERT INTO audit_events (tenant_id, actor_user_id, actor_email_snapshot, action, entity_type, entity_id, payload)
+       VALUES ($1, $2, $3, 'portal.evidence.download', 'portal_evidence', $4, $5::jsonb)`,
+      [session.tenantId, session.userId, session.email, evidenceId, JSON.stringify({ requestId })],
+    );
+    return { id: row.id, objectKey: row.object_key, filename: row.filename, mediaType: row.media_type,
+      byteLength: row.byte_length, sha256: row.sha256 };
   }, options);
 }
 
@@ -439,4 +546,4 @@ async function updatePortalProjectRecord(session, { recordId, kind, record, requ
   }, options);
 }
 
-module.exports = { CUSTOMER_ROLES, provisionPortalAccount, authenticatePortal, resolvePortalSession, revokePortalSession, portalWorkspace, createPortalAnnualProject, createPortalProjectRecord, createPortalMaterialRequest, createPortalProductBatch, renamePortalTenant, updatePortalProjectRecord };
+module.exports = { CUSTOMER_ROLES, provisionPortalAccount, authenticatePortal, resolvePortalSession, revokePortalSession, portalWorkspace, createPortalAnnualProject, createPortalProjectRecord, createPortalMaterialRequest, createPortalProductBatch, renamePortalTenant, updatePortalProjectRecord, reservePortalEvidence, setPortalEvidenceStatus, getPortalEvidence };

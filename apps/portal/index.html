@@ -129,7 +129,7 @@
             <button type="button" class="text-button" id="customerProductionLinksSetup" data-customer-view="setup" hidden>先补充产品与设施 →</button>
           </section>
           <section class="customer-portal__panel customer-portal__next" aria-labelledby="customerMaterialPlanTitle">
-            <div><small>下一步 · 材料计划</small><h2 id="customerMaterialPlanTitle">确定要收集哪一季度的资料</h2><p>如果生产设施使用天然气，可先建立该季度的用量资料草稿。这里只记录收集范围，不会发送通知或上传文件；实际账单和责任人可在后续收资流程中确认。</p></div>
+            <div><small>下一步 · 材料计划</small><h2 id="customerMaterialPlanTitle">确定要收集哪一季度的资料</h2><p>如果生产设施使用天然气，可先建立该季度的用量资料草稿。草稿不会发送通知；确认后可上传对应季度的用量文件。</p></div>
             <p id="customerMaterialPlanHint"></p>
             <form id="customerMaterialPlanForm" hidden>
               <label>生产设施<select name="facilityId" required></select></label>
@@ -138,6 +138,17 @@
             </form>
             <p id="customerMaterialPlanFeedback" role="status"></p>
             <ul id="customerMaterialPlanList"></ul>
+            <section class="customer-evidence" aria-labelledby="customerEvidenceTitle">
+              <h3 id="customerEvidenceTitle">上传用量文件</h3>
+              <p id="customerEvidenceHint">先建立材料计划草稿。文件只与所选设施和季度关联，不会自动确认为申报数据。</p>
+              <form id="customerEvidenceForm" hidden>
+                <label>对应材料计划<select name="materialRequestId" required></select></label>
+                <label>TXT 或 CSV 文件（UTF-8，最多 2 MiB）<input name="evidenceFile" type="file" accept=".txt,.csv,text/plain,text/csv" required></label>
+                <div class="customer-portal__form-actions"><button class="button button--primary" type="submit">上传文件</button></div>
+              </form>
+              <p id="customerEvidenceFeedback" role="status"></p>
+              <ul id="customerEvidenceList"></ul>
+            </section>
           </section>
         </section>
         <section class="customer-portal__page" data-customer-view-panel="annual" aria-label="CBAM 年度项目" hidden></section>

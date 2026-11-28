@@ -143,6 +143,7 @@ async function main() {
     await evaluate(`(() => { const f=document.querySelector('#customerMaterialPlanForm'); f.elements.facilityId.selectedIndex=1; f.elements.quarter.value='1'; })()`);
     await activate('#customerMaterialPlanForm button[type=submit]');
     await waitFor('document.querySelectorAll("#customerMaterialPlanList li").length===1 && document.querySelector("#customerMaterialPlanFeedback").textContent.includes("尚未发送")', 'material request saves as an unsent draft');
+    await waitFor('document.querySelector("#customerEvidenceForm").hidden && document.querySelector("#customerEvidenceHint").textContent.includes("尚未开通")', 'unconfigured private upload stays closed with a clear explanation');
     for (const width of [320, 390, 768, 1440]) {
       await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: width < 821 });
       await pause(150);

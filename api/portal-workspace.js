@@ -1,5 +1,6 @@
 import { platformDb } from "./_lib/platform-db.js";
 import { createRequestId, sendSuccess, sendError, sendDomainError } from "./_lib/platform-api-response.js";
+import { evidenceConfigured } from "./_lib/portal-evidence-cos.js";
 
 function bearerToken(request) {
   const header = String(request.headers?.authorization || "");
@@ -69,7 +70,8 @@ export default async function handler(request, response) {
       }
       return sendError(response, "VALIDATION_FAILED", { requestId });
     }
-    return sendSuccess(response, await platformDb.portalWorkspace(session), { requestId });
+    const evidenceUpload = evidenceConfigured();
+    return sendSuccess(response, { ...await platformDb.portalWorkspace(session, { includeEvidence: evidenceUpload }), capabilities: { evidenceUpload } }, { requestId });
   } catch (error) {
     return sendDomainError(response, error, { requestId });
   }
