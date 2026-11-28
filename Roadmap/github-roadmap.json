@@ -380,15 +380,15 @@
     },
     {
       "id": "F02-04",
-      "updatedAt": "2026-11-27",
+      "updatedAt": "2026-11-28",
       "kind": "feature",
       "parentId": "E02",
       "title": "[Feature] Portal 共用页面与企业租户数据投影",
-      "state": "open",
+      "state": "closed",
       "labels": [
         "Roadmap",
         "type/feature",
-        "status/in-progress",
+        "status/done",
         "priority/P0",
         "area/portal",
         "area/platform",
@@ -412,7 +412,8 @@
       ],
       "references": [
         "apps/portal/README.md",
-        "tests/portal-framework.test.cjs"
+        "tests/portal-framework.test.cjs",
+        "docs/reviews/0010_portal-customer-journey-acceptance_2026-11-28.md"
       ]
     },
     {
