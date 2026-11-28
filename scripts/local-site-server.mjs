@@ -62,6 +62,7 @@ const apiRoutes = {
   "/api/staff-login": "api/staff-login.js",
   "/api/portal-login": "api/portal-login.js",
   "/api/portal-workspace": "api/portal-workspace.js",
+  "/api/portal-evidence": "api/portal-evidence.js",
   "/api/portal-intake-extract": "api/_lib/portal-intake-local.js",
   "/api/portal-intake-record": "api/_lib/portal-intake-record-local.js",
 };
@@ -183,7 +184,7 @@ const server = http.createServer(async (request, response) => {
       const handler = await loadHandler(apiFile);
       request.query = Object.fromEntries(url.searchParams.entries());
       request.body = ["PATCH", "POST", "PUT"].includes(String(request.method || "").toUpperCase())
-        ? await readBody(request, url.pathname === "/api/portal-intake-record" ? 42 * 1024 * 1024 : url.pathname === "/api/portal-intake-extract" ? 3 * 1024 * 1024 : Infinity)
+        ? await readBody(request, url.pathname === "/api/portal-intake-record" ? 42 * 1024 * 1024 : ["/api/portal-intake-extract", "/api/portal-evidence"].includes(url.pathname) ? 3 * 1024 * 1024 : Infinity)
         : undefined;
       await handler(request, response);
       return;
